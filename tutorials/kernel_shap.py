@@ -26,7 +26,3 @@ exp.run(input2)
 exp.run(input3)
 
 print(project.experiments)
-
-# Return value is matplotlib figure.
-# Transforming matplotlib figure to image and then 
-# rendering image in plotly harms the image quaility
