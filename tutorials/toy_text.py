@@ -2,13 +2,15 @@ import random
 import re
 import urllib
 import urllib.request
-
-from xai_pnp import Project
-from xai_pnp.explainers import LayerIntegratedGradients
+import json
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import plotly.io
+
+from xai_pnp import Project
+from xai_pnp.explainers import LayerIntegratedGradients
 
 
 class ToyVocab:
@@ -94,7 +96,7 @@ exp.run([input1, input2], target=1, baselines=baseline1, method='gausslegendre')
 bar1p = {
     "type": "bar",
     "x": vocab.itos(exp.runs[0].inputs[0]),
-    "y": exp.runs[1].outputs[0].sum(1) / torch.norm(exp.runs[0].outputs[0]),
+    "y": (exp.runs[1].outputs[0].sum(1) / torch.norm(exp.runs[0].outputs[0])).tolist(),
     "base": 0,
     "marker": {"color": "blue"},
     "name": "positive",
@@ -103,7 +105,7 @@ bar1p = {
 bar1n = {
     "type": "bar",
     "x": vocab.itos(exp.runs[1].inputs[0]),
-    "y": exp.runs[0].outputs[0].sum(1) / torch.norm(exp.runs[0].outputs[0]),
+    "y": (exp.runs[0].outputs[0].sum(1) / torch.norm(exp.runs[0].outputs[0])).tolist(),
     "base": 0,
     "marker": {"color": "red"},
     "name": "negative",
@@ -135,8 +137,9 @@ bar2n = {
 
 bar2 = [bar2p, bar2n]
 
-print(bar1)
-print(bar2)
+
+fig = plotly.io.from_json(json.dumps(bar2))
+fig.show()
 
 
 # [GH] Running in sequence v.s. Running in batch
@@ -175,5 +178,5 @@ print(bar2)
 
 # how to visualize result is determined by `data`, `model`, and `explainer` -> `Experiment`
 # `Run` is varying over `data` and parameters for `explainer` on a `Experiment`
-# All the runs in a experment have same visualizations
+# All the runs in an experment have same visualizations
 # Is it possible 
