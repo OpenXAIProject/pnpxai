@@ -26,8 +26,7 @@ baseline1 = torch.tensor([0.0])
 baseline2 = torch.tensor([0.0])
 
 project = Project('test_project')
-exp = project.make_experiment(model, IntegratedGradients())
+exp = project.explain(IntegratedGradients(model))
 exp.run(input1, baselines=baseline1, method='gausslegendre')
-exp.run(input2, baselines=baseline2, method='gausslegendre')
 
-print(project.experiments)
+print(project.experiments[0].runs[0].outputs)

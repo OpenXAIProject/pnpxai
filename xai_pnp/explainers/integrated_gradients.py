@@ -7,18 +7,17 @@ from xai_pnp.explainers._explainer import Explainer
 
 
 class IntegratedGradients(Explainer):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, model: Model):
+        super().__init__(model)
+        self.method = IG(model)
 
-    def run(self, model: Model, data: DataSource, *args: Any, **kwargs: Any) -> List[Tensor]:
-        ig = IG(model)
-
+    def run(self, data: DataSource, *args: Any, **kwargs: Any) -> List[Tensor]:
         attributions = []
 
         if type(data) is Tensor:
             data = [data]
 
         for datum in data:
-            attributions.append(ig.attribute(datum, *args, **kwargs))
+            attributions.append(self.method.attribute(datum, *args, **kwargs))
 
         return attributions

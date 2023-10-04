@@ -1,4 +1,3 @@
-from torch import nn
 from typing import Optional, List, Any
 from dataclasses import dataclass
 
@@ -6,9 +5,10 @@ from time import time_ns
 from xai_pnp.core._types import DataSource
 from xai_pnp.explainers._explainer import Explainer
 
+
 @dataclass
 class Run:
-    model: nn.Module
+    explainer: Explainer
     inputs: DataSource
     outputs: Optional[DataSource] = None
     started_at: Optional[int] = None
@@ -18,11 +18,8 @@ class Run:
 class Experiment:
     def __init__(
         self,
-        model: nn.Module,
         explainer: Explainer
     ):
-        self.model = model
-        self.outputs = None
         self.explainer = explainer
         self.runs: List[Run] = []
 
@@ -32,20 +29,21 @@ class Experiment:
     def run(
         self,
         data: DataSource,
-        model: Optional[nn.Module] = None,
         *args: Any,
         **kwargs: Any
     ):
-        if model is not None:
-            self.model = model
-
         run = Run(
-            model=self.model,
+            explainer=self.explainer,
             inputs=data,
             started_at=time_ns()
         )
 
-        run.outputs = self.explainer.run(self.model, data, *args, **kwargs)
+        run.outputs = self.explainer.run(data, *args, **kwargs)
         run.finished_at = time_ns()
 
         self._add_run(run)
+
+        return run
+
+    def visualize(self):
+        pass
