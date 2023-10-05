@@ -1,5 +1,6 @@
 from functools import partial
 
+import os
 import torch
 from torchvision import datasets
 from torch.utils.data import DataLoader
@@ -9,13 +10,13 @@ import torchvision.transforms as transforms
 from xai_pnp import Project
 from xai_pnp.explainers import RAP
 
-
+data_path = './data/imagenet/'
 normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                  std=[0.229, 0.224, 0.225])
 
 val_loader = DataLoader(
     datasets.ImageFolder(
-        './data/imagenet/',
+        data_path,
         transforms.Compose([
             transforms.Resize([224, 224]),
             transforms.ToTensor(),
@@ -49,4 +50,11 @@ project = Project('test_project')
 exp = project.explain(explainer)
 exp.run(val_loader)
 
-print(project.experiments[0].runs[0].outputs)
+outputs = [output.detach().cpu() for output in exp.runs[-1].outputs]
+
+visualizaion_path = f"{data_path}/results/rap"
+if not os.path.exists(visualizaion_path):
+    os.makedirs(visualizaion_path)
+visualizations = explainer.format_outputs_for_visualization(outputs)
+for idx, visualization in enumerate(visualizations):
+    visualization.write_image(f"{visualizaion_path}/rap_{idx}.png")
