@@ -25,18 +25,20 @@ class RelProp:
         self.Y: _TensorOrTensors
         self.module = module
 
-    def forward_hook(self, module: nn.Module, input: _TensorOrTensors, output: _TensorOrTensors):
-        if type(input[0]) in (list, tuple):
+    def forward_hook(self, module: nn.Module, inputs: _TensorOrTensors, outputs: _TensorOrTensors):
+        self.X_orig = inputs[0]
+
+        if type(inputs[0]) in (list, tuple):
             self.X = []
-            for i in input[0]:
+            for i in inputs[0]:
                 x = i.detach()
                 x.requires_grad = True
                 self.X.append(x)
         else:
-            self.X = input[0].detach()
+            self.X = inputs[0].detach()
             self.X.requires_grad = True
 
-        self.Y = output
+        self.Y = outputs
 
     def gradprop(self, Z: _TensorOrTensors, X: _TensorOrTensors, S: _TensorOrTensors) -> _TensorOrTensors:
         C = torch.autograd.grad(Z, X, S, retain_graph=True)
@@ -47,21 +49,23 @@ class RelProp:
 
 
 class RelPropSimple(RelProp):
-    def relprop(self, r: _TensorOrTensors):
+    def relprop(self, r: _TensorOrTensors, inputs: Optional[_TensorOrTensors] = None, outputs: Optional[_TensorOrTensors] = None):
+        inputs = inputs if inputs is not None else self.X
+
         def backward(_r):
-            if self.module is None:
+            if self.module is None and (inputs is None or outputs is None):
                 return r
 
-            Z = self.module.forward(self.X)
+            Z = outputs if outputs is not None else self.module(inputs)
             Sp = safe_divide(_r, Z)
 
-            Cp = self.gradprop(Z, self.X, Sp)[0]
-            if torch.is_tensor(self.X) == False:
+            Cp = self.gradprop(Z, inputs, Sp)[0]
+            if torch.is_tensor(inputs) == False:
                 Rp = []
-                Rp.append(self.X[0] * Cp)
-                Rp.append(self.X[1] * Cp)
+                Rp.append(inputs[0] * Cp)
+                Rp.append(inputs[1] * Cp)
             else:
-                Rp = self.X * (Cp)
+                Rp = inputs * (Cp)
             return Rp
         if torch.is_tensor(r) == False:
             idx = len(r)
@@ -93,38 +97,6 @@ class AdaptiveAvgPool2d(RelPropSimple):
 
 class AvgPool2d(RelPropSimple):
     pass
-
-
-class Clone(RelProp):
-    captures_in_out: bool = False
-
-    def relprop(self, R_p: _TensorOrTensors, inputs: Tensor):
-        def backward(R_p):
-            Z: Sequence[Tensor] = [inputs] * len(R_p)
-
-            Spp = []
-            Spn = []
-
-            for z, rp in zip(Z, R_p):
-                Spp.append(safe_divide(torch.clamp(rp, min=0), z))
-                Spn.append(safe_divide(torch.clamp(rp, max=0), z))
-
-            Cpp = self.gradprop(Z, inputs, Spp)[0]
-            Cpn = self.gradprop(Z, inputs, Spn)[0]
-
-            Rp = inputs * (Cpp * Cpn)
-
-            return Rp
-        if torch.is_tensor(R_p) == False:
-            idx = len(R_p)
-            tmp_R_p = R_p
-            Rp = []
-            for i in range(idx):
-                Rp_tmp = backward(tmp_R_p[i])
-                Rp.append(Rp_tmp)
-        else:
-            Rp = backward(R_p)
-        return Rp
 
 
 class Cat(RelProp):
@@ -161,7 +133,9 @@ class Sequential(RelProp):
             return r
 
         for m in reversed(self.module._modules.values()):
-            if hasattr(m, 'rule') and hasattr(m.rule, 'relprop'):
+            if hasattr(m, 'relprop'):
+                r = m.relprop(r)
+            elif hasattr(m, 'rule') and hasattr(m.rule, 'relprop'):
                 r = m.rule.relprop(r)
 
         return r
