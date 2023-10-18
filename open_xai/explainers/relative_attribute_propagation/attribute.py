@@ -7,9 +7,9 @@ import torch
 from torch import Tensor
 from torch.autograd import Variable
 
-from xai_pnp.core._types import Model, DataSource
-from xai_pnp.explainers._explainer import Explainer
-from xai_pnp.explainers.relative_attribute_propagation.rap import RelativeAttributePropagation
+from open_xai.core._types import Model, DataSource
+from open_xai.explainers._explainer import Explainer
+from open_xai.explainers.relative_attribute_propagation.rap import RelativeAttributePropagation
 
 
 class RAP(Explainer):
@@ -51,5 +51,5 @@ class RAP(Explainer):
 
         return torch.concat(attributions, dim=0)
 
-    def format_outputs_for_visualization(self, outputs: Tensor) -> List[go.Figure]:
+    def format_outputs_for_visualization(self, inputs: DataSource, outputs: DataSource) -> List[go.Figure]:
         return [px.imshow(output.sum(axis=-1)) for output in outputs]

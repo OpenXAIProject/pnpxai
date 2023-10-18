@@ -1,1 +1,0 @@
-from xai_pnp.detector.detector import get_model_architecture
