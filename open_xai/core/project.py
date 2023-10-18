@@ -1,9 +1,9 @@
 from typing import Optional, List
 
-from xai_pnp.detector.detector import Detector
-from xai_pnp.core._types import Model
-from xai_pnp.explainers._explainer import Explainer
-from xai_pnp.core.experiment import Experiment
+from open_xai.detector.detector import Detector
+from open_xai.core._types import Model
+from open_xai.explainers._explainer import Explainer
+from open_xai.core.experiment import Experiment
 
 
 class Project():
