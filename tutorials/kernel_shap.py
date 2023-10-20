@@ -13,7 +13,7 @@ import torchvision.transforms.functional as TF
 from torchvision import models
 
 from open_xai import Project
-from open_xai.explainers import IntegratedGradients
+from open_xai.explainers import KernelShap
 
 
 transform = transforms.Compose(
@@ -78,15 +78,18 @@ model.eval()
 
 
 project = Project('test_project')
-exp = project.explain(IntegratedGradients(model))
-run = exp.run(inputs, target=labels[idx], baselines=inputs * 0, return_convergence_delta=True)
+exp = project.explain(KernelShap(model))
+run = exp.run(inputs, target=labels[idx], baselines=inputs * 0)
 
 plots = exp.visualize()
 
-plot_path = 'results/ig'
+plot_path = 'results/kernel_shap'
 if not os.path.exists(plot_path):
     os.makedirs(plot_path)
     
 for run_idx, run_plots in enumerate(plots):
-    for idx, plot in enumerate(run_plots):
-        plot.write_image(f"{plot_path}/ig_{run_idx}_{idx}.png")
+    idx = 0
+    for batch in run_plots:
+        for plot in batch:
+            plot.write_image(f"{plot_path}/ig_{run_idx}_{idx}.png")
+            idx += 1

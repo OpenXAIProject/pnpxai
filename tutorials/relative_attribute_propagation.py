@@ -4,13 +4,13 @@ import os
 import torch
 from torchvision import datasets
 from torch.utils.data import DataLoader
-from torchvision.models.vgg import vgg11_bn, VGG11_BN_Weights
+from torchvision.models.vgg import vgg16_bn, VGG16_BN_Weights
 from torchvision.models.resnet import resnet18, ResNet18_Weights, BasicBlock, Bottleneck
 import torchvision.transforms as transforms
 
-from xai_pnp import Project
-from xai_pnp.explainers import Explainer, RAP
-from xai_pnp.explainers.relative_attribute_propagation.rules import RelPropSimple
+from open_xai import Project
+from open_xai.explainers import Explainer, RAP
+from open_xai.explainers.relative_attribute_propagation.rules import RelPropSimple
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -45,7 +45,7 @@ def vgg_relprop(self, r: torch.Tensor):
 
 
 def explain_vgg(project: Project, data_loader: DataLoader):
-    model = vgg11_bn(weights=VGG11_BN_Weights.IMAGENET1K_V1).to(device)
+    model = vgg16_bn(weights=VGG16_BN_Weights.IMAGENET1K_V1).to(device)
     explainer = RAP(model)
     explainer.method.relprop = partial(vgg_relprop, explainer.method)
 
@@ -136,10 +136,10 @@ def explain_resnet(project: Project, data_loader: DataLoader):
     return exp, outputs
 
 
-def visualize(explainer: Explainer, outputs, path: str):
+def visualize(explainer: Explainer, inputs, outputs, path: str):
     if not os.path.exists(path):
         os.makedirs(path)
-    visualizations = explainer.format_outputs_for_visualization(outputs) or []
+    visualizations = explainer.format_outputs_for_visualization(inputs, outputs) or []
     for idx, visualization in enumerate(visualizations):
         visualization.write_image(f"{path}/rap_{idx}.png")
 
@@ -152,12 +152,12 @@ def app():
     resnet_exp, resnet_outputs = explain_resnet(project, data_loader)
 
     visualizaion_path = f"./results/rap/resnet"
-    visualize(resnet_exp.explainer, resnet_outputs, visualizaion_path)
+    visualize(resnet_exp.explainer, data_loader, resnet_outputs, visualizaion_path)
 
     vgg_exp, vgg_outputs = explain_vgg(project, data_loader)
 
     visualizaion_path = f"./results/rap/vgg"
-    visualize(vgg_exp.explainer, vgg_outputs, visualizaion_path)
+    visualize(vgg_exp.explainer, data_loader, vgg_outputs, visualizaion_path)
 
 
 if __name__ == '__main__':
