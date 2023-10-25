@@ -4,8 +4,9 @@
   * Correctness - Infidelity
   * Robustness - Sensitivity
   * Completeness - TBD
-
-
+* Aggregation
+  * Score는 Normalization이 불가능하기 때문에 모든 score의 rank의 평균이 작은 순서대로 plotting
+  * 동점이면 infidelity가 가장 큰 순서대로 보여주기
 
 ```python
 import numpy as np
@@ -102,7 +103,3 @@ def max_sensitivity(phi, f, x, r):
         max_diff = max(max_diff, diff)
     return max_diff
 ```
-
-* Aggregation
-  * Score는 Normalization이 불가능하기 때문에 모든 score의 rank의 평균이 작은 순서대로 plotting
-  * 동점이면 infidelity가 가장 큰 순서대로 보여주기
