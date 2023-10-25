@@ -12,3 +12,4 @@
     * [UI Design](gitbooks/frontend/ui-design.md)
     * [Web Application](gitbooks/frontend/web-application.md)
   * [Resources](gitbooks/resources.md)
+  * [Collaboration Manual](gitbooks/collaboration-manual.md)
