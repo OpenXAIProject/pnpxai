@@ -39,8 +39,8 @@ def infidelity(f, phi, x, I_samples):
     return np.mean(errors)
 
 
-def gradient_sensitivity(phi, f, x, epsilon=1e-5):
-    """ Compute the gradient sensitivity.
+def sensitivity(phi, f, x, epsilon=1e-5):
+    """ Compute the sensitivity with gradient
 
     Parameters:
     - phi: Explanation function.
@@ -60,46 +60,23 @@ def gradient_sensitivity(phi, f, x, epsilon=1e-5):
     return np.max(np.abs(sensitivity))
 
 
-def local_lipschitz(phi, x, r):
-    """ Compute the local Lipschitz continuity.
 
-    Parameters:
-    - phi: Explanation function.
-    - x: Test input.
-    - r: Radius of perturbation.
-
-    Returns:
-    - Local Lipschitz continuity score.
-    """
-    # This is a simplified method using random sampling.
-    # It's recommended to use more structured methods for a precise measure.
-    num_samples = 100
-    max_diff = 0
-    for _ in range(num_samples):
-        perturbation = np.random.uniform(-r, r, size=x.shape)
-        diff = np.linalg.norm(phi(x + perturbation) - phi(x))
-        max_diff = max(max_diff, diff)
-    return max_diff / r
-
-
-def max_sensitivity(phi, f, x, r):
-    """ Compute the max-sensitivity.
-
-    Parameters:
-    - phi: Explanation function.
-    - f: Black-box predictor function.
-    - x: Test input.
-    - r: Radius of perturbation.
-
-    Returns:
-    - Max-sensitivity score.
-    """
-    # This is again a simplified method using random sampling.
-    num_samples = 100
-    max_diff = 0
-    for _ in range(num_samples):
-        perturbation = np.random.uniform(-r, r, size=x.shape)
-        diff = np.abs(phi(f, x + perturbation) - phi(f, x))
-        max_diff = max(max_diff, diff)
-    return max_diff
 ```
+
+\----------------------------------------------------------------------------------------------------
+
+## Evaluation Metrics for All Explainers
+
+* **Correctness**: Infidelity
+* **Robustness**: Sensitivity
+* **Completeness**: To be determined (TBD)
+
+## Aggregation
+
+* Since normalization of scores is not possible, plot them in the order of the smallest average rank of all scores.
+* In case of ties, display in the order of the greatest infidelity.
+
+
+
+
+

@@ -1,7 +1,7 @@
 ---
-description: Frontend 개발 방식
+description: Frontend Development
 ---
 
 # Frontend
 
-Do not have progress yet
+Frontend Development
