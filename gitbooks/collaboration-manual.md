@@ -81,6 +81,7 @@ description: Why and How to Collaborate
 #### 8. Completion and Updating Documentation
 
 * Once your task is completed and the pull request is merged, update the relevant sections in GitBook.
+  * You can do it by revising the documentation in gitbooks directory. It is not free to edit the Gitbook in Web UI for more than 2 members. Please notice that update of documentation in Gitbook should be on the `gitbooks` branch
 * This ensures that changes and new information are easily accessible to others.
 
 #### 9. Handling Critical or Discussable Issues
