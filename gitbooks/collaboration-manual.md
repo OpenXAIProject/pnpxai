@@ -98,3 +98,72 @@ description: Why and How to Collaborate
 
 * Open communication and regular updates in the Git project are crucial for smooth workflow and team synergy.
 * The workflow is designed to foster collaboration while respecting individual responsibilities and maintaining a high standard of quality.
+
+
+
+## Branch naming convention(Not Required)
+
+#### 1. **Feature Branches**
+
+These are branches where new features are developed.
+
+* **Format:** `feature/<feature-name>` or `feature/<issue-number>`
+* **Example:** `feature/login-system`, `feature/123`
+
+#### 2. **Bugfix Branches**
+
+Branches used for fixing bugs.
+
+* **Format:** `bugfix/<bug-name>` or `bugfix/<issue-number>`
+* **Example:** `bugfix/login-error`, `bugfix/456`
+
+#### 3. **Hotfix Branches**
+
+Urgent fixes that need to be applied directly to the production environment.
+
+* **Format:** `hotfix/<issue>` or `hotfix/<issue-number>`
+* **Example:** `hotfix/missing-file`, `hotfix/789`
+
+#### 4. **Release Branches**
+
+Used for preparing releases.
+
+* **Format:** `release/<version>` or `release/<release-date>`
+* **Example:** `release/1.0.1`, `release/october-2023`
+
+#### 5. **Refactor Branches**
+
+Branches for code refactoring.
+
+* **Format:** `refactor/<description>`
+* **Example:** `refactor/cleanup-routing`
+
+#### 6. **Documentation Branches**
+
+For updating or adding documentation.
+
+* **Format:** `docs/<description>` or `docs/<issue-number>`
+* **Example:** `docs/readme-update`, `docs/321`
+
+#### 7. **Experimental/Branches for Testing**
+
+Branches for experiments or trials.
+
+* **Format:** `experiment/<description>` or `test/<description>`
+* **Example:** `experiment/new-algorithm`, `test/ui-overhaul`
+
+#### 8. **Personal/Developer Branches**
+
+Personal branches for developers, typically for work-in-progress (WIP) code.
+
+* **Format:** `<username>/<description>`
+* **Example:** `john/feature-x-work`, `alice/bugfix-y`
+
+#### General Guidelines
+
+* **Be Descriptive and Concise:** The branch name should briefly describe the purpose of the branch.
+* **Use Dashes to Separate Words:** Avoid spaces and use dashes (`-`) for readability.
+* **Avoid Special Characters:** Stick to alphanumeric characters and dashes.
+* **Consider Including Issue/Task Numbers:** If your team uses a ticketing system, including the issue or task number can be helpful for traceability.
+
+Remember, the key to a good naming convention is consistency and clarity. The convention should make it easy for anyone in the team to understand the purpose of a branch at a glance.
