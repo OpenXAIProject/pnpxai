@@ -5,6 +5,6 @@ author = "Team SAIL"
 author_email = "open.xai@gmail.com"
 version = "0.0.1"
 full_version = "0.0.1"
-git_version = '4b34f391d9cef824567c3318de254fc702be5c22'
+git_version = '38689708876a9f8496dae8e1651fa645d2989abb'
 release = False
 homepage = "https://github.com/jasmcaus/caer"
