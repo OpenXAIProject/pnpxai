@@ -1,5 +1,5 @@
 from dataclasses import dataclass, asdict
-from typing import Literal, List, Dict, Tuple, Optional, Callable, Union
+from typing import Literal, List, Optional, Callable, Union
 
 from torch import nn
 from torch.fx import Node, Graph, symbolic_trace
@@ -13,8 +13,6 @@ class NodeInfo:
     ]
     name: str
     target: Union[Callable, str]
-    # args: Tuple
-    # kwargs: Dict
 
     @classmethod
     def from_node(cls, n: Node):
@@ -27,7 +25,7 @@ class NodeInfo:
         return self
     
     # set original node from the graph
-    def _set_node(self, graph) -> Node:
+    def _set_node(self, graph):
         # [GH] no `get_node` method in `torch.fx.Graph`. just find.
         for n in graph.nodes:
             if n.name == self.name:
@@ -37,7 +35,7 @@ class NodeInfo:
     @property
     def args(self):
         return tuple([
-            NodeInfo.from_node(n) if isinstance(a, Node) else a
+            NodeInfo.from_node(a) if isinstance(a, Node) else a
             for a in self._node.args
         ])
     
