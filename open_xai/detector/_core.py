@@ -1,8 +1,16 @@
+import _operator
 from dataclasses import dataclass, asdict
-from typing import Literal, List, Optional, Callable, Union
+from typing import Literal, List, Tuple, Optional, Callable, Union
 
-from torch import nn
+import torch
 from torch.fx import Node, Graph, symbolic_trace
+
+from .filters import conv_filter, pool_filter
+
+SUPPORTED_FUNCTION_MODULES = {
+    "torch": torch,
+    "operator": _operator,
+}
 
 
 @dataclass
@@ -19,7 +27,7 @@ class NodeInfo:
         self = cls(
             opcode = n.op,
             name = n.name,
-            target = n.target,
+            target = n._pretty_print_target(n.target),
         )
         self._set_node(n.graph)
         return self
@@ -32,6 +40,10 @@ class NodeInfo:
                 self._node = n
     
     # cloning main attributions
+    @property
+    def meta(self):
+        return self._node.meta
+    
     @property
     def args(self):
         return tuple([
@@ -67,33 +79,43 @@ class NodeInfo:
     
     # additional properties for detection
     @property
-    def operator(self, base_model: Optional[nn.Module]=None) -> Optional[Callable]:
+    def operator(self) -> Optional[Callable]:
         if self.opcode == "call_module":
-            target = model if base_model else self._node.graph.owning_module
-            for s in self.target.split("."):
-                target = getattr(target, s)
-            return target
+            return self._get_operator(self.target.split("."))
         elif self.opcode == "call_function":
-            return self.target # target is Callable itself
-        # self.op == "call_method": Usually, call a method of torch.Tensor but whatif not
-        # self.op in ["input", "output", "get_attr"]: non-operator output
+            targets = self.target.split(".")
+            root_module = SUPPORTED_FUNCTION_MODULES[targets.pop(0)]
+            return self._get_operator(targets, root_module)
         return
+    
+    @property
+    def owning_module(self) -> Optional[Tuple[str, torch.nn.Module]]:
+        if self.opcode in ["call_module", "call_function"]:
+            if self.meta.get("nn_module_stack"):
+                nm = next(reversed(self.meta["nn_module_stack"]))
+                return nm, self._get_operator(nm.split("."))
+        return
+    
+    def _get_operator(self, targets: List[str], root_module=None):
+        operator = root_module if root_module else self._node.graph.owning_module
+        for s in targets:
+            operator = getattr(operator, s)
+        return operator
     
     # convert data format
     def to_dict(self):
         return asdict(self)
     
     # [TODO] to_json for visualization
-    def to_json(self):
+    def to_json_serializable(self):
         pass
-
 
 class ModelArchitecture:
     def __init__(self, graph: Graph):
         self.graph = graph
     
     @classmethod
-    def from_model(cls, model: nn.Module):
+    def from_model(cls, model: torch.nn.Module):
         traced_model = symbolic_trace(model)
         return cls(graph=traced_model.graph)
     
@@ -106,9 +128,10 @@ class ModelArchitecture:
                 return NodeInfo.from_node(n)
         return # [TODO] Error for no result?
         
-    def find_node(self, filter_func: Callable, base_node: Optional[NodeInfo]=None, all=False):
-        if not base_node:
-            base_node = self.list_nodes()[0]
+    def find_node(self, filter_func: Callable, root: Optional[NodeInfo]=None, all=False):
+        # [TODO] breadth first / depth first
+        if not root:
+            root = self.list_nodes()[0]
         def _find_node(n):
             if n == None:
                 return None
@@ -117,9 +140,9 @@ class ModelArchitecture:
             else:
                 return _find_node(n.next)
         if not all:
-            return _find_node(base_node)
+            return _find_node(root)
         nodes = []
-        n = base_node
+        n = root
         while True:
             found = _find_node(n)
             if not found:
@@ -128,21 +151,20 @@ class ModelArchitecture:
             n = found.next
         return nodes
     
-    def find_cam_target_node(self):
+    def find_cam_target_module(self) -> Optional[Tuple[str, torch.nn.Module]]:
         # filters to find target node
-        conv_filter = lambda n: (
-            n.opcode == "call_module"
-            and n.operator.__module__ == "torch.nn.modules.conv"
-        )
-        pool_filter = lambda n: (
-            n.opcode == "call_module"
-            and n.operator.__module__ == "torch.nn.modules.pooling"
-            and len(n.users) == 1
-        )
         first_conv_node = self.find_node(conv_filter)
         if not first_conv_node:
             return
-        final_pool_node = self.find_node(pool_filter)
-        if not final_pool_node:
+        pool_nodes = self.find_node(pool_filter, all=True)
+        if not pool_nodes:
             return
-        return final_pool_node.prev
+        return pool_nodes[-1].prev.owning_module
+    
+    def to_dict(self):
+        nodes = []
+        edges = []
+        for n in self.list_nodes():
+            nodes.append(n.to_dict())
+            edges += [{"source": n.name, "target": u.name} for u in n.users]
+        return {"nodes": nodes, "edges": edges}

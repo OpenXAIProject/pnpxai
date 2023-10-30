@@ -5,4 +5,4 @@ def conv_filter(n):
     return module_filter(n, "torch.nn.modules.conv")
 
 def pool_filter(n):
-    return module_filter(n, "torch.nn.modules.pooing")
+    return module_filter(n, "torch.nn.modules.pooling")
