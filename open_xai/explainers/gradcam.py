@@ -1,5 +1,7 @@
 from typing import Any, List, Sequence, Optional
-from torch import Tensor
+
+from torch import Tensor, nn
+
 from captum.attr import LayerGradCam
 from captum._utils.typing import TargetType
 from plotly import express as px
@@ -12,18 +14,37 @@ from open_xai.detector import ModelArchitecture
 class GradCam(Explainer):
     def __init__(self, model: Model, layer: Optional[Model]=None):
         super().__init__(model)
-        self.layer = layer if layer else self._locate_candidate_layer()
+        self.layer = layer if layer else self._locate_candidate_layer(model)
         self.method = LayerGradCam(forward_func=self.model, layer=self.layer)
     
-    def _locate_candidate_layer(self):
-        ma = ModelArchitecture.from_model(self.model)
-        candidate = ma.find_cam_target_module() # (name, module)
-        assert candidate, "GradCam applicable layer not found."
-        print(f"GradCam target layer not given. Automatically set it as '{candidate[0]}'")
-        module = self.model
-        for s in candidate[0].split("."):
-            module = getattr(module, s)
-        return module
+    def _locate_candidate_layer(self, model):
+        ma = ModelArchitecture(model)
+
+        # check whether conv exists
+        conv_filter = lambda n: isinstance(n.operator, nn.Conv2d)
+        first_conv_node = ma.find_node(conv_filter)
+        assert first_conv_node, "GradCam applicable layer not found."
+
+        # check whether the conv is pooled
+        pool_filter = lambda n: (
+            n.opcode == "call_module"
+            and n.operator.__module__ == "torch.nn.modules.pooling"
+        )
+        pool_nodes = ma.find_node(pool_filter, root=first_conv_node, all=True)
+        assert pool_nodes, "GradCam applicable layer not found"
+
+        # get the final pooling node
+        final_pool_node = pool_nodes[-1]
+
+        # cam target node is before the final pooling node
+        cam_target_node = final_pool_node.prev
+
+        # get the layer
+        accessible_name = next(reversed(cam_target_node.meta["nn_module_stack"]))
+        m = model
+        for s in accessible_name.split("."):
+            m = getattr(m, s)
+        return m
 
     def run(
         self,
