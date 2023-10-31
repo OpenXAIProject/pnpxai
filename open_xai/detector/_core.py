@@ -3,17 +3,16 @@ from dataclasses import dataclass, asdict
 from typing import Literal, List, Tuple, Optional, Callable, Union
 
 import torch
-from torch.fx import Node, Graph, symbolic_trace
-
-from .filters import conv_filter, pool_filter
+from torch.fx import Node, symbolic_trace
 
 SUPPORTED_FUNCTION_MODULES = {
     "torch": torch,
     "operator": _operator,
 }
 
+REPLACE_PREFIX = "_replaced_"
 
-@dataclass
+@dataclass(init=True)
 class NodeInfo:
     opcode: Literal[
         "placeholder", "get_attr", "call_function",
@@ -22,12 +21,21 @@ class NodeInfo:
     name: str
     target: Union[Callable, str]
 
+    def __init__(self, opcode, name, target, _operator=None, _from_node=False):
+        self.opcode = opcode
+        self.name = name
+        self.target = target
+
+        self._from_node = _from_node
+        self._operator = _operator
+
     @classmethod
     def from_node(cls, n: Node):
         self = cls(
             opcode = n.op,
             name = n.name,
             target = n._pretty_print_target(n.target),
+            _from_node = True
         )
         self._set_node(n.graph)
         return self
@@ -54,7 +62,7 @@ class NodeInfo:
     @property
     def kwargs(self):
         return {
-            k: NodeInfo.from_node(n) if isinstance(v, Node) else v
+            k: NodeInfo.from_node(v) if isinstance(v, Node) else v
             for k, v in self._node.kwargs
         }
     
@@ -80,13 +88,14 @@ class NodeInfo:
     # additional properties for detection
     @property
     def operator(self) -> Optional[Callable]:
-        if self.opcode == "call_module":
-            return self._get_operator(self.target.split("."))
-        elif self.opcode == "call_function":
-            targets = self.target.split(".")
-            root_module = SUPPORTED_FUNCTION_MODULES[targets.pop(0)]
-            return self._get_operator(targets, root_module)
-        return
+        if self._from_node:
+            if self.opcode == "call_module":
+                return self._get_operator(self.target.split("."))
+            elif self.opcode == "call_function":
+                targets = self.target.split(".")
+                root_module = SUPPORTED_FUNCTION_MODULES[targets.pop(0)]
+                return self._get_operator(targets, root_module)
+        return self._operator
     
     @property
     def owning_module(self) -> Optional[Tuple[str, torch.nn.Module]]:
@@ -95,6 +104,17 @@ class NodeInfo:
                 nm = next(reversed(self.meta["nn_module_stack"]))
                 return nm, self._get_operator(nm.split("."))
         return
+    
+    def set_operator(self, operator: Callable):
+        if self._from_node:
+            raise Exception("Cannot set operator for NodeInfo generated from a node.")
+        self._valid_operator(operator)
+        self._operator = operator
+        return self
+
+    # [TODO] validation for operator e.g. if it is module, opcode should be "call_module"
+    def _valid_operator(self, operator: Callable):
+        pass
     
     def _get_operator(self, targets: List[str], root_module=None):
         operator = root_module if root_module else self._node.graph.owning_module
@@ -111,19 +131,15 @@ class NodeInfo:
         pass
 
 class ModelArchitecture:
-    def __init__(self, graph: Graph):
-        self.graph = graph
-    
-    @classmethod
-    def from_model(cls, model: torch.nn.Module):
-        traced_model = symbolic_trace(model)
-        return cls(graph=traced_model.graph)
+    def __init__(self, model):
+        self.model = model
+        self.traced_model = symbolic_trace(model)
     
     def list_nodes(self) -> List[NodeInfo]:
-        return [NodeInfo.from_node(n) for n in self.graph.nodes]
+        return [NodeInfo.from_node(n) for n in self.traced_model.graph.nodes]
     
     def get_node(self, name: str) -> NodeInfo:
-        for n in self.graph.nodes:
+        for n in self.traced_model.graph.nodes:
             if n.name == name:
                 return NodeInfo.from_node(n)
         return # [TODO] Error for no result?
@@ -151,16 +167,29 @@ class ModelArchitecture:
             n = found.next
         return nodes
     
-    def find_cam_target_module(self) -> Optional[Tuple[str, torch.nn.Module]]:
-        # filters to find target node
-        first_conv_node = self.find_node(conv_filter)
-        if not first_conv_node:
-            return
-        pool_nodes = self.find_node(pool_filter, all=True)
-        if not pool_nodes:
-            return
-        return pool_nodes[-1].prev.owning_module
-    
+    def replace_node(self, node: NodeInfo, new_node: NodeInfo):
+        # validations
+        assert new_node.opcode == "call_module", "call_module only"
+        assert new_node._operator, "Must set operator for new_node: new_node.set_operator(operator)."
+        if new_node.name is not None:
+            exists = self.get_node(name=new_node.name)
+            assert exists, f"A node named {new_node.name} already exists."
+        
+        # replace
+        with self.traced_model.graph.inserting_after(node._node):
+            new_name = new_node.name if new_node.name else f"{REPLACE_PREFIX}{node.name}"
+            self.traced_model.add_submodule(new_name, new_node.operator)
+            _new_node = self.traced_model.graph.call_module(
+                new_name,
+                node._node.args,
+                node._node.kwargs,
+            )
+            node._node.replace_all_uses_with(_new_node)
+        self.traced_model.graph.erase_node(node._node)
+        self.traced_model.graph.lint()
+        self.traced_model.recompile()
+        return self
+            
     def to_dict(self):
         nodes = []
         edges = []
