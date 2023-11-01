@@ -39,10 +39,12 @@ class GradCam(Explainer):
         # cam target node is before the final pooling node
         cam_target_node = final_pool_node.prev
 
-        # get the layer
-        accessible_name = next(reversed(cam_target_node.meta["nn_module_stack"]))
+        # node.owning_module is the name of the lowest-level module containing the node.operator
+        assert cam_target_node.owning_module, "Target layer must have name"
+
+        # get the module
         m = model
-        for s in accessible_name.split("."):
+        for s in cam_target_node.owning_module.split("."):
             m = getattr(m, s)
         return m
 
