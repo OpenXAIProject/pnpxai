@@ -12,7 +12,7 @@ SUPPORTED_FUNCTION_MODULES = {
 
 REPLACE_PREFIX = "_replaced_"
 
-@dataclass(init=True)
+@dataclass #(init=True)
 class NodeInfo:
     opcode: Literal[
         "placeholder", "get_attr", "call_function",
@@ -21,13 +21,13 @@ class NodeInfo:
     name: str
     target: Union[Callable, str]
 
-    def __init__(self, opcode, name, target, _operator=None, _from_node=False):
-        self.opcode = opcode
-        self.name = name
-        self.target = target
+    # def __init__(self, opcode, name, target, _operator=None, _from_node=False):
+    #     self.opcode = opcode
+    #     self.name = name
+    #     self.target = target
 
-        self._from_node = _from_node
-        self._operator = _operator
+    #     self._from_node = _from_node
+    #     self._operator = _operator
 
     @classmethod
     def from_node(cls, n: Node):
@@ -35,17 +35,45 @@ class NodeInfo:
             opcode = n.op,
             name = n.name,
             target = n._pretty_print_target(n.target),
-            _from_node = True
         )
+        self._mode = "from_node"
         self._set_node(n.graph)
         return self
-    
+
+    @classmethod
+    def from_module(cls, m: torch.nn.Module):
+        self = cls(
+            opcode = "call_module",
+            name = None,
+            target = None,
+        )
+        self._mode = "from_module"
+        self._set_operator(m)
+        return self
+
     # set original node from the graph
     def _set_node(self, graph):
+        assert self._mode == "from_node"
         # [GH] no `get_node` method in `torch.fx.Graph`. just find.
         for n in graph.nodes:
             if n.name == self.name:
                 self._node = n
+    
+    def _set_operator(self, operator: Callable):
+        assert self._mode == "from_module"
+        self._valid_operator(operator)
+        self._operator = operator
+        return self
+
+    # [TODO] validation for operator
+    def _valid_operator(self, operator: Callable):
+        pass
+    
+    def _get_operator(self, targets: List[str], root_module=None):
+        operator = root_module if root_module else self._node.graph.owning_module
+        for s in targets:
+            operator = getattr(operator, s)
+        return operator
     
     # cloning main attributions
     @property
@@ -88,40 +116,24 @@ class NodeInfo:
     # additional properties for detection
     @property
     def operator(self) -> Optional[Callable]:
-        if self._from_node:
+        if self._mode == "from_node":
             if self.opcode == "call_module":
                 return self._get_operator(self.target.split("."))
             elif self.opcode == "call_function":
                 targets = self.target.split(".")
                 root_module = SUPPORTED_FUNCTION_MODULES[targets.pop(0)]
                 return self._get_operator(targets, root_module)
+            return
         return self._operator
     
     @property
-    def owning_module(self) -> Optional[Tuple[str, torch.nn.Module]]:
+    def owning_module(self) -> Optional[str]:
         if self.opcode in ["call_module", "call_function"]:
             if self.meta.get("nn_module_stack"):
                 nm = next(reversed(self.meta["nn_module_stack"]))
-                return nm, self._get_operator(nm.split("."))
+                return nm
         return
-    
-    def set_operator(self, operator: Callable):
-        if self._from_node:
-            raise Exception("Cannot set operator for NodeInfo generated from a node.")
-        self._valid_operator(operator)
-        self._operator = operator
-        return self
-
-    # [TODO] validation for operator e.g. if it is module, opcode should be "call_module"
-    def _valid_operator(self, operator: Callable):
-        pass
-    
-    def _get_operator(self, targets: List[str], root_module=None):
-        operator = root_module if root_module else self._node.graph.owning_module
-        for s in targets:
-            operator = getattr(operator, s)
-        return operator
-    
+        
     # convert data format
     def to_dict(self):
         return asdict(self)
