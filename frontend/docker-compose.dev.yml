@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  database:
+    image: postgres:15-alpine
+    container_name: sailab_aki_db_dev
+    ports:
+      - "5432:${DB_PORT}"
+    environment:
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_DATABASE}
+    volumes:
+      - sailab-db-data-dev:/var/lib/postgresql/data
+    networks:
+      aki_network_dev:
+        aliases:
+          - database
+
+  backend:
+    depends_on:
+      - database
+    container_name: sailab_aki_backend_dev
+    build:
+      context: ./aki_backend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./aki_backend:/project
+    expose:
+      - ${BACKEND_PORT}
+    tty: true
+    networks:
+      aki_network_dev:
+        aliases:
+          - backend
+    env_file:
+      - .env.dev
+
+  frontend:
+    depends_on:
+      - backend
+    container_name: sailab_aki_frontend_dev
+    build:
+      context: ./aki_frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./aki_frontend:/project
+      - /project/node_modules
+    expose:
+      - ${VITE_FRONTEND_PORT}
+    tty: true
+    networks:
+      aki_network_dev:
+        aliases:
+          - frontend
+    env_file:
+      - ./.env.dev
+
+  nginx:
+    image: nginx:1.23-alpine
+    container_name: sailab_aki_nginx_dev
+    volumes:
+      - ./aki_nginx/nginx-dev.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - 8080:80
+    networks:
+      - aki_network_dev
+    depends_on:
+      - backend
+      - frontend
+
+volumes:
+  sailab-db-data-dev:
+    driver: local
+
+networks:
+  aki_network_dev:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.10.2.0/24
