@@ -10,7 +10,7 @@ import torchvision.transforms as transforms
 
 from open_xai import Project
 from open_xai.explainers import Explainer, RAP
-from open_xai.explainers.relative_attribute_propagation.rules import RelPropSimple
+from open_xai.explainers.rap.rules import RelPropSimple
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 

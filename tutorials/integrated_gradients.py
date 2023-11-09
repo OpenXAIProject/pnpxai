@@ -78,9 +78,9 @@ model.eval()
 
 
 project = Project('test_project')
-exp = project.explain(IntegratedGradients(model))
-run = exp.run(inputs, target=labels[idx], baselines=inputs * 0, return_convergence_delta=True)
+exp = project.explain([IntegratedGradients(model)])
 
+run = exp.run(inputs, target=labels[idx], baselines=inputs * 0, return_convergence_delta=True)
 plots = exp.visualize()
 
 plot_path = 'results/ig'

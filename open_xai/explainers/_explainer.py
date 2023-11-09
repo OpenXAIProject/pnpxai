@@ -1,9 +1,10 @@
 from abc import abstractmethod
-from typing import Any, Sequence
+from dataclasses import dataclass
+from typing import Any, Sequence, Optional
 
 import plotly.graph_objects as go
-from torch import nn
-from open_xai.core._types import Model, DataSource
+
+from open_xai.core._types import Model, DataSource, Args
 
 
 class Explainer:
@@ -12,8 +13,17 @@ class Explainer:
         pass
 
     @abstractmethod
-    def run(self, data: DataSource, *args: Any, **kwargs: Any) -> DataSource:
+    def attribute(self, data: DataSource, *args: Any, **kwargs: Any) -> DataSource:
         pass
 
     def format_outputs_for_visualization(self, inputs: DataSource, outputs: DataSource, *args, **kwargs) -> Sequence[go.Figure]:
         pass
+
+
+@dataclass
+class ExplainerWArgs:
+    explainer: Explainer
+    args: Optional[Args] = None
+
+    def has_args(self):
+        return self.args is not None

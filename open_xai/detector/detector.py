@@ -1,67 +1,59 @@
+from dataclasses import dataclass
 from functools import partial
-from typing import Optional, Union, Sequence
-
-import torch
-
-from open_xai.core._types import Model
-from open_xai.explainers._explainer import Explainer
-from open_xai.explainers import IntegratedGradients, RAP
-
-from .core import ModelArchitecture
+import torch.nn as nn
 
 
-class Detector:
+@dataclass
+class DetectorOutput:
+    architecture: set
+
+
+class ModelArchitectureDetector:
     def __init__(self):
-        pass
+        self.modules = []
 
-    def __call__(self, model: Model) -> Explainer:
-        return RAP(model)
+    def extract_modules(self, model):
+        modules = []
+        for module in model.children():
+            if isinstance(module, nn.Sequential) or isinstance(module, nn.ModuleList):
+                modules.extend(self.extract_modules(module))
+            else:
+                modules.append(module)
+        return modules
 
-
-def get_model_architecture(
-        model, # Model,
-        input: Union[torch.Tensor, Sequence[torch.Tensor]],
-    ) -> ModelArchitecture:
-    model_architecture = ModelArchitecture()
-    module_mode = model.training
-    model.eval()
-    def _record_layer_info(
-        module, #: Model,
-        input: torch.Tensor,
-        output: torch.Tensor,
-        name: Optional[str] = None,
-    ) -> None:
-        # [TODO] ugly
-        if not torch.is_tensor(output):
-            if any(isinstance(module, m) for m in MULTIPLE_OUTPUT_MODULES):
-                output = output[0]
-        model_architecture._add_data(dict(
-            name = name,
-            module_name = module.__module__,
-            class_name = module.__class__.__name__,
-            output_size = None, # insert in the second pass
-            grad_fn = None, # insert in the second pass
-        ))
-    hook_handles = []
-    for n, m in model.named_modules():
-         # if a layer is not named, the layer is not recorded
-        hook_handles.append(
-            m.register_forward_hook(
-                partial(_record_layer_info, name=n)
-            )
+    def __call__(self, model):
+        self.modules = self.extract_modules(model)
+        return DetectorOutput(
+            architecture = set([type(module) for module in self.modules])
         )
 
-    if torch.is_tensor(input):
-        _ = model(input)
-    else:
-        _ = model(*input)
-    for handle in hook_handles:
-        handle.remove()
 
-    model.training = module_mode
-    return model_architecture
+class ModelArchitectureDetectorV2:
+    def __init__(self):
+        self.modules = []
+        # self.inputs = []
+        # self.outputs = []
 
+    def _record_layer_info(self, module, input, output):
+        self.modules.append(module)
+        # self.inputs.append(input)
+        # self.outputs.append(output)
+    
+    def extract_modules(self, model, sample):
+        module_mode = model.training
+        model.eval()
 
-MULTIPLE_OUTPUT_MODULES = {
-    torch.nn.modules.activation.MultiheadAttention,
-}
+        hook_handles = []
+        for name, module in model.named_modules():
+            hook_handles.append(module.register_forward_hook(partial(self._record_layer_info)))
+        model(sample)
+        for handle in hook_handles:
+            handle.remove()
+        model.training = module_mode
+
+    def __call__(self, model, sample):
+        self.extract_modules(model, sample)
+        # pdb.set_trace()
+        return DetectorOutput(
+            architecture = set([type(module) for module in self.modules])
+        )

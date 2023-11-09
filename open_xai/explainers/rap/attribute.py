@@ -9,7 +9,7 @@ from torch.autograd import Variable
 
 from open_xai.core._types import Model, DataSource
 from open_xai.explainers._explainer import Explainer
-from open_xai.explainers.relative_attribute_propagation.rap import RelativeAttributePropagation
+from open_xai.explainers.rap.rap import RelativeAttributePropagation
 
 
 class RAP(Explainer):

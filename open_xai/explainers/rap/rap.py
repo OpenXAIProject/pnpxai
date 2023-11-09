@@ -1,7 +1,7 @@
 from typing import List, Dict
 
 from torch import nn, Tensor
-from open_xai.explainers.relative_attribute_propagation import rules
+from open_xai.explainers.rap import rules
 
 SUPPORTED_LAYERS: Dict[type[nn.Module], type[rules.RelProp]] = {
     nn.Sequential: rules.Sequential,

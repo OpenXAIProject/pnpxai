@@ -1,34 +1,26 @@
-from typing import Any, List, Sequence, Tuple
-import plotly.graph_objects as go
+from typing import Any, List, Sequence
 from torch import Tensor
-from captum.attr import KernelShap as KS
-from captum._utils.typing import BaselineType, TargetType
+from captum.attr import GuidedGradCam as GuidedGradCamCaptum
+from captum._utils.typing import TargetType
 from plotly import express as px
 from plotly.graph_objects import Figure
-import numpy as np
 
 from open_xai.core._types import Model, DataSource
 from open_xai.explainers._explainer import Explainer
 
-from typing import Union, Literal
 
-
-class KernelShap(Explainer):
+class GuidedGradCam(Explainer):
     def __init__(self, model: Model):
         super().__init__(model)
-        self.method = KS(model)
+        self.method = GuidedGradCamCaptum(model)
 
-    def run(
+    def attribute(
         self,
         data: DataSource,
-        baselines: BaselineType = None,
         target: TargetType = None,
         additional_forward_args: Any = None,
-        feature_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
-        n_samples: int = 25,
-        perturbations_per_eval: int = 1,
-        return_input_shape: bool = True,
-        show_progress: bool = False
+        interpolate_mode: str = "nearest",
+        attribute_to_layer_input: bool = False,
     ) -> List[Tensor]:
         attributions = []
 
@@ -36,16 +28,13 @@ class KernelShap(Explainer):
             data = [data]
 
         for datum in data:
+
             attributions.append(self.method.attribute(
                 datum,
-                baselines,
                 target,
                 additional_forward_args,
-                feature_mask,
-                n_samples,
-                perturbations_per_eval,
-                return_input_shape,
-                show_progress,
+                interpolate_mode,
+                attribute_to_layer_input,
             ))
 
         return attributions
