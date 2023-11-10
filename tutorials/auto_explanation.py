@@ -7,8 +7,8 @@ import torchvision.transforms as transforms
 
 from torchvision.models.resnet import resnet18, ResNet18_Weights
 
-from open_xai.utils import set_seed
-from open_xai import Project, AutoExplanationInput
+from pnpxai.utils import set_seed
+from pnpxai import Project, AutoExplanationInput
 
 import pdb
 

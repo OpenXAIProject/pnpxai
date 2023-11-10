@@ -12,8 +12,8 @@ import torchvision.transforms as transforms
 import torchvision.transforms.functional as TF
 from torchvision import models
 
-from open_xai import Project
-from open_xai.explainers import IntegratedGradients
+from pnpxai import Project
+from pnpxai.explainers import IntegratedGradients
 
 
 transform = transforms.Compose(

@@ -12,8 +12,8 @@ import torchvision.transforms as transforms
 import torchvision.transforms.functional as TF
 from torchvision import models
 
-from open_xai import Project
-from open_xai.explainers import KernelShap
+from pnpxai import Project
+from pnpxai.explainers import KernelShap
 
 
 transform = transforms.Compose(
