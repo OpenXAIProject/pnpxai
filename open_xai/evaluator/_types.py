@@ -3,6 +3,6 @@ from typing import Dict
 
 @dataclass
 class EvaluatorOutput:
-    explanation_results: dict
-    evaluation_results: dict
+    # explanation_results: dict
+    # evaluation_results: dict
     metrics_results: dict

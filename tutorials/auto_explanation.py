@@ -1,13 +1,11 @@
 import os
-from dataclasses import dataclass
 import json
 from PIL import Image
 import torch
-import torch.nn as nn
 from torch.utils.data import Dataset
-import torchvision
-import torchvision.datasets as datasets
 import torchvision.transforms as transforms
+
+from torchvision.models.resnet import resnet18, ResNet18_Weights
 
 from open_xai.utils import set_seed
 from open_xai import Project, AutoExplanationInput
@@ -20,14 +18,14 @@ import pdb
 #-----------------------------------------------------------------------------#
 
 set_seed(seed=0)
-device = torch.device("cuda:2" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 #-----------------------------------------------------------------------------#
 #----------------------------------- model -----------------------------------#
 #-----------------------------------------------------------------------------#
 
-model = torchvision.models.resnet18(pretrained=True).to(device)
+model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1).to(device)
 
 
 #-----------------------------------------------------------------------------#
@@ -64,25 +62,17 @@ class ImageNetDataset(Dataset):
     def idx_to_label(self, idx):
         return self.idx_to_labels[str(idx)][1]
 
-class ToDevice:
-    def __init__(self, device):
-        self.device = device
-
-    def __call__(self, tensor):
-        return tensor.to(self.device)
-
 data_transforms = transforms.Compose([
     transforms.Resize(256),
     transforms.CenterCrop(224),
-    transforms.ToTensor(),
-    ToDevice(device),
+    transforms.ToTensor()
 ])
 
 imagenet_data = ImageNetDataset(root_dir='./data/ImageNet/', transform=data_transforms)
 loaders = {
     'test': torch.utils.data.DataLoader(
         imagenet_data, 
-        batch_size=32, 
+        batch_size=8, 
         shuffle=True, 
         num_workers=0,
         pin_memory=True,
@@ -99,10 +89,13 @@ user_input = AutoExplanationInput(
     data=loaders['test'],
     question='why',
     task='image',
+    input_extractor=lambda x: x[0].to(device),
+    label_extractor=lambda x: x[1].to(device),
 )
 
 # pdb.set_trace()
 
-pnp_xai_project = Project()
+pnp_xai_project = Project('test_project')
 exp = pnp_xai_project.auto_explain(user_input)
-exp.visualize('results/auto')
+print(exp.runs[0].explanation[0])
+print(exp.runs[0].evaluation)

@@ -16,6 +16,7 @@ class RAP(Explainer):
     def __init__(self, model: Model):
         super().__init__(model)
         self.method = RelativeAttributePropagation(model)
+        self.device = next(self.model.parameters()).device
 
     def compute_pred(self, output):
         # get the index of the max log-probability
@@ -28,28 +29,20 @@ class RAP(Explainer):
         Tt = Variable(T).cuda()
         return Tt
 
-    def run(self, data: DataSource, *args: Any, **kwargs: Any) -> DataSource:
+    def run(self, inputs: DataSource, target: DataSource, *args: Any, **kwargs: Any) -> DataSource:
         attributions = []
 
-        if torch.is_tensor(data):
-            data = [data]
+        if not (torch.is_tensor(datum)):
+            datum = datum[0]
 
-        device = next(self.model.parameters()).device
+        datum = inputs.to(self.device)
+        outputs = self.model(datum)
+        preds = self.compute_pred(outputs)
+        relprop = self.method.relprop(preds, *args, **kwargs)
+        relprop = relprop.sum(dim=1, keepdim=True)
+        attributions = relprop.permute(0, 2, 3, 1)
 
-        for datum in data:
-            if not (torch.is_tensor(datum)):
-                datum = datum[0]
-
-            datum = datum.to(device)
-            outputs = self.model(datum)
-            preds = self.compute_pred(outputs)
-            relprop = self.method.relprop(preds, *args, **kwargs)
-            relprop = relprop.sum(dim=1, keepdim=True)
-            relprop = relprop.permute(0, 2, 3, 1)
-
-            attributions.append(relprop)
-
-        return torch.concat(attributions, dim=0)
+        return attributions
 
     def format_outputs_for_visualization(self, inputs: DataSource, outputs: DataSource) -> List[go.Figure]:
         return [px.imshow(output.sum(axis=-1)) for output in outputs]

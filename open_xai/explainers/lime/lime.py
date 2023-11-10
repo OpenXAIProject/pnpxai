@@ -1,5 +1,5 @@
 from typing import Any, List, Sequence, Tuple
-from torch import Tensor
+from torch import Tensor, LongTensor
 from captum.attr import Lime as LimeCaptum
 from captum._utils.typing import BaselineType, TargetType
 from plotly import express as px
@@ -20,37 +20,33 @@ class Lime(Explainer):
 
     def attribute(
         self,
-        data: DataSource,
-        baselines: BaselineType = None,
+        inputs: DataSource,
         target: TargetType = None,
+        baselines: BaselineType = None,
         additional_forward_args: Any = None,
         feature_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
         n_samples: int = 25,
         perturbations_per_eval: int = 1,
         return_input_shape: bool = True,
         show_progress: bool = False
-    ) -> List[Tensor]:
-        attributions = []
+    ) -> DataSource:
+        if feature_mask is None:
+            feature_mask = felzenszwalb(
+                inputs.permute(0, 2, 3, 1).cpu().numpy()[0], scale=250
+            )
+            feature_mask = LongTensor(feature_mask).to(self.device)
 
-        if type(data) is Tensor:
-            data = [data]
-
-        for datum in data:
-            if feature_mask is None:
-                feature_mask = felzenszwalb(datum.cpu().numpy()[0], scale=250)
-                feature_mask = Tensor(feature_mask).cuda().to(self.device)
-
-            attributions.append(self.method.attribute(
-                datum,
-                baselines,
-                target,
-                additional_forward_args,
-                feature_mask,
-                n_samples,
-                perturbations_per_eval,
-                return_input_shape,
-                show_progress,
-            ))
+        attributions = self.method.attribute(
+            inputs,
+            baselines,
+            target,
+            additional_forward_args,
+            feature_mask,
+            n_samples,
+            perturbations_per_eval,
+            return_input_shape,
+            show_progress,
+        )
 
         return attributions
 

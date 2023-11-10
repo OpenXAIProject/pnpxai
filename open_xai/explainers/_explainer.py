@@ -13,10 +13,10 @@ class Explainer:
         pass
 
     @abstractmethod
-    def attribute(self, data: DataSource, *args: Any, **kwargs: Any) -> DataSource:
+    def attribute(self, inputs: DataSource, target: DataSource, *args: Any, **kwargs: Any) -> DataSource:
         pass
 
-    def format_outputs_for_visualization(self, inputs: DataSource, outputs: DataSource, *args, **kwargs) -> Sequence[go.Figure]:
+    def format_outputs_for_visualization(self, inputs: DataSource, labels: DataSource, *args, **kwargs) -> Sequence[go.Figure]:
         pass
 
 

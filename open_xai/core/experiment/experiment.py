@@ -25,25 +25,25 @@ class Experiment:
     def run(
         self,
         inputs: DataSource,
-        labels: DataSource,
-    ):
+        targets: DataSource,
+    ) -> 'Experiment':
         for explainer_w_args in self.explainers_w_args:
             run = Run(
                 inputs=inputs,
-                labels=labels,
-                explainer=explainer_w_args,
+                targets=targets,
+                explainer_w_args=explainer_w_args,
                 evaluator=self.evaluator,
             )
             run.execute()
             
-        self._add_run(run)
+            self._add_run(run)
 
-        return run
+        return self
 
-    def visualize(self) -> Sequence[List[Figure]]:
+    def visualize(self, path: str = None) -> Sequence[List[Figure]]:
         return [
             run.explainer_w_args.explainer.format_outputs_for_visualization(
-                run.data,
+                run.inputs,
                 run.explanation,
                 run.explainer_w_args.args
             ) for run in self.runs

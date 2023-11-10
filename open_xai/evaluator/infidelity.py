@@ -15,8 +15,9 @@ class Infidelity(EvaluatorMetric):
 
     def __call__(self, model: Model, explainer_w_args: ExplainerWArgs, sample: Tensor, label, pred, pred_idx, result):
         pred = pred[:, label]
+        print(self.n_perturbations)
         repeated_sample = sample.repeat(
-            self.n_perturbations, *([1]*sample.ndim - 1)
+            self.n_perturbations, *([1]*(sample.ndim - 1))
         )
 
         device = next(model.parameters()).device
@@ -31,13 +32,13 @@ class Infidelity(EvaluatorMetric):
         # Compute the dot product of the input perturbation to the explanation
         dot_product = torch.mul(perturbed_sample, result)
         dot_product = dot_product.sum(dim=(1, 2, 3))
-        mu = torch.ones(dot_product.shape).to(self.device)
+        mu = torch.ones(dot_product.shape).to(device)
 
         def _forward_batch(model, samples, label, batch_size):
             training_mode = model.training
             model.eval()
 
-            predictions = torch.zeros(samples.shape[0]).to(self.device)
+            predictions = torch.zeros(samples.shape[0]).to(device)
             cur_idx = 0
             next_idx = min(batch_size, samples.shape[0])
             while cur_idx < samples.shape[0]:

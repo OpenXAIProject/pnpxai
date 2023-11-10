@@ -1,5 +1,6 @@
 from typing import Any, List, Sequence, Tuple
-from torch import Tensor
+import torch
+from torch import Tensor, LongTensor
 from captum.attr import KernelShap as KernelShapeCaptum
 from captum._utils.typing import BaselineType, TargetType
 from plotly import express as px
@@ -20,9 +21,9 @@ class KernelShap(Explainer):
 
     def attribute(
         self,
-        data: DataSource,
-        baselines: BaselineType = None,
+        inputs: DataSource,
         target: TargetType = None,
+        baselines: BaselineType = None,
         additional_forward_args: Any = None,
         feature_mask: Union[None, Tensor, Tuple[Tensor, ...]] = None,
         n_samples: int = 25,
@@ -30,27 +31,23 @@ class KernelShap(Explainer):
         return_input_shape: bool = True,
         show_progress: bool = False
     ) -> List[Tensor]:
-        attributions = []
+        if feature_mask is None:
+            feature_mask = felzenszwalb(
+                inputs.permute(0, 2, 3, 1).cpu().numpy()[0], scale=250
+            )
+            feature_mask = LongTensor(feature_mask).to(self.device)
 
-        if type(data) is Tensor:
-            data = [data]
-
-        for datum in data:
-            if feature_mask is None:
-                feature_mask = felzenszwalb(datum.cpu().numpy()[0], scale=250)
-                feature_mask = Tensor(feature_mask).cuda().to(self.device)
-
-            attributions.append(self.method.attribute(
-                datum,
-                baselines,
-                target,
-                additional_forward_args,
-                feature_mask,
-                n_samples,
-                perturbations_per_eval,
-                return_input_shape,
-                show_progress,
-            ))
+        attributions = self.method.attribute(
+            inputs=inputs,
+            baselines=baselines,
+            target=target,
+            additional_forward_args=additional_forward_args,
+            feature_mask=feature_mask,
+            n_samples=n_samples,
+            perturbations_per_eval=perturbations_per_eval,
+            return_input_shape=return_input_shape,
+            show_progress=show_progress,
+        )
 
         return attributions
 

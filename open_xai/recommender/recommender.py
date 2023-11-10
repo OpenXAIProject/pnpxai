@@ -17,7 +17,9 @@ class XaiRecommender:
             'how to still be this': {Anchors},
         }
         self.task_table = {
-            'image': {GuidedGradCam, Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV},
+            'image': {Lime, KernelShap, IntegratedGradients, FullGrad,
+                      #   RAP,
+                      GuidedGradCam, LRP, CEM, TCAV},
             'tabular': {Lime, KernelShap, PDP, CEM, Anchors},
             'text': {Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, CEM},
         }
@@ -47,7 +49,7 @@ class XaiRecommender:
         }
 
     def _find_overlap(self, *lists):
-        return list(set().intersection(*lists))
+        return list(set.intersection(*lists))
 
     def filter_methods(self, question, task, architecture):
         question_to_method = self.question_table[question]
@@ -60,7 +62,8 @@ class XaiRecommender:
             except KeyError:
                 warnings.warn(
                     f"\n[Recommender] Warning: {repr(module)} is not currently supported.")
-        architecture_to_method = self._find_overlap(architecture_to_method)
+
+        architecture_to_method = self._find_overlap(*architecture_to_method)
         if (nn.Conv1d in architecture or nn.Conv2d in architecture) and GuidedGradCam not in architecture_to_method:
             if nn.MultiheadAttention not in architecture:
                 architecture_to_method.append(GuidedGradCam)

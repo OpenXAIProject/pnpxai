@@ -16,25 +16,19 @@ class LRP(Explainer):
 
     def attribute(
         self,
-        data: DataSource,
+        inputs: DataSource,
         target: TargetType = None,
         additional_forward_args: Any = None,
         return_convergence_delta: bool = False,
         verbose: bool = False
     ) -> List[Tensor]:
-        attributions = []
-
-        if type(data) is Tensor:
-            data = [data]
-
-        for datum in data:
-            attributions.append(self.method.attribute(
-                datum,
-                target,
-                additional_forward_args,
-                return_convergence_delta,
-                verbose
-            ))
+        attributions = self.method.attribute(
+            inputs=inputs,
+            target=target,
+            additional_forward_args=additional_forward_args,
+            return_convergence_delta=return_convergence_delta,
+            verbose=verbose
+        )
 
         return attributions
 

@@ -1,5 +1,5 @@
-from typing import Any, List, Sequence
-from torch import Tensor
+from typing import Any, List, Sequence, Optional
+from torch import Tensor, nn
 from captum.attr import GuidedGradCam as GuidedGradCamCaptum
 from captum._utils.typing import TargetType
 from plotly import express as px
@@ -12,30 +12,37 @@ from open_xai.explainers._explainer import Explainer
 class GuidedGradCam(Explainer):
     def __init__(self, model: Model):
         super().__init__(model)
-        self.method = GuidedGradCamCaptum(model)
+
+        layer = self._find_last_conv_layer(self.model.modules())
+        self.method = GuidedGradCamCaptum(model, layer)
+
+    def _find_last_conv_layer(self, modules: Sequence[nn.Module]) -> Optional[nn.Conv2d]:
+        last_conv = None
+        for module in modules:
+            if isinstance(module, nn.Conv2d):
+                last_conv = module
+
+            submodules = list(module.children())
+            if len(submodules) > 0:
+                last_conv = self._find_last_conv_layer(submodules)
+        
+        return last_conv
 
     def attribute(
         self,
-        data: DataSource,
+        inputs: DataSource,
         target: TargetType = None,
         additional_forward_args: Any = None,
         interpolate_mode: str = "nearest",
         attribute_to_layer_input: bool = False,
     ) -> List[Tensor]:
-        attributions = []
-
-        if type(data) is Tensor:
-            data = [data]
-
-        for datum in data:
-
-            attributions.append(self.method.attribute(
-                datum,
-                target,
-                additional_forward_args,
-                interpolate_mode,
-                attribute_to_layer_input,
-            ))
+        attributions=self.method.attribute(
+            inputs,
+            target,
+            additional_forward_args,
+            interpolate_mode,
+            attribute_to_layer_input,
+        )
 
         return attributions
 
