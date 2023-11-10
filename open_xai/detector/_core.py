@@ -12,22 +12,34 @@ SUPPORTED_FUNCTION_MODULES = {
 
 REPLACE_PREFIX = "_replaced_"
 
-@dataclass #(init=True)
+@dataclass
 class NodeInfo:
+    """
+    NodeInfo is a dataclass representing a node: `torch.fx.Node`
+    in a graph: `torch.fx.Graph`. A instance can be generated
+    `from_node`, `from_module`, and `from_function`.
+
+    - `from_node` clones a node in a graph
+    - `from_module` generates an instance to replace with a node
+       or to be inserted in a graph from a module
+    - `from_function` generates an instance to replace with a node
+       or to be inserted in a graph from a function
+    
+    Attributions
+    - `opcode` is an operation code of a node, which is one of
+      [
+        "placeholder", "get_attr", "call_function",
+        "call_module", "call_method", "output",
+      ]
+    - `name` is a name of node auto-assigned by `torch.fx.symbolic_graph`
+    - `target` is an accessible name of node
+    """
     opcode: Literal[
         "placeholder", "get_attr", "call_function",
         "call_module", "call_method", "output",
     ]
     name: str
     target: Union[Callable, str]
-
-    # def __init__(self, opcode, name, target, _operator=None, _from_node=False):
-    #     self.opcode = opcode
-    #     self.name = name
-    #     self.target = target
-
-    #     self._from_node = _from_node
-    #     self._operator = _operator
 
     @classmethod
     def from_node(cls, n: Node):
@@ -41,14 +53,27 @@ class NodeInfo:
         return self
 
     @classmethod
-    def from_module(cls, m: torch.nn.Module):
+    def from_module(cls, module: torch.nn.Module, **kwargs):
         self = cls(
             opcode = "call_module",
             name = None,
             target = None,
         )
         self._mode = "from_module"
-        self._set_operator(m)
+        self._set_operator(module)
+        self._kwargs = kwargs
+        return self
+
+    @classmethod
+    def from_function(cls, func: Callable, **kwargs):
+        self = cls(
+            opcode = "call_function",
+            name = None,
+            target = None,
+        )
+        self._mode = "from_function"
+        self._set_operator(func)
+        self._kwargs = kwargs
         return self
 
     # set original node from the graph
@@ -60,7 +85,7 @@ class NodeInfo:
                 self._node = n
     
     def _set_operator(self, operator: Callable):
-        assert self._mode == "from_module"
+        assert self._mode != "from_node"
         self._valid_operator(operator)
         self._operator = operator
         return self
@@ -91,7 +116,7 @@ class NodeInfo:
     def kwargs(self):
         return {
             k: NodeInfo.from_node(v) if isinstance(v, Node) else v
-            for k, v in self._node.kwargs
+            for k, v in self._node.kwargs.items()
         }
     
     @property
@@ -121,8 +146,9 @@ class NodeInfo:
                 return self._get_operator(self.target.split("."))
             elif self.opcode == "call_function":
                 targets = self.target.split(".")
-                root_module = SUPPORTED_FUNCTION_MODULES[targets.pop(0)]
-                return self._get_operator(targets, root_module)
+                root_module = SUPPORTED_FUNCTION_MODULES.get(targets.pop(0))
+                if root_module:
+                    return self._get_operator(targets, root_module)
             return
         return self._operator
     
@@ -143,20 +169,36 @@ class NodeInfo:
         pass
 
 class ModelArchitecture:
+    """
+    ModelArchitecture is a helper class to manipulate a graph generated
+    by `torch.fx.symbolic_graph`.
+    """
     def __init__(self, model):
         self.model = model
         self.traced_model = symbolic_trace(model)
+
+        self._replacing = False
     
     def list_nodes(self) -> List[NodeInfo]:
+        """
+        List all nodes in graph.
+        """
         return [NodeInfo.from_node(n) for n in self.traced_model.graph.nodes]
     
     def get_node(self, name: str) -> NodeInfo:
+        """
+        Get a node in graph by name.
+        """
         for n in self.traced_model.graph.nodes:
             if n.name == name:
                 return NodeInfo.from_node(n)
         return # [TODO] Error for no result?
         
     def find_node(self, filter_func: Callable, root: Optional[NodeInfo]=None, all=False):
+        """
+        Find a node satisfying `filter_func` in graph.
+        Searching is started from `root` node.
+        """
         # [TODO] breadth first / depth first
         if not root:
             root = self.list_nodes()[0]
@@ -179,30 +221,81 @@ class ModelArchitecture:
             n = found.next
         return nodes
     
-    def replace_node(self, node: NodeInfo, new_node: NodeInfo):
-        # validations
-        assert new_node.opcode == "call_module", "call_module only"
-        assert new_node._operator, "Must set operator for new_node: new_node.set_operator(operator)."
+    def _validate_new_node(self, new_node: NodeInfo):
         if new_node.name is not None:
             exists = self.get_node(name=new_node.name)
-            assert exists, f"A node named {new_node.name} already exists."
-        
-        # replace
-        with self.traced_model.graph.inserting_after(node._node):
-            new_name = new_node.name if new_node.name else f"{REPLACE_PREFIX}{node.name}"
-            self.traced_model.add_submodule(new_name, new_node.operator)
-            _new_node = self.traced_model.graph.call_module(
-                new_name,
-                node._node.args,
-                node._node.kwargs,
-            )
-            node._node.replace_all_uses_with(_new_node)
-        self.traced_model.graph.erase_node(node._node)
+            assert not exists, f"A node named {new_node.name} already exists."
+        return True
+
+    def _ensure_graph(self) -> None:
         self.traced_model.graph.lint()
         self.traced_model.recompile()
-        return self
-            
+    
+    def replace_node(self, node: NodeInfo, new_node: NodeInfo) -> NodeInfo:
+        """
+        Replace a `node` with `new_node`.
+        """
+        self._replacing = True
+        self._validate_new_node(new_node)
+        try:
+            if new_node._mode == "from_module":
+                new_node.name = f"{REPLACE_PREFIX}{node.name}"
+            inserted = self.insert_node(new_node, base_node=node)
+            self.traced_model.graph.erase_node(node._node)
+            self._ensure_graph()
+        finally:
+            self._replacing = False
+        return inserted
+    
+    def insert_node(self, new_node: NodeInfo, base_node: NodeInfo, before=False) -> NodeInfo:
+        """
+        Insert a `new_node` after `base_node`.
+        """
+        self._validate_new_node(new_node)
+        inserting = self.traced_model.graph.inserting_before if before else self.traced_model.graph.inserting_after
+        if self._replacing:
+            _inserted_args = base_node._node.args
+            _inserted_kwargs = base_node._node.kwargs
+            pass
+        elif before:
+            _inserted_args = tuple(arg for arg in base_node._node.args if isinstance(arg, Node))
+            _inserted_kwargs = {kw: arg for kw, arg in base_node._node.kwargs.items() if isinstance(arg, Node)}
+            _inserted_kwargs = {**_inserted_kwargs, **new_node._kwargs}
+        else:
+            _inserted_args = (base_node,)
+            _inserted_kwargs = new_node._kwargs
+
+        # [TODO] validation for new_node: if new_node._mode=="from_module" , new_node.name exists
+        # insert
+        with inserting(base_node._node):
+            if new_node._mode == "from_module":
+                self.traced_model.add_submodule(new_node.name, new_node.operator)
+                _inserted = self.traced_model.graph.call_module(
+                    new_node.name,
+                    _inserted_args,
+                    _inserted_kwargs,
+                )
+            elif new_node._mode == "from_function":
+                _inserted = self.traced_model.graph.call_function(
+                    new_node.operator,
+                    _inserted_args,
+                    _inserted_kwargs,
+                )
+        
+        if self._replacing or not before:
+            base_node._node.replace_all_uses_with(_inserted)
+            pass
+        elif before:
+            _not_inserted_args = [arg for arg in base_node._node.args if not isinstance(arg, Node)]
+            base_node._node.args = tuple([_inserted] + _not_inserted_args)
+            base_node._node.kwargs = {kw: arg for kw, arg in base_node._node.kwargs.items() if not isinstance(arg, Node)}
+        self._ensure_graph()
+        return NodeInfo.from_node(_inserted)        
+
     def to_dict(self):
+        """
+        Convert the model architecture into dict in order to visualize.
+        """
         nodes = []
         edges = []
         for n in self.list_nodes():
