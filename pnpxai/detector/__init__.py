@@ -1,0 +1,1 @@
+from pnpxai.detector.detector import ModelArchitectureDetectorV2
