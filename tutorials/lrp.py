@@ -1,22 +1,28 @@
+import os
+
 import torch
 import torchvision
 
-from open_xai import Project
-from open_xai.explainers import LRPEpsilon, LRPGamma
+from pnpxai.explainers import LRP
 
-model = torchvision.models.get_model("inception_v3").eval()
-inputs = torch.randn(1, 3, 224, 224)
-target = model(inputs).argmax(1).item()
+def get_model(model_name):
+    weights = torchvision.models.get_model_weights(model_name).DEFAULT
+    model = torchvision.models.get_model(model_name, weights=weights).eval()
+    transform = weights.transforms()
+    return model, transform
 
-proj = Project("test_lrp")
+def get_images(num_images, transform):
+    IMG_DIR = "./tutorials/data/ImageNet/samples/"
+    imgs = torch.stack([
+        transform(torchvision.io.read_image(os.path.join(IMG_DIR, fnm)))
+        for fnm in os.listdir(IMG_DIR)[:num_images]
+    ])
+    return imgs
 
-proj.explain(LRPEpsilon(model, epsilon=1e-6))
-proj.explain(LRPGamma(model, gamma=.25))
+model, transform = get_model("vit_b_16")
+inputs = get_images(num_images=4, transform=transform)
+targets = model(inputs).argmax(1)
 
-for experiment in proj.experiments:
-    experiment.run(inputs, target)
-
-print("LRPEpsilon")
-print(proj.experiments[0].runs[0].outputs, "\n")
-print("LRPGamma")
-print(proj.experiments[1].runs[0].outputs)
+explainer = LRP(model)
+attributions = explainer.attribute(inputs, targets)
+print(attributions.shape)
