@@ -16,7 +16,7 @@ REPLACE_PREFIX = "_replaced_"
 class NodeInfo:
     """
     NodeInfo is a dataclass representing a node: `torch.fx.Node`
-    in a graph: `torch.fx.Graph`. A instance can be generated
+    in a graph: `torch.fx.Graph`. There are 3 types of constructor:
     `from_node`, `from_module`, and `from_function`.
 
     - `from_node` clones a node in a graph
