@@ -12,8 +12,8 @@ import torchvision.transforms as transforms
 import torchvision.transforms.functional as TF
 from torchvision import models
 
-from open_xai import Project
-from open_xai.explainers import IntegratedGradients
+from pnpxai import Project
+from pnpxai.explainers import IntegratedGradients
 
 
 transform = transforms.Compose(
@@ -78,9 +78,9 @@ model.eval()
 
 
 project = Project('test_project')
-exp = project.explain(IntegratedGradients(model))
-run = exp.run(inputs, target=labels[idx], baselines=inputs * 0, return_convergence_delta=True)
+exp = project.explain([IntegratedGradients(model)])
 
+run = exp.run(inputs, target=labels[idx], baselines=inputs * 0, return_convergence_delta=True)
 plots = exp.visualize()
 
 plot_path = 'results/ig'

@@ -8,9 +8,9 @@ from torchvision.models.vgg import vgg16_bn, VGG16_BN_Weights
 from torchvision.models.resnet import resnet18, ResNet18_Weights, BasicBlock, Bottleneck
 import torchvision.transforms as transforms
 
-from open_xai import Project
-from open_xai.explainers import Explainer, RAP
-from open_xai.explainers.relative_attribute_propagation.rules import RelPropSimple
+from pnpxai import Project
+from pnpxai.explainers import Explainer, RAP
+from pnpxai.explainers.rap.rules import RelPropSimple
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
