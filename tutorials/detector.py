@@ -1,6 +1,6 @@
 import torch
 
-from open_xai.detector import get_model_architecture
+from pnpxai.detector import get_model_architecture
 
 resnet = torch.hub.load('pytorch/vision:v0.10.0', 'resnet18', pretrained=False).eval()
 input = torch.randn(1, 3, 224, 224)
