@@ -1,6 +1,6 @@
 from typing import Optional, List, Union, Sequence
 
-from pnpxai.detector import ModelArchitectureDetectorV2
+from pnpxai.detector import ModelArchitectureDetector
 from pnpxai.recommender.recommender import XaiRecommender
 from pnpxai.evaluator import XaiEvaluator
 from pnpxai.explainers import ExplainerWArgs, Explainer
@@ -15,7 +15,7 @@ class Project():
     def __init__(self, name: str):
         self.name = name
         self.experiments: List[Experiment] = []
-        self.detector = ModelArchitectureDetectorV2()
+        self.detector = ModelArchitectureDetector()
         self.recommender = XaiRecommender()
 
     def auto_explain(self, exp_input: AutoExplanationInput):
