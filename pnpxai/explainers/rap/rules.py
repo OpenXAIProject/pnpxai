@@ -15,6 +15,7 @@ def safe_divide(a: Tensor, b: Tensor):
     return a / (b + b.eq(0).type(b.type()) * 1e-9) * b.ne(0).type(b.type())
 
 
+
 class RelProp:
     captures_in_out: bool = True
 
@@ -44,7 +45,7 @@ class RelProp:
         C = torch.autograd.grad(Z, X, S, retain_graph=True)
         return C
 
-    def relprop(self, R_p: _TensorOrTensors) -> _TensorOrTensors:
+    def relprop(self, R_p: _TensorOrTensors, inputs: Optional[_TensorOrTensors] = None, outputs: Optional[_TensorOrTensors] = None) -> _TensorOrTensors:
         return R_p
 
 
@@ -99,6 +100,23 @@ class AvgPool2d(RelPropSimple):
     pass
 
 
+class Add(RelPropSimple):
+    def __init__(self, module: Optional[nn.Module] = None):
+        module = module or (lambda x: torch.add(*x))
+        super().__init__(module)
+
+
+class Flatten(RelProp):
+    captures_in_out: bool = True
+
+    def __init__(self, module: Optional[nn.Module] = None):
+        module = module or torch.flatten
+        super().__init__(module)
+
+    def relprop(self, r: _TensorOrTensors, inputs: Optional[_TensorOrTensors] = None, outputs: Optional[_TensorOrTensors] = None):
+        return r.reshape(inputs.shape)
+
+
 class Cat(RelProp):
     captures_in_out: bool = False
 
@@ -128,7 +146,7 @@ class Cat(RelProp):
 
 
 class Sequential(RelProp):
-    def relprop(self, r: _TensorOrTensors):
+    def relprop(self, r: _TensorOrTensors, inputs: Optional[_TensorOrTensors] = None, outputs: Optional[_TensorOrTensors] = None):
         if self.module is None:
             return r
 
@@ -142,7 +160,7 @@ class Sequential(RelProp):
 
 
 class BatchNorm2d(RelProp):
-    def relprop(self, R_p: Tensor):
+    def relprop(self, R_p: Tensor, inputs: Optional[_TensorOrTensors] = None, outputs: Optional[_TensorOrTensors] = None):
         def f(R, w1, x1):
             Z1 = x1 * w1
             S1 = safe_divide(R, Z1) * w1
@@ -183,7 +201,7 @@ class BatchNorm2d(RelProp):
 
 
 class Linear(RelProp):
-    def relprop(self, R_p):
+    def relprop(self, R_p, inputs: Optional[_TensorOrTensors] = None, outputs: Optional[_TensorOrTensors] = None):
         def shift_rel(R, R_val):
             R_nonzero = torch.ne(R, 0).type(R.type())
             shift = safe_divide(R_val, torch.sum(
@@ -304,7 +322,7 @@ class Conv2d(RelProp):
 
         return F.conv_transpose2d(DY, weight, stride=self.module.stride, padding=self.module.padding, output_padding=output_padding)
 
-    def relprop(self, R_p):
+    def relprop(self, R_p, inputs: Optional[_TensorOrTensors] = None, outputs: Optional[_TensorOrTensors] = None):
         def shift_rel(R, R_val):
             R_nonzero = torch.ne(R, 0).type(R.type())
             shift = safe_divide(R_val, torch.sum(

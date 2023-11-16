@@ -29,11 +29,11 @@ class RAP(Explainer):
         Tt = Variable(T).cuda()
         return Tt
 
-    def run(self, inputs: DataSource, target: DataSource, *args: Any, **kwargs: Any) -> DataSource:
+    def attribute(self, inputs: DataSource, target: DataSource, *args: Any, **kwargs: Any) -> DataSource:
         attributions = []
-
-        if not (torch.is_tensor(datum)):
-            datum = datum[0]
+        
+        if not (torch.is_tensor(inputs)):
+            datum = inputs[0]
 
         datum = inputs.to(self.device)
         outputs = self.model(datum)
