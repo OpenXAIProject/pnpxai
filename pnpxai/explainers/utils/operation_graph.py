@@ -35,6 +35,14 @@ class OperationNode:
                 if isinstance(target, str) else target
 
     @property
+    def name(self):
+        return self._node.name
+
+    @property
+    def users(self):
+        return self._node.users
+
+    @property
     def next_nodes(self):
         return self._next_nodes
 
@@ -65,6 +73,7 @@ class OperationNode:
 class OperationGraph:
     def __init__(self, model: nn.Module):
         self.root = None
+        self.tail = None
         self._nodes_map: Dict[str, OperationNode] = {}
         self._model = model
 
@@ -92,10 +101,14 @@ class OperationGraph:
             if node.op == 'placeholder':
                 self.root = operation_node
 
+            if node.op == 'output':
+                self.tail = operation_node
+
     def pprint(self):
         def _pprint(node: OperationNode, indent: int = 0):
             print(' ' * indent, node._node.name)
             for next_node in node._next_nodes:
-                _pprint(next_node, indent + 1)
+                if not next_node.is_output:
+                    _pprint(next_node, indent + 1)
 
         _pprint(self.root)
