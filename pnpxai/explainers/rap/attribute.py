@@ -26,7 +26,7 @@ class RAP(Explainer):
         T = np.expand_dims(T, 0)
         T = (T[:, np.newaxis] == np.arange(1000)) * 1.0
         T = torch.from_numpy(T).type(torch.FloatTensor)
-        Tt = Variable(T).cuda()
+        Tt = Variable(T)#.cuda()
         return Tt
 
     def attribute(self, inputs: DataSource, target: DataSource, *args: Any, **kwargs: Any) -> DataSource:
