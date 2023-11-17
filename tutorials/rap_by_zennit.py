@@ -140,10 +140,10 @@ class RapBaseRule(BasicHook):
     def reducer(self, *args):
         raise NotImplementedError
     
-    @abstractmethod
-    def _gmap_arg_selector(self, *args)
-    def _get_gradient_mapper_args(self, *args)
-        raise NotImplementedError
+    # @abstractmethod
+    # def _gmap_arg_selector(self, *args)
+    # def _get_gradient_mapper_args(self, *args)
+    #     raise NotImplementedError
 
     def backward(self, module, grad_input, grad_output):
         '''Backward hook to compute LRP based on the class attributes.'''
