@@ -54,17 +54,17 @@ class LRP(Explainer):
         # replace
         for add_func_node in add_func_nodes:
             add_mod_node = ma.replace_node(
-                node = add_func_node,
-                new_node = NodeInfo.from_module(Sum()),
+                add_func_node,
+                NodeInfo.from_module(Sum()),
             )
             stack_node = ma.insert_node(
-                node = NodeInfo.from_function(stack, dim=-1),
-                base_node = add_mod_node,
+                NodeInfo.from_function(stack, dim=-1),
+                add_mod_node,
                 before = True,
             )
             _ = ma.insert_node(
-                node = NodeInfo.from_function(list_args_for_stack),
-                base_node = stack_node,
+                NodeInfo.from_function(list_args_for_stack),
+                stack_node,
                 before = True,
             )
         
