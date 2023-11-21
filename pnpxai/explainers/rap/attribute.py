@@ -4,7 +4,7 @@ from plotly import express as px
 from plotly import graph_objects as go
 import numpy as np
 import torch
-from torch import Tensor
+from torch import Tensor, nn
 from torch.autograd import Variable
 
 from pnpxai.core._types import Model, DataSource
@@ -20,20 +20,14 @@ class RAP(Explainer):
 
     def compute_pred(self, output):
         # get the index of the max log-probability
-        pred = output.data.max(1, keepdim=True)[1]
-
-        T = pred.squeeze().cpu().numpy()
-        T = np.expand_dims(T, 0)
-        T = (T[:, np.newaxis] == np.arange(1000)) * 1.0
-        T = torch.from_numpy(T).type(torch.FloatTensor)
-        Tt = Variable(T)#.cuda()
-        return Tt
+        pred = output.max(1, keepdim=True)[1]
+        pred = pred.squeeze(-1)
+        
+        pred_one_hot = nn.functional.one_hot(pred, 1000) * 1.0
+        pred_one_hot = pred_one_hot.to(self.device)
 
     def attribute(self, inputs: DataSource, target: DataSource, *args: Any, **kwargs: Any) -> DataSource:
         attributions = []
-        
-        if not (torch.is_tensor(inputs)):
-            datum = inputs[0]
 
         datum = inputs.to(self.device)
         outputs = self.model(datum)
