@@ -17,9 +17,11 @@ class XaiRecommender:
             'how to still be this': {Anchors},
         }
         self.task_table = {
-            'image': {Lime, KernelShap, IntegratedGradients, FullGrad,
-                      #   RAP,
-                      GuidedGradCam, LRP, CEM, TCAV},
+            'image': {
+                # Lime, KernelShap, IntegratedGradients, FullGrad,
+                RAP,
+                # GuidedGradCam, LRP, CEM, TCAV
+            },
             'tabular': {Lime, KernelShap, PDP, CEM, Anchors},
             'text': {Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, CEM},
         }
