@@ -1,21 +1,31 @@
-from typing import Any, List, Sequence, Optional
-from torch import Tensor, nn
+from typing import Dict, List, Sequence, Optional
+from torch import nn
+
 from captum.attr import GuidedGradCam as GuidedGradCamCaptum
-from captum._utils.typing import TargetType
-from plotly import express as px
-from plotly.graph_objects import Figure
 
-from pnpxai.core._types import Model, DataSource
+from pnpxai.core._types import Model
 from pnpxai.explainers._explainer import Explainer
-
 
 class GuidedGradCam(Explainer):
     def __init__(self, model: Model):
-        super().__init__(model)
+        super().__init__(
+            source = GuidedGradCamCaptum,
+            model = model,
+        )
 
-        layer = self._find_last_conv_layer(self.model.modules())
-        self.method = GuidedGradCamCaptum(model, layer)
-
+    @property
+    def _attributor_arg_keys(self) -> List[str]:
+        return ["layer"]
+    
+    def get_default_additional_kwargs(self) -> Dict:
+        return {
+            "layer": self._find_last_conv_layer(self.model.modules()),
+            "additional_forward_args": None,
+            "interpolate_mode": "nearest",
+            "attribute_to_layer_input": False,
+        }
+    
+    # TODO: integrate with ..utils.operation_graph
     def _find_last_conv_layer(self, modules: Sequence[nn.Module]) -> Optional[nn.Conv2d]:
         last_conv = None
         for module in modules:
@@ -27,26 +37,3 @@ class GuidedGradCam(Explainer):
                 last_conv = self._find_last_conv_layer(submodules)
         
         return last_conv
-
-    def attribute(
-        self,
-        inputs: DataSource,
-        target: TargetType = None,
-        additional_forward_args: Any = None,
-        interpolate_mode: str = "nearest",
-        attribute_to_layer_input: bool = False,
-    ) -> List[Tensor]:
-        attributions=self.method.attribute(
-            inputs,
-            target,
-            additional_forward_args,
-            interpolate_mode,
-            attribute_to_layer_input,
-        )
-
-        return attributions
-
-    def format_outputs_for_visualization(self, inputs: DataSource, outputs: DataSource, *args, **kwargs) -> Sequence[Figure]:
-        return [[
-            px.imshow(output.permute((1, 2, 0))) for output in batch
-        ] for batch in outputs]

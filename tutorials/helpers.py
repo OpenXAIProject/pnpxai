@@ -54,11 +54,11 @@ def get_imagenet_dataset(transform, subset_size: int=100, root_dir="./data/Image
     subset = Subset(dataset, indices=indices[:subset_size])
     return subset
 
+img_to_np = lambda img: img.permute(1,2,0).detach().numpy()
+
 def denormalize_image(inputs, mean, std):
-    return (
+    return img_to_np(
         inputs
         * Tensor(std)[:, None, None]
         + Tensor(mean)[:, None, None]
     )
-
-img_to_np = lambda img: img.permute(1,2,0).detach().numpy()

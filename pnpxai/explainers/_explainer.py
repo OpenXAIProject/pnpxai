@@ -1,29 +1,50 @@
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import Any, Sequence, Optional
+from typing import Any, Optional, List, Dict
 
-import plotly.graph_objects as go
-
-from pnpxai.core._types import Model, DataSource, Args
-
+from pnpxai.core._types import Model, DataSource
+from .utils.feature_mask import get_default_feature_mask
 
 class Explainer:
-    def __init__(self, model: Model):
+    def __init__(
+            self,
+            source: Any,
+            model: Model,
+        ):
+        self.source = source
         self.model = model
-        pass
+
+        self.additional_kwargs = self.get_default_additional_kwargs()
+        self.device = next(self.model.parameters()).device
+
+    @property
+    @abstractmethod
+    def _attributor_arg_keys(self) -> List[str]:
+        return []
 
     @abstractmethod
-    def attribute(self, inputs: DataSource, target: DataSource, *args: Any, **kwargs: Any) -> DataSource:
-        pass
+    def get_default_additional_kwargs(self) -> Dict:
+        return {}
+    
+    def attribute(
+        self,
+        inputs: DataSource,
+        targets: DataSource,
+        **kwargs,
+    ) -> DataSource:
+        current_additional_kwargs = self.additional_kwargs.copy()
+        if "feature_mask" in current_additional_kwargs:
+            current_additional_kwargs["feature_mask"] = get_default_feature_mask(inputs, self.device)
+        for k, v in kwargs.items():
+            current_additional_kwargs[k] = v
 
-    def format_outputs_for_visualization(self, inputs: DataSource, labels: DataSource, *args, **kwargs) -> Sequence[go.Figure]:
-        pass
+        # select kwargs for attributor
+        attributor_kwargs = {}
+        for k in self._attributor_arg_keys:
+            attributor_kwargs[k] = current_additional_kwargs.pop(k)
+        attributor = self.source(self.model, **attributor_kwargs)
 
-
-@dataclass
-class ExplainerWArgs:
-    explainer: Explainer
-    args: Optional[Args] = None
-
-    def has_args(self):
-        return self.args is not None
+        # attribute
+        attr = attributor.attribute(inputs, target=targets, **current_additional_kwargs)
+        return attr
+    

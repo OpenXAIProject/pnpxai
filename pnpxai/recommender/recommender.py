@@ -18,9 +18,14 @@ class XaiRecommender:
         }
         self.task_table = {
             'image': {
-                # Lime, KernelShap, IntegratedGradients, FullGrad,
-                RAP,
-                # GuidedGradCam, LRP, CEM, TCAV
+                Lime, KernelShap,
+                LRP, GuidedGradCam,
+                # TODO: integrate RAP
+                # RAP,
+                # TODO: memory issue in IG, 
+                # IntegratedGradients,
+                # TODO: add more explainers
+                # FullGrad, CEM, TCAV
             },
             'tabular': {Lime, KernelShap, PDP, CEM, Anchors},
             'text': {Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, CEM},
@@ -59,11 +64,13 @@ class XaiRecommender:
 
         architecture_to_method = []
         for module in architecture:
-            try:
+            if module in self.architecture_table:
                 architecture_to_method.append(self.architecture_table[module])
-            except KeyError:
-                warnings.warn(
-                    f"\n[Recommender] Warning: {repr(module)} is not currently supported.")
+            # try:
+            #     architecture_to_method.append(self.architecture_table[module])
+            # except KeyError:
+            #     warnings.warn(
+            #         f"\n[Recommender] Warning: {repr(module)} is not currently supported.")
 
         architecture_to_method = self._find_overlap(*architecture_to_method)
         if (nn.Conv1d in architecture or nn.Conv2d in architecture) and GuidedGradCam not in architecture_to_method:

@@ -1,7 +1,7 @@
 import torch
 
 from pnpxai.core._types import Model
-from pnpxai.explainers import ExplainerWArgs
+from pnpxai.explainers import Explainer
 from pnpxai.evaluator._evaluator import EvaluatorMetric
 
 
@@ -10,7 +10,7 @@ class Sensitivity(EvaluatorMetric):
         self.n_iter = n_iter
         self.epsilon = epsilon
         
-    def __call__(self, model: Model, explainer_w_args: ExplainerWArgs, sample, label, pred, pred_idx, result):
+    def __call__(self, model: Model, explainer: Explainer, sample, label, pred, pred_idx, result):
         norm = torch.linalg.norm(result)
 
         device = next(model.parameters()).device
@@ -24,11 +24,9 @@ class Sensitivity(EvaluatorMetric):
             perturbed_sample = sample + noise
 
             # Get perturbed explanation results
-            perturbed_result = explainer_w_args.explainer.attribute(
-                *explainer_w_args.args.args,
-                inputs=perturbed_sample,
-                target=pred_idx,
-                **explainer_w_args.args.kwargs
+            perturbed_result = explainer.attribute(
+                inputs = perturbed_sample,
+                targets = pred_idx,
             )
 
             # Get maximum of the difference between the perturbed explanation and the original explanation
