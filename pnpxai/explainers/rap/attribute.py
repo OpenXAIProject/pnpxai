@@ -25,6 +25,7 @@ class RAP(Explainer):
         
         pred_one_hot = nn.functional.one_hot(pred, 1000) * 1.0
         pred_one_hot = pred_one_hot.to(self.device)
+        return pred_one_hot
 
     def attribute(self, inputs: DataSource, target: DataSource, *args: Any, **kwargs: Any) -> DataSource:
         attributions = []
