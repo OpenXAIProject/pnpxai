@@ -8,7 +8,6 @@ docker run --name front-container -it --rm -p 5173:5173 -v "$(pwd):/project" -v 
 
 docker run --name front-container -it --rm -p 5173:5173 -v "$(pwd):/project" -v /project/node_modules pnp-front sh
 
-
 docker run --name front-container -it --rm -p 5173:5173 -v "$(pwd):/project" pnp-front sh
 npm install
 npm run dev

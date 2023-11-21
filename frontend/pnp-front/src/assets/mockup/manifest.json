@@ -1,0 +1,22 @@
+{
+    "packageManifest": "플러그 앤 플레이 설명 가능한 AI",
+    "coreComponents": {
+      "explainableAIModels": "내장된 설명 기능이 있는 사전 훈련된 모델들",
+      "plugAndPlayInterface": "다양한 프로그래밍 환경에 쉽게 통합할 수 있는 모듈들",
+      "visualizationTools": "AI 의사 결정 과정을 시각화하는 인터랙티브 도구들",
+      "documentation": "종합적인 가이드와 사용 사례 예시들",
+      "apisForCustomization": "사용자의 특정 필요에 맞게 설명을 조정할 수 있게 해주는 API들",
+      "supportForMultipleDataTypes": "이미지, 텍스트, 표 데이터를 포함한 다양한 데이터 유형과의 호환성",
+      "communitySupportForum": "사용자들이 토론하고, 공유하며, 문제를 해결할 수 있는 플랫폼"
+    },
+    "visionAndStrengths": {
+      "vision": "AI 시스템의 이해를 민주화하여 개발자부터 비즈니스 이해 관계자에 이르기까지 다양한 사용자가 투명하고 접근하기 쉽게 만듭니다.",
+      "strengths": {
+        "easeOfUse": "빠른 통합과 사용의 용이성을 위해 설계되었으며, AI 설명 구현의 장벽을 낮춥니다.",
+        "broadCompatibility": "다양한 AI 모델과 데이터 유형과 함께 작동하여 다재다능함을 보장합니다.",
+        "deepInsights": "AI 의사 결정 과정을 깊이 있고 이해하기 쉽게 설명해줍니다.",
+        "communityDrivenInnovation": "커뮤니티의 피드백과 필요에 기반한 정기적인 업데이트와 개선을 제공합니다."
+      }
+    }
+  }
+  
