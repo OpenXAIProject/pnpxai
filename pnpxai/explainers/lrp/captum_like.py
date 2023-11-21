@@ -29,7 +29,7 @@ class CaptumLikeZennit:
             lambda n: n.operator is add and all(isinstance(arg, NodeInfo) for arg in n.args),
             all = True
         )
-        if add_func_nodes:
+        if not add_func_nodes:
             return
         
         warnings.warn(
