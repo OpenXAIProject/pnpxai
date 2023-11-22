@@ -64,13 +64,11 @@ class XaiRecommender:
 
         architecture_to_method = []
         for module in architecture:
-            if module in self.architecture_table:
+            try:
                 architecture_to_method.append(self.architecture_table[module])
-            # try:
-            #     architecture_to_method.append(self.architecture_table[module])
-            # except KeyError:
-            #     warnings.warn(
-            #         f"\n[Recommender] Warning: {repr(module)} is not currently supported.")
+            except KeyError:
+                warnings.warn(
+                    f"\n[Recommender] Warning: {repr(module)} is not currently supported.")
 
         architecture_to_method = self._find_overlap(*architecture_to_method)
         if (nn.Conv1d in architecture or nn.Conv2d in architecture) and GuidedGradCam not in architecture_to_method:
