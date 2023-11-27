@@ -19,9 +19,14 @@ class XaiRecommender:
         }
         self.task_table = {
             'image': {
-                # Lime, KernelShap, IntegratedGradients, FullGrad,
-                RAP,
-                # GuidedGradCam, LRP, CEM, TCAV
+                Lime, KernelShap,
+                LRP, GuidedGradCam,
+                # TODO: integrate RAP
+                # RAP,
+                # TODO: memory issue in IG, 
+                # IntegratedGradients,
+                # TODO: add more explainers
+                # FullGrad, CEM, TCAV
             },
             'tabular': {Lime, KernelShap, PDP, CEM, Anchors},
             'text': {Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, CEM},

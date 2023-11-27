@@ -1,4 +1,4 @@
-from pnpxai.explainers._explainer import Explainer, ExplainerWArgs
+from pnpxai.explainers._explainer import Explainer
 from pnpxai.explainers.guided_grad_cam import GuidedGradCam
 from pnpxai.explainers.integrated_gradients import IntegratedGradients
 from pnpxai.explainers.kernel_shap import KernelShap

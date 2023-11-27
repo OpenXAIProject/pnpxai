@@ -3,7 +3,7 @@ from torch import Tensor
 import numpy as np
 
 from pnpxai.core._types import Model
-from pnpxai.explainers import ExplainerWArgs
+from pnpxai.explainers import Explainer
 from pnpxai.evaluator._evaluator import EvaluatorMetric
 
 
@@ -13,7 +13,7 @@ class Infidelity(EvaluatorMetric):
         self.noise_scale = noise_scale
         self.batch_size = batch_size
 
-    def __call__(self, model: Model, explainer_w_args: ExplainerWArgs, sample: Tensor, label, pred, pred_idx, result):
+    def __call__(self, model: Model, explainer: Explainer, sample: Tensor, label, pred, pred_idx, result):
         pred = pred[:, label]
         print(self.n_perturbations)
         repeated_sample = sample.repeat(

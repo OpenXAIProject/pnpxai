@@ -5,15 +5,10 @@ from typing import Sequence
 
 from pnpxai.utils import class_to_string
 from pnpxai.evaluator._types import EvaluatorOutput
-from pnpxai.explainers import ExplainerWArgs
+from pnpxai.explainers import Explainer
 from pnpxai.core._types import Args
 
 import time
-
-# @dataclass
-# class EvaluatorOutput:
-#     explainers: list
-#     evaluation_results: list
 
 class EvaluatorMetric():
     @abstractmethod
@@ -38,8 +33,8 @@ class XaiEvaluator:
             sorted(weighted_scores.items(), key=lambda item: item[1]))
         return weighted_scores
 
-    def __call__(self, sample, label, explainer_w_args: ExplainerWArgs, explanation_outupts):
-        model = explainer_w_args.explainer.model
+    def __call__(self, sample, label, explainer: Explainer, explanation_outupts):
+        model = explainer.model
         pred = model(sample)
         pred_score, pred_idx = pred.topk(1)
 
@@ -50,7 +45,7 @@ class XaiEvaluator:
             st = time.time()
             metric_name = class_to_string(metric)
             metrics_scores[metric_name] = metric(
-                model, explainer_w_args, sample, label, pred, pred_idx, explanation_outupts
+                model, explainer, sample, label, pred, pred_idx, explanation_outupts
             )
             print(f'Compute {metric_name} done: {time.time() - st}')
             

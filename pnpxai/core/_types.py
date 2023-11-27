@@ -1,7 +1,8 @@
+from dataclasses import dataclass
+
 from torch.utils.data import DataLoader, Dataset
 from torch import Tensor, nn
-from typing import Optional, Union, Sequence, Dict, Any, Callable
-from dataclasses import dataclass
+from typing import Union, Sequence, Dict, Any
 
 TensorSequence = Union[DataLoader, Dataset, Sequence[Tensor]]
 DataSource = Union[TensorSequence, Tensor]
