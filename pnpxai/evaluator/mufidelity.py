@@ -6,7 +6,7 @@ from torchvision import transforms
 from scipy.stats import spearmanr
 
 from pnpxai.core._types import Model
-from pnpxai.explainers import ExplainerWArgs
+from pnpxai.explainers import Explainer
 from pnpxai.evaluator._evaluator import EvaluatorMetric
 
 
@@ -18,7 +18,7 @@ class muFidelity(EvaluatorMetric):
         self.grid_size = grid_size
         self.baseline = baseline
 
-    def __call__(self, model: Model, explainer_w_args: ExplainerWArgs, sample: Tensor, label, pred, pred_idx, result):
+    def __call__(self, model: Model, explainer: Explainer, sample: Tensor, label, pred, pred_idx, result):
         pred = pred[:, label]
         print(self.n_perturbations)
         repeated_sample = sample.repeat(

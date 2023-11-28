@@ -50,7 +50,7 @@ def get_imagenet_dataset(transform, subset_size: int=100, root_dir="./data/Image
     os.chdir(Path(__file__).parent) # ensure path
     dataset = ImageNetDataset(root_dir=root_dir, transform=transform)
     indices = list(range(len(dataset)))
-    random.shuffle(indices)
+    # random.shuffle(indices)
     subset = Subset(dataset, indices=indices[:subset_size])
     return subset
 

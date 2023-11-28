@@ -13,7 +13,8 @@ def postprocess_attr(
     elif sign == 'negative':
         attr = -torch.nn.functional.relu(-attr)
     else:
-        raise NotImplementedError
+        pass
+        # raise NotImplementedError
     postprocessed = attr.permute((1, 2, 0)).sum(dim=-1)
     attr_max = torch.max(postprocessed)
     attr_min = torch.min(postprocessed)

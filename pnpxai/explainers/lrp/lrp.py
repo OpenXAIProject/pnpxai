@@ -2,7 +2,7 @@ from typing import Dict
 
 from zennit.attribution import Gradient
 from zennit.canonizers import SequentialMergeBatchNorm
-from zennit.composites import EpsilonPlus
+from zennit.composites import LayerMapComposite
 
 from pnpxai.core._types import Model
 from pnpxai.explainers._explainer import Explainer
@@ -19,7 +19,7 @@ class LRP(Explainer):
         return {
             "attributor_type": Gradient,
             "canonizers": [SequentialMergeBatchNorm()],
-            "composite_type": EpsilonPlus,
+            "composite_type": LayerMapComposite,
             "additional_composite_args": {},
             "n_classes": 1000,
         }
