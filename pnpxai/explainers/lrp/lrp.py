@@ -1,25 +1,50 @@
-from typing import Dict
+from typing import Any, List, Sequence, Optional, Dict
+from torch import Tensor
+from captum.attr import LRP as LRPCaptum
+from captum._utils.typing import TargetType
+from plotly import express as px
+from plotly.graph_objects import Figure
 
-from zennit.attribution import Gradient
-from zennit.canonizers import SequentialMergeBatchNorm
-from zennit.composites import EpsilonPlus
-
-from pnpxai.core._types import Model
+from pnpxai.core._types import Model, DataSource, Task
 from pnpxai.explainers._explainer import Explainer
-from .captum_like import CaptumLikeZennit
+
 
 class LRP(Explainer):
     def __init__(self, model: Model):
-        super().__init__(
-            source = CaptumLikeZennit,
-            model = model,
+        super(LRP, self).__init__(model)
+        self.source = LRPCaptum(model)
+
+    def attribute(
+        self,
+        inputs: DataSource,
+        targets: TargetType = None,
+        additional_forward_args: Any = None,
+        return_convergence_delta: bool = False,
+        verbose: bool = False
+    ) -> DataSource:
+        attributions = self.source.attribute(
+            inputs=inputs,
+            target=targets,
+            additional_forward_args=additional_forward_args,
+            return_convergence_delta=return_convergence_delta,
+            verbose=verbose
         )
-    
-    def get_default_additional_kwargs(self) -> Dict:
-        return {
-            "attributor_type": Gradient,
-            "canonizers": [SequentialMergeBatchNorm()],
-            "composite_type": EpsilonPlus,
-            "additional_composite_args": {},
-            "n_classes": 1000,
-        }
+
+        return attributions
+
+    def format_outputs_for_visualization(
+        self,
+        inputs: DataSource,
+        targets: DataSource,
+        explanations: DataSource,
+        task: Task,
+        kwargs: Optional[Dict[str, Any]] = None,
+    ):
+        explanations = explanations.permute((1, 2, 0))
+        return super().format_outputs_for_visualization(
+            inputs=inputs,
+            targets=targets,
+            explanations=explanations,
+            task=task,
+            kwargs=kwargs
+        )
