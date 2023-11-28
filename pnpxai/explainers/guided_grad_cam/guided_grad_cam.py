@@ -1,39 +1,68 @@
-from typing import Dict, List, Sequence, Optional
-from torch import nn
+from typing import List, Dict, Optional, Any
+from torch import nn, Tensor
 
 from captum.attr import GuidedGradCam as GuidedGradCamCaptum
+from captum._utils.typing import TargetType
 
-from pnpxai.core._types import Model
+from pnpxai.core._types import Model, DataSource, Task
+from pnpxai.explainers.utils.operation_graph import OperationGraph
 from pnpxai.explainers._explainer import Explainer
+
 
 class GuidedGradCam(Explainer):
     def __init__(self, model: Model):
-        super().__init__(
-            source = GuidedGradCamCaptum,
-            model = model,
+        super().__init__(model=model)
+        self.source = GuidedGradCamCaptum(
+            self.model,
+            layer=self._find_last_conv_layer()
         )
 
-    @property
-    def _attributor_arg_keys(self) -> List[str]:
-        return ["layer"]
-    
-    def get_default_additional_kwargs(self) -> Dict:
-        return {
-            "layer": self._find_last_conv_layer(self.model.modules()),
-            "additional_forward_args": None,
-            "interpolate_mode": "nearest",
-            "attribute_to_layer_input": False,
-        }
-    
-    # TODO: integrate with ..utils.operation_graph
-    def _find_last_conv_layer(self, modules: Sequence[nn.Module]) -> Optional[nn.Conv2d]:
-        last_conv = None
-        for module in modules:
-            if isinstance(module, nn.Conv2d):
-                last_conv = module
+    def _find_last_conv_layer(self) -> Optional[nn.Conv2d]:
+        op_graph = OperationGraph(self.model)
+        if op_graph.tail is None:
+            return None
 
-            submodules = list(module.children())
-            if len(submodules) > 0:
-                last_conv = self._find_last_conv_layer(submodules)
-        
-        return last_conv
+        nodes_to_visit = [op_graph.tail]
+        while len(nodes_to_visit) > 0:
+            node = nodes_to_visit.pop()
+            if isinstance(node.operator, nn.Conv2d):
+                return node.operator
+
+            nodes_to_visit.extend(node.prev_nodes)
+
+        return None
+
+    def attribute(
+        self,
+        inputs: DataSource,
+        targets: TargetType = None,
+        additional_forward_args: Any = None,
+        interpolate_mode: str = "nearest",
+        attribute_to_layer_input: bool = False,
+    ) -> List[Tensor]:
+        attributions = self.source.attribute(
+            inputs=inputs,
+            target=targets,
+            additional_forward_args=additional_forward_args,
+            interpolate_mode=interpolate_mode,
+            attribute_to_layer_input=attribute_to_layer_input,
+        )
+
+        return attributions
+
+    def format_outputs_for_visualization(
+        self,
+        inputs: DataSource,
+        targets: DataSource,
+        explanations: DataSource,
+        task: Task,
+        kwargs: Optional[Dict[str, Any]] = None,
+    ):
+        explanations = explanations.permute((1, 2, 0))
+        return super().format_outputs_for_visualization(
+            inputs=inputs,
+            targets=targets,
+            explanations=explanations,
+            task=task,
+            kwargs=kwargs
+        )
