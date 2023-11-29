@@ -11,7 +11,8 @@ const Footer: React.FC = () => {
         py: 3,
         mt: 4,
         borderTop: 1,
-        borderColor: 'divider'
+        borderColor: 'divider',
+        marginTop: 0,
       }}
     >
       <Container maxWidth="lg">
@@ -23,9 +24,6 @@ const Footer: React.FC = () => {
           <Link href="https://github.com/OpenXAIProject/pnpxai" target="_blank" rel="noopener noreferrer">
             GitHub
           </Link>.
-        </Typography>
-        <Typography variant="body2" align="center" sx={{ mt: 1 }}>
-          Built with ❤️ by the Open Source Community
         </Typography>
       </Container>
     </Box>

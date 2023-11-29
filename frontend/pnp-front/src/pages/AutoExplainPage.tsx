@@ -1,77 +1,111 @@
-// src/pages/ModelExplainPage.tsx
+// src/pages/AutoExplainPage.tsx
 import React, { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { Container, Grid, Card, Select, MenuItem, Button, Typography, Chip } from '@mui/material';
-import { fetchData, selectData, DataType } from '../features/yourDataSlice';
-import { selectAlgorithms, AlgorithmType } from '../features/algorithmSlice';
-import { RootState } from '../app/store'; // Adjust this import path as necessary
-import { setSelectedData, setSelectedAlgorithms, setPlotData, setLabelData } from '../features/explainSlice';
-import ModelExplanation from '../components/ModelExplanation/ModelExplanation';
+import { Grid, Container, Tabs, Tab, Box, Button, Typography, Card, CardContent } from '@mui/material';
+import Sidebar from '../components/SideBar/SideBar';
+import ImageClassificationResults from '../components/ImageClassificationResult';
+import mockResult from '../assets/mockup/mockResults.json';
+
+interface ModelPrediction {
+  label: string;
+  probability: number;
+}
+
+interface ImageClassificationResult {
+  imageName : string;
+  imagePath: string;
+  trueLabel: string;
+  modelPredictions: ModelPrediction[];
+  isCorrect: boolean;
+}
+
+const mockResults: ImageClassificationResult[] = mockResult;
 
 
-const mockLabelData = [
-  { id: 1, realLabel: 'Cat', predictedLabel: 'Cat', evaluationResults: { accuracy: 0.95, precision: 0.93 } },
-  { id: 2, realLabel: 'Dog', predictedLabel: 'Dog', evaluationResults: { accuracy: 0.90, precision: 0.89 } },
-  { id: 3, realLabel: 'Bird', predictedLabel: 'Cat', evaluationResults: { accuracy: 0.75, precision: 0.80 } },
-  // Add more data as needed
+const experiments = [
+  {
+    name: "Experiment 1",
+    algorithms: ["Algorithm 1", "Algorithm 2", "Algorithm 3"],
+    images : mockResult.slice(0,3)
+  },
+  {
+    name: "Experiment 2",
+    algorithms: ["Algorithm 1", "Algorithm 2", "Algorithm 3", "Algorithm 4"],
+    images : mockResult.slice(3,6)
+    
+  },
 ];
 
-const AutoExplainPage: React.FC = () => {
-  const dispatch = useDispatch();
-  const data: DataType[] = useSelector(selectData);
-  const algorithms: AlgorithmType[] = useSelector(selectAlgorithms);
-  const selectedData = useSelector((state: RootState) => state.explain.selectedData);
-  const selectedAlgorithms = useSelector((state: RootState) => state.explain.selectedAlgorithms);
-  const [showPlot, setShowPlot] = useState(false); // Add state to control plot visibility
+const ModelExplainPage: React.FC = () => {
+  const [selectedExperimentTab, setSelectedExperimentTab] = useState(0);
+  const [selectedAlgorithms, setSelectedAlgorithms] = useState<Record<number, string[]>>({});
+  const [numObjectsinLine, setNumObjectsinLine] = useState(3); // Default value
 
   useEffect(() => {
-      dispatch(fetchData());
-      dispatch(setLabelData([
-          ...mockLabelData
-      ]));
-  }, [dispatch]);
+    const initialSelectedAlgorithms = experiments.reduce((acc, _, index) => {
+      acc[index] = experiments[index].algorithms;
+      return acc;
+    }, {} as Record<number, string[]>);
+    setSelectedAlgorithms(initialSelectedAlgorithms);
+  }, []);
 
-  const handleDataChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    const newData = event.target.value as number;
-    if (!selectedData.includes(newData)) {
-      dispatch(setSelectedData([...selectedData, newData]));
-    }
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [filteredResults, setFilteredResults] = useState<ImageClassificationResult[]>([]);
+
+  const handleRunClick = () => {
+    setFilteredResults(mockResults.filter(result => selectedImages.includes(result.imageName)));
   };
 
-  const handleAlgorithmChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    const newAlgorithm = event.target.value as number;
-    if (!selectedAlgorithms.includes(newAlgorithm)) {
-      dispatch(setSelectedAlgorithms([...selectedAlgorithms, newAlgorithm]));
-    }
-  };
-
-  const handleDataDelete = (dataId: number) => {
-    dispatch(setSelectedData(selectedData.filter(id => id !== dataId)));
-  };
-
-  const handleAlgorithmDelete = (algorithmId: number) => {
-    dispatch(setSelectedAlgorithms(selectedAlgorithms.filter(id => id !== algorithmId)));
-  };
-
-  const runAnalysis = () => {
-      // Add code to run analysis here
-      // Change show plot state to true to show the plot
-      setShowPlot(true);
+  const handleImageSelectionChange = (selectedImages: string[]) => {
+    setSelectedImages(selectedImages);
   };
 
   return (
-      <Grid container spacing={2} sx={{ marginTop : 2 }}>
-        <Grid item xs={12}>
-          <Typography variant="h4">자동으로 설명하기</Typography>
-        </Grid>
-        <Grid item xs={12}>
-          <Button variant="contained" color="primary" onClick={runAnalysis}>
-            Run
-          </Button>
-        </Grid>
+    <Grid container direction="row" spacing={0} sx={{ flexGrow: 1, width: '100%', minHeight: 800 }}>
+      {/* Sidebar Grid */}
+      <Grid item xs={3}>
+        <Sidebar
+          experiments={experiments}
+          selectedExperimentTab={selectedExperimentTab}
+          selectedAlgorithms={selectedAlgorithms}
+          drawerWidth={300}
+          setSelectedAlgorithms={setSelectedAlgorithms}
+          onImageSelectionChange={handleImageSelectionChange}
+          setNumObjectsinLine={setNumObjectsinLine}
+        />
       </Grid>
-      
+
+      {/* Main Content Grid */}
+      <Grid item xs={9} sx={{ marginTop: 3 }}>
+        <Container maxWidth="lg">
+          {/* Instructions Card */}
+          {/* ... Instructions Card Content ... */}
+
+          {/* Experiment Tabs */}
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+            <Tabs value={selectedExperimentTab} onChange={(event, newValue) => setSelectedExperimentTab(newValue)} aria-label="Experiment tabs">
+              {experiments.map((value, index) => (
+                <Tab label={value['name']} key={index} />
+              ))}
+            </Tabs>
+          </Box>
+
+          {/* Auto Explain Button */}
+          <Button variant="contained" color="primary" onClick={handleRunClick}>
+            Auto Explain
+          </Button>
+
+          {/* Image Classification Results */}
+          {filteredResults.length > 0 && (
+            <Box sx={{ mt: 2, width: 1000 }}>
+              <Typography variant='h2' sx={{ m: 3 }}> 아래 내용은 설명된 부분입니다 </Typography>
+              <ImageClassificationResults numObjectsinLine={numObjectsinLine} algorithms={selectedAlgorithms[selectedExperimentTab]} results={filteredResults} />
+            </Box>
+          )}
+        </Container>
+      </Grid>
+    </Grid>
   );
 };
 
-export default AutoExplainPage;
+export default ModelExplainPage;
+

@@ -2,7 +2,7 @@
 import React from 'react';
 import NavBar from '../components/NavBar/NavBar';
 import Footer from '../components/Footer/Footer';
-import { Box, Container } from '@mui/material';
+import { Container, Box } from '@mui/material';
 
 type LayoutProps = {
   children: React.ReactNode;
@@ -12,9 +12,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
     <>
       <NavBar />
-      <Container maxWidth="lg">
-        <main>{children}</main>
-      </Container>
+      <Box>
+        {children}
+      </Box>
       <Footer />
     </>
   );

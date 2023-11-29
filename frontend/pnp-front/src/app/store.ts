@@ -1,15 +1,10 @@
 // In your store configuration file
 import { configureStore } from '@reduxjs/toolkit';
-import yourDataReducer from '../features/yourDataSlice';
-import algorithmReducer from '../features/algorithmSlice';
-import explainReducer from '../features/explainSlice';
-
+import experimentReducer from '../features/experimentSlice';
 
 export const store = configureStore({
   reducer: {
-    data: yourDataReducer,
-    algorithm: algorithmReducer,
-    explain: explainReducer,
+    experiments: experimentReducer,
   },
 });
 
