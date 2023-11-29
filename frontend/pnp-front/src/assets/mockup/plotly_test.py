@@ -56,7 +56,7 @@ if __name__ == '__main__':
             "name": "Experiment 1",
             "model" : "Model 1",
             "modelDetected" : True,
-            "modelStructure" : "Model Structure" + "\n"*20,
+            "modelStructure" : "Model Structure"*40,
             "algorithms": ["Algorithm 1", "Algorithm 2", "Algorithm 3"],
             "data" : [
                 {"sample_id" : 1, "name" : "Image 1", "json" : ""},
@@ -69,7 +69,7 @@ if __name__ == '__main__':
             "name": "Experiment 2",
             "model" : "Model 2",
             "modelDetected" : True,
-            "modelStructure" : "Model Structure" + "\n"*20,
+            "modelStructure" : "Model Structure"*40,
             "algorithms": ["Algorithm 1", "Algorithm 2", "Algorithm 3", "Algorithm 4"],
             "data" : [
                 {"sample_id" : 4, "name" : "Image 4", "json" : ""},

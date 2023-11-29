@@ -23,8 +23,8 @@ const ModelInfoComponent: React.FC = () => {
   
 
   const isNoModelDetected = experimentData.every((experiment) => {
-    // return !experiment.modelDetected;
-    return true; // For testing
+    return !experiment.modelDetected;
+    // return true; // For testing
 
   });
 
@@ -69,7 +69,7 @@ const ModelInfoComponent: React.FC = () => {
                       <Box sx={{ m: 5, minHeight: "50px" }}>
                         <Card>
                           <CardContent>
-                            <Alert severity="warning"> Retry. Only torch.nn.Module Based model can be detected.</Alert>
+                            <Alert severity="warning"> We cannot identify Your Model Structure. Only torch.nn.Module Based model can be detected.</Alert>
                           </CardContent>
                         </Card>
                       </Box>

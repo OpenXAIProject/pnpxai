@@ -7,4 +7,4 @@ RUN npm install
 
 COPY . /project
 
-CMD [ "npm", "run", "dev" ]
+ENV NODE_OPTIONS=--max-old-space-size=4096

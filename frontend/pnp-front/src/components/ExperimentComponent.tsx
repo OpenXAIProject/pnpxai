@@ -123,8 +123,11 @@ const ExperimentComponent: React.FC<Props> = ({ id }) => {
 
     setTimeout(() => {
       setLoading(false); // Hide loading modal after 1 second
-      setPredictions(makePredictions(selectedImages));
-      setEvaluations(makeEvaluations(selectedImages, selectedAlgorithms));
+      const preds = makePredictions(selectedImages);
+      preds[0].isCorrect = false; // For testing
+      const evals = makeEvaluations(selectedImages, selectedAlgorithms);
+      setPredictions(preds);
+      setEvaluations(evals);
       setIsExperimentRun(true);
     }, 3000);
 
@@ -214,17 +217,18 @@ const ExperimentComponent: React.FC<Props> = ({ id }) => {
               <Grid item xs={12} sm={6} md={4} key={index}>
                 <Paper 
                   sx={{ 
-                    height: "200px", 
+                    height: "300px", 
                     display: 'flex', 
-                    justifyContent: 'center', 
-                    alignItems: 'center', 
+                    flexDirection: 'column', // Set the flex direction to column
+                    justifyContent: 'center', // Aligns children vertically in the center
+                    alignItems: 'center', // Aligns children horizontally in the center
                     cursor: 'pointer', 
                     opacity: selectedImages.includes(imageData.name) ? 0.5 : 1
                   }}
                   onClick={() => handleImageClick(imageData.name)}
                 >
-                  <Plot data={JSON.parse(imageData.json).data} layout={JSON.parse(imageData.json).layout} />
-                  <Typography variant="subtitle1" align="center">{imageData.name}</Typography>
+                    <Plot data={JSON.parse(imageData.json).data} layout={JSON.parse(imageData.json).layout} />
+                    <Typography variant="subtitle1" align="center">{imageData.name}</Typography>
                 </Paper>
               </Grid>
             ))}

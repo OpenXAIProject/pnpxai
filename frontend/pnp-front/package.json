@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --host",
     "start": "vite",
-    "build": "tsc && vite build",
+    "build": "NODE_OPTIONS=--max-old-space-size=4096 tsc && vite build",
     "preview": "vite preview",
     "test": "vitest",
     "format": "prettier --write .",
@@ -28,7 +28,6 @@
     "react-chartjs-2": "^5.2.0",
     "react-dom": "^18.2.0",
     "react-plotly.js": "^2.6.0",
-    "react-plotlyjs": "^0.4.4",
     "react-redux": "^8.0.1",
     "react-router-dom": "^6.18.0",
     "styled-components": "^6.1.0"
@@ -40,6 +39,7 @@
     "@testing-library/user-event": "^14.2.5",
     "@types/react": "^18.0.15",
     "@types/react-dom": "^18.0.6",
+    "@types/react-plotly.js": "^2.6.3",
     "@types/react-router-dom": "^5.3.3",
     "@types/testing-library__jest-dom": "^5.14.5",
     "@vitejs/plugin-react": "^4.0.0",

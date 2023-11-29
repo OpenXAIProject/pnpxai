@@ -20,7 +20,7 @@ const Visualizations: React.FC<VisualizationsProp> = ({
   
   const algorithmList = ["Original", ...selectedAlgorithms]
   return (
-    <Box sx={{ m: 1 }}>
+    <Box sx={{ mt: 4 }}>
       {selectedImages.map((imageName, index) => {
         const imagePrediction = predictions.find(pred => pred.image === imageName);
         const imageEvaluations = evaluations.filter((evaluation) => evaluation.image === imageName);
