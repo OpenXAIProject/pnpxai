@@ -1,15 +1,18 @@
 import warnings
 from _operator import add
-from typing import Any, List, Dict
+from typing import Any, List, Dict, Optional
 
 import torch
 from torch import nn
 from captum._utils.typing import TargetType
 
-from zennit.attribution import Gradient
+from zennit.core import Composite
+from zennit.attribution import Attributor, Gradient
 from zennit.canonizers import SequentialMergeBatchNorm
 from zennit.composites import LayerMapComposite, layer_map_base
+from zennit.rules import Epsilon
 from zennit.layer import Sum
+from zennit.types import Linear
 
 from pnpxai.core._types import Model, DataSource
 from pnpxai.detector import ModelArchitecture
@@ -18,6 +21,11 @@ from pnpxai.detector._core import NodeInfo
 from .rules import AttentionHeadRule, LayerNormRule
 from .utils import list_args_for_stack
 
+_layer_map_base = [
+    (Linear, Epsilon()),
+    (nn.LayerNorm, LayerNormRule()),
+    (nn.MultiheadAttention, AttentionHeadRule(1e-9)),
+] + layer_map_base()
 
 class CaptumLikeZennit:
     def __init__(self, model: Model):
@@ -58,43 +66,35 @@ class CaptumLikeZennit:
             )
         return ma.traced_model
     
-    @staticmethod
-    def _has_attn_layer(model):
-        ma = ModelArchitecture(model)
-        attn_node = ma.find_node(lambda n: isinstance(n.operator, nn.MultiheadAttention))
-        return attn_node is not None
-                
+    # @staticmethod
+    # def _get_attn_layers(model):
+    #     ma = ModelArchitecture(model)
+    #     attn_nodes = ma.find_node(lambda n: isinstance(n.operator, nn.MultiheadAttention), all=True)
+    #     return [(n.operator, n.kwargs) for n in attn_nodes]
+    
     def attribute(
         self,
         inputs: DataSource,
         target: TargetType,
-        attributor_type: Any = Gradient,
-        canonizers: Any = [SequentialMergeBatchNorm()],
-        composite_type: Any = LayerMapComposite,
-        additional_composite_args: Dict = {},
+        attributor_type: Optional[type[Attributor]] = None,
+        composite: Optional[Composite] = None,
         n_classes: int = 1000,
     ) -> List[torch.Tensor]:
         model = self._replace_add_func_with_mod(self.model)
-        if isinstance(composite_type, type(LayerMapComposite)):
-            additional_composite_args["layer_map"] = layer_map_base()
-        composite = composite_type(canonizers=canonizers, **additional_composite_args)
-        if self._has_attn_layer(self.model):
-            # [GH] implementation trick
-            # nn.MultiheadAttention is an instance of zennit.type.Activation
-            # to which Pass rule is assigned by layer_map_base(). By simply
-            # change the order of composite.layer_map, assign AttentionHeadRule
-            composite.layer_map = [
-                (nn.LayerNorm, LayerNormRule()),
-                (nn.MultiheadAttention, AttentionHeadRule()),
-            ] + composite.layer_map
-
         if isinstance(target, int):
             targets = [target]
         elif torch.is_tensor(target):
             targets = target.tolist()
         else:
             raise Exception(f"[LRP] Unsupported target type: {type(target)}")
+        
+        if attributor_type is None:
+            attributor_type = Gradient
+        if composite is None:
+            canonizers = [SequentialMergeBatchNorm()]
+            composite = LayerMapComposite(layer_map=_layer_map_base, canonizers=canonizers)
 
-        with attributor_type(model=model, composite=composite) as attributor:
+        # import pdb; pdb.set_trace()
+        with attributor_type(model=model, composite=composite) as attributor:            
             _, relevance = attributor(inputs, torch.eye(n_classes)[targets])
         return relevance

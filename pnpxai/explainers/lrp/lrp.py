@@ -18,8 +18,6 @@ class LRP(Explainer):
     def get_default_additional_kwargs(self) -> Dict:
         return {
             "attributor_type": Gradient,
-            "canonizers": [SequentialMergeBatchNorm()],
-            "composite_type": LayerMapComposite,
-            "additional_composite_args": {},
+            "composite": None,
             "n_classes": 1000,
         }
