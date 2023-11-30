@@ -5,7 +5,6 @@ from typing import List, Type
 
 from pnpxai.explainers import *
 from pnpxai.evaluator.infidelity import Infidelity
-from pnpxai.evaluator.mufidelity import muFidelity
 from pnpxai.evaluator.sensitivity import Sensitivity
 from pnpxai.recommender._types import RecommenderOutput
 

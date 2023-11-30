@@ -3,7 +3,7 @@ from captum._utils.typing import TargetType
 
 from pnpxai.core._types import Model, DataSource, Task
 from pnpxai.explainers._explainer import Explainer
-from .lrp_zennit import LRPZennit
+from .lrp_zennit import LRPZennit, Attributor, Composite
 
 class LRP(Explainer):
     def __init__(self, model: Model):
@@ -14,16 +14,18 @@ class LRP(Explainer):
         self,
         inputs: DataSource,
         targets: TargetType = None,
-        additional_forward_args: Any = None,
-        return_convergence_delta: bool = False,
-        verbose: bool = False
+        attributor_type: Optional[type[Attributor]] = None,
+        composite: Optional[Composite] = None,
+        n_classes: Optional[int] = 1000,
     ) -> DataSource:
+        if n_classes is None:
+            n_classes = self.model(inputs).shape[-1]
         attributions = self.source.attribute(
             inputs=inputs,
-            target=targets,
-            additional_forward_args=additional_forward_args,
-            return_convergence_delta=return_convergence_delta,
-            verbose=verbose
+            targets=targets,
+            attributor_type=attributor_type,
+            composite=composite,
+            n_classes=n_classes,
         )
 
         return attributions

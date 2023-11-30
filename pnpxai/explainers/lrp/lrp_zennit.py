@@ -75,7 +75,7 @@ class LRPZennit(Explainer):
         composite: Optional[Composite] = None,
         n_classes: int = 1000,
     ) -> List[torch.Tensor]:
-        model = self._replace_add_func_with_mod(self.model)
+        self._replace_add_func_with_mod()
         if isinstance(targets, int):
             targets = [targets]
         elif torch.is_tensor(targets):
@@ -89,6 +89,6 @@ class LRPZennit(Explainer):
             canonizers = [SequentialMergeBatchNorm()]
             composite = LayerMapComposite(layer_map=DEFAULT_LAYER_MAP, canonizers=canonizers)
 
-        with attributor_type(model=model, composite=composite) as attributor:            
+        with attributor_type(model=self.model, composite=composite) as attributor:            
             _, relevance = attributor(inputs, torch.eye(n_classes)[targets])
         return relevance
