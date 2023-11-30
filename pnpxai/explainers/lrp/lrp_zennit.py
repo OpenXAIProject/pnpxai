@@ -21,12 +21,6 @@ from pnpxai.explainers._explainer import Explainer
 from .rules import AttentionHeadRule, LayerNormRule
 from .utils import list_args_for_stack
 
-DEFAULT_LAYER_MAP = [
-    (Linear, Epsilon()),
-    (nn.LayerNorm, LayerNormRule()),
-    (nn.MultiheadAttention, AttentionHeadRule(1e-9)),
-] + layer_map_base()
-
 class LRPZennit(Explainer):
     def __init__(self, model: Model):
         super(LRPZennit, self).__init__(model)
@@ -42,9 +36,11 @@ class LRPZennit(Explainer):
             all=True
         )
         if add_func_nodes:
-            self.__set_model_with_functional_nodes(ma, add_func_nodes)
+            traced_model = self.__get_model_with_functional_nodes(ma, add_func_nodes)
+            return traced_model
+        return self.model
 
-    def __set_model_with_functional_nodes(self, ma: ModelArchitecture, functional_nodes: List[NodeInfo]):
+    def __get_model_with_functional_nodes(self, ma: ModelArchitecture, functional_nodes: List[NodeInfo]):
         warnings.warn(
             f"\n[LRP] Warning: {len(functional_nodes)} add operations in function detected. Automatically changed to modules."
         )
@@ -65,17 +61,16 @@ class LRPZennit(Explainer):
                 stack_node,
                 before=True,
             )
-        self.model = ma.traced_model
+        return ma.traced_model
 
     def attribute(
         self,
         inputs: DataSource,
         targets: TargetType,
-        attributor_type: Optional[type[Attributor]] = None,
-        composite: Optional[Composite] = None,
+        epsilon: float = 1e-6,
         n_classes: int = 1000,
     ) -> List[torch.Tensor]:
-        self._replace_add_func_with_mod()
+        model = self._replace_add_func_with_mod()
         if isinstance(targets, int):
             targets = [targets]
         elif torch.is_tensor(targets):
@@ -83,12 +78,14 @@ class LRPZennit(Explainer):
         else:
             raise Exception(f"[LRP] Unsupported target type: {type(targets)}")
         
-        if attributor_type is None:
-            attributor_type = Gradient
-        if composite is None:
-            canonizers = [SequentialMergeBatchNorm()]
-            composite = LayerMapComposite(layer_map=DEFAULT_LAYER_MAP, canonizers=canonizers)
+        layer_map = [
+            (Linear, Epsilon(epsilon=epsilon)),
+            (nn.MultiheadAttention, AttentionHeadRule(stabilizer=epsilon)),
+            (nn.LayerNorm, LayerNormRule(stabilizer=epsilon)),
+        ] + layer_map_base()
+        canonizers = [SequentialMergeBatchNorm()]
+        composite = LayerMapComposite(layer_map=layer_map, canonizers=canonizers)
 
-        with attributor_type(model=self.model, composite=composite) as attributor:            
+        with Gradient(model=model, composite=composite) as attributor:            
             _, relevance = attributor(inputs, torch.eye(n_classes)[targets])
         return relevance

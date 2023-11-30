@@ -14,8 +14,7 @@ class LRP(Explainer):
         self,
         inputs: DataSource,
         targets: TargetType = None,
-        attributor_type: Optional[type[Attributor]] = None,
-        composite: Optional[Composite] = None,
+        epsilon: float = 1e-6,
         n_classes: Optional[int] = 1000,
     ) -> DataSource:
         if n_classes is None:
@@ -23,8 +22,7 @@ class LRP(Explainer):
         attributions = self.source.attribute(
             inputs=inputs,
             targets=targets,
-            attributor_type=attributor_type,
-            composite=composite,
+            epsilon=epsilon,
             n_classes=n_classes,
         )
 
