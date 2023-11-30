@@ -87,5 +87,5 @@ class LRPZennit(Explainer):
         composite = LayerMapComposite(layer_map=layer_map, canonizers=canonizers)
 
         with Gradient(model=model, composite=composite) as attributor:            
-            _, relevance = attributor(inputs, torch.eye(n_classes)[targets])
+            _, relevance = attributor(inputs, torch.eye(n_classes)[targets].to(self.device))
         return relevance
