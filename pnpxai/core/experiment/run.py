@@ -62,7 +62,7 @@ class Run:
     def visualize(self, task: Task):
         explanations = self.explainer.format_outputs_for_visualization(
             inputs=self.inputs,
-            target=self.targets,
+            targets=self.targets,
             explanations=self.explanations,
             task=task
         )
