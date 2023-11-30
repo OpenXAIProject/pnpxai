@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 import warnings
 import torch.nn as nn
+from typing import List, Type
 
 from pnpxai.explainers import *
 from pnpxai.evaluator.infidelity import Infidelity
@@ -59,7 +60,7 @@ class XaiRecommender:
     def _find_overlap(self, *lists):
         return list(set.intersection(*lists))
 
-    def filter_methods(self, question, task, architecture):
+    def filter_methods(self, question, task, architecture) -> List[Type[Explainer]]:
         question_to_method = self.question_table[question]
         task_to_method = self.task_table[task]
 

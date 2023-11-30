@@ -1,16 +1,16 @@
 import torch
 
 from pnpxai.core._types import Model
-from pnpxai.explainers import Explainer
-from pnpxai.evaluator._evaluator import EvaluatorMetric
+from pnpxai.explainers import ExplainerWArgs
+from pnpxai.evaluator._evaluator import EvaluationMetric
 
 
-class Sensitivity(EvaluatorMetric):
+class Sensitivity(EvaluationMetric):
     def __init__(self, n_iter: int = 10, epsilon: float = 0.2):
         self.n_iter = n_iter
         self.epsilon = epsilon
         
-    def __call__(self, model: Model, explainer: Explainer, sample, label, pred, pred_idx, result):
+    def __call__(self, model: Model, explainer: ExplainerWArgs, sample, label, pred, pred_idx, result):
         norm = torch.linalg.norm(result)
 
         device = next(model.parameters()).device
