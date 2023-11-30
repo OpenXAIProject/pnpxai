@@ -4,16 +4,16 @@ import numpy as np
 
 from pnpxai.core._types import Model
 from pnpxai.explainers import ExplainerWArgs
-from pnpxai.evaluator._evaluator import EvaluatorMetric
+from pnpxai.evaluator._evaluator import EvaluationMetric
 
 
-class Infidelity(EvaluatorMetric):
+class Infidelity(EvaluationMetric):
     def __init__(self, n_perturbations: int = 200, noise_scale: int = 0.2, batch_size: int = 32):
         self.n_perturbations = n_perturbations
         self.noise_scale = noise_scale
         self.batch_size = batch_size
 
-    def __call__(self, model: Model, explainer_w_args: ExplainerWArgs, sample: Tensor, label, pred, pred_idx, result):
+    def __call__(self, model: Model, explainer: ExplainerWArgs, sample: Tensor, label, pred, pred_idx, result):
         pred = pred[:, label]
         print(self.n_perturbations)
         repeated_sample = sample.repeat(

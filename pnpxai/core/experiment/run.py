@@ -1,11 +1,16 @@
-from time import time_ns
 import warnings
-from typing import Sequence, Optional, Callable, Any, List
+from dataclasses import dataclass
+from time import time_ns
+from typing import Optional, Callable, Any
+from functools import partial
 
+from torch import Tensor
+
+from pnpxai.core._types import Task
 from pnpxai.explainers import ExplainerWArgs
+from pnpxai.explainers.utils.post_process import postprocess_attr
 from pnpxai.evaluator import XaiEvaluator
-from pnpxai.core._types import Model, Args, DataSource
-from pnpxai.utils import class_to_string
+from pnpxai.core._types import DataSource
 
 
 class Run:
@@ -13,50 +18,56 @@ class Run:
         self,
         inputs: DataSource,
         targets: DataSource,
-        explainer_w_args: ExplainerWArgs,
+        explainer: ExplainerWArgs,
         evaluator: Optional[XaiEvaluator] = None,
     ):
-        self.explainer_w_args = explainer_w_args
-        self.evaluator = evaluator
         self.inputs = inputs
         self.targets = targets
+        self.explainer = explainer
+        self.evaluator = evaluator
 
-        self.explanation: List[Any] = []
-        self.evaluation: List[Any] = []
+        self.explanations: Any = None
+        self.evaluations: Any = None
 
         self.started_at: int
         self.finished_at: int
 
     def execute(self):
         self.started_at = time_ns()
-        explainer_method = class_to_string(self.explainer_w_args.explainer)
-        print(f"[Run] Explaining {explainer_method}")
-        for inputs, target in zip(self.inputs, self.targets):
-            try:
-                explainer = self.explainer_w_args.explainer
-                explainer_args = self.explainer_w_args.args
-                self.explanation.append(explainer.attribute(
-                    inputs=inputs,
-                    target=target,
-                    *explainer_args.args,
-                    **explainer_args.kwargs
-                ))
-            except NotImplementedError as e:
-                warnings.warn(f"\n[Run] Warning: {repr(explainer)} is not currently supported.")
-            
-        print(f"[Run] Evaluating {explainer_method}")
-        if self.evaluator is not None and len(self.explanation) > 0:
-            inputs, target = next(iter(zip(self.inputs, self.targets)))
+        print(f"[Run] Explaining {self.explainer.__class__.__name__}")
+        try:
+            self.explanations = self.explainer.attribute(
+                inputs=self.inputs,
+                targets=self.targets,
+            )
+        except NotImplementedError as e:
+            warnings.warn(
+                f"\n[Run] Warning: {repr(self.explainer)} is not currently supported.")
 
-            explanation = self.explanation[0][:1]
-            inputs = inputs[0][None, :]
-            target = target[0]
+        print(f"[Run] Evaluating {self.explainer.__class__.__name__}")
+        if self.evaluator is not None and self.explanations is not None and len(self.explanations) > 0:
+            inputs, target, explanation = next(iter(zip(
+                self.inputs, self.targets, self.explanations
+            )))
 
-            self.evaluation.append(self.evaluator(
-                inputs, target, self.explainer_w_args, explanation
-            ))
+            explanation = self.explanations[:1]
+            inputs = inputs[None, :]
+
+            self.evaluation = self.evaluator(
+                inputs, target, self.explainer, explanation
+            )
 
         self.finished_at = time_ns()
+
+    def visualize(self, task: Task):
+        explanations = self.explainer.format_outputs_for_visualization(
+            inputs=self.inputs,
+            targets=self.targets,
+            explanations=self.explanations,
+            task=task
+        )
+
+        return explanations
 
     @property
     def elapsed_time(self) -> Optional[int]:

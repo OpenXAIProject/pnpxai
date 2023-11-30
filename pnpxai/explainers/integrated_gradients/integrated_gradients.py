@@ -1,21 +1,17 @@
-from typing import Any, Sequence
+from typing import Sequence, Any, Union, Literal, Optional, Dict
 from torch import Tensor
+
 from captum.attr import IntegratedGradients as IntegratedGradientsCaptum
 from captum._utils.typing import BaselineType, TargetType
-from plotly import express as px
-from plotly.graph_objects import Figure
-import numpy as np
 
-from pnpxai.core._types import Model, DataSource
+from pnpxai.core._types import Model, DataSource, Task
 from pnpxai.explainers._explainer import Explainer
-
-from typing import Union, Literal
 
 
 class IntegratedGradients(Explainer):
     def __init__(self, model: Model):
-        super().__init__(model)
-        self.method = IntegratedGradientsCaptum(model)
+        super().__init__(model=model)
+        self.source = IntegratedGradientsCaptum(self.model)
 
     def attribute(
         self,
@@ -28,7 +24,7 @@ class IntegratedGradients(Explainer):
         internal_batch_size: Union[None, int] = None,
         return_convergence_delta: Literal[True] = False
     ) -> Tensor:
-        attributions = self.method.attribute(
+        attributions = self.source.attribute(
             inputs,
             baselines,
             target,
@@ -41,12 +37,23 @@ class IntegratedGradients(Explainer):
 
         return attributions
 
-    def format_outputs_for_visualization(self, inputs: DataSource, outputs: DataSource, *args, **kwargs) -> Sequence[Figure]:
-        attr_ig = []
+    def format_outputs_for_visualization(
+        self,
+        inputs: DataSource,
+        targets: DataSource,
+        explanations: DataSource,
+        task: Task,
+        kwargs: Optional[Dict[str, Any]] = None,
+    ):
+        if kwargs.get('return_convergence_delta', False):
+            explanations = explanations[0]
 
-        for attr, delta in outputs:
-            attr = np.transpose(
-                attr.squeeze().cpu().detach().numpy(), (1, 2, 0))
-            attr_ig.append(attr)
+        explanations = explanations.permute((1, 2, 0))
 
-        return [px.imshow(attr) for attr in attr_ig]
+        return super().format_outputs_for_visualization(
+            inputs=inputs,
+            targets=targets,
+            explanations=explanations,
+            task=task,
+            kwargs=kwargs
+        )

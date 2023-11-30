@@ -1,38 +1,46 @@
-from typing import Any, List, Sequence
-from torch import Tensor
-from captum.attr import LRP as LRPCaptum
+from typing import Any, Optional, Dict
 from captum._utils.typing import TargetType
-from plotly import express as px
-from plotly.graph_objects import Figure
 
-from pnpxai.core._types import Model, DataSource
+from pnpxai.core._types import Model, DataSource, Task
 from pnpxai.explainers._explainer import Explainer
-
+from .lrp_zennit import LRPZennit, Attributor, Composite
 
 class LRP(Explainer):
     def __init__(self, model: Model):
-        super().__init__(model)
-        self.method = LRPCaptum(model)
+        super(LRP, self).__init__(model)
+        self.source = LRPZennit(model)
 
     def attribute(
         self,
         inputs: DataSource,
-        target: TargetType = None,
-        additional_forward_args: Any = None,
-        return_convergence_delta: bool = False,
-        verbose: bool = False
-    ) -> List[Tensor]:
-        attributions = self.method.attribute(
+        targets: TargetType = None,
+        epsilon: float = 1e-6,
+        n_classes: Optional[int] = 1000,
+    ) -> DataSource:
+        if n_classes is None:
+            n_classes = self.model(inputs).shape[-1]
+        attributions = self.source.attribute(
             inputs=inputs,
-            target=target,
-            additional_forward_args=additional_forward_args,
-            return_convergence_delta=return_convergence_delta,
-            verbose=verbose
+            targets=targets,
+            epsilon=epsilon,
+            n_classes=n_classes,
         )
 
         return attributions
 
-    def format_outputs_for_visualization(self, inputs: DataSource, outputs: DataSource, *args, **kwargs) -> Sequence[Figure]:
-        return [[
-            px.imshow(output.permute((1, 2, 0))) for output in batch
-        ] for batch in outputs]
+    def format_outputs_for_visualization(
+        self,
+        inputs: DataSource,
+        targets: DataSource,
+        explanations: DataSource,
+        task: Task,
+        kwargs: Optional[Dict[str, Any]] = None,
+    ):
+        explanations = explanations.permute((1, 2, 0))
+        return super().format_outputs_for_visualization(
+            inputs=inputs,
+            targets=targets,
+            explanations=explanations,
+            task=task,
+            kwargs=kwargs
+        )

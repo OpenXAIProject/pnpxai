@@ -1,29 +1,68 @@
 from abc import abstractmethod
-from dataclasses import dataclass
-from typing import Any, Sequence, Optional
+from typing import Any, Optional, Dict
 
-import plotly.graph_objects as go
-
-from pnpxai.core._types import Model, DataSource, Args
+from pnpxai.core._types import Model, DataSource, Task
+from pnpxai.explainers.utils.post_process import postprocess_attr
 
 
 class Explainer:
-    def __init__(self, model: Model):
+    def __init__(
+        self,
+        model: Model,
+    ):
         self.model = model
-        pass
+        self.device = next(self.model.parameters()).device
 
     @abstractmethod
-    def attribute(self, inputs: DataSource, target: DataSource, *args: Any, **kwargs: Any) -> DataSource:
+    def attribute(self, inputs: DataSource, targets: DataSource, **kwargs) -> DataSource:
         pass
 
-    def format_outputs_for_visualization(self, inputs: DataSource, labels: DataSource, *args, **kwargs) -> Sequence[go.Figure]:
-        pass
+    def format_outputs_for_visualization(
+        self,
+        inputs: DataSource,
+        targets: DataSource,
+        explanations: DataSource,
+        task: Task,
+        kwargs: Optional[Dict[str, Any]] = None,
+    ):
+        return postprocess_attr(
+            attr=explanations,
+            sign="absolute"
+        )
 
 
-@dataclass
-class ExplainerWArgs:
-    explainer: Explainer
-    args: Optional[Args] = None
+class ExplainerWArgs():
+    def __init__(self, explainer: Explainer, kwargs: Optional[Dict[str, Any]] = None):
+        self.explainer = explainer
+        self.kwargs = kwargs or {}
 
-    def has_args(self):
-        return self.args is not None
+    def attribute(self, inputs: DataSource, targets: DataSource, **kwargs) -> DataSource:
+        kwargs = {
+            **self.kwargs,
+            "inputs": inputs,
+            "targets": targets,
+            **kwargs,
+        }
+        print(self.explainer)
+        attributions = self.explainer.attribute(**kwargs)
+        return attributions
+
+    def format_outputs_for_visualization(
+        self,
+        inputs: DataSource,
+        targets: DataSource,
+        explanations: DataSource,
+        task: Task,
+        **kwargs,
+    ):
+        kwargs = {
+            **self.kwargs,
+            **kwargs
+        }
+        return self.explainer.format_outputs_for_visualization(
+            inputs=inputs,
+            targets=targets,
+            explanations=explanations,
+            task=task,
+            kwargs=self.kwargs,
+        )

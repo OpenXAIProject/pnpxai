@@ -13,3 +13,7 @@ from pnpxai.explainers.cem import CEM
 from pnpxai.explainers.full_grad import FullGrad
 from pnpxai.explainers.pdp import PDP
 from pnpxai.explainers.tcav import TCAV
+
+AVAILABLE_EXPLAINERS = [
+    GuidedGradCam, Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors, PDP
+]

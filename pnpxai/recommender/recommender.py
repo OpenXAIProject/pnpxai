@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 import warnings
 import torch.nn as nn
+from typing import List, Type
 
 from pnpxai.explainers import *
 from pnpxai.evaluator.infidelity import Infidelity
-from pnpxai.evaluator.mufidelity import muFidelity
 from pnpxai.evaluator.sensitivity import Sensitivity
 from pnpxai.recommender._types import RecommenderOutput
 
@@ -19,9 +19,14 @@ class XaiRecommender:
         }
         self.task_table = {
             'image': {
-                # Lime, KernelShap, IntegratedGradients, FullGrad,
-                RAP,
-                # GuidedGradCam, LRP, CEM, TCAV
+                Lime, KernelShap,
+                LRP, GuidedGradCam,
+                # TODO: integrate RAP
+                # RAP,
+                # TODO: memory issue in IG, 
+                # IntegratedGradients,
+                # TODO: add more explainers
+                # FullGrad, CEM, TCAV
             },
             'tabular': {Lime, KernelShap, PDP, CEM, Anchors},
             'text': {Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, CEM},
@@ -36,25 +41,25 @@ class XaiRecommender:
         }
         self.evaluation_metric_table = {
             # Correctness -- Infidelity, Conitinuity -- Sensitivity
-            GuidedGradCam: {muFidelity, Sensitivity},
-            Lime: {muFidelity, Sensitivity},
-            KernelShap: {muFidelity, Sensitivity},
-            IntegratedGradients: {muFidelity, Sensitivity},
-            FullGrad: {muFidelity, Sensitivity},
-            LRP: {muFidelity, Sensitivity},
-            RAP: {muFidelity, Sensitivity},
+            GuidedGradCam: {Infidelity, Sensitivity},
+            Lime: {Infidelity, Sensitivity},
+            KernelShap: {Infidelity, Sensitivity},
+            IntegratedGradients: {Infidelity, Sensitivity},
+            FullGrad: {Infidelity, Sensitivity},
+            LRP: {Infidelity, Sensitivity},
+            RAP: {Infidelity, Sensitivity},
 
             # Evaluation metric not implemented yet
             PDP: {},
-            CEM: {muFidelity, Sensitivity},
-            TCAV: {muFidelity, Sensitivity},
-            Anchors: {muFidelity, Sensitivity},
+            CEM: {Infidelity, Sensitivity},
+            TCAV: {Infidelity, Sensitivity},
+            Anchors: {Infidelity, Sensitivity},
         }
 
     def _find_overlap(self, *lists):
         return list(set.intersection(*lists))
 
-    def filter_methods(self, question, task, architecture):
+    def filter_methods(self, question, task, architecture) -> List[Type[Explainer]]:
         question_to_method = self.question_table[question]
         task_to_method = self.task_table[task]
 

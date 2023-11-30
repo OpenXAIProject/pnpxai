@@ -3,6 +3,8 @@ from collections import OrderedDict
 from abc import abstractmethod
 from typing import Sequence
 
+from torch import Tensor
+
 from pnpxai.utils import class_to_string
 from pnpxai.evaluator._types import EvaluatorOutput
 from pnpxai.explainers import ExplainerWArgs
@@ -10,24 +12,20 @@ from pnpxai.core._types import Args
 
 import time
 
-# @dataclass
-# class EvaluatorOutput:
-#     explainers: list
-#     evaluation_results: list
 
-class EvaluatorMetric():
+class EvaluationMetric():
     @abstractmethod
     def __call__(self, *args, **kwargs):
         raise NotImplementedError()
 
 
 class XaiEvaluator:
-    def __init__(self, metrics: Sequence[EvaluatorMetric]):
+    def __init__(self, metrics: Sequence[EvaluationMetric]):
         self.metrics = metrics
 
     def prioritize(self, metrics, weights):
         assert sum(weights) == 1, "Sum of weights should be 1."
-        
+
         weighted_scores = dict()
         weighted_score = 0
         for i, weight in enumerate(weights):
@@ -40,8 +38,8 @@ class XaiEvaluator:
 
     def __call__(self, sample, label, explainer_w_args: ExplainerWArgs, explanation_outupts):
         model = explainer_w_args.explainer.model
-        pred = model(sample)
-        pred_score, pred_idx = pred.topk(1)
+        pred: Tensor = model(sample)
+        pred_idx = pred.argmax(1, keepdim=True)
 
         metrics_scores = {}
 
@@ -53,13 +51,8 @@ class XaiEvaluator:
                 model, explainer_w_args, sample, label, pred, pred_idx, explanation_outupts
             )
             print(f'Compute {metric_name} done: {time.time() - st}')
-            
+
         return EvaluatorOutput(
             # evaluation_results=weighted_scores,
             metrics_results=metrics_scores,
         )
-
-@dataclass
-class EvaluatorWArgs:
-    evaluator: XaiEvaluator
-    config: Args

@@ -10,7 +10,7 @@ class ModelArchitectureDetector:
     def __init__(self):
         self.modules = []
     
-    def extract_modules(self, model, sample):
+    def extract_modules(self, model):
         module_mode = model.training
         model.eval()
 
@@ -20,8 +20,8 @@ class ModelArchitectureDetector:
                 self.modules.append(n.operator)
         model.training = module_mode
 
-    def __call__(self, model, sample):
-        self.extract_modules(model, sample)
+    def __call__(self, model):
+        self.extract_modules(model)
         return DetectorOutput(
             architecture = set([type(module) for module in self.modules])
         )
