@@ -1,1 +1,0 @@
-from pnpxai.web.server.backend.app.app import create_app

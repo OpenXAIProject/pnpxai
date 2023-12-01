@@ -12,14 +12,16 @@ from pnpxai.recommender._types import RecommenderOutput
 class XaiRecommender:
     def __init__(self):
         self.question_table = {
-            'why': {GuidedGradCam, Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, TCAV, Anchors},
+            'why': {GuidedGradCam, 
+                    # Lime, KernelShap,
+                    IntegratedGradients, FullGrad, LRP, RAP, TCAV, Anchors},
             'how': {PDP},
             'why not': {CEM},
             'how to still be this': {Anchors},
         }
         self.task_table = {
             'image': {
-                Lime, KernelShap,
+                # Lime, KernelShap,
                 LRP, GuidedGradCam,
                 # TODO: integrate RAP
                 # RAP,
@@ -28,22 +30,38 @@ class XaiRecommender:
                 # TODO: add more explainers
                 # FullGrad, CEM, TCAV
             },
-            'tabular': {Lime, KernelShap, PDP, CEM, Anchors},
-            'text': {Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, CEM},
+            'tabular': {
+                # Lime, KernelShap,
+                PDP, CEM, Anchors},
+            'text': {
+                # Lime, KernelShap,
+                IntegratedGradients, FullGrad, LRP, RAP, CEM},
         }
         self.architecture_table = {
-            nn.Linear: {Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
-            nn.Conv1d: {GuidedGradCam, Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
-            nn.Conv2d: {GuidedGradCam, Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
-            nn.RNN: {Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
-            nn.Transformer: {Lime, KernelShap, IntegratedGradients, FullGrad, CEM, TCAV, Anchors},
-            nn.MultiheadAttention: {Lime, KernelShap, IntegratedGradients, FullGrad, CEM, TCAV, Anchors},
+            nn.Linear: {
+                # Lime, KernelShap,
+                IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
+            nn.Conv1d: {GuidedGradCam, 
+            # Lime, KernelShap,
+            IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
+            nn.Conv2d: {GuidedGradCam, 
+            # Lime, KernelShap,
+            IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
+            nn.RNN: {
+                # Lime, KernelShap,
+                IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
+            nn.Transformer: {
+                # Lime, KernelShap,
+                IntegratedGradients, FullGrad, CEM, TCAV, Anchors},
+            nn.MultiheadAttention: {
+                # Lime, KernelShap,
+                IntegratedGradients, FullGrad, CEM, TCAV, Anchors},
         }
         self.evaluation_metric_table = {
             # Correctness -- Infidelity, Conitinuity -- Sensitivity
             GuidedGradCam: {Infidelity, Sensitivity},
-            Lime: {Infidelity, Sensitivity},
-            KernelShap: {Infidelity, Sensitivity},
+            # Lime: {Infidelity, Sensitivity},
+            # KernelShap: {Infidelity, Sensitivity},
             IntegratedGradients: {Infidelity, Sensitivity},
             FullGrad: {Infidelity, Sensitivity},
             LRP: {Infidelity, Sensitivity},

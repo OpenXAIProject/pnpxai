@@ -69,3 +69,9 @@ class Project():
         )
         self.experiments.append(experiment)
         return experiment
+
+    def sync(self, client):
+        client.set_project(self.name, self)
+
+    def get_all_other_projects(self, client):
+        client.set_project(self.name, self)

@@ -1,11 +1,9 @@
-from typing import Any, List, Sequence, Tuple
+from typing import Any, List, Tuple
 
 from torch import Tensor
 
 from captum.attr import KernelShap as KernelShapeCaptum
 from captum._utils.typing import BaselineType, TargetType
-from plotly import express as px
-from plotly.graph_objects import Figure
 
 from pnpxai.core._types import Model, DataSource, Task
 from pnpxai.explainers._explainer import Explainer
