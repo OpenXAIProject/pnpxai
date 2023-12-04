@@ -40,7 +40,7 @@ class Infidelity(EvaluationMetric):
         n_instances, n_classes = outputs.shape
         if targets is None:
             targets = outputs.argmax(1).tolist()
-        preds = (outputs * torch.eye(n_classes)[targets].to(device)).sum(dim=-1, keepdim=True)
+        preds = (outputs * torch.eye(n_classes).to(device)[targets]).sum(dim=-1, keepdim=True)
         if attributions is None:
             attributions = explainer.attribute(inputs, targets, **explainer.kwargs)
 
