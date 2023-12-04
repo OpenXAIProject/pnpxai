@@ -7,6 +7,14 @@ from pnpxai.core._types import DataSource, Model
 from pnpxai.core.experiment.run import Run
 
 
+def default_input_extractor(x):
+    return x[0]
+
+
+def default_target_extractor(x):
+    return x[1]
+
+
 class Experiment:
     def __init__(
         self,
@@ -30,10 +38,10 @@ class Experiment:
 
         self.input_extractor = input_extractor \
             if input_extractor is not None \
-            else lambda x: x[0]
+            else default_input_extractor
         self.target_extractor = target_extractor \
             if target_extractor is not None \
-            else lambda x: x[1]
+            else default_target_extractor
         self.task = task
         self.runs: List[Run] = []
 
@@ -41,7 +49,12 @@ class Experiment:
         if explainers is None:
             return AVAILABLE_EXPLAINERS
 
-        return list(map(lambda explainer: explainer if isinstance(explainer, ExplainerWArgs) else ExplainerWArgs(explainer), explainers))
+        return [
+            explainer
+            if isinstance(explainer, ExplainerWArgs)
+            else ExplainerWArgs(explainer)
+            for explainer in explainers
+        ]
 
     @property
     def available_explainers(self) -> List[Type[Explainer]]:

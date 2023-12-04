@@ -26,7 +26,8 @@ class AutoExperiment(Experiment):
     ):
         recommender_output = self.recommend(model, question, task)
 
-        explainers = self.__get_init_explainers(model, recommender_output.explainers)
+        explainers = self.__get_init_explainers(
+            model, recommender_output.explainers)
         evaluator = self.__get_init_evaluator(recommender_output.evaluation_metrics)\
             if evaluator_enabled else None
 
@@ -52,13 +53,13 @@ class AutoExperiment(Experiment):
         return recommender_out
 
     def __get_init_explainers(self, model: Model, explainers: List[Type[Explainer]]) -> List[ExplainerWArgs]:
-        return list(map(
-            lambda explainer: ExplainerWArgs(
+        return [
+            ExplainerWArgs(
                 explainer=explainer(model),
                 kwargs=EXPLAINER_AUTO_KWARGS.get(explainer, None)
-            ),
-            explainers
-        ))
+            )
+            for explainer in explainers
+        ]
 
     def __get_init_evaluator(self, metrics: List[Type[EvaluationMetric]]) -> XaiEvaluator:
         metrics = [

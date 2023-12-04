@@ -3,7 +3,6 @@ from torch.utils.data import DataLoader
 
 from pnpxai.utils import set_seed
 from pnpxai import Project
-from pnpxai.visualizer.proc_manager.client import Client
 
 from helpers import get_imagenet_dataset, get_torchvision_model
 
@@ -44,8 +43,6 @@ experiment = project.create_auto_experiment(
     input_extractor=input_extractor,
     target_extractor=target_extractor
 )
-client = Client()
-client.connect_to_or_start_server()
-client.set_project(project.name, project)
+project.serve()
 
 print(len(experiment.runs))

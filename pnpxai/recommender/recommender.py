@@ -13,7 +13,7 @@ class XaiRecommender:
     def __init__(self):
         self.question_table = {
             'why': {GuidedGradCam, 
-                    # Lime, KernelShap,
+                    Lime, KernelShap,
                     IntegratedGradients, FullGrad, LRP, RAP, TCAV, Anchors},
             'how': {PDP},
             'why not': {CEM},
@@ -21,7 +21,7 @@ class XaiRecommender:
         }
         self.task_table = {
             'image': {
-                # Lime, KernelShap,
+                Lime, KernelShap,
                 LRP, GuidedGradCam,
                 # TODO: integrate RAP
                 # RAP,
@@ -31,7 +31,7 @@ class XaiRecommender:
                 # FullGrad, CEM, TCAV
             },
             'tabular': {
-                # Lime, KernelShap,
+                Lime, KernelShap,
                 PDP, CEM, Anchors},
             'text': {
                 # Lime, KernelShap,
@@ -39,29 +39,29 @@ class XaiRecommender:
         }
         self.architecture_table = {
             nn.Linear: {
-                # Lime, KernelShap,
+                Lime, KernelShap,
                 IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
             nn.Conv1d: {GuidedGradCam, 
-            # Lime, KernelShap,
+            Lime, KernelShap,
             IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
             nn.Conv2d: {GuidedGradCam, 
-            # Lime, KernelShap,
+            Lime, KernelShap,
             IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
             nn.RNN: {
-                # Lime, KernelShap,
+                Lime, KernelShap,
                 IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
             nn.Transformer: {
-                # Lime, KernelShap,
+                Lime, KernelShap,
                 IntegratedGradients, FullGrad, CEM, TCAV, Anchors},
             nn.MultiheadAttention: {
-                # Lime, KernelShap,
+                Lime, KernelShap,
                 IntegratedGradients, FullGrad, CEM, TCAV, Anchors},
         }
         self.evaluation_metric_table = {
             # Correctness -- Infidelity, Conitinuity -- Sensitivity
             GuidedGradCam: {Infidelity, Sensitivity},
-            # Lime: {Infidelity, Sensitivity},
-            # KernelShap: {Infidelity, Sensitivity},
+            Lime: {Infidelity, Sensitivity},
+            KernelShap: {Infidelity, Sensitivity},
             IntegratedGradients: {Infidelity, Sensitivity},
             FullGrad: {Infidelity, Sensitivity},
             LRP: {Infidelity, Sensitivity},
@@ -74,8 +74,9 @@ class XaiRecommender:
             Anchors: {Infidelity, Sensitivity},
         }
 
-    def _find_overlap(self, *lists):
-        return list(set.intersection(*lists))
+    def _find_overlap(self, *sets):
+        sets = sets or [set()]
+        return list(set.intersection(*sets))
 
     def filter_methods(self, question, task, architecture) -> List[Type[Explainer]]:
         question_to_method = self.question_table[question]
