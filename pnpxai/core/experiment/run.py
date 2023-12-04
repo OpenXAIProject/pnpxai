@@ -46,15 +46,15 @@ class Run:
 
         print(f"[Run] Evaluating {self.explainer.__class__.__name__}")
         if self.evaluator is not None and self.explanations is not None and len(self.explanations) > 0:
-            inputs, target, explanation = next(iter(zip(
-                self.inputs, self.targets, self.explanations
-            )))
+            # inputs, target, explanation = next(iter(zip(
+            #     self.inputs, self.targets, self.explanations
+            # )))
 
-            explanation = self.explanations[:1]
-            inputs = inputs[None, :]
+            # explanation = self.explanations[:1]
+            # inputs = inputs[None, :]
 
-            self.evaluation = self.evaluator(
-                inputs, target, self.explainer, explanation
+            self.evaluations = self.evaluator(
+                self.inputs, self.targets, self.explainer, self.explanations
             )
 
         self.finished_at = time_ns()

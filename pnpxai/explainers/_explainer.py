@@ -43,7 +43,7 @@ class ExplainerWArgs():
             "targets": targets,
             **kwargs,
         }
-        print(self.explainer)
+        # print(self.explainer)
         attributions = self.explainer.attribute(**kwargs)
         return attributions
 
