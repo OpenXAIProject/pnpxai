@@ -55,6 +55,8 @@ class Project():
         explainers: Optional[Sequence[Union[ExplainerWArgs, Explainer]]] = None,
         evaluator: Optional[XaiEvaluator] = None,
         task: Task = "image",
+        input_extractor: Optional[Callable] = None,
+        target_extractor: Optional[Callable] = None,
     ) -> Experiment:
         if name is None:
             name = self._generate_next_experiment_id()
@@ -65,7 +67,9 @@ class Project():
             data=data,
             explainers=explainers,
             evaluator=evaluator,
-            task=task
+            task=task,
+            input_extractor=input_extractor,
+            target_extractor=target_extractor,
         )
         self.experiments.append(experiment)
         return experiment
