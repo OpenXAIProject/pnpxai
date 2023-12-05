@@ -1,6 +1,6 @@
 from typing import Any, Union, Tuple
 
-# from captum.attr import Lime as LimeCaptum
+from captum.attr import Lime as LimeCaptum
 from captum._utils.typing import BaselineType, TargetType
 
 from torch import Tensor
@@ -13,7 +13,7 @@ from pnpxai.explainers._explainer import Explainer
 class Lime(Explainer):
     def __init__(self, model: Model):
         super().__init__(model=model)
-        # self.source = LimeCaptum(model)
+        self.source = LimeCaptum(model)
 
     def attribute(
         self,

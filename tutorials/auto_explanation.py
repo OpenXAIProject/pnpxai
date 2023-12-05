@@ -35,14 +35,18 @@ def target_extractor(x): return x[1].to(device)
 # -----------------------------------------------------------------------------#
 
 
+def input_visualizer(x): return x.permute(1, 2, 0)
+
+
 project = Project('test_project')
 experiment = project.create_auto_experiment(
     model,
     loader,
     name='test_experiment',
     input_extractor=input_extractor,
-    target_extractor=target_extractor
+    target_extractor=target_extractor,
+    input_visualizer=input_visualizer
 )
-project.serve()
+project.get_server().serve(debug=True)
 
 print(len(experiment.runs))

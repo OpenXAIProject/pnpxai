@@ -15,7 +15,6 @@ from pnpxai.core.experiment.experiment_metrics_defaults import EVALUATION_METRIC
 class AutoExperiment(Experiment):
     def __init__(
         self,
-        name: str,
         model: Model,
         data: DataSource,
         task: Literal["image", "tabular"] = "image",
@@ -23,6 +22,7 @@ class AutoExperiment(Experiment):
         evaluator_enabled: bool = True,
         input_extractor: Optional[Callable] = None,
         target_extractor: Optional[Callable] = None,
+        input_visualizer: Optional[Callable] = None,
     ):
         recommender_output = self.recommend(model, question, task)
 
@@ -32,7 +32,6 @@ class AutoExperiment(Experiment):
             if evaluator_enabled else None
 
         super().__init__(
-            name=name,
             model=model,
             data=data,
             explainers=explainers,
@@ -40,6 +39,7 @@ class AutoExperiment(Experiment):
             task=task,
             input_extractor=input_extractor,
             target_extractor=target_extractor,
+            input_visualizer=input_visualizer
         )
 
     @staticmethod
@@ -67,6 +67,3 @@ class AutoExperiment(Experiment):
             for metric in metrics
         ]
         return XaiEvaluator(metrics)
-
-    def __repr__(self):
-        return f"<AutoExperiment: {self.name}>"

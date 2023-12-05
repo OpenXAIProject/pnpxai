@@ -1,6 +1,9 @@
 import warnings
 from typing import List, Any, Dict, Type, Callable, Optional, Sequence, Union
 
+from torch import Tensor
+from torch.utils.data import DataLoader, Subset, Dataset
+
 from pnpxai.explainers import Explainer, ExplainerWArgs, AVAILABLE_EXPLAINERS
 from pnpxai.evaluator import XaiEvaluator
 from pnpxai.core._types import DataSource, Model
@@ -18,16 +21,15 @@ def default_target_extractor(x):
 class Experiment:
     def __init__(
         self,
-        name: str,
         model: Model,
         data: DataSource,
         explainers: Optional[Sequence[Union[ExplainerWArgs, Explainer]]] = None,
         evaluator: XaiEvaluator = None,
-        task: str = "classification",
+        task: str = "image",
         input_extractor: Optional[Callable[[Any], Any]] = None,
         target_extractor: Optional[Callable[[Any], Any]] = None,
+        input_visualizer: Optional[Callable[[Any], Any]] = None,
     ):
-        self.name = name
         self.model = model
         self.data = data
         self.evaluator = evaluator
@@ -42,6 +44,7 @@ class Experiment:
         self.target_extractor = target_extractor \
             if target_extractor is not None \
             else default_target_extractor
+        self.input_visualizer = input_visualizer
         self.task = task
         self.runs: List[Run] = []
 
@@ -60,9 +63,6 @@ class Experiment:
     def available_explainers(self) -> List[Type[Explainer]]:
         return list(map(lambda explainer: type(explainer.explainer), self.explainers_w_args))
 
-    def __repr__(self):
-        return f"<Experiment: {self.name}>"
-
     def add_explainer(
         self,
         explainer_type: Type[Explainer],
@@ -79,15 +79,36 @@ class Experiment:
         return self.explainers_w_args.pop(idx)
 
     def get_explainers_by_ids(self, explainer_ids: Optional[Sequence[int]] = None) -> List[ExplainerWArgs]:
-        return self.explainers_w_args if explainer_ids is None else [self.explainers_w_args[idx] for idx in explainer_ids]
+        return [self.explainers_w_args[idx] for idx in explainer_ids] if explainer_ids is not None else self.explainers_w_args
 
-    def run(self, explainer_ids: Optional[Sequence[int]] = None) -> 'Experiment':
+    def get_data_by_ids(self, data_ids: Optional[Sequence[int]] = None) -> List[Any]:
+        data = self.data
+        if isinstance(self.data, DataLoader):
+            duplicated_params = [
+                'batch_size', 'sampler', 'num_workers', 'batch_sampler', 'collate_fn', 'pin_memory', 'drop_last', 'timeout',
+                'worker_init_fn', 'multiprocessing_context', 'generator', 'persistent_workers', 'pin_memory_device'
+            ]
+            data = self.data.__class__(
+                dataset=Subset(self.data.dataset)[data_ids], shuffle=False,
+                **{param: getattr(self.data, param) for param in duplicated_params}
+            )
+        elif isinstance(self.data, Dataset):
+            data = Subset(data, data_ids)
+        else:
+            data = data[data_ids]
+
+        return data
+
+    def run(
+        self,
+        data_ids: Optional[Sequence[int]] = None,
+        explainer_ids: Optional[Sequence[int]] = None
+    ) -> 'Experiment':
         explainers = self.get_explainers_by_ids(explainer_ids)
+        data = self.get_explainers_by_ids(data_ids)
         runs = []
 
-        for datum in self.data:
-            print("DATUM: ", datum[0].shape)
-            print("DATUM: ", datum[1].shape)
+        for datum in data:
             for explainer in explainers:
                 run = Run(
                     inputs=self.input_extractor(datum),
@@ -102,9 +123,15 @@ class Experiment:
         return self
 
     def visualize(self):
-        visualizations = []
-        for run in self.runs:
+        visualizations = [
             run.visualize(task=self.task)
+            for run in self.runs
+        ]
+        return visualizations
 
     def rank_by_metrics(self):
         pass
+    
+    @property
+    def is_image_task(self):
+        return self.task == 'image'
