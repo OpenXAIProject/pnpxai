@@ -1,6 +1,6 @@
 from pnpxai.visualizer.backend.app.core.generics import Controller
-from pnpxai.visualizer.backend.app.domain.project.project_service import ProjectService
-from pnpxai.visualizer.backend.app.domain.experiment.experiment_service import ExperimentService
+from pnpxai.visualizer.backend.app.domain.project import ProjectService
+from pnpxai.visualizer.backend.app.domain.experiment import ExperimentService
 
 
 class ExperimentListController(Controller):

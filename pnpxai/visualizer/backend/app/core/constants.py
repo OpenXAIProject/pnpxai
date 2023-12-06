@@ -8,5 +8,8 @@ class APIItems(Enum):
 
     ID = 'id'
     NAME = 'name'
+    SOURCE = 'source'
+    TARGET = 'target'
+
     EXPERIMENTS = 'experiments'
     EXPLAINERS = 'explainers'
