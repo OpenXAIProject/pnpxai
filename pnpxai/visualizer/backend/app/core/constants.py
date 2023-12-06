@@ -11,5 +11,8 @@ class APIItems(Enum):
     SOURCE = 'source'
     TARGET = 'target'
 
+    NODES = 'nodes'
+    EDGES = 'edges'
+
     EXPERIMENTS = 'experiments'
     EXPLAINERS = 'explainers'
