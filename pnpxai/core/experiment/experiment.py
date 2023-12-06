@@ -133,7 +133,3 @@ class Experiment:
 
     def rank_by_metrics(self):
         pass
-
-    @property
-    def is_image_task(self):
-        return self.task == 'image'

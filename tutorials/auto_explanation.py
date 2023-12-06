@@ -1,5 +1,5 @@
 import torch
-from torch.utils.data import DataLoader, Subset
+from torch.utils.data import DataLoader
 
 from pnpxai.utils import set_seed
 from pnpxai import Project

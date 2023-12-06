@@ -1,0 +1,13 @@
+/* src/assets/fonts/fonts.css */
+@font-face {
+    font-family: 'Noto Sans KR';
+    src: url('./Noto_Sans_KR/NotoSansKR-VariableFont_wght.ttf') format('truetype');
+    font-weight: 400;
+}
+  
+@font-face {
+    font-family: 'Nanum Pen Script';
+    src: local('Nanum Pen Script'), url('./NanumPen.ttf') format('truetype');
+    font-weight: 400;
+}
+  
