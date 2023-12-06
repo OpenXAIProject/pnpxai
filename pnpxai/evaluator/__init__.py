@@ -1,2 +1,0 @@
-from pnpxai.evaluator._evaluator import XaiEvaluator
-from pnpxai.evaluator.config import default_evaluator_kwargs
