@@ -4,3 +4,4 @@ scikit-learn>0.20
 scipy>1.10.1
 plotly>5.15
 kaleido>0.2
+scikit-image>0.18.1
