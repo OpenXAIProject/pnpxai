@@ -15,7 +15,7 @@ class Infidelity(EvaluationMetric):
 
     def __call__(self, model: Model, explainer: ExplainerWArgs, sample: Tensor, label, pred, pred_idx, result):
         pred = pred[:, label]
-        print(self.n_perturbations)
+        
         repeated_sample = sample.repeat(
             self.n_perturbations, *([1]*(sample.ndim - 1))
         )

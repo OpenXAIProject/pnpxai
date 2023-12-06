@@ -15,18 +15,16 @@ class ExperimentService:
         return data
 
     @classmethod
-    def get_task_formatted_inputs(cls, experiment):
+    def get_task_formatted_inputs(cls, experiment, inputs=None):
+        inputs = inputs or cls.get_inputs_list(experiment)
         if experiment.is_image_task:
-            inputs = cls._format_image_inputs(experiment)
-        else:
-            inputs = cls.get_inputs_list(experiment)
+            inputs = cls._format_image_inputs(
+                inputs, experiment.input_visualizer)
 
         return inputs
 
     @classmethod
-    def _format_image_inputs(cls, experiment):
-        inputs = cls.get_inputs_list(experiment)
-
+    def _format_image_inputs(cls, inputs, visualizer=None):
         formatted = []
         for datum in inputs:
             datum: np.ndarray = datum.cpu()
@@ -34,12 +32,12 @@ class ExperimentService:
             if datum.max() <= 1 and datum.min() >= 0:
                 datum = (datum * 255).astype(int)
 
-            if experiment.input_visualizer is not None:
-                datum = experiment.input_visualizer(datum)
+            if visualizer is not None:
+                datum = visualizer(datum)
                 fig = px.imshow(datum)
 
             formatted.append(fig.to_dict())
-            
+
         return formatted
 
     @classmethod

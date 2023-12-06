@@ -3,6 +3,7 @@ from flask import abort, request
 from pnpxai.visualizer.backend.app.core.generics import Controller
 from pnpxai.visualizer.backend.app.domain.project import ProjectService
 from pnpxai.visualizer.backend.app.domain.experiment import ExperimentService
+from pnpxai.visualizer.backend.app.http.responses.experiment_response import ExperimentRunsResponse
 
 
 class ExperimentListController(Controller):
@@ -23,7 +24,7 @@ class ExperimentController(Controller):
 
         experiment = ExperimentService.run(experiment, inputs, explainers)
 
-        return self.response(data=experiment.to_dict())
+        return self.response(data=ExperimentRunsResponse.dump(experiment))
 
 
 class ExperimentInputsController(Controller):

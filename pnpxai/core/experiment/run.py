@@ -1,14 +1,10 @@
 import warnings
 from dataclasses import dataclass
 from time import time_ns
-from typing import Optional, Callable, Any
-from functools import partial
-
-from torch import Tensor
+from typing import Optional, Any
 
 from pnpxai.core._types import Task
 from pnpxai.explainers import ExplainerWArgs
-from pnpxai.explainers.utils.post_process import postprocess_attr
 from pnpxai.evaluator import XaiEvaluator
 from pnpxai.core._types import DataSource
 
@@ -53,7 +49,7 @@ class Run:
             explanation = self.explanations[:1]
             inputs = inputs[None, :]
 
-            self.evaluation = self.evaluator(
+            self.evaluations = self.evaluator(
                 inputs, target, self.explainer, explanation
             )
 

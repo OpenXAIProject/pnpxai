@@ -24,3 +24,24 @@ class ExperimentResponse(Response):
             fields[APIItems.NAME.value] = experiment.name
 
         return fields
+
+class ExperimentRunsResponse(Response):
+
+
+    @classmethod
+    def to_dict(cls, experiment):
+        formatted = []
+        visualizations = experiment.visualize()
+        for run in experiment.runs:
+            run.inputs
+            formatted += [
+                {
+                    APIItems.EXPLAINER.value: run.explainer.__name__,
+                    APIItems.INPUT.value: input,
+                    APIItems.TARGET.value: target,
+                }
+            ]
+
+        return {
+            APIItems.RUNS.value: runs
+        }

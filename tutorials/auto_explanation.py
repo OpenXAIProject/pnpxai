@@ -1,5 +1,5 @@
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Subset
 
 from pnpxai.utils import set_seed
 from pnpxai import Project
@@ -26,7 +26,7 @@ model = model.to(device)
 # -----------------------------------------------------------------------------#
 
 dataset = get_imagenet_dataset(transform, subset_size=100)
-loader = DataLoader(dataset, batch_size=8)
+loader = DataLoader(dataset, batch_size=25)
 def input_extractor(x): return x[0].to(device)
 def target_extractor(x): return x[1].to(device)
 
@@ -48,5 +48,3 @@ experiment = project.create_auto_experiment(
     input_visualizer=input_visualizer
 )
 project.get_server().serve(debug=True)
-
-print(len(experiment.runs))

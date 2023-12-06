@@ -87,7 +87,7 @@ class Experiment:
             return data
         if isinstance(self.data, DataLoader):
             duplicated_params = [
-                'sampler', 'num_workers', 'collate_fn', 'pin_memory', 'drop_last', 'timeout',
+                'num_workers', 'collate_fn', 'pin_memory', 'drop_last', 'timeout',
                 'worker_init_fn', 'multiprocessing_context', 'generator', 'persistent_workers', 'pin_memory_device'
             ]
             data = self.data.__class__(
