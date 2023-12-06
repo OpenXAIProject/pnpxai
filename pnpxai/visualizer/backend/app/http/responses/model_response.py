@@ -38,6 +38,7 @@ class ModelSchema(Response):
     def to_dict(cls, model):
         nodes, edges = cls.generate_nodes_edges_list(model)
         return {
+            APIItems.NAME.value: model.__class__.__name__,
             APIItems.NODES.value: nodes,
             APIItems.EDGES.value: edges
         }

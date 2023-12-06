@@ -41,3 +41,9 @@ class ExperimentService:
             formatted.append(fig.to_dict())
             
         return formatted
+
+    @classmethod
+    def run(cls, experiment, inputs=None, explainers=None):
+        experiment.run(inputs, explainers)
+
+        return experiment

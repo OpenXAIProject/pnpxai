@@ -83,13 +83,15 @@ class Experiment:
 
     def get_data_by_ids(self, data_ids: Optional[Sequence[int]] = None) -> List[Any]:
         data = self.data
+        if data_ids is None:
+            return data
         if isinstance(self.data, DataLoader):
             duplicated_params = [
-                'batch_size', 'sampler', 'num_workers', 'batch_sampler', 'collate_fn', 'pin_memory', 'drop_last', 'timeout',
+                'sampler', 'num_workers', 'collate_fn', 'pin_memory', 'drop_last', 'timeout',
                 'worker_init_fn', 'multiprocessing_context', 'generator', 'persistent_workers', 'pin_memory_device'
             ]
             data = self.data.__class__(
-                dataset=Subset(self.data.dataset)[data_ids], shuffle=False,
+                dataset=Subset(self.data.dataset, data_ids), shuffle=False,
                 **{param: getattr(self.data, param) for param in duplicated_params}
             )
         elif isinstance(self.data, Dataset):
@@ -105,7 +107,7 @@ class Experiment:
         explainer_ids: Optional[Sequence[int]] = None
     ) -> 'Experiment':
         explainers = self.get_explainers_by_ids(explainer_ids)
-        data = self.get_explainers_by_ids(data_ids)
+        data = self.get_data_by_ids(data_ids)
         runs = []
 
         for datum in data:
@@ -131,7 +133,7 @@ class Experiment:
 
     def rank_by_metrics(self):
         pass
-    
+
     @property
     def is_image_task(self):
         return self.task == 'image'
