@@ -15,5 +15,5 @@ from pnpxai.explainers.pdp import PDP
 from pnpxai.explainers.tcav import TCAV
 
 AVAILABLE_EXPLAINERS = [
-    GuidedGradCam, Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors, PDP
+    Lime, KernelShap, GuidedGradCam, IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors, PDP
 ]

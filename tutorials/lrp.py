@@ -1,22 +1,46 @@
+import os
+
 import torch
+from torch import nn
+import torch.nn.functional as F
 import torchvision
+from torch.utils.data import DataLoader
+from zennit.composites import EpsilonPlus
+import plotly.graph_objects as go
+import plotly.express as px
 
-from open_xai import Project
-from open_xai.explainers import LRPEpsilon, LRPGamma
+from pnpxai.explainers import LRP
+from pnpxai.explainers.utils.post_process import postprocess_attr
 
-model = torchvision.models.get_model("inception_v3").eval()
-inputs = torch.randn(1, 3, 224, 224)
-target = model(inputs).argmax(1).item()
+from helpers import get_imagenet_dataset, get_torchvision_model, denormalize_image
 
-proj = Project("test_lrp")
 
-proj.explain(LRPEpsilon(model, epsilon=1e-6))
-proj.explain(LRPGamma(model, gamma=.25))
+model, transform = get_torchvision_model("vit_b_16")
+dataset = get_imagenet_dataset(transform, subset_size=8)
+loader = DataLoader(dataset, batch_size=8)
+inputs, labels = next(iter(loader))
+targets = labels
 
-for experiment in proj.experiments:
-    experiment.run(inputs, target)
+explainer = LRP(model)
+attributions = explainer.attribute(inputs, targets)
 
-print("LRPEpsilon")
-print(proj.experiments[0].runs[0].outputs, "\n")
-print("LRPGamma")
-print(proj.experiments[1].runs[0].outputs)
+attr = attributions[6]
+t = .05
+lb = attr.quantile(t)
+ub = attr.quantile(1-t)
+bounded = attr - torch.nn.functional.relu(attr-ub) + torch.nn.functional.relu(-attr+lb)
+# bounded = attr
+hm = postprocess_attr(bounded)
+
+# # hm = attributions[1].permute(1,2,0).sum(dim=-1)
+# # import pdb; pdb.set_trace()
+
+# # img_data = go.Image(z=denormalize_image(inputs[0], mean=transform.mean, std=transform.std))
+# # fig = go.Figure(data=img_data)
+# # fig.show()
+
+fig = px.imshow(hm)
+# fig.add_trace(px.imshow(attributions[0].permute(1,2,0)))
+fig.show()
+# # print(attributions.shape)
+

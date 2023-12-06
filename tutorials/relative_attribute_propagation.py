@@ -1,163 +1,107 @@
-from functools import partial
-
 import os
+import json
+
+from PIL import Image
+
 import torch
-from torchvision import datasets
-from torch.utils.data import DataLoader
+from torch import nn
+from torch.utils.data import DataLoader, Dataset
 from torchvision.models.vgg import vgg16_bn, VGG16_BN_Weights
-from torchvision.models.resnet import resnet18, ResNet18_Weights, BasicBlock, Bottleneck
+from torchvision.models.resnet import resnet18, ResNet18_Weights
 import torchvision.transforms as transforms
 
-from open_xai import Project
-from open_xai.explainers import Explainer, RAP
-from open_xai.explainers.relative_attribute_propagation.rules import RelPropSimple
+from pnpxai.explainers import Explainer, RAP
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
+class ImageNetDataset(Dataset):
+    def __init__(self, root_dir, transform=None):
+        self.root_dir = root_dir
+        self.img_dir = os.path.join(self.root_dir, 'samples/')
+        self.label_dir = os.path.join(
+            self.root_dir, 'imagenet_class_index.json')
+
+        with open(self.label_dir) as json_data:
+            self.idx_to_labels = json.load(json_data)
+
+        self.img_names = os.listdir(self.img_dir)
+        self.img_names.sort()
+
+        self.transform = transform
+
+    def __len__(self):
+        return len(self.img_names)
+
+    def __getitem__(self, idx):
+        img_path = os.path.join(self.img_dir, self.img_names[idx])
+        image = Image.open(img_path).convert('RGB')
+        label = idx
+
+        if self.transform:
+            image = self.transform(image)
+
+        return image, label
+
+    def idx_to_label(self, idx):
+        return self.idx_to_labels[str(idx)][1]
+
+
 def load_data(path: str) -> DataLoader:
-    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                     std=[0.229, 0.224, 0.225])
+    data_transforms = transforms.Compose([
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
+        transforms.ToTensor()
+    ])
+
+    imagenet_data = ImageNetDataset(root_dir=path, transform=data_transforms)
 
     return DataLoader(
-        datasets.ImageFolder(path, transforms.Compose([
-            transforms.Resize([224, 224]),
-            transforms.ToTensor(),
-            normalize,
-        ])), batch_size=1, shuffle=False, num_workers=0, pin_memory=True
+        imagenet_data,
+        batch_size=8,
+        shuffle=True,
+        num_workers=0,
+        pin_memory=True,
     )
 
 
-def vgg_relprop(self, r: torch.Tensor):
-    x1 = self.model.classifier.rule.relprop(r)
-    if torch.is_tensor(x1) == False:
-        for i in range(len(x1)):
-            x1[i] = x1[i].reshape_as(
-                next(reversed(self.model.features._modules.values())).rule.Y)
-    else:
-        x1 = x1.reshape_as(
-            next(reversed(self.model.features._modules.values())).rule.Y)
-
-    x1 = self.model.avgpool.rule.relprop(x1)
-    x1 = self.model.features.rule.relprop(x1)
-
-    return x1
-
-
-def explain_vgg(project: Project, data_loader: DataLoader):
-    model = vgg16_bn(weights=VGG16_BN_Weights.IMAGENET1K_V1).to(device)
+def explain_model(model: nn.Module, data_loader: DataLoader):
     explainer = RAP(model)
-    explainer.method.relprop = partial(vgg_relprop, explainer.method)
+    outputs = [
+        explainer.attribute(inputs, labels).detach().cpu()
+        for inputs, labels in data_loader
+    ]
 
-    exp = project.explain(explainer)
-    exp.run(data_loader)
-
-    outputs = [output.detach().cpu() for output in exp.runs[-1].outputs]
-
-    return exp, outputs
-
-
-def resnet_relprop(self, r: torch.Tensor):
-    r = self.model.fc.rule.relprop(r)
-    r = r.reshape_as(self.model.avgpool.rule.Y)
-    r = self.model.avgpool.rule.relprop(r)
-
-    r = self.model.layer4.rule.relprop(r)
-    r = self.model.layer3.rule.relprop(r)
-    r = self.model.layer2.rule.relprop(r)
-    r = self.model.layer1.rule.relprop(r)
-
-    r = self.model.maxpool.rule.relprop(r)
-    r = self.model.relu.rule.relprop(r)
-    r = self.model.bn1.rule.relprop(r)
-    r = self.model.conv1.rule.relprop(r)
-
-    return r
-
-
-def resnet_basic_block_relprop(self, r: torch.Tensor):
-    x = self.downsample.rule.Y if self.downsample else self.conv1.rule.X_orig
-    out = self.relu.rule.relprop(r)
-    out, x2 = RelPropSimple().relprop(out, [self.bn2.rule.Y, x], self.relu.rule.X_orig)
-
-    if self.downsample is not None:
-        x2 = self.downsample.rule.relprop(x2)
-
-    out = self.bn2.rule.relprop(out)
-    out = self.conv2.rule.relprop(out)
-
-    out = self.bn1.rule.relprop(out)
-    x1 = self.conv1.rule.relprop(out)
-
-    return x1 + x2
-
-
-def resnet_bottleneck_relprop(self, r: torch.Tensor):
-    x = self.downsample.rule.X_orig if self.downsample else self.conv1.rule.X_orig
-    out = self.relu3.rule.relprop(r)
-
-    out, x = RelPropSimple().relprop(out, [self.bn3.rule.Y, x])
-
-    if self.downsample is not None:
-        x = self.downsample.rule.relprop(x)
-
-    out = self.bn3.rule.relprop(out)
-    out = self.conv3.rule.relprop(out)
-
-    out = self.relu2.rule.relprop(out)
-    out = self.bn2.rule.relprop(out)
-    out = self.conv2.rule.relprop(out)
-
-    out = self.relu1.rule.relprop(out)
-    out = self.bn1.rule.relprop(out)
-    x1 = self.conv1.rule.relprop(out)
-
-    return x1 + x
-
-
-def explain_resnet(project: Project, data_loader: DataLoader):
-    model = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1).to(device)
-    explainer = RAP(model)
-
-    for layer in explainer.method.layers:
-        if isinstance(layer, BasicBlock):
-            layer.relprop = partial(resnet_basic_block_relprop, layer)
-
-        if isinstance(layer, Bottleneck):
-            layer.relprop = partial(resnet_bottleneck_relprop, layer)
-
-    explainer.method.relprop = partial(resnet_relprop, explainer.method)
-
-    exp = project.explain(explainer)
-    exp.run(data_loader)
-
-    outputs = [output.detach().cpu() for output in exp.runs[-1].outputs]
-
-    return exp, outputs
+    return explainer, outputs
 
 
 def visualize(explainer: Explainer, inputs, outputs, path: str):
     if not os.path.exists(path):
         os.makedirs(path)
-    visualizations = explainer.format_outputs_for_visualization(inputs, outputs) or []
-    for idx, visualization in enumerate(visualizations):
-        visualization.write_image(f"{path}/rap_{idx}.png")
+    visualizations = [
+        explainer.format_outputs_for_visualization(batch_in, batch_out)
+        for batch_in, batch_out in zip(inputs, outputs)
+    ] or [[]]
+    for batch_idx, batch_viz in enumerate(visualizations):
+        for idx, visualization in enumerate(batch_viz):
+            visualization.write_image(f"{path}/rap_{batch_idx}_{idx}.png")
 
 
 def app():
-    data_path = './data/imagenet/'
+    data_path = './data/ImageNet/'
     data_loader = load_data(data_path)
 
-    project = Project('test_project')
-    resnet_exp, resnet_outputs = explain_resnet(project, data_loader)
+    resnet = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1).to(device)
+    explainer, resnet_outputs = explain_model(resnet, data_loader)
 
     visualizaion_path = f"./results/rap/resnet"
-    visualize(resnet_exp.explainer, data_loader, resnet_outputs, visualizaion_path)
+    visualize(explainer, data_loader, resnet_outputs, visualizaion_path)
 
-    vgg_exp, vgg_outputs = explain_vgg(project, data_loader)
+    model = vgg16_bn(weights=VGG16_BN_Weights.IMAGENET1K_V1).to(device)
+    explainer, vgg_outputs = explain_model(model, data_loader)
 
     visualizaion_path = f"./results/rap/vgg"
-    visualize(vgg_exp.explainer, data_loader, vgg_outputs, visualizaion_path)
+    visualize(explainer, data_loader, vgg_outputs, visualizaion_path)
 
 
 if __name__ == '__main__':
