@@ -1,7 +1,7 @@
 from typing import Any, Optional, Callable
 from captum._utils.typing import TargetType
 
-from pnpxai.core._types import Model, DataSource, Task
+from pnpxai.core._types import Model, DataSource, Task, Tensor
 from pnpxai.explainers._explainer import Explainer
 from .lrp_zennit import LRPZennit, Attributor, Composite
 
@@ -31,18 +31,17 @@ class LRP(Explainer):
 
     def format_outputs_for_visualization(
         self,
-        data: DataSource,
-        explanations: DataSource,
-        input_extractor: Callable[[Any], Any],
-        target_extractor: Callable[[Any], Any],
+        inputs: Tensor,
+        targets: Tensor,
+        explanations: Tensor,
         task: Task,
-        kwargs,
+        kwargs: Optional[dict] = None,
     ):
-        explanations = explanations.permute((1, 2, 0))
+        explanations = explanations.transpose(-1, -3) \
+            .transpose(-2, -3)
         return super().format_outputs_for_visualization(
-            data=data,
-            input_extractor=input_extractor,
-            target_extractor=target_extractor,
+            inputs=inputs,
+            targets=targets,
             explanations=explanations,
             task=task,
             kwargs=kwargs

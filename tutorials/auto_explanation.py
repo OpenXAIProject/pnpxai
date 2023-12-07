@@ -47,5 +47,4 @@ experiment = project.create_auto_experiment(
     target_extractor=target_extractor,
     input_visualizer=input_visualizer
 )
-experiment.run(data_ids=[0, 1, 2])
-# project.get_server().serve(debug=True)
+project.get_server().serve(debug=True)

@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import DataLoader
 
+from pnpxai.utils import class_to_string
 from pnpxai.visualizer.backend.app.core.generics import Response
 from pnpxai.visualizer.backend.app.core.constants import APIItems
 from pnpxai.visualizer.backend.app.domain.experiment import ExperimentService
@@ -12,7 +13,7 @@ class ExperimentResponse(Response):
         return [
             {
                 APIItems.ID.value: idx,
-                APIItems.NAME.value: explainer.__name__
+                APIItems.NAME.value: class_to_string(explainer)
             }
             for idx, explainer in enumerate(explainers)
         ]
@@ -29,6 +30,11 @@ class ExperimentResponse(Response):
 
         return fields
 
+class ExperimentInputsResponse(Response):
+    @classmethod
+    def to_dict(cls, figure):
+        return figure.to_json()
+
 
 class ExperimentRunsResponse(Response):
     @classmethod
@@ -37,13 +43,13 @@ class ExperimentRunsResponse(Response):
         if run is None:
             return []
 
-        inputs = run.inputs
+        inputs = [run.input_extractor(datum) for datum in run.data]
         if experiment.is_batched:
-            in_shape = list(inputs.shape)
-            print(in_shape)
-            inputs = inputs.reshape(-1, *in_shape[2:])
+            inputs = list(torch.concat(inputs, dim=0))
+
         inputs = ExperimentService.get_task_formatted_inputs(
-            experiment, inputs)
+            experiment, inputs
+        )
 
         return inputs
 
@@ -52,23 +58,21 @@ class ExperimentRunsResponse(Response):
         inputs = cls.format_run_inputs(experiment)
         formatted = [
             {
-                APIItems.INPUT.value: datum,
+                APIItems.INPUT.value: datum.to_json(),
                 APIItems.VISUALIZATIONS.value: [],
             }
             for datum in inputs
         ]
 
-        is_batched = experiment.is_batched
-
         for run in experiment.runs:
-            run_name = run.explainer.explainer.__class__.__name__
-            run_visualizations = run.explainer.visualize()
-            if is_batched:
-                run_visualizations = torch.concat(run_visualizations, dim=0)
+            run_name = class_to_string(run.explainer.explainer)
+            run_visualizations = run.visualize(experiment.task)
+            run_visualizations = sum(run_visualizations, [])
             for idx, visualization in enumerate(run_visualizations):
                 formatted[idx][APIItems.VISUALIZATIONS.value].append({
                     APIItems.EXPLAINER.value: run_name,
-                    APIItems.DATA.value: visualization,
+                    APIItems.DATA.value: visualization.to_json() if visualization is not None else None,
                 })
+        print(formatted)
 
         return formatted

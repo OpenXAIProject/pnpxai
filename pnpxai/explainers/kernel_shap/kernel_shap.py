@@ -54,7 +54,8 @@ class KernelShap(Explainer):
         task: Task,
         kwargs: Optional[Dict[str, Any]] = None,
     ):
-        explanations = explanations.permute((1, 2, 0))
+        explanations = explanations.transpose(-1, -3)\
+            .transpose(-2, -3)
         return super().format_outputs_for_visualization(
             inputs=inputs,
             targets=targets,

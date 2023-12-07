@@ -2,6 +2,7 @@ import warnings
 from dataclasses import dataclass
 from time import time_ns
 from typing import Optional, Any, Callable, List
+from plotly import express as px
 
 from pnpxai.core._types import Task, DataSource
 from pnpxai.explainers import ExplainerWArgs
@@ -68,15 +69,28 @@ class Run:
         self.finished_at = time_ns()
 
     def visualize(self, task: Task):
-        explanations = self.explainer.format_outputs_for_visualization(
-            data=self.data,
-            input_extractor=self.input_extractor,
-            target_extractor=self.target_extractor,
-            explanations=self.explanations,
-            task=task
-        )
+        visualizations = []
+        for datum, explanation in zip(self.data, self.explanations):
+            if explanation is None:
+                visualizations.append([None for _ in range(len(self.datum))])
+                continue
 
-        return explanations
+            inputs = self.input_extractor(datum)
+            targets = self.target_extractor(datum)
+
+            formatted = self.explainer.format_outputs_for_visualization(
+                inputs=inputs,
+                targets=targets,
+                explanations=explanation,
+                task=task
+            )
+
+            batch_visualizations = [
+                px.imshow(explanation) for explanation in formatted
+            ]
+            visualizations.append(batch_visualizations)
+
+        return visualizations
 
     @property
     def has_explanations(self):

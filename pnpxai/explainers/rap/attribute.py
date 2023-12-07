@@ -1,11 +1,6 @@
-from typing import Any, List, Callable
+from typing import Any, Optional
 
-from plotly import express as px
-from plotly import graph_objects as go
-import numpy as np
-import torch
 from torch import Tensor, nn
-from torch.autograd import Variable
 
 from pnpxai.core._types import Model, DataSource, Task
 from pnpxai.explainers._explainer import Explainer
@@ -41,18 +36,16 @@ class RAP(Explainer):
 
     def format_outputs_for_visualization(
         self,
-        data: DataSource,
-        explanations: DataSource,
-        input_extractor: Callable[[Any], Any],
-        target_extractor: Callable[[Any], Any],
+        inputs: Tensor,
+        targets: Tensor,
+        explanations: Tensor,
         task: Task,
-        kwargs,
+        kwargs: Optional[dict] = None,
     ):
         explanations = explanations.sum(-1)
         return super().format_outputs_for_visualization(
-            data=data,
-            input_extractor=input_extractor,
-            target_extractor=target_extractor,
+            inputs=inputs,
+            targets=targets,
             explanations=explanations,
             task=task,
             kwargs=kwargs
