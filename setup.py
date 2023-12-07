@@ -135,7 +135,7 @@ homepage = "%(homepage)s"
 """
 
 
-def write_meta(filename="open_xai/_meta.py"):
+def write_meta(filename="pnpxai/_meta.py"):
     print("[INFO] Writing _meta.py")
     TEXT = META_PY_TEXT
     FULL_VERSION = VERSION
