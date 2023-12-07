@@ -6,10 +6,6 @@ from pnpxai.visualizer.backend.app.domain.experiment import ExperimentService
 from pnpxai.visualizer.backend.app.http.responses.experiment_response import ExperimentRunsResponse, ExperimentInputsResponse
 
 
-class ExperimentListController(Controller):
-    pass
-
-
 class ExperimentController(Controller):
     def put(self, project_id: str, experiment_id: str):
         experiment = ProjectService.get_experiment_by_id(
