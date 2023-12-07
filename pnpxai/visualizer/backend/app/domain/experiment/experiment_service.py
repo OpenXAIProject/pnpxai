@@ -16,7 +16,7 @@ class ExperimentService:
 
     @classmethod
     def get_task_formatted_inputs(cls, experiment, inputs=None):
-        inputs = inputs or cls.get_inputs_list(experiment)
+        inputs = inputs if inputs is not None else cls.get_inputs_list(experiment)
         if experiment.is_image_task:
             inputs = cls._format_image_inputs(
                 inputs, experiment.input_visualizer)

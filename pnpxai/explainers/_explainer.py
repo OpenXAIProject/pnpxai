@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Any, Optional, Dict
+from typing import Any, Optional, Dict, Callable
 
 from pnpxai.core._types import Model, DataSource, Task
 from pnpxai.explainers.utils.post_process import postprocess_attr
@@ -19,10 +19,11 @@ class Explainer:
 
     def format_outputs_for_visualization(
         self,
-        inputs: DataSource,
-        targets: DataSource,
+        data: DataSource,
         explanations: DataSource,
         task: Task,
+        input_extractor: Callable[[Any], Any],
+        target_extractor: Callable[[Any], Any],
         kwargs: Optional[Dict[str, Any]] = None,
     ):
         return postprocess_attr(
@@ -49,20 +50,22 @@ class ExplainerWArgs():
 
     def format_outputs_for_visualization(
         self,
-        inputs: DataSource,
-        targets: DataSource,
+        data: DataSource,
         explanations: DataSource,
+        input_extractor: Callable[[Any], Any],
+        target_extractor: Callable[[Any], Any],
         task: Task,
-        **kwargs,
+        kwargs,
     ):
         kwargs = {
             **self.kwargs,
             **kwargs
         }
         return self.explainer.format_outputs_for_visualization(
-            inputs=inputs,
-            targets=targets,
+            data=data,
+            input_extractor=input_extractor,
+            target_extractor=target_extractor,
             explanations=explanations,
             task=task,
-            kwargs=self.kwargs,
+            kwargs=kwargs,
         )

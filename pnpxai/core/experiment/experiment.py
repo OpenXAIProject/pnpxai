@@ -110,16 +110,16 @@ class Experiment:
         data = self.get_data_by_ids(data_ids)
         runs = []
 
-        for datum in data:
-            for explainer in explainers:
-                run = Run(
-                    inputs=self.input_extractor(datum),
-                    targets=self.target_extractor(datum),
-                    explainer=explainer,
-                    evaluator=self.evaluator,
-                )
-                run.execute()
-                runs.append(run)
+        for explainer in explainers:
+            run = Run(
+                data=data,
+                input_extractor=self.input_extractor,
+                target_extractor=self.target_extractor,
+                explainer=explainer,
+                evaluator=self.evaluator,
+            )
+            run.execute()
+            runs.append(run)
 
         self.runs = runs
         return self
@@ -137,3 +137,7 @@ class Experiment:
     @property
     def is_image_task(self):
         return self.task == 'image'
+
+    @property
+    def is_batched(self):
+        return isinstance(self.data, DataLoader) and self.data.batch_size > 1

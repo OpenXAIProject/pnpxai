@@ -1,53 +1,65 @@
 import warnings
 from dataclasses import dataclass
 from time import time_ns
-from typing import Optional, Any
+from typing import Optional, Any, Callable, List
 
-from pnpxai.core._types import Task
+from pnpxai.core._types import Task, DataSource
 from pnpxai.explainers import ExplainerWArgs
 from pnpxai.evaluator import XaiEvaluator
-from pnpxai.core._types import DataSource
+from pnpxai.utils import class_to_string
 
 
 class Run:
     def __init__(
         self,
-        inputs: DataSource,
-        targets: DataSource,
+        data: DataSource,
+        input_extractor: Callable[[Any], Any],
+        target_extractor: Callable[[Any], Any],
         explainer: ExplainerWArgs,
         evaluator: Optional[XaiEvaluator] = None,
     ):
-        self.inputs = inputs
-        self.targets = targets
+        self.data = data
         self.explainer = explainer
         self.evaluator = evaluator
 
-        self.explanations: Any = None
-        self.evaluations: Any = None
+        self.input_extractor = input_extractor
+        self.target_extractor = target_extractor
+
+        n_data = len(self.data)
+        self.explanations: List[DataSource] = [None for _ in range(n_data)]
+        self.evaluations: List[DataSource] = [None for _ in range(n_data)]
 
         self.started_at: int
         self.finished_at: int
 
     def execute(self):
         self.started_at = time_ns()
-        print(f"[Run] Explaining {self.explainer.__class__.__name__}")
-        try:
-            self.explanations = self.explainer.attribute(
-                inputs=self.inputs,
-                targets=self.targets,
-            )
-        except NotImplementedError as e:
-            warnings.warn(
-                f"\n[Run] Warning: {repr(self.explainer)} is not currently supported.")
+        explainer_name = class_to_string(self.explainer.explainer)
+        print(f"[Run] Explaining {explainer_name}")
+        for i, datum in enumerate(self.data):
+            try:
+                inputs = self.input_extractor(datum)
+                targets = self.target_extractor(datum)
+                self.explanations[i] = self.explainer.attribute(
+                    inputs=inputs,
+                    targets=targets,
+                )
+            except NotImplementedError as e:
+                warnings.warn(
+                    f"\n[Run] Warning: {explainer_name} is not currently supported.")
 
-        print(f"[Run] Evaluating {self.explainer.__class__.__name__}")
-        if self.evaluator is not None and self.explanations is not None and len(self.explanations) > 0:
-            inputs, target, explanation = next(iter(zip(
-                self.inputs, self.targets, self.explanations
-            )))
+        print(f"[Run] Evaluating {explainer_name}")
+        if self.evaluator is not None and self.explanations is not None and self.has_explanations:
+            datum = None
+            explanation = None
 
-            explanation = self.explanations[:1]
-            inputs = inputs[None, :]
+            for datum, explanation in zip(self.data, self.explanations):
+                if explanation is not None:
+                    break
+
+            inputs = self.input_extractor(datum)[:1]
+            target = self.target_extractor(datum)[:1]
+            explanation = explanation[:1]
 
             self.evaluations = self.evaluator(
                 inputs, target, self.explainer, explanation
@@ -57,13 +69,18 @@ class Run:
 
     def visualize(self, task: Task):
         explanations = self.explainer.format_outputs_for_visualization(
-            inputs=self.inputs,
-            targets=self.targets,
+            data=self.data,
+            input_extractor=self.input_extractor,
+            target_extractor=self.target_extractor,
             explanations=self.explanations,
             task=task
         )
 
         return explanations
+
+    @property
+    def has_explanations(self):
+        return any(map(lambda x: x is not None, self.explanations))
 
     @property
     def elapsed_time(self) -> Optional[int]:

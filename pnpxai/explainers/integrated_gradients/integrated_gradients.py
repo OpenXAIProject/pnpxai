@@ -47,9 +47,7 @@ class IntegratedGradients(Explainer):
     ):
         if kwargs.get('return_convergence_delta', False):
             explanations = explanations[0]
-
         explanations = explanations.permute((1, 2, 0))
-
         return super().format_outputs_for_visualization(
             inputs=inputs,
             targets=targets,
