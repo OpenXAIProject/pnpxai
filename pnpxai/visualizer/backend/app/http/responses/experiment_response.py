@@ -13,7 +13,7 @@ class ExperimentResponse(Response):
         return [
             {
                 APIItems.ID.value: idx,
-                APIItems.NAME.value: class_to_string(explainer)
+                APIItems.NAME.value: explainer.__name__,
             }
             for idx, explainer in enumerate(explainers)
         ]
