@@ -1,9 +1,10 @@
-from typing import Any, Optional, Dict
+from typing import Any, Optional, Callable
 from captum._utils.typing import TargetType
 
-from pnpxai.core._types import Model, DataSource, Task
+from pnpxai.core._types import Model, DataSource, Task, Tensor
 from pnpxai.explainers._explainer import Explainer
 from .lrp_zennit import LRPZennit, Attributor, Composite
+
 
 class LRP(Explainer):
     def __init__(self, model: Model):
@@ -30,13 +31,14 @@ class LRP(Explainer):
 
     def format_outputs_for_visualization(
         self,
-        inputs: DataSource,
-        targets: DataSource,
-        explanations: DataSource,
+        inputs: Tensor,
+        targets: Tensor,
+        explanations: Tensor,
         task: Task,
-        kwargs: Optional[Dict[str, Any]] = None,
+        kwargs: Optional[dict] = None,
     ):
-        explanations = explanations.permute((1, 2, 0))
+        explanations = explanations.transpose(-1, -3) \
+            .transpose(-2, -3)
         return super().format_outputs_for_visualization(
             inputs=inputs,
             targets=targets,

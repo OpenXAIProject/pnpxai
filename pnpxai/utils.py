@@ -14,7 +14,7 @@ def set_seed(seed):
 
 
 def class_to_string(object):
-    return object.__class__.__name__
+    return str(object.__class__.__name__)
 
 
 class CustomIterator():

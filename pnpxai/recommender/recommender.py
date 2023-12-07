@@ -4,7 +4,7 @@ import torch.nn as nn
 from typing import List, Type
 
 from pnpxai.explainers import *
-from pnpxai.evaluator.infidelity import Infidelity
+from pnpxai.evaluator.mu_fidelity import MuFidelity
 from pnpxai.evaluator.sensitivity import Sensitivity
 from pnpxai.recommender._types import RecommenderOutput
 
@@ -59,19 +59,19 @@ class XaiRecommender:
         }
         self.evaluation_metric_table = {
             # Correctness -- Infidelity, Conitinuity -- Sensitivity
-            GuidedGradCam: {Infidelity, Sensitivity},
-            Lime: {Infidelity, Sensitivity},
-            KernelShap: {Infidelity, Sensitivity},
-            IntegratedGradients: {Infidelity, Sensitivity},
-            FullGrad: {Infidelity, Sensitivity},
-            LRP: {Infidelity, Sensitivity},
-            RAP: {Infidelity, Sensitivity},
+            GuidedGradCam: {MuFidelity, Sensitivity},
+            Lime: {MuFidelity, Sensitivity},
+            KernelShap: {MuFidelity, Sensitivity},
+            IntegratedGradients: {MuFidelity, Sensitivity},
+            FullGrad: {MuFidelity, Sensitivity},
+            LRP: {MuFidelity, Sensitivity},
+            RAP: {MuFidelity, Sensitivity},
 
             # Evaluation metric not implemented yet
             PDP: {},
-            CEM: {Infidelity, Sensitivity},
-            TCAV: {Infidelity, Sensitivity},
-            Anchors: {Infidelity, Sensitivity},
+            CEM: {MuFidelity, Sensitivity},
+            TCAV: {MuFidelity, Sensitivity},
+            Anchors: {MuFidelity, Sensitivity},
         }
 
     def _find_overlap(self, *sets):
