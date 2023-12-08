@@ -1,3 +1,5 @@
+from typing import Optional, Union
+
 import torch
 from torch import Tensor
 from torchvision import transforms
@@ -10,14 +12,39 @@ from pnpxai.evaluator._evaluator import EvaluationMetric
 
 
 class MuFidelity(EvaluationMetric):
-    def __init__(self, n_perturbations: int = 200, noise_scale: int = 0.2, batch_size: int = 32, grid_size: int = 9, baseline: float or Tensor = 0.0):
-        self.n_perturbations = n_perturbations
+    def __init__(
+            self,
+            n_perturbations: int = 200,
+            noise_scale: int = 0.2,
+            batch_size: int = 32,
+            grid_size: int = 9,
+            baseline: Union[float, Tensor] = 0.0,
+        ):
         self.noise_scale = noise_scale
         self.batch_size = batch_size
         self.grid_size = grid_size
         self.baseline = baseline
 
-    def __call__(self, model: Model, explainer_w_args: ExplainerWArgs, sample: Tensor, label, pred, pred_idx, result):
+    def __call__(
+            self,
+            model: Model,
+            explainer: ExplainerWArgs,
+            inputs: Tensor,
+            targets: Optional[Tensor] = None,
+            attributions: Optional[Tensor] = None,
+            # pred,
+            # pred_idx,
+            # result,
+        ):
+        device = next(model.parameters()).device
+        inputs = inputs.to(device)
+        outputs = model(inputs).to(device)
+        _, n_classes = outputs.shape
+        if targets is None:
+            targets = outputs.argmax(1).to(device)
+        import pdb; pdb.set_trace()
+        preds = (outputs * torch.eye(n_classes)[targets])
+
         init_pred_shape = pred.shape
         pred = pred[:, label]
         print(self.n_perturbations)
@@ -25,7 +52,6 @@ class MuFidelity(EvaluationMetric):
             self.n_perturbations, *([1]*(sample.ndim - 1))
         )
 
-        device = next(model.parameters()).device
 
         # Add Gaussian random noise
         std, mean = torch.std_mean(repeated_sample)
