@@ -72,7 +72,7 @@ class LRPZennit(Explainer):
     ) -> List[torch.Tensor]:
         model = self._replace_add_func_with_mod()
         if isinstance(targets, int):
-            targets = [targets]
+            targets = [targets] * len(inputs)
         elif torch.is_tensor(targets):
             targets = targets.tolist()
         else:

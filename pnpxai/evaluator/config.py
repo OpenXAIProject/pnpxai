@@ -9,5 +9,8 @@ default_evaluator_kwargs = dict(
     Sensitivity=dict(
         num_iter=10,
         epsilon=0.2,
-    )
+    ),
+    Complexity=dict(
+        n_bins=10,
+    ),
 )

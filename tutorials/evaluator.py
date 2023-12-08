@@ -6,6 +6,7 @@ from pnpxai.explainers import LRP, ExplainerWArgs
 from pnpxai.evaluator import XaiEvaluator
 from pnpxai.evaluator.mu_fidelity import MuFidelity
 from pnpxai.evaluator.sensitivity import Sensitivity
+from pnpxai.evaluator.complexity import Complexity
 
 from helpers import get_imagenet_dataset, get_torchvision_model
 
@@ -26,6 +27,12 @@ inputs, targets = inputs.to(device), targets.to(device)
 
 attrs = explainer.attribute(inputs, targets)
 
-# import pdb; pdb.set_trace()
-mufd = MuFidelity()
-mufd(model, explainer, inputs, targets, attrs)
+# test metrics
+mufd = MuFidelity()(model, explainer, inputs, targets, attrs)
+sens = Sensitivity()(model, explainer, inputs, targets, attrs)
+cmpx = Complexity()(model, explainer, inputs, targets, attrs)
+
+# test evaluator
+metrics = [MuFidelity(n_perturbations=10), Sensitivity(n_iter=10), Complexity()]
+evaluator = XaiEvaluator(metrics=metrics)
+evaluations = evaluator(inputs, targets, explainer, attrs)
