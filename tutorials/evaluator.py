@@ -26,6 +26,6 @@ inputs, targets = inputs.to(device), targets.to(device)
 
 attrs = explainer.attribute(inputs, targets)
 
-import pdb; pdb.set_trace()
+# import pdb; pdb.set_trace()
 mufd = MuFidelity()
 mufd(model, explainer, inputs, targets, attrs)
