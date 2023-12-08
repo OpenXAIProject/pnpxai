@@ -55,7 +55,7 @@ class MuFidelity(EvaluationMetric):
         if targets is None:
             targets = outputs.argmax(1)
         targets = targets.to(device)
-        preds = (outputs * torch.eye(n_classes)[targets]).sum(dim=-1).detach()
+        preds = (outputs * torch.eye(n_classes).to(device)[targets]).sum(dim=-1).detach()
         if attributions is None:
             attributions = explainer_w_args.attribute(inputs, targets, **explainer_w_args.kwargs)
         evaluations = []
