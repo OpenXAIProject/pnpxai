@@ -1,0 +1,18 @@
+/* NetworkGraph.css */
+.tooltip {
+    position: absolute;
+    text-align: center;
+    padding: 8px;
+    font-size: 12px;
+    background: lightsteelblue;
+    border: "none";
+    border-radius: 8px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.d3-component {
+    border: 2px solid black; /* Adds a border to the SVG */
+}
+

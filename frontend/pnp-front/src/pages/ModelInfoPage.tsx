@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import ModelInfoComponent from '../components/ModelInfoComponent'; // Adjust the import path as per your project structure
 import { Typography, Box, Card, CardContent, Button } from '@mui/material';
 import { Link } from 'react-router-dom';

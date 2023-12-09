@@ -1,3 +1,4 @@
+// src/components/ExperimentComponent.tsx
 import React, { useState, useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../app/store';
@@ -12,13 +13,10 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useTheme } from '@mui/material/styles';
 import Plot from 'react-plotly.js';
 import Visualizations from './Visualizations';
+import { Experiment, InputData } from '../app/types';
+import { fetchExperiment } from '../features/apiService';
 
-
-interface Props {
-  id: number;
-}
-
-const ExperimentComponent: React.FC<Props> = ({ id }) => {
+const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {experiment} ) => {
   function makePredictions(images: string[]) {
     const predictions = [];
     for (const image of images) {
@@ -53,20 +51,25 @@ const ExperimentComponent: React.FC<Props> = ({ id }) => {
     return evaluations;
   }
 
+  const inputs: InputData[] = JSON.parse(JSON.stringify(experiment.inputs));
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [modalSelection, setModalSelection] = useState<string[]>([]); // State to track selection in the modal
   const [selectedAlgorithms, setSelectedAlgorithms] = useState<string[]>([]);
   const [experimentOutput, setExperimentOutput] = useState<string>('');
+  const [experimentResult, setExperimentResult] = useState<any[]>([]);
   const [predictions, setPredictions] = useState<any[]>([]);
   const [evaluations, setEvaluations] = useState<any[]>([]);
   const [isExperimentRun, setIsExperimentRun] = useState(false); // New state to track if experiment is run
   const [loading, setLoading] = useState(false); // State for loading modal
 
-  const experimentData = useSelector((state: RootState) => {
-    return state.experiments.data.find((experiment) => experiment.experiment_id === id);
-  });
   
+  useEffect(() => {
+    setSelectedAlgorithms(experiment.explainers.map(explainer => explainer.name));
+    // console.log(selectedAlgorithms);
+    // console.log(experiment.explainers)
+  }, []);
+
   useEffect(() => {
     // Synchronize modalSelection with selectedImages
     if (isModalOpen) {
@@ -74,12 +77,45 @@ const ExperimentComponent: React.FC<Props> = ({ id }) => {
     }
   }, [isModalOpen, selectedImages]);
 
-  useEffect(() => {
-    if (experimentData) {
-      setSelectedAlgorithms(experimentData.algorithms);
-      setSelectedImages(experimentData.data.map(image => image.name));
-    }
-  }, [experimentData]);
+
+  const modifyLayout = (layout: any) => {
+      const modifiedLayout = {
+          ...layout,
+          xaxis: { visible: false },
+          yaxis: { visible: false },
+          width: 240,
+          height: 200,
+          margin: { l: 0, r: 0, t: 0, b: 0 }
+      };
+
+      modifiedLayout.template.data.heatmap[0].colorbar = null;
+
+      return modifiedLayout;
+  }
+
+  const modifyData = (data: any) => {
+      const modifiedData = {
+        ...data[0],
+        coloraxis: null,
+        showscale: false,
+      }
+
+      return [modifiedData];
+  }
+
+  const preprocess = (response: any) => {
+      response.data.data.forEach((result: any) => {
+          result.input = JSON.parse(result.input);
+          result.input.layout = modifyLayout(result.input.layout);
+
+          result.visualizations.forEach((visualization: any) => {
+              visualization.data = JSON.parse(visualization.data);
+              visualization.data.data = modifyData(visualization.data.data);
+              visualization.data.layout = modifyLayout(visualization.data.layout);
+          });
+      });
+  }
+
 
 
   // Add logic to handle image selection, algorithm selection, etc.
@@ -113,23 +149,54 @@ const ExperimentComponent: React.FC<Props> = ({ id }) => {
   };
 
 
-  const handleRunExperiment = () => {
+  const handleRunExperiment = async () => {
     if (selectedImages.length === 0 || selectedAlgorithms.length === 0) {
       setExperimentOutput('Please select at least one image and one algorithm');
       return;
     }
-
+    
     setLoading(true); // Show loading modal
 
-    setTimeout(() => {
-      setLoading(false); // Hide loading modal after 1 second
-      const preds = makePredictions(selectedImages);
-      preds[0].isCorrect = false; // For testing
-      const evals = makeEvaluations(selectedImages, selectedAlgorithms);
-      setPredictions(preds);
-      setEvaluations(evals);
-      setIsExperimentRun(true);
-    }, 3000);
+    // Convert the argument for API
+    const selectedExplainers = selectedAlgorithms.map(algorithm => {
+      const obj = experiment.explainers.find(explainer => explainer.name === algorithm);
+      return obj?.id;
+    }).filter(id => id !== null);
+
+    const selectedInputs = selectedImages.map(image => Number(image));
+
+    const projectId = "test_project"; // Replace with your actual project ID
+    const response = await fetchExperiment(projectId, experiment.name, {
+      inputs: selectedInputs,
+      explainers: selectedExplainers,
+    });
+    
+    preprocess(response);
+    setExperimentResult(response.data.data);
+    setLoading(false); // Hide loading modal after 1 second
+    const preds = makePredictions(selectedImages);
+    preds[0].isCorrect = false; // For testing
+    const evals = makeEvaluations(selectedImages, selectedAlgorithms);
+    setPredictions(preds);
+    setEvaluations(evals);
+    setIsExperimentRun(true);
+
+    
+
+
+    // setTimeout(() => {
+    //   setLoading(false); // Hide loading modal after 1 second
+    //   const preds = makePredictions(selectedImages);
+    //   preds[0].isCorrect = false; // For testing
+    //   const evals = makeEvaluations(selectedImages, selectedAlgorithms);
+    //   setPredictions(preds);
+    //   setEvaluations(evals);
+    //   setIsExperimentRun(true);
+    // }, 500);
+
+    // console.log(JSON.parse(response.data.data[0].input));
+    // console.log(response.data.data[0].visualizations[0]);
+    // console.log(JSON.parse(response.data.data[0].visualizations[0].data));
 
   };
 
@@ -175,7 +242,7 @@ const ExperimentComponent: React.FC<Props> = ({ id }) => {
                 ))}
               </Box>
               <Box sx={{ mt: 2 }}>
-                {experimentData?.algorithms.map((algorithm, index) => (
+                {experiment?.explainers.map(explainer => explainer.name).map((algorithm, index) => (
                   !selectedAlgorithms.includes(algorithm) && (
                     <Chip 
                       key={index} 
@@ -192,12 +259,12 @@ const ExperimentComponent: React.FC<Props> = ({ id }) => {
         <Grid item xs={12} md={9}>
           {/* Experiment Visualization */}
           <Box sx={{ pl: 2 }}>
-            <Typography variant="h5">{experimentData?.name}</Typography>
+            <Typography variant="h5">{experiment?.name}</Typography>
             <Button variant="contained" color="secondary" onClick={handleRunExperiment} sx={{ mt: 2 }}>Run Experiment</Button>
             {/* Experiment Visualization */}
-            {isExperimentRun && (
+            {isExperimentRun && experimentResult && experimentResult.length > 0 && (
               <Visualizations 
-                experimentData={experimentData}
+                experimentResult={experimentResult}
                 predictions={predictions}
                 evaluations={evaluations}
                 selectedImages={selectedImages}
@@ -208,12 +275,13 @@ const ExperimentComponent: React.FC<Props> = ({ id }) => {
         </Grid>
       </Grid>
       
+      
       {/* Image Selection Dialog */}
       <Dialog open={isModalOpen} onClose={() => setIsModalOpen(false)} fullWidth maxWidth="md">
         <DialogTitle>Select Images</DialogTitle>
         <DialogContent>
           <Grid container spacing={2}>
-            {experimentData?.data.map((imageData, index) => (
+            {inputs.map((input, index) => (
               <Grid item xs={12} sm={6} md={4} key={index}>
                 <Paper 
                   sx={{ 
@@ -223,12 +291,26 @@ const ExperimentComponent: React.FC<Props> = ({ id }) => {
                     justifyContent: 'center', // Aligns children vertically in the center
                     alignItems: 'center', // Aligns children horizontally in the center
                     cursor: 'pointer', 
-                    opacity: selectedImages.includes(imageData.name) ? 0.5 : 1
+                    opacity: selectedImages.includes(input.id) ? 0.5 : 1
                   }}
-                  onClick={() => handleImageClick(imageData.name)}
+                  onClick={() => handleImageClick(input.id)}
                 >
-                    <Plot data={JSON.parse(imageData.json).data} layout={JSON.parse(imageData.json).layout} />
-                    <Typography variant="subtitle1" align="center">{imageData.name}</Typography>
+                  <Paper
+                    sx={{
+                      height: "300px",
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      opacity: selectedImages.includes(input.id) ? 0.5 : 1
+                    }}
+                    onClick={() => handleImageClick(input.id)}
+                  >
+                  </Paper>
+                    {/* <Plot data={input.imageObj.data} layout={input.imageObj.layout} /> */}
+                    <img src={input.imageObj.data[0].source} width={240} height={200} alt={input.id} />
+                    <Typography variant="subtitle1" align="center">{input.id}</Typography>
                 </Paper>
               </Grid>
             ))}

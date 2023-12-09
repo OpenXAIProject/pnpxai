@@ -1,12 +1,14 @@
-// In your store configuration file
+// src/app/store.ts
 import { configureStore } from '@reduxjs/toolkit';
-import experimentReducer from '../features/experimentSlice';
+import projectReducer from '../features/projectSlice'; // Import the projectReducer
+
 
 export const store = configureStore({
   reducer: {
-    experiments: experimentReducer,
+    projects: projectReducer,
   },
 });
 
 export type AppDispatch = typeof store.dispatch
 export type RootState = ReturnType<typeof store.getState>
+

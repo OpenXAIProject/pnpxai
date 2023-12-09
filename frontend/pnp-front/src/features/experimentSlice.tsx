@@ -1,49 +1,43 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import plotly_test from '../assets/mockup/plotly_test.json'
+// // src/features/experimentSlice.tsx
+// import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+// import axios from 'axios';
+// import { Experiment } from '../app/types';
+// import { fetchInputsByExperimentId as fetchExperimentsApi } from './apiService';
 
-// Define a type for the slice state
-interface Sample {
-  "sample_id" : number;
-  "name" : string;
-  "json" : string; // Plotly Image JSON
-}
+// interface ExperimentState {
+//   experimentsByProjectId: { [key: string]: Experiment[] };
+// }
 
-interface Experiment {
-  "experiment_id": number;
-  "name": string;
-  "model" : string;
-  "modelDetected": boolean;
-  "modelStructure": string;
-  "algorithms": string[];
-  "data" : Sample[];
-}
+// const initialState: ExperimentState = {
+//   experimentsByProjectId: {},
+// };
 
-interface ExperimentState {
-  data: Experiment[];
-}
+// // Revised async thunk for fetching experiments
+// export const fetchExperimentsByProjectId = createAsyncThunk(
+//   'experiments/fetchByProjectId',
+//   async (projectId: string, { rejectWithValue }) => {
+//     try {
+//       const response = await fetchExperimentsApi(projectId);
+//       return { projectId, experiments: response.data.data as Experiment[] };
+//     } catch (error : any) {
+//       return rejectWithValue(error.response.data);
+//     }
+//   }
+// );
 
-// Initial state
-const initialState: ExperimentState = {
-  data: plotly_test,
-};
+// const experimentSlice = createSlice({
+//   name: 'experiments',
+//   initialState,
+//   reducers: {
+//     // Reducers here if necessary
+//   },
+//   extraReducers: (builder) => {
+//     builder.addCase(fetchExperimentsByProjectId.fulfilled, (state, action) => {
+//       const { projectId, experiments } = action.payload;
+//       state.experimentsByProjectId[projectId] = experiments;
+//     });
+//     // Handle other cases like pending, rejected if needed
+//   },
+// });
 
-export const experimentSlice = createSlice({
-  name: 'experiments',
-  initialState,
-  reducers: {
-    setData: (state, action: PayloadAction<any>) => {
-      state.data = action.payload;
-    },
-  },
-});
-
-// Actions
-export const { setData } = experimentSlice.actions;
-
-// Asynchronous thunk action
-export const fetchData = () => async (dispatch: any) => {
-  // Fetch data from the server and dispatch setData
-  // ...
-};
-
-export default experimentSlice.reducer;
+// export default experimentSlice.reducer;

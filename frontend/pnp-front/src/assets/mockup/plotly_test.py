@@ -96,7 +96,9 @@ if __name__ == '__main__':
         for image in experiment["data"]:
             idx = str(image["sample_id"]).zfill(4)
             path = f"../data/caltech256/001.ak47/001_{idx}.jpg"
-            image["json"] = get_json(path)
+            print(get_json(path))
+            exit()
+            # image["json"] = get_json(path)
 
 
     with open("plotly_test.json", "w") as f:
@@ -150,3 +152,16 @@ if __name__ == '__main__':
     #             })
 
 
+import plotly.express as px
+import json
+
+# Sample data
+df = px.data.iris()
+
+# Create a simple scatter plot
+fig = px.scatter(df, x='sepal_width', y='sepal_length', color='species')
+
+# Convert the plot to JSON
+plot_json = json.dumps(fig, cls=px.utils.PlotlyJSONEncoder)
+
+# Now, plot_json contains the JSON representation of the plot

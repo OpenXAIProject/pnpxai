@@ -1,9 +1,29 @@
+// src/components/Visualizations.tsx
 import React, { useEffect } from 'react';
 import { Card, CardContent, Typography, Box, LinearProgress, ImageList, ImageListItem, ImageListItemBar } from '@mui/material';
 import Plot from 'react-plotly.js';
+import { Experiment, InputData } from '../app/types';
 
+interface ExperimentResult {
+  input : {
+    data: {
+      name: string;
+    }
+    layout: {};
+  };
+  visualizations: {
+    explainer : string;
+    data: {
+      data : {
+        name: string;
+        z: number[][];
+      }
+      layout: {};
+    };
+  }[];
+}
 interface VisualizationsProp {
-    experimentData: any;
+    experimentResult: ExperimentResult[];
     predictions: any[];
     evaluations: any[];
     selectedImages: string[];
@@ -11,19 +31,21 @@ interface VisualizationsProp {
 }
 
 const Visualizations: React.FC<VisualizationsProp> = ({ 
-    experimentData,
+    experimentResult,
     predictions,
     evaluations,
     selectedImages,
     selectedAlgorithms,
   }) => {
   
-  const algorithmList = ["Original", ...selectedAlgorithms]
+  const results: ExperimentResult[] = JSON.parse(JSON.stringify(experimentResult));
+  console.log(results);
+  const algorithmList = ["Original", ...results[0].visualizations.map((visualization) => visualization.explainer)];
   return (
     <Box sx={{ mt: 4 }}>
-      {selectedImages.map((imageName, index) => {
-        const imagePrediction = predictions.find(pred => pred.image === imageName);
-        const imageEvaluations = evaluations.filter((evaluation) => evaluation.image === imageName);
+      {results.map((result, index) => {
+        const imagePrediction = predictions.find(pred => pred.image === result.input.data.name);
+        const imageEvaluations = evaluations.filter((evaluation) => evaluation.image === result.input.data.name);
 
         return (
           <Box key={index} sx={{ marginBottom: 4, paddingBottom: 2, borderBottom: '2px solid #e0e0e0' }}>
@@ -68,18 +90,17 @@ const Visualizations: React.FC<VisualizationsProp> = ({
                     {algIndex === 0 ? (
                       <Box sx={{ p: 1}}>
                         <Plot 
-                        data={JSON.parse(experimentData.data.find(
-                          (sample: { name: string; }) => sample.name === imageName).json).data
-                        } 
-                        layout={JSON.parse(experimentData.data.find((sample: { name: string; }) => sample.name === imageName).json).layout
-                        } />
+                          data={result.input.data}
+                          layout={result.input.layout}
+                        />
                         <Typography variant="subtitle1" align="center">{algorithm}</Typography>
                       </Box>
                       ) : (
                         <Box sx={{ p: 1 }}>
+                          {/* Should be replaced to multiple XAI algorithm result */}
                           <Plot 
-                            data={JSON.parse(experimentData.data.find((sample: { name: string; }) => sample.name === imageName).json).data} 
-                            layout={JSON.parse(experimentData.data.find((sample: { name: string; }) => sample.name === imageName).json).layout} 
+                          data={result.visualizations.find(visualization => visualization.explainer === algorithm)?.data.data}
+                          layout={result.visualizations.find(visualization => visualization.explainer === algorithm)?.data.layout}
                           />
                           <Typography variant="subtitle1" align="center">{algorithm}</Typography>
                           <Typography variant="body2" sx={{ textAlign: 'center' }}> Rank {algIndex}</Typography>

@@ -21,7 +21,9 @@
     "@mui/material": "^5.14.18",
     "@mui/styled-engine-sc": "^6.0.0-alpha.4",
     "@reduxjs/toolkit": "^1.8.1",
+    "axios": "^1.6.2",
     "chart.js": "^4.4.0",
+    "d3": "^7.8.5",
     "dompurify": "^3.0.6",
     "plotly.js": "^2.27.1",
     "react": "^18.2.0",
@@ -30,6 +32,7 @@
     "react-plotly.js": "^2.6.0",
     "react-redux": "^8.0.1",
     "react-router-dom": "^6.18.0",
+    "react-tree-graph": "^8.0.1",
     "styled-components": "^6.1.0"
   },
   "devDependencies": {
@@ -39,7 +42,6 @@
     "@testing-library/user-event": "^14.2.5",
     "@types/react": "^18.0.15",
     "@types/react-dom": "^18.0.6",
-    "@types/react-plotly.js": "^2.6.3",
     "@types/react-router-dom": "^5.3.3",
     "@types/testing-library__jest-dom": "^5.14.5",
     "@vitejs/plugin-react": "^4.0.0",

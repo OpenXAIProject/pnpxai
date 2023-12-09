@@ -1,21 +1,28 @@
-import React, { useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { Box, Container, CardContent, Typography, Card, Alert } from '@mui/material';
+import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { Box, Container, CardContent, Typography, Card, Alert, 
+  FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import { RootState } from '../app/store';
 import ExperimentComponent from '../components/ExperimentComponent';
-import { fetchData } from '../features/experimentSlice';
-import { AnyAction } from 'redux';
-import { ThunkDispatch } from 'redux-thunk';
 
 const ExperimentPage = () => {
-  const experimentData = useSelector((state: RootState) => state.experiments.data);
-  const dispatch = useDispatch<ThunkDispatch<RootState, null, AnyAction>>();
+  const tasks = ['Vision', 'Tabular'];
+  const [task, setTask] = useState(tasks[0]);
 
-  useEffect(() => {
-    dispatch(fetchData());
-  }, [dispatch]);
+  const handleChange = (event: any) => {
+    setTask(event.target.value);
+  };
+  const projectId = "test_project"; // Replace with your actual project ID
+  const projectData = useSelector((state: RootState) => {
+    return state.projects.data.find(project => project.id === projectId);
+  });
 
-  const isAnyModelDetected = experimentData.some(experiment => experiment.modelDetected);
+  // // log projectData
+  // useEffect(() => {
+  //   console.log(projectData?.experiments[0]);
+  // }, [projectData]);
+
+  const isAnyModelDetected = projectData?.experiments.some(experiment => experiment.modelDetected);
   // const isAnyModelDetected = false; // For testing
 
   return (
@@ -39,10 +46,24 @@ const ExperimentPage = () => {
         </Container>
       </Box>
 
+      <FormControl fullWidth>
+        <InputLabel id="task-select"> Task </InputLabel>
+        <Select
+          labelId="task-select"
+          id="task-select"
+          value={task}
+          label="Task"
+          onChange={handleChange}
+        >
+          {tasks.map((task, index) => (
+            <MenuItem key={index} value={task}>{task}</MenuItem>
+          ))}
+        </Select>
+      </FormControl>
       <Box sx={{ m: 1 }}>
         {isAnyModelDetected ? (
-          experimentData.filter(experiment => experiment.modelDetected).map((experiment, index) => (
-            <ExperimentComponent key={index} id={experiment.experiment_id} />
+          projectData?.experiments.filter(experiment => experiment.modelDetected).map((experiment, index) => (
+            <ExperimentComponent key={index} experiment={experiment} />
           ))
         ) : (
           <Box sx={{ m: 5, minHeight: "200px" }}>

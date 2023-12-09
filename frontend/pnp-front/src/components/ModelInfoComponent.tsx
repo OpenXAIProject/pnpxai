@@ -1,16 +1,29 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { 
   Typography, Card, CardContent, CardHeader, Box, Alert,
   FormControlLabel, Toolbar, Collapse, Button } from '@mui/material';
 import { RootState } from '../app/store'; // Import your RootState type
+import NetworkGraph from './ModelGraph';
+import TreeGraph from './ModelGraph';
 
 const ModelInfoComponent: React.FC = () => {
-  const experimentData = useSelector((state: RootState) => {
-    return state.experiments.data;
+  const projectId = "test_project"; // Replace with your actual project ID
+  const projectData = useSelector((state: RootState) => {
+    return state.projects.data.find(project => project.id === projectId);
   });
   const [expanded, setExpanded] = useState<{ [key: string]: boolean }>({});
-  
+  const [nodes, setNodes] = React.useState<any[]>([]);
+  const [links, setLinks] = React.useState<any[]>([]);
+
+  useEffect(() => {
+    if (projectData?.experiments[0].model.nodes && projectData?.experiments[0].model.edges) {
+      const deepCopy = JSON.parse(JSON.stringify(projectData?.experiments[0].model));
+      setNodes(deepCopy.nodes);
+      setLinks(deepCopy.edges);
+    }
+  }
+  , [projectData]);
 
 
 
@@ -22,7 +35,7 @@ const ModelInfoComponent: React.FC = () => {
   };
   
 
-  const isNoModelDetected = experimentData.every((experiment) => {
+  const isNoModelDetected = projectData?.experiments.every((experiment) => {
     return !experiment.modelDetected;
     // return true; // For testing
 
@@ -41,7 +54,7 @@ const ModelInfoComponent: React.FC = () => {
             </Card>
           </Box>
         ) : (
-          experimentData.map((experiment, index) => {
+          projectData?.experiments.map((experiment, index) => {
             const toolbarStyle = {
               backgroundColor: experiment.modelDetected ? 'green' : 'red',
               color: 'white',
@@ -56,13 +69,18 @@ const ModelInfoComponent: React.FC = () => {
                     </Typography>
                   </Toolbar>
                   <CardContent>
-                    <Typography variant='body1'> Model: {experiment.model} </Typography>
-                    <Typography variant='body1'> Availalbe XAI Algorithms: {experiment.algorithms.join(', ')} </Typography>
                     {experiment.modelDetected ? (
                       <Box sx={{ m: 1 }}>
+                        <Typography variant='body1'> Model: {experiment.model.name} </Typography>
+                        <Typography variant='body1'> Availalbe XAI Algorithms: </Typography>
+                        {experiment.explainers.map((explainer, index) => (
+                          <Typography key={index}> {explainer.name} </Typography>
+                        ))}
                         <Button onClick={() => handleCollapse(index)}> View Model </Button>
                         <Collapse in={expanded[index]} timeout="auto" unmountOnExit>
-                          <Typography variant='body1'> Model Structure: {experiment.modelStructure} </Typography>
+                          <Typography variant='body1'> Model Structure </Typography>
+                          <TreeGraph nodes={nodes} links={links} />
+                          
                         </Collapse>
                       </Box>
                     ) : (
