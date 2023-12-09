@@ -1,6 +1,6 @@
+from torch import Tensor
 from torch.utils.data import DataLoader
 import plotly.express as px
-import numpy as np
 
 
 class ExperimentService:
@@ -31,15 +31,10 @@ class ExperimentService:
     def _format_image_inputs(cls, inputs, visualizer=None):
         formatted = []
         for datum in inputs:
-            datum: np.ndarray = datum.cpu()
-            # Scale to RGB, if between 0 and 1
-            if datum.max() <= 1 and datum.min() >= 0:
-                datum = (datum * 255).astype(int)
-
+            datum: Tensor = datum.cpu()
+            
             if visualizer is not None:
                 datum = visualizer(datum)
-                if hasattr(datum, 'tolist'):
-                    datum = datum.tolist()
 
             fig = px.imshow(datum)
             formatted.append(fig)

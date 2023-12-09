@@ -17,12 +17,16 @@ def postprocess_attr(
         pass
         # raise NotImplementedError
 
-    postprocessed = attr.transpose(-1, -3)\
-        .transpose(-2, -3).sum(dim=-1)
+    # Step 1: Sum over the channels to get a tensor of shape (batch, width, height)
+    summed_tensor = attr.sum(dim=-1)
 
-    aggr_shape = (-3, -2, -1)
+    # Step 2: Normalize each batch item independently
+    # Find the max and min values for each item in the batch
+    max_values = summed_tensor.view(summed_tensor.shape[0], -1).max(dim=1)[0].unsqueeze(1).unsqueeze(2)
+    min_values = summed_tensor.view(summed_tensor.shape[0], -1).min(dim=1)[0].unsqueeze(1).unsqueeze(2)
 
-    attr_max = torch.amax(postprocessed, dim=aggr_shape)
-    attr_min = torch.amin(postprocessed, dim=aggr_shape)
-    postprocessed = (postprocessed - attr_min) / (attr_max - attr_min)
+    # Perform the normalization
+    postprocessed = (summed_tensor - min_values) / (max_values - min_values)
+    postprocessed = torch.flip(postprocessed, [1])
+
     return postprocessed.cpu().detach().numpy()
