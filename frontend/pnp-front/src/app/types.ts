@@ -28,7 +28,7 @@ interface Model {
 
 // Define input data type
 interface InputData {
-  id: string;
+  id: number;
   imageObj: imageObj;
 }
 
@@ -37,4 +37,35 @@ interface imageObj {
   layout: any;
 }
 
-export type { Project, Experiment, Explainer, Model, InputData, imageObj}
+interface ExperimentResult {
+  input : {
+    data: {
+      name: string;
+    }
+    layout: {};
+  };
+  visualizations: {
+    explainer : string;
+    data: {
+      data : {
+        name: string;
+        z: number[][];
+      }
+      layout: {};
+    };
+    metrics: {
+      faithfulness: number;
+      robustness: number;
+    };
+  }[];
+  prediction: {
+    label: string;
+    probPredictions: {
+      label: string;
+      score: number;
+    }[];
+    isCorrect: boolean;
+  };
+}
+
+export type { Project, Experiment, Explainer, Model, InputData, imageObj, ExperimentResult}
