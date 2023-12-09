@@ -39,18 +39,18 @@ interface imageObj {
 
 interface ExperimentResult {
   input : {
-    data: {
+    data: [{
       name: string;
-    }
+    }]
     layout: {};
   };
   visualizations: {
     explainer : string;
     data: {
-      data : {
+      data : [{
         name: string;
         z: number[][];
-      }
+      }]
       layout: {};
     };
     metrics: {

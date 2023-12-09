@@ -1,0 +1,23 @@
+# frontend/pnp-front/Dockerfile.build
+FROM node:20-alpine
+
+WORKDIR /project
+
+# Copy package.json and package-lock.json (if available)
+COPY package.json /project/
+
+# Install any needed packages
+RUN yarn install
+
+# Copy the rest of your app's source code from your host to your image filesystem.
+COPY . /project/
+
+# Increase memory limit for Node
+ENV NODE_OPTIONS="--max_old_space_size=4096"
+
+# Build the app
+CMD ["yarn", "build"]
+
+# No need to expose a port or set a CMD as this Dockerfile is only for building the app
+# docker build -f Dockerfile.build -t my-react-app-build .
+# docker run --rm -v "$(pwd)/build:/project/build" my-react-app-build

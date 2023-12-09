@@ -98,8 +98,8 @@ const Visualizations: React.FC<{ inputs: number[]; explainers: number[]; setLoad
               }}>
               <ImageListItem key={0} sx={{ width: '240px', minHeight: "300px" }}>
                 <Box sx={{ p: 1}}>
-                  <Plot 
-                    data={result.input.data}
+                  <Plot
+                    data={[result.input.data[0]]}
                     layout={result.input.layout}
                   />
                   <Typography variant="subtitle1" align="center"> Original </Typography>
@@ -111,7 +111,7 @@ const Visualizations: React.FC<{ inputs: number[]; explainers: number[]; setLoad
                   <ImageListItem key={index+1} sx={{ width: '240px', minHeight: "300px" }}>
                       <Box sx={{ p: 1 }}>
                         <Plot 
-                          data={viz.data.data}
+                          data={[viz.data.data[0]]}
                           layout={viz.data.layout}
                           />
                         <Typography variant="subtitle1" align="center">{viz.explainer}</Typography>

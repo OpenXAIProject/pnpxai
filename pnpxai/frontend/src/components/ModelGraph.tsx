@@ -4,20 +4,20 @@ import './NetworkGraph.css';
 import { Box } from '@mui/material';
 
 interface Node {
-    id: string;
-    x?: number;
-    y?: number;
-    children?: Node[];
+  id: string;
+  children?: Node[];
+  // Add any other properties that your nodes might have
 }
 
 interface Link {
-    source: string;
-    target: string;
+  source: string;
+  target: string;
+  // Add any other properties that your links might have
 }
 
 interface NetworkGraphProps {
-    nodes: Node[];
-    links: Link[];
+  nodes: Node[];
+  links: Link[];
 }
 
 const width = 1200;
@@ -31,16 +31,16 @@ const TreeGraph: React.FC<NetworkGraphProps> = ({ nodes, links }) => {
         const svg = d3.select(d3Container.current);
         svg.selectAll("*").remove();
 
-        const g = svg.append('g');
+        const g = svg.append<SVGSVGElement>('g');
 
-            // Zoom functionality
-            const zoom = d3.zoom()
-                .on('zoom', (event) => {
-                    g.attr('transform', event.transform);
-                });
+        // Zoom functionality
+        const zoom = d3.zoom<SVGSVGElement, unknown>()
+          .on('zoom', (event) => {
+            g.attr('transform', event.transform);
+          });
 
-            // Apply the zoom behavior to the svg element
-            svg.call(zoom);
+        // Apply the zoom behavior to the svg element
+        svg.call(zoom);
 
         const root = buildTree(nodes, links);
 
@@ -48,22 +48,23 @@ const TreeGraph: React.FC<NetworkGraphProps> = ({ nodes, links }) => {
         treeLayout(root);
         
         // Draw links
+        // @ts-ignore
         g.selectAll('.link')
-            .data(root.links())
-            .enter().append('line')
-            .classed('link', true)
-            .attr('x1', d => d.source.x ?? 0)
-            .attr('y1', d => d.source.y ?? 0)
-            .attr('x2', d => d.target.x ?? 0)
-            .attr('y2', d => d.target.y ?? 0)
-            .attr('stroke', '#555');
+          .data(root.links())
+          .enter().append('line')
+          .classed('link', true)
+          .attr('x1', (d : any) => d.source.x ?? 0)
+          .attr('y1', (d : any) => d.source.y ?? 0)
+          .attr('x2', (d : any) => d.target.x ?? 0)
+          .attr('y2', (d : any) => d.target.y ?? 0)
+          .attr('stroke', '#555');
 
         // Draw nodes
         const nodeEnter = g.selectAll('.node')
             .data(root.descendants())
             .enter().append('g')
             .classed('node', true)
-            .attr('transform', d => `translate(${d.x ?? 0},${d.y ?? 0})`);
+            .attr('transform', (d : any) => `translate(${d.x ?? 0},${d.y ?? 0})`);
 
         nodeEnter.append('circle')
             .attr('r', 5)
@@ -107,7 +108,10 @@ const TreeGraph: React.FC<NetworkGraphProps> = ({ nodes, links }) => {
 };
 
 function buildTree(nodes: Node[], links: Link[]): d3.HierarchyNode<Node> {
-  const idToNode: Map<string, Node> = new Map(nodes.map(node => [node.id, { ...node, children: [] }]));
+  const idToNode = new Map<string, Node>();
+  nodes.forEach(node => {
+    idToNode.set(node.id, { ...node, children: [] });
+  });
 
   links.forEach(link => {
     const parent = idToNode.get(link.source);

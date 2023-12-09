@@ -1,4 +1,4 @@
-import { ExperimentResult } from "../types";
+import { ExperimentResult } from "../app/types";
 
 const modifyLayout = (layout: any) => {
   const modifiedLayout = {
