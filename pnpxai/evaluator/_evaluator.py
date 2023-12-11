@@ -8,14 +8,21 @@ from torch import Tensor
 from pnpxai.utils import class_to_string
 from pnpxai.evaluator._types import EvaluatorOutput
 from pnpxai.explainers import ExplainerWArgs
-from pnpxai.core._types import Args
+from pnpxai.core._types import Model, DataSource, TensorOrTensorSequence
 
 import time
 
 
 class EvaluationMetric():
     @abstractmethod
-    def __call__(self, *args, **kwargs):
+    def __call__(
+        self,
+        model: Model,
+        explainer_w_args: ExplainerWArgs,
+        inputs: DataSource,
+        targets: DataSource,
+        explanations: TensorOrTensorSequence
+    ):
         raise NotImplementedError()
 
 
@@ -37,12 +44,12 @@ class XaiEvaluator:
         return weighted_scores
 
     def __call__(
-            self,
-            inputs: Tensor,
-            targets: Tensor,
-            explainer_w_args: ExplainerWArgs,
-            explanations: Tensor
-        ) -> EvaluatorOutput:
+        self,
+        inputs: Tensor,
+        targets: Tensor,
+        explainer_w_args: ExplainerWArgs,
+        explanations: Tensor
+    ) -> EvaluatorOutput:
         model = explainer_w_args.explainer.model
         metrics_scores = {}
 
