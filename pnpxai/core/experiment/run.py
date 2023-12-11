@@ -58,9 +58,9 @@ class Run:
                 if explanation is not None:
                     break
 
-            inputs = self.input_extractor(datum)[:1]
-            target = self.target_extractor(datum)[:1]
-            explanation = explanation[:1]
+            inputs = self.input_extractor(datum)#[:1]
+            target = self.target_extractor(datum)#[:1]
+            # explanation = explanation#[:1]
 
             self.evaluations = self.evaluator(
                 inputs, target, self.explainer, explanation
