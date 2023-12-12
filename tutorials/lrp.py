@@ -8,6 +8,7 @@ from torch.utils.data import DataLoader
 from zennit.composites import EpsilonPlus
 import plotly.graph_objects as go
 import plotly.express as px
+import matplotlib.pyplot as plt
 
 from pnpxai.explainers import LRP
 from pnpxai.explainers.utils.post_process import postprocess_attr
@@ -15,32 +16,33 @@ from pnpxai.explainers.utils.post_process import postprocess_attr
 from helpers import get_imagenet_dataset, get_torchvision_model, denormalize_image
 
 
+dataset_size = 100
+batch_size = 32
+assert dataset_size >= batch_size, "dataset_size should be larger than batch_size."
+
+savedir = './results/lrp_vit'
+os.makedirs(savedir, exist_ok=True)
+
 model, transform = get_torchvision_model("vit_b_16")
-dataset = get_imagenet_dataset(transform, subset_size=8)
-loader = DataLoader(dataset, batch_size=8)
-inputs, labels = next(iter(loader))
-targets = labels
+dataset = get_imagenet_dataset(transform, subset_size=dataset_size)
+loader = DataLoader(dataset, batch_size=batch_size)
 
 explainer = LRP(model)
-attributions = explainer.attribute(inputs, targets)
 
-attr = attributions[6]
-t = .05
-lb = attr.quantile(t)
-ub = attr.quantile(1-t)
-bounded = attr - torch.nn.functional.relu(attr-ub) + torch.nn.functional.relu(-attr+lb)
-# bounded = attr
-hm = postprocess_attr(bounded)
+for i, data in enumerate(loader):
+    inputs, labels = data
+    targets = model(inputs).argmax(1)
 
-# # hm = attributions[1].permute(1,2,0).sum(dim=-1)
-# # import pdb; pdb.set_trace()
+    # attribute
+    attributions = explainer.attribute(inputs, targets, epsilon=1e-1)
+    attributions = postprocess_attr(attributions, sign='positive')
 
-# # img_data = go.Image(z=denormalize_image(inputs[0], mean=transform.mean, std=transform.std))
-# # fig = go.Figure(data=img_data)
-# # fig.show()
-
-fig = px.imshow(hm)
-# fig.add_trace(px.imshow(attributions[0].permute(1,2,0)))
-fig.show()
-# # print(attributions.shape)
-
+    # visualize
+    for idx, attribution in enumerate(attributions):
+        fig, axs = plt.subplots(nrows=1, ncols=2, figsize=(10, 5))
+        axs[0].imshow(denormalize_image(inputs[idx], mean=transform.mean, std=transform.std))
+        axs[1].imshow(attribution, cmap='Reds')
+        [ax.axis('off') for ax in axs]
+        plt.tight_layout()
+        plt.savefig(f'{savedir}/{batch_size*i + idx}')
+        plt.close()
