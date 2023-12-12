@@ -27,7 +27,7 @@ model = model.to(device)
 
 dataset = get_imagenet_dataset(transform, subset_size=100)
 dataset = Subset(dataset, list(range(25)))
-loader = DataLoader(dataset, batch_size=25)
+loader = DataLoader(dataset, batch_size=10)
 def input_extractor(x): return x[0].to(device)
 def target_extractor(x): return x[1].to(device)
 
