@@ -1,4 +1,7 @@
 # Byte-compiled / optimized / DLL files
+pnpxai/frontend/node_modules/
+pnpxai/frontend/src/assets/data/
+*.DS_Store*
 __pycache__/
 *.py[cod]
 *$py.class
