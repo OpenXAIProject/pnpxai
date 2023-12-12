@@ -10,7 +10,7 @@ class ExperimentController(Controller):
     def put(self, project_id: str, experiment_id: str):
         experiment = ProjectService.get_experiment_by_id(
             project_id, experiment_id)
-        print(experiment)
+        
         if experiment is None:
             abort(404)
 

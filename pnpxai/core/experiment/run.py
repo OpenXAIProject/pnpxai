@@ -1,7 +1,6 @@
 import warnings
-from dataclasses import dataclass
 from time import time_ns
-from typing import Optional, Any, Callable, List
+from typing import Optional, Any, Callable, List, Sequence
 from plotly import express as px
 
 from pnpxai.core._types import Task, DataSource
@@ -45,28 +44,32 @@ class Run:
                     inputs=inputs,
                     targets=targets,
                 )
-            except NotImplementedError as e:
+            except NotImplementedError:
                 warnings.warn(
                     f"\n[Run] Warning: {explainer_name} is not currently supported.")
+            except Exception as e:
+                warnings.warn(
+                    f"\n[Run] Warning: Explaining {explainer_name} produced an error {e}.")
 
         print(f"[Run] Evaluating {explainer_name}")
-        if self.evaluator is not None and self.explanations is not None and self.has_explanations:
-            datum = None
-            explanation = None
-
-            for datum, explanation in zip(self.data, self.explanations):
-                if explanation is not None:
-                    break
-
-            inputs = self.input_extractor(datum)#[:1]
-            target = self.target_extractor(datum)#[:1]
-            # explanation = explanation#[:1]
-
-            self.evaluations = self.evaluator(
-                inputs, target, self.explainer, explanation
-            )
+        self.evaluate()
 
         self.finished_at = time_ns()
+
+    def evaluate(self):
+        if self.evaluator is None or self.explanations is None or not self.has_explanations:
+            return None
+
+        for i, (datum, explanation) in enumerate(zip(self.data, self.explanations)):
+            if explanation is None:
+                continue
+
+            inputs = self.input_extractor(datum)
+            target = self.target_extractor(datum)
+
+            self.evaluations[i] = self.evaluator(
+                inputs, target, self.explainer, explanation
+            )
 
     def visualize(self, task: Task):
         visualizations = []
@@ -93,8 +96,40 @@ class Run:
         return visualizations
 
     @property
+    def flattened_evaluations(self) -> Optional[Sequence[Any]]:
+        if self.evaluations is None:
+            return None
+
+        flattened = []
+        for datum, batch_evaluations in zip(self.data, self.evaluations):
+            if batch_evaluations is None:
+                flattened.append([None for _ in range(len(datum))])
+                continue
+
+            metric_evaluations = []
+            for idx, (metric, metric_vals) in enumerate(batch_evaluations.items()):
+                if len(metric_evaluations) < len(metric_vals):
+                    metric_evaluations += [
+                        {} for _ in range(len(metric_vals) - len(metric_evaluations))
+                    ]
+
+                for idx, val in enumerate(metric_vals):
+                    metric_evaluations[idx][metric] = val.item()
+
+            flattened += metric_evaluations
+
+        return flattened
+
+    def _has_vals(self, vals: Sequence[Optional[Any]]):
+        return any(map(lambda x: x is not None, vals))
+
+    @property
     def has_explanations(self):
-        return any(map(lambda x: x is not None, self.explanations))
+        return self._has_vals(self.explanations)
+
+    @property
+    def has_evaluations(self):
+        return self._has_vals(self.evaluations)
 
     @property
     def elapsed_time(self) -> Optional[int]:

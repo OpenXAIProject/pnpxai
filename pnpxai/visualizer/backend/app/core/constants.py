@@ -11,7 +11,8 @@ class APIItems(Enum):
     SOURCE = 'source'
     TARGET = 'target'
 
-    VISUALIZATIONS = 'visualizations'
+    EXPLANATIONS = 'explanations'
+    EVALUATION = 'evaluation'
     INPUT = 'input'
     EXPLAINER = 'explainer'
 

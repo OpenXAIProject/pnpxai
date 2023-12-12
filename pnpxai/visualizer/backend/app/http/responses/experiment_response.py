@@ -30,6 +30,7 @@ class ExperimentResponse(Response):
 
         return fields
 
+
 class ExperimentInputsResponse(Response):
     @classmethod
     def to_dict(cls, figure):
@@ -59,7 +60,7 @@ class ExperimentRunsResponse(Response):
         formatted = [
             {
                 APIItems.INPUT.value: datum.to_json(),
-                APIItems.VISUALIZATIONS.value: [],
+                APIItems.EXPLANATIONS.value: [],
             }
             for datum in inputs
         ]
@@ -68,11 +69,15 @@ class ExperimentRunsResponse(Response):
             run_name = class_to_string(run.explainer.explainer)
             run_visualizations = run.visualize(experiment.task)
             run_visualizations = sum(run_visualizations, [])
-            for idx, visualization in enumerate(run_visualizations):
-                formatted[idx][APIItems.VISUALIZATIONS.value].append({
+            evaluations = run.flattened_evaluations or [
+                None for _ in range(len(run_visualizations))
+            ]
+
+            for idx, (visualization, evaluation) in enumerate(zip(run_visualizations, evaluations)):
+                formatted[idx][APIItems.EXPLANATIONS.value].append({
                     APIItems.EXPLAINER.value: run_name,
                     APIItems.DATA.value: visualization.to_json() if visualization is not None else None,
+                    APIItems.EVALUATION.value: evaluation
                 })
-        print(formatted)
 
         return formatted

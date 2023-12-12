@@ -1,12 +1,10 @@
-from dataclasses import dataclass
 from collections import OrderedDict
 from abc import abstractmethod
-from typing import Sequence
+from typing import Sequence, Dict
 
 from torch import Tensor
 
 from pnpxai.utils import class_to_string
-from pnpxai.evaluator._types import EvaluatorOutput
 from pnpxai.explainers import ExplainerWArgs
 from pnpxai.core._types import Model, DataSource, TensorOrTensorSequence
 
@@ -30,7 +28,8 @@ class XaiEvaluator:
     def __init__(self, metrics: Sequence[EvaluationMetric]):
         self.metrics = metrics
 
-    def prioritize(self, metrics, weights):
+    @classmethod
+    def prioritize(cls, metrics, weights):
         assert sum(weights) == 1, "Sum of weights should be 1."
 
         weighted_scores = dict()
@@ -49,7 +48,7 @@ class XaiEvaluator:
         targets: Tensor,
         explainer_w_args: ExplainerWArgs,
         explanations: Tensor
-    ) -> EvaluatorOutput:
+    ) -> Dict[str, Tensor]:
         model = explainer_w_args.explainer.model
         metrics_scores = {}
 
@@ -60,9 +59,6 @@ class XaiEvaluator:
             metrics_scores[metric_name] = metric(
                 model, explainer_w_args, inputs, targets, explanations,
             )
-            print(f'Compute {metric_name} done: {time.time() - st}')
+            print(f'Computed {metric_name} in {time.time() - st} sec')
 
-        return EvaluatorOutput(
-            # evaluation_results=weighted_scores,
-            metrics_results=metrics_scores,
-        )
+        return metrics_scores

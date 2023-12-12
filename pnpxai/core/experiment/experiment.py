@@ -23,7 +23,7 @@ class Experiment:
         self,
         model: Model,
         data: DataSource,
-        explainers: Optional[Sequence[Union[ExplainerWArgs, Explainer]]] = None,
+        explainers: Sequence[Union[ExplainerWArgs, Explainer]],
         evaluator: XaiEvaluator = None,
         task: str = "image",
         input_extractor: Optional[Callable[[Any], Any]] = None,
@@ -48,10 +48,7 @@ class Experiment:
         self.task = task
         self.runs: List[Run] = []
 
-    def preprocess_explainers(self, explainers: Optional[Sequence[Union[ExplainerWArgs, Explainer]]] = None) -> List[ExplainerWArgs]:
-        if explainers is None:
-            return AVAILABLE_EXPLAINERS
-
+    def preprocess_explainers(self, explainers: Sequence[Union[ExplainerWArgs, Explainer]]) -> List[ExplainerWArgs]:
         return [
             explainer
             if isinstance(explainer, ExplainerWArgs)
@@ -79,6 +76,7 @@ class Experiment:
         return self.explainers_w_args.pop(idx)
 
     def get_explainers_by_ids(self, explainer_ids: Optional[Sequence[int]] = None) -> List[ExplainerWArgs]:
+        print([exp.explainer for exp in self.explainers_w_args])
         return [self.explainers_w_args[idx] for idx in explainer_ids] if explainer_ids is not None else self.explainers_w_args
 
     def get_data_by_ids(self, data_ids: Optional[Sequence[int]] = None) -> List[Any]:
