@@ -1,16 +1,20 @@
-from dataclasses import dataclass
 from collections import OrderedDict
 from abc import abstractmethod
-from typing import Sequence
+from typing import Sequence, Dict, Any
 
 from torch import Tensor
 
 from pnpxai.utils import class_to_string
-from pnpxai.evaluator._types import EvaluatorOutput
 from pnpxai.explainers import ExplainerWArgs
 from pnpxai.core._types import Model, DataSource, TensorOrTensorSequence
 
 import time
+
+DEFAULT_METRIC_WEIGHTS = {
+    'Sensitivity': 1/3,
+    'Complexity': 1/3,
+    'MuFidelity': 1/3,
+}
 
 
 class EvaluationMetric():
@@ -30,18 +34,15 @@ class XaiEvaluator:
     def __init__(self, metrics: Sequence[EvaluationMetric]):
         self.metrics = metrics
 
-    def prioritize(self, metrics, weights):
-        assert sum(weights) == 1, "Sum of weights should be 1."
+    @classmethod
+    def weigh_metrics(cls, metrics: Dict[str, Any], weights: Dict[str, Any] = None):
+        weights = weights or DEFAULT_METRIC_WEIGHTS
+        assert sum(weights.values()) == 1, "Sum of weights should be 1."
 
-        weighted_scores = dict()
         weighted_score = 0
-        for i, weight in enumerate(weights):
-            weighted_score += metrics[i] * weight
-        weighted_scores = weighted_score
-
-        weighted_scores = OrderedDict(
-            sorted(weighted_scores.items(), key=lambda item: item[1]))
-        return weighted_scores
+        for metric in metrics:
+            weighted_score += metrics[metric] * weights[metric]
+        return weighted_score
 
     def __call__(
         self,
@@ -49,7 +50,7 @@ class XaiEvaluator:
         targets: Tensor,
         explainer_w_args: ExplainerWArgs,
         explanations: Tensor
-    ) -> EvaluatorOutput:
+    ) -> Dict[str, Tensor]:
         model = explainer_w_args.explainer.model
         metrics_scores = {}
 
@@ -60,9 +61,6 @@ class XaiEvaluator:
             metrics_scores[metric_name] = metric(
                 model, explainer_w_args, inputs, targets, explanations,
             )
-            print(f'Compute {metric_name} done: {time.time() - st}')
+            print(f'Computed {metric_name} in {time.time() - st} sec')
 
-        return EvaluatorOutput(
-            # evaluation_results=weighted_scores,
-            metrics_results=metrics_scores,
-        )
+        return metrics_scores

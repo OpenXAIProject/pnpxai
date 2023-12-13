@@ -23,7 +23,7 @@ class Experiment:
         self,
         model: Model,
         data: DataSource,
-        explainers: Optional[Sequence[Union[ExplainerWArgs, Explainer]]] = None,
+        explainers: Sequence[Union[ExplainerWArgs, Explainer]],
         evaluator: XaiEvaluator = None,
         task: str = "image",
         input_extractor: Optional[Callable[[Any], Any]] = None,
@@ -48,10 +48,7 @@ class Experiment:
         self.task = task
         self.runs: List[Run] = []
 
-    def preprocess_explainers(self, explainers: Optional[Sequence[Union[ExplainerWArgs, Explainer]]] = None) -> List[ExplainerWArgs]:
-        if explainers is None:
-            return AVAILABLE_EXPLAINERS
-
+    def preprocess_explainers(self, explainers: Sequence[Union[ExplainerWArgs, Explainer]]) -> List[ExplainerWArgs]:
         return [
             explainer
             if isinstance(explainer, ExplainerWArgs)
@@ -79,25 +76,28 @@ class Experiment:
         return self.explainers_w_args.pop(idx)
 
     def get_explainers_by_ids(self, explainer_ids: Optional[Sequence[int]] = None) -> List[ExplainerWArgs]:
+        print([exp.explainer for exp in self.explainers_w_args])
         return [self.explainers_w_args[idx] for idx in explainer_ids] if explainer_ids is not None else self.explainers_w_args
 
     def get_data_by_ids(self, data_ids: Optional[Sequence[int]] = None) -> List[Any]:
-        data = self.data
         if data_ids is None:
-            return data
+            return self.data
         if isinstance(self.data, DataLoader):
             duplicated_params = [
                 'num_workers', 'collate_fn', 'pin_memory', 'drop_last', 'timeout',
                 'worker_init_fn', 'multiprocessing_context', 'generator', 'persistent_workers', 'pin_memory_device'
             ]
+            batch_size = min(self.data.batch_size, len(data_ids)) \
+                if self.data.batch_size is not None else None
+            print("BS:", batch_size)
             data = self.data.__class__(
-                dataset=Subset(self.data.dataset, data_ids), shuffle=False,
+                dataset=Subset(self.data.dataset, data_ids), shuffle=False, batch_size=batch_size,
                 **{param: getattr(self.data, param) for param in duplicated_params}
             )
         elif isinstance(self.data, Dataset):
-            data = Subset(data, data_ids)
+            data = Subset(self.data, data_ids)
         else:
-            data = data[data_ids]
+            data = self.data[data_ids]
 
         return data
 

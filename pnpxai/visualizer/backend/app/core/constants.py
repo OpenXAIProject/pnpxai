@@ -11,7 +11,9 @@ class APIItems(Enum):
     SOURCE = 'source'
     TARGET = 'target'
 
-    VISUALIZATIONS = 'visualizations'
+    EXPLANATIONS = 'explanations'
+    WEIGHTED_SCORE = 'weighted_score'
+    EVALUATION = 'evaluation'
     INPUT = 'input'
     EXPLAINER = 'explainer'
 
