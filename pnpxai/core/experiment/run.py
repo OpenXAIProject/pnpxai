@@ -62,6 +62,7 @@ class Run:
 
         for i, (datum, explanation) in enumerate(zip(self.data, self.explanations)):
             if explanation is None:
+                self.evaluations[i] = None
                 continue
 
             inputs = self.input_extractor(datum)
@@ -75,7 +76,7 @@ class Run:
         visualizations = []
         for datum, explanation in zip(self.data, self.explanations):
             if explanation is None:
-                visualizations.append([None for _ in range(len(self.datum))])
+                visualizations.append(None)
                 continue
 
             inputs = self.input_extractor(datum)
@@ -94,6 +95,17 @@ class Run:
             visualizations.append(batch_visualizations)
 
         return visualizations
+
+    def get_flattened_visualizations(self, task: Task):
+        visualizations = self.visualize(task)
+        flattened = []
+        for datum, batch_visualizations in zip(self.data, visualizations):
+            if batch_visualizations is None:
+                batch_visualizations = [None for _ in range(len(datum))]
+
+            flattened += batch_visualizations
+
+        return flattened
 
     @property
     def flattened_evaluations(self) -> Optional[Sequence[Any]]:
@@ -119,6 +131,21 @@ class Run:
             flattened += metric_evaluations
 
         return flattened
+
+    @property
+    def flattened_weighted_evaluations(self):
+        evaluations = self.flattened_evaluations
+        if evaluations is None or self.evaluator is None:
+            return None
+
+        weighted_evaluations = [
+            XaiEvaluator.weigh_metrics(evaluation)
+            if evaluation is not None else None
+            for evaluation in evaluations
+        ]
+
+        return weighted_evaluations
+        
 
     def _has_vals(self, vals: Sequence[Optional[Any]]):
         return any(map(lambda x: x is not None, vals))

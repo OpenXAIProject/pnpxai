@@ -1,6 +1,6 @@
 from collections import OrderedDict
 from abc import abstractmethod
-from typing import Sequence, Dict
+from typing import Sequence, Dict, Any
 
 from torch import Tensor
 
@@ -9,6 +9,12 @@ from pnpxai.explainers import ExplainerWArgs
 from pnpxai.core._types import Model, DataSource, TensorOrTensorSequence
 
 import time
+
+DEFAULT_METRIC_WEIGHTS = {
+    'Sensitivity': 1/3,
+    'Complexity': 1/3,
+    'MuFidelity': 1/3,
+}
 
 
 class EvaluationMetric():
@@ -29,18 +35,14 @@ class XaiEvaluator:
         self.metrics = metrics
 
     @classmethod
-    def prioritize(cls, metrics, weights):
-        assert sum(weights) == 1, "Sum of weights should be 1."
+    def weigh_metrics(cls, metrics: Dict[str, Any], weights: Dict[str, Any] = None):
+        weights = weights or DEFAULT_METRIC_WEIGHTS
+        assert sum(weights.values()) == 1, "Sum of weights should be 1."
 
-        weighted_scores = dict()
         weighted_score = 0
-        for i, weight in enumerate(weights):
-            weighted_score += metrics[i] * weight
-        weighted_scores = weighted_score
-
-        weighted_scores = OrderedDict(
-            sorted(weighted_scores.items(), key=lambda item: item[1]))
-        return weighted_scores
+        for metric in metrics:
+            weighted_score += metrics[metric] * weights[metric]
+        return weighted_score
 
     def __call__(
         self,
