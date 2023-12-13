@@ -51,10 +51,10 @@ class XaiRecommender:
                 Lime, KernelShap,
                 IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
             nn.Transformer: {
-                Lime, KernelShap,
+                Lime, KernelShap, LRP,
                 IntegratedGradients, FullGrad, CEM, TCAV, Anchors},
             nn.MultiheadAttention: {
-                Lime, KernelShap,
+                Lime, KernelShap, LRP,
                 IntegratedGradients, FullGrad, CEM, TCAV, Anchors},
         }
         self.evaluation_metric_table = {
