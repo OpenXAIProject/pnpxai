@@ -1,6 +1,6 @@
 import warnings
 from time import time_ns
-from typing import Optional, Any, Callable, List, Sequence
+from typing import Optional, Any, Callable, List, Sequence, Dict
 from plotly import express as px
 
 from pnpxai.core._types import Task, DataSource
@@ -27,7 +27,7 @@ class Run:
 
         n_data = len(self.data)
         self.explanations: List[DataSource] = [None for _ in range(n_data)]
-        self.evaluations: List[DataSource] = [None for _ in range(n_data)]
+        self.evaluations: List[Dict[str, DataSource]] = [None for _ in range(n_data)]
 
         self.started_at: int
         self.finished_at: int
