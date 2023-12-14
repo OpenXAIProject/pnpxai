@@ -22,7 +22,7 @@ class RAP(Explainer):
         pred_one_hot = pred_one_hot.to(self.device)
         return pred_one_hot
 
-    def attribute(self, inputs: DataSource, target: DataSource, *args: Any, **kwargs: Any) -> DataSource:
+    def attribute(self, inputs: DataSource, targets: DataSource, *args: Any, **kwargs: Any) -> DataSource:
         attributions = []
 
         datum = inputs.to(self.device)
@@ -33,20 +33,3 @@ class RAP(Explainer):
         attributions = relprop.permute(0, 2, 3, 1)
 
         return attributions
-
-    def format_outputs_for_visualization(
-        self,
-        inputs: Tensor,
-        targets: Tensor,
-        explanations: Tensor,
-        task: Task,
-        kwargs: Optional[dict] = None,
-    ):
-        explanations = explanations.sum(-1)
-        return super().format_outputs_for_visualization(
-            inputs=inputs,
-            targets=targets,
-            explanations=explanations,
-            task=task,
-            kwargs=kwargs
-        )

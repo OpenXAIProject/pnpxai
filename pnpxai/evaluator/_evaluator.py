@@ -41,6 +41,8 @@ class XaiEvaluator:
 
         weighted_score = 0
         for metric in metrics:
+            if metric not in weights or metrics[metric] is None:
+                continue
             weighted_score += metrics[metric] * weights[metric]
         return weighted_score
 
