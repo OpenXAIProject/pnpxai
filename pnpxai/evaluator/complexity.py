@@ -36,7 +36,7 @@ class Complexity(EvaluationMetric):
             attributions = rgb_to_grayscale(attributions)
         evaluations = []
         for attr in attributions:
-            hist, _ = np.histogram(attr.cpu())
+            hist, _ = np.histogram(attr.detach().cpu())
             prob_mass = hist / hist.sum()
             evaluations.append(entropy(prob_mass))
         return torch.tensor(evaluations)
