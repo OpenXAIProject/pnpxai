@@ -6,7 +6,7 @@ interface ExperimentReq {
   explainers: (number | undefined)[];
 }
 
-const API_BASE_URL = 'http://localhost:5001/api';
+const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:${window.location.port}/api`;
 
 export const fetchProjects = 
   () => axios.get(`${API_BASE_URL}/projects/`);
