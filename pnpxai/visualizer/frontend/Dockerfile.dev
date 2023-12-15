@@ -1,0 +1,22 @@
+# frontend/pnp-front/Dockerfile
+FROM node:20-alpine
+
+WORKDIR /project
+
+# Copy package.json and package-lock.json (if available)
+COPY package.json /project/
+
+# Install any needed packages
+RUN yarn install
+
+# Copy the rest of your app's source code from your host to your image filesystem.
+COPY . /project/
+
+# Make port 5173 available to the world outside this container
+EXPOSE 5173
+
+# Define environment variable
+ENV NODE_ENV development
+
+# Run the app when the container launches
+CMD ["yarn", "dev"]
