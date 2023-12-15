@@ -21,10 +21,7 @@ class XaiRecommender:
         }
         self.task_table = {
             'image': {
-                Lime, KernelShap,
-                LRP, GuidedGradCam,
-                # TODO: integrate RAP
-                # RAP,
+                Lime, KernelShap,LRP, GuidedGradCam,RAP,
                 # TODO: memory issue in IG, 
                 # IntegratedGradients,
                 # TODO: add more explainers

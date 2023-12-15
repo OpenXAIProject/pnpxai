@@ -1,108 +1,56 @@
-import os
-import json
-
-from PIL import Image
-
 import torch
-from torch import nn
-from torch.utils.data import DataLoader, Dataset
-from torchvision.models.vgg import vgg16_bn, VGG16_BN_Weights
-from torchvision.models.resnet import resnet18, ResNet18_Weights
-import torchvision.transforms as transforms
+from torch.utils.data import DataLoader, Subset
 
-from pnpxai.explainers import Explainer, RAP
+from pnpxai.utils import set_seed
+from pnpxai import Project
+from pnpxai.explainers import RAP
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+from helpers import get_imagenet_dataset, get_torchvision_model, denormalize_image
 
 
-class ImageNetDataset(Dataset):
-    def __init__(self, root_dir, transform=None):
-        self.root_dir = root_dir
-        self.img_dir = os.path.join(self.root_dir, 'samples/')
-        self.label_dir = os.path.join(
-            self.root_dir, 'imagenet_class_index.json')
+# -----------------------------------------------------------------------------#
+# ----------------------------------- setup -----------------------------------#
+# -----------------------------------------------------------------------------#
 
-        with open(self.label_dir) as json_data:
-            self.idx_to_labels = json.load(json_data)
+set_seed(seed=0)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        self.img_names = os.listdir(self.img_dir)
-        self.img_names.sort()
+# -----------------------------------------------------------------------------#
+# ----------------------------------- model -----------------------------------#
+# -----------------------------------------------------------------------------#
 
-        self.transform = transform
+model, transform = get_torchvision_model("resnet18")
+model = model.to(device)
 
-    def __len__(self):
-        return len(self.img_names)
+# -----------------------------------------------------------------------------#
+# ------------------------------------ data -----------------------------------#
+# -----------------------------------------------------------------------------#
 
-    def __getitem__(self, idx):
-        img_path = os.path.join(self.img_dir, self.img_names[idx])
-        image = Image.open(img_path).convert('RGB')
-        label = idx
+dataset = get_imagenet_dataset(transform, subset_size=100)
+dataset = Subset(dataset, list(range(25)))
+loader = DataLoader(dataset, batch_size=10)
+def input_extractor(x): return x[0].to(device)
+def target_extractor(x): return x[1].to(device)
 
-        if self.transform:
-            image = self.transform(image)
-
-        return image, label
-
-    def idx_to_label(self, idx):
-        return self.idx_to_labels[str(idx)][1]
+# -----------------------------------------------------------------------------#
+# ---------------------------------- explain ----------------------------------#
+# -----------------------------------------------------------------------------#
 
 
-def load_data(path: str) -> DataLoader:
-    data_transforms = transforms.Compose([
-        transforms.Resize(256),
-        transforms.CenterCrop(224),
-        transforms.ToTensor()
-    ])
-
-    imagenet_data = ImageNetDataset(root_dir=path, transform=data_transforms)
-
-    return DataLoader(
-        imagenet_data,
-        batch_size=8,
-        shuffle=True,
-        num_workers=0,
-        pin_memory=True,
-    )
+def input_visualizer(x): return denormalize_image(x, transform.mean, transform.std)
 
 
-def explain_model(model: nn.Module, data_loader: DataLoader):
-    explainer = RAP(model)
-    outputs = [
-        explainer.attribute(inputs, labels).detach().cpu()
-        for inputs, labels in data_loader
-    ]
-
-    return explainer, outputs
-
-
-def visualize(explainer: Explainer, inputs, outputs, path: str):
-    if not os.path.exists(path):
-        os.makedirs(path)
-    visualizations = [
-        explainer.format_outputs_for_visualization(batch_in, batch_out)
-        for batch_in, batch_out in zip(inputs, outputs)
-    ] or [[]]
-    for batch_idx, batch_viz in enumerate(visualizations):
-        for idx, visualization in enumerate(batch_viz):
-            visualization.write_image(f"{path}/rap_{batch_idx}_{idx}.png")
-
-
-def app():
-    data_path = './data/ImageNet/'
-    data_loader = load_data(data_path)
-
-    resnet = resnet18(weights=ResNet18_Weights.IMAGENET1K_V1).to(device)
-    explainer, resnet_outputs = explain_model(resnet, data_loader)
-
-    visualizaion_path = f"./results/rap/resnet"
-    visualize(explainer, data_loader, resnet_outputs, visualizaion_path)
-
-    model = vgg16_bn(weights=VGG16_BN_Weights.IMAGENET1K_V1).to(device)
-    explainer, vgg_outputs = explain_model(model, data_loader)
-
-    visualizaion_path = f"./results/rap/vgg"
-    visualize(explainer, data_loader, vgg_outputs, visualizaion_path)
-
-
-if __name__ == '__main__':
-    app()
+project = Project('test_project')
+experiment = project.create_experiment(
+    model,
+    loader,
+    name='test_experiment',
+    explainers=[RAP(model)],
+    input_extractor=input_extractor,
+    target_extractor=target_extractor,
+    input_visualizer=input_visualizer
+)
+experiment.run()
+run = experiment.runs[0]
+vis = run.get_flattened_visualizations(experiment.task)
+vis[0].show()
