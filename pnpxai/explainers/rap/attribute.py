@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, Optional, Dict
 
 from torch import Tensor, nn
 
@@ -29,7 +29,26 @@ class RAP(Explainer):
         outputs = self.model(datum)
         preds = self.compute_pred(outputs)
         relprop = self.method.relprop(preds, *args, **kwargs)
-        relprop = relprop.sum(dim=1, keepdim=True)
-        attributions = relprop.permute(0, 2, 3, 1)
+        return relprop
+        # relprop = relprop.sum(dim=1, keepdim=True)
+        # attributions = relprop.permute(0, 2, 3, 1)
 
-        return attributions
+        # return attributions
+    
+    def format_outputs_for_visualization(
+        self,
+        inputs: DataSource,
+        targets: DataSource,
+        explanations: DataSource,
+        task: Task,
+        kwargs: Optional[Dict[str, Any]] = None,
+    ):
+        explanations = explanations.transpose(-1, -3)\
+            .transpose(-2, -3)
+        return super().format_outputs_for_visualization(
+            inputs=inputs,
+            targets=targets,
+            explanations=explanations,
+            task=task,
+            kwargs=kwargs
+        )

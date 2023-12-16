@@ -27,7 +27,7 @@ class Explainer:
     ):
         return postprocess_attr(
             attr=explanations,
-            sign="absolute"
+            # sign="absolute"
         )
 
 
