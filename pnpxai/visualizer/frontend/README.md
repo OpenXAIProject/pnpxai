@@ -12,7 +12,7 @@ docker run --name front-container -it --rm -p 5173:5173 -v "$(pwd):/project" pnp
 npm install
 npm run dev
 
-docker run -d --name front-container -v "$(pwd):/project"
+docker run -d --name front-container -v "$(pwd):/project" -p 5173:5173 frontend
 
 
 fetch('http://host.docker.internal:5001/api/projects')

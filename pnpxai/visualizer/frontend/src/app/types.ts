@@ -44,7 +44,7 @@ interface ExperimentResult {
     }]
     layout: {};
   };
-  visualizations: {
+  explanations: {
     explainer : string;
     data: {
       data : [{
@@ -53,10 +53,11 @@ interface ExperimentResult {
       }]
       layout: {};
     };
-    metrics: {
-      faithfulness: number;
-      robustness: number;
+    evaluation: {
+      MuFidelity: number;
+      Sensitivity: number;
     };
+    weighted_score : number;
   }[];
   prediction: {
     label: string;

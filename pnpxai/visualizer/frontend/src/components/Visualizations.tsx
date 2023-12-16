@@ -31,6 +31,7 @@ const Visualizations: React.FC<{ inputs: number[]; explainers: number[]; setLoad
             explainers: explainers
           }
           );
+          console.log(response.data.data);
           preprocess(response);
           AddMockData(response); // Add mock data for testing
           const experimentResults = response.data.data
@@ -106,23 +107,23 @@ const Visualizations: React.FC<{ inputs: number[]; explainers: number[]; setLoad
                 </Box>
               </ImageListItem>
 
-              {result.visualizations.map((viz, index) => {
-                return (
+              {result.explanations.map((exp, index) => {
+                return exp.data && 
                   <ImageListItem key={index+1} sx={{ width: '240px', minHeight: "300px" }}>
-                      <Box sx={{ p: 1 }}>
-                        <Plot 
-                          data={[viz.data.data[0]]}
-                          layout={viz.data.layout}
-                          />
-                        <Typography variant="subtitle1" align="center">{viz.explainer}</Typography>
-                        <Typography variant="body2" sx={{ textAlign: 'center' }}> Rank {index+1}</Typography>
-                        <Typography variant="body2" sx={{ textAlign: 'center' }}> Faithfulness ({viz.metrics.faithfulness})</Typography>
-                        <Typography variant="body2" sx={{ textAlign: 'center' }}> Robustness ({viz.metrics.robustness})</Typography>
-                      </Box>
+                    <Box sx={{ p: 1 }}>
+                      <Plot 
+                        data={[exp.data.data[0]]}
+                        layout={exp.data.layout}
+                        />
+                      <Typography variant="subtitle1" align="center">{exp.explainer}</Typography>
+                      <Typography variant="body2" sx={{ textAlign: 'center' }}> Rank {index+1}</Typography>
+                      <Typography variant="body2" sx={{ textAlign: 'center' }}> MuFidelity ({exp.evaluation.MuFidelity})</Typography>
+                      <Typography variant="body2" sx={{ textAlign: 'center' }}> Sensitivity ({exp.evaluation.Sensitivity})</Typography>
+                      <Typography variant="body2" sx={{ textAlign: 'center' }}> weighted_score ({exp.weighted_score})</Typography>
+                    </Box>
                   </ImageListItem>
-                );
-              }
-            )}
+                }
+              )}
             </ImageList>
           </Box>
         );

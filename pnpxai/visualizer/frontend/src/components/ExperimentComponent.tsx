@@ -88,10 +88,6 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
     setIsExperimentRun(true);
     setSelectedInputs(inputs.map(input => Number(input)));
     setSelectedExplainers(explainers.map(explainer => Number(explainer)));
-
-    console.log(experiment.explainers);
-    console.log(inputs);
-    console.log(explainers);
   };
 
   return (

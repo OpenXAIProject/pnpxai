@@ -30,24 +30,19 @@ export const preprocess = (response: any) => {
         result.input = JSON.parse(result.input);
         result.input.layout = modifyLayout(result.input.layout);
 
-        result.visualizations.forEach((visualization: any) => {
-            visualization.data = JSON.parse(visualization.data);
-            visualization.data.data = modifyData(visualization.data.data);
-            visualization.data.layout = modifyLayout(visualization.data.layout);
+        result.explanations.forEach((explanation: any) => {
+          if (explanation.data !== null) {
+            explanation.data = JSON.parse(explanation.data);
+            explanation.data.data = modifyData(explanation.data.data);
+            explanation.data.layout = modifyLayout(explanation.data.layout);
+          }
         });
     });
 }
 
 
 export const AddMockData = (response: any) => {
-  response.data.data.forEach((result: ExperimentResult) => {
-    result.visualizations.forEach((visualization: any) => {
-      visualization.metrics = {
-        "faithfulness": 50,
-        "robustness": 70
-      }
-    });
-
+  response.data.data.forEach((result: any) => {
     result.prediction = {
       "label": "cat",
       "isCorrect": true,
