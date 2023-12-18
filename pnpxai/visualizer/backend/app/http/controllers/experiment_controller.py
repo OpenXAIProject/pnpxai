@@ -7,18 +7,29 @@ from pnpxai.visualizer.backend.app.http.responses.experiment_response import Exp
 
 
 class ExperimentController(Controller):
+    def get(self, project_id: str, experiment_id: str):
+        experiment = ProjectService.get_experiment_by_id(
+            project_id, experiment_id)
+
+        if experiment is None:
+            abort(404)
+
+        return self.response(data=ExperimentRunsResponse.dump(experiment))
+
     def put(self, project_id: str, experiment_id: str):
         experiment = ProjectService.get_experiment_by_id(
             project_id, experiment_id)
-        
+
         if experiment is None:
             abort(404)
 
         data = request.get_json() or {}
         inputs = data.get('inputs', None)
         explainers = data.get('explainers', None)
+        metrics = data.get('metrics', None)
 
-        experiment = ExperimentService.run(experiment, inputs, explainers)
+        experiment = ExperimentService.run(
+            experiment, inputs, explainers, metrics)
 
         return self.response(data=ExperimentRunsResponse.dump(experiment))
 

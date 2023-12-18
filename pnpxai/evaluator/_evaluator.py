@@ -1,6 +1,5 @@
-from collections import OrderedDict
 from abc import abstractmethod
-from typing import Sequence, Dict, Any
+from typing import Sequence, Dict, Any, Optional, Type
 
 from torch import Tensor
 
@@ -33,6 +32,11 @@ class EvaluationMetric():
 class XaiEvaluator:
     def __init__(self, metrics: Sequence[EvaluationMetric]):
         self.metrics = metrics
+        self.reset_runable_metrics()
+
+    @property
+    def available_metrics(self) -> Sequence[Type[EvaluationMetric]]:
+        return list(map(lambda metric: type(metric), self.metrics))
 
     @classmethod
     def weigh_metrics(cls, metrics: Dict[str, Any], weights: Dict[str, Any] = None):
@@ -46,6 +50,20 @@ class XaiEvaluator:
             weighted_score += metrics[metric] * weights[metric]
         return weighted_score
 
+    def is_metric_id_valid(self, metric_id):
+        return isinstance(metric_id, int) and 0 <= metric_id < len(self.metrics)
+
+    def reset_runable_metrics(self):
+        self._runable_metrics_ids = range(len(self.metrics))
+
+    def set_runable_metrics(self, metrics_ids: Optional[Sequence[int]] = None):
+        if metrics_ids is None:
+            self.reset_runable_metrics()
+            return
+        self._runable_metrics_ids = [
+            idx for idx in metrics_ids if self.is_metric_id_valid(idx)
+        ]
+
     def __call__(
         self,
         inputs: Tensor,
@@ -57,7 +75,11 @@ class XaiEvaluator:
         metrics_scores = {}
 
         # Get attribution score
-        for metric in self.metrics:
+        for metric_id in self._runable_metrics_ids:
+            if not self.is_metric_id_valid(metric_id):
+                continue
+
+            metric = self.metrics[metric_id]
             st = time.time()
             metric_name = class_to_string(metric)
             metrics_scores[metric_name] = metric(
