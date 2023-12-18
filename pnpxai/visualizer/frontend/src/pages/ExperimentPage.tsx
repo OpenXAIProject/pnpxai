@@ -19,11 +19,10 @@ const ExperimentPage = () => {
     setTask(event.target.value);
   };
   
-  const projectId = "test_project"; // Replace with your actual project ID
-  const projectData = useSelector((state: RootState) => {
-    return state.projects.data.find(project => project.id === projectId);
-  });
-  const isAnyModelDetected = projectData?.experiments.some(experiment => experiment.modelDetected);
+  const projectsData = useSelector((state: RootState) => state.projects.data);
+  const projectId = projectsData?.[0]?.id;
+  const projectData = projectsData?.find(project => project.id === projectId);
+  const isAnyModelDetected = projectData?.experiments.some(experiment => experiment.id);
 
   const [expanded, setExpanded] = useState(false);
   const handleCollapse = () => {
@@ -53,20 +52,22 @@ const ExperimentPage = () => {
         </Container>
       </Box>
 
-      <FormControl fullWidth>
-        <InputLabel id="task-select"> Task </InputLabel>
-        <Select
-          labelId="task-select"
-          id="task-select"
-          value={tasks[0]}
-          label="Task"
-          // onChange={handleChange}
-        >
-          {tasks.map((task, index) => (
-            <MenuItem key={index} value={task}>{task}</MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+      <Box sx={{maxWidth : '200px'}}>
+        <FormControl fullWidth>
+          <InputLabel id="task-select"> Task </InputLabel>
+          <Select
+            labelId="task-select"
+            id="task-select"
+            value={tasks[0]}
+            label="Task"
+            // onChange={handleChange}
+          >
+            {tasks.map((task, index) => (
+              <MenuItem key={index} value={task}>{task}</MenuItem>
+              ))}
+          </Select>
+        </FormControl>
+      </Box>
       <Box sx={{ m: 1 }}>
         {isAnyModelDetected ? (
           projectData?.experiments.filter(experiment => experiment.modelDetected).map((experiment, index) => (
