@@ -1,27 +1,55 @@
 // src/components/Visualizations.tsx
 import React, { useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../app/store';
 import { Card, CardContent, Typography, Box, 
   LinearProgress, ImageList, ImageListItem,
   Dialog, DialogContent, CircularProgress
 } from '@mui/material';
 import Plot from 'react-plotly.js';
 import { ExperimentResult } from '../app/types';
-import { fetchExperiment } from '../features/apiService';
+import { RunExperiment, fetchExperiment } from '../features/apiService';
 import { preprocess, AddMockData } from './utils';
 
 
-const Visualizations: React.FC<{ inputs: number[]; explainers: number[]; loading: boolean; setLoading: any}> = ({ inputs, explainers, loading, setLoading }) => {
+const Visualizations: React.FC<{ 
+  experiment: string; inputs: number[]; explainers: number[]; metrics: number[]; loading: boolean; setLoading: any
+}> = ({ experiment, inputs, explainers, metrics, loading, setLoading }) => {
+  const projectId = useSelector((state: RootState) => {
+    return state.projects.data[0].id;
+  });
   const [experimentResults, setExperimentResults] = React.useState<ExperimentResult[]>([]);
+  
 
   useEffect(() => {
     const fetchExperimentResults = async () => {
       try {
-        let response = await fetchExperiment(
-          'test_project',
-          'test_experiment',
+        let response = await fetchExperiment(projectId, experiment);
+        response = preprocess(response);
+        AddMockData(response); // Add mock data for testing
+        const experimentResults = response.data.data
+        setExperimentResults(JSON.parse(JSON.stringify(experimentResults)));
+        setLoading(false);
+      }
+      catch (err) {
+        console.log(err);
+      }
+    }
+
+    fetchExperimentResults();
+  }
+  , [])
+
+  
+  
+  useEffect(() => {
+    const runExperimentResults = async () => {
+      try {
+        let response = await RunExperiment(projectId, experiment,
           {
             inputs: inputs,
-            explainers: explainers
+            explainers: explainers,
+            metrics: metrics
           }
           );
           response = preprocess(response);
@@ -36,7 +64,7 @@ const Visualizations: React.FC<{ inputs: number[]; explainers: number[]; loading
     }
     
     if (inputs.length > 0 && explainers.length > 0) {
-      fetchExperimentResults();
+      runExperimentResults();
     }
   }
   , [inputs, explainers])
@@ -133,19 +161,23 @@ const Visualizations: React.FC<{ inputs: number[]; explainers: number[]; loading
                         />
                       <Typography variant="subtitle1" align="center">{exp.explainer}</Typography>
                       <Typography variant="body2" sx={{ textAlign: 'center' }}> Rank {index+1}</Typography>
-                      <Typography variant="body2" sx={{ textAlign: 'center' }}> MuFidelity ({exp.evaluation.MuFidelity})</Typography>
-                      <Typography variant="body2" sx={{ textAlign: 'center' }}> Sensitivity ({exp.evaluation.Sensitivity})</Typography>
-                      <Typography variant="body2" sx={{ textAlign: 'center' }}> weighted_score ({exp.weighted_score})</Typography>
+                      
+                      {Object.entries(exp.evaluation).map(([key, value]) => {
+                        return (
+                          <Typography key={key} variant="body2" sx={{ textAlign: 'center' }}> {key} ({value.toFixed(3)}) </Typography>
+                      )})}
+                      
+                      <Typography variant="body2" sx={{ textAlign: 'center' }}> Weighted score ({exp.weighted_score.toFixed(3)})</Typography>
                     </Box>
                   </ImageListItem>
                 }
               )}
             </ImageList>
           </Box>
+
+          
         );
       })}
-
-     
     </Box>
   );
 }
