@@ -1,21 +1,18 @@
 // src/components/ExperimentComponent.tsx
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '../app/store';
 import { 
   Grid, Box, Typography, 
   Button, Chip, 
   Dialog, DialogActions, DialogContent, DialogTitle, 
-  CircularProgress,
+  Alert, FormControlLabel,
   Checkbox, Paper
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import Visualizations from './Visualizations';
-import { Experiment, InputData } from '../app/types';
+import { Experiment, Metric } from '../app/types';
 
 const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {experiment} ) => {
   // Basic Data
-  const projectId = "test_project";
   const galleryInputs = experiment.inputs.map(input => {
     return {id: input.id, source: input.imageObj.data[0].source}
   });
@@ -26,6 +23,9 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
   const [selectedInputs, setSelectedInputs] = useState<number[]>([]);
   const [explainers, setExplainers] = useState<number[]>([]);
   const [selectedExplainers, setSelectedExplainers] = useState<number[]>([]);
+  const [metrics, setMetrics] = useState<Metric[]>(experiment.metrics.filter(metric => metric.name === "Complexity"));
+  const [selectedMetrics, setSelectedMetrics] = useState<number[]>(experiment.metrics.map(metric => metric.id));
+
 
 
   // const inputs: InputData[] = JSON.parse(JSON.stringify(experiment.inputs));
@@ -34,6 +34,10 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
 
   const [isExperimentRun, setIsExperimentRun] = useState(false); // New state to track if experiment is run
   const [loading, setLoading] = React.useState<boolean>(false);
+  const [showDialog, setShowDialog] = React.useState(false);
+
+  
+
   
 
   
@@ -86,13 +90,29 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
     setExplainers(explainers.filter(alg => alg !== explainer));
   };
 
+  const handleCheckboxChange = (item: Metric, isChecked: boolean) => {
+    if (isChecked) {
+      setMetrics(prevItems => [...prevItems, item]);
+    } else {
+      setMetrics(prevItems => prevItems.filter(i => i.id !== item.id));
+    }
+  };
+
 
   const handleRunExperiment = () => {
+    if (inputs.length === 0 || explainers.length === 0) {
+      setShowDialog(true);
+      return;
+    }
+
     setLoading(true);
     setIsExperimentRun(true);
     setSelectedInputs(inputs.map(input => Number(input)));
     setSelectedExplainers(explainers.map(explainer => Number(explainer)));
+    setSelectedMetrics(metrics.map(metric => metric.id));
   };
+
+
 
   return (
     <Box sx={{ mt: 3, mb: 3, ml: 1, pb: 3, borderBottom: 1, minHeight: "600px" }}>
@@ -141,6 +161,23 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
                   ))}
               </Box>
             </Box>
+              
+              {/* Metrics Box */}
+              <Box sx={{ mt : 3}}>
+                <Typography variant="h6"> Metrics </Typography>
+                {experiment.metrics.map(item => (
+                  <FormControlLabel
+                    key={item.id}
+                    control={
+                      <Checkbox
+                        checked={metrics.some(i => i.id === item.id)}
+                        onChange={(e) => handleCheckboxChange(item, e.target.checked)}
+                      />
+                    }
+                    label={item.name}
+                  />
+                ))}
+              </Box>
           </Box>
         </Grid>
         <Grid item xs={12} md={9}>
@@ -149,14 +186,14 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
             <Typography variant="h5">{experiment?.name}</Typography>
             <Button variant="contained" color="secondary" onClick={handleRunExperiment} sx={{ mt: 2 }}>Run Experiment</Button>
             {/* Experiment Visualization */}
-            {isExperimentRun && (
-              <Visualizations 
-                inputs={selectedInputs}
-                explainers={selectedExplainers}
-                loading={loading}
-                setLoading={setLoading}
-              />
-            )}
+            <Visualizations
+              experiment={experiment.name}
+              inputs={selectedInputs}
+              explainers={selectedExplainers}
+              metrics={selectedMetrics}
+              loading={loading}
+              setLoading={setLoading}
+            />
           </Box>
         </Grid>
       </Grid>
@@ -193,7 +230,19 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
           <Button onClick={handleConfirmSelection}>OK</Button>
         </DialogActions>
       </Dialog>
-
+      
+      
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <Dialog 
+          open={showDialog}
+          onClose={() => setShowDialog(false)}
+          >
+          <DialogContent>
+            <Alert severity='info'>Please select at least 1 input and 1 explainer </Alert>
+          </DialogContent>
+        </Dialog>
+      </Box>
+      
     </Box>
   );
 }
