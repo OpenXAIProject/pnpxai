@@ -22,3 +22,4 @@ class APIItems(Enum):
 
     EXPERIMENTS = 'experiments'
     EXPLAINERS = 'explainers'
+    METRICS = 'metrics'
