@@ -90,7 +90,7 @@ class Run:
             )
 
             batch_visualizations = [
-                px.imshow(explanation) for explanation in formatted
+                px.imshow(explanation, color_continuous_scale="Reds") for explanation in formatted
             ]
             visualizations.append(batch_visualizations)
 

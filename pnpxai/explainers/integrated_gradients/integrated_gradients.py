@@ -16,7 +16,7 @@ class IntegratedGradients(Explainer):
     def attribute(
         self,
         inputs: DataSource,
-        target: TargetType = None,
+        targets: TargetType = None,
         baselines: BaselineType = None,
         additional_forward_args: Any = None,
         n_steps: int = 50,
@@ -27,14 +27,13 @@ class IntegratedGradients(Explainer):
         attributions = self.source.attribute(
             inputs,
             baselines,
-            target,
+            targets,
             additional_forward_args,
             n_steps,
             method,
             internal_batch_size,
             return_convergence_delta
         )
-
         return attributions
 
     def format_outputs_for_visualization(
@@ -45,9 +44,10 @@ class IntegratedGradients(Explainer):
         task: Task,
         kwargs: Optional[Dict[str, Any]] = None,
     ):
-        if kwargs.get('return_convergence_delta', False):
+        if kwargs.get("return_convergence_delta", False):
             explanations = explanations[0]
-        explanations = explanations.permute((1, 2, 0))
+        explanations = explanations.transpose(-1, -3)\
+            .transpose(-2, -3)
         return super().format_outputs_for_visualization(
             inputs=inputs,
             targets=targets,

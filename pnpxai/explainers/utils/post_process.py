@@ -27,6 +27,6 @@ def postprocess_attr(
 
     # Perform the normalization
     postprocessed = (summed_tensor - min_values) / (max_values - min_values)
-    postprocessed = torch.flip(postprocessed, [1])
+    # postprocessed = torch.flip(postprocessed, [1])
 
     return postprocessed.cpu().detach().numpy()

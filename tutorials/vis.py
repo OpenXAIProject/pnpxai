@@ -1,30 +1,40 @@
-from functools import partial
-
+import torch
 from torch.utils.data import DataLoader
-import plotly.express as px
-
-from pnpxai.core.project import Project
-
+from pnpxai import Project
+from pnpxai.evaluator import XaiEvaluator
+from pnpxai.evaluator.mu_fidelity import MuFidelity
+from pnpxai.evaluator.sensitivity import Sensitivity
+from pnpxai.evaluator.complexity import Complexity
+from pnpxai.utils import set_seed
 from helpers import get_imagenet_dataset, get_torchvision_model, denormalize_image
 
+set_seed(0)
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model, transform = get_torchvision_model("resnet18")
-dataset = get_imagenet_dataset(transform, subset_size=8)
+model = model.to(device)
+dataset = get_imagenet_dataset(transform=transform, subset_size=16)
 loader = DataLoader(dataset, batch_size=8)
-inputs, labels = next(iter(loader))
-targets = labels
 
-proj = Project("test proj")
-expr = proj.create_experiment(model, auto=True)
-expr.run(inputs, targets)
+def input_extractor(x): return x[0].to(device)
+def target_extractor(x): return x[1].to(device)
 
-
-def target_to_label(target):
-    return dataset.dataset.idx_to_labels[str(target.item())]
-
-data = expr.runs[0].to_heatmap_data(
-    input_process=partial(denormalize_image, mean=transform.mean, std=transform.std),
-    target_process=target_to_label,
+# vis test
+proj = Project("vis test")
+expr = proj.create_auto_experiment(
+    model=model,
+    data=loader,
+    input_extractor=input_extractor,
+    target_extractor=target_extractor,
+    input_visualizer=denormalize_image,
 )
 
-fig = px.imshow(data[0].explanation)
-fig.show()
+# force evaluator
+expr.evaluator = XaiEvaluator(metrics=[
+    MuFidelity(n_perturbations=1),
+    Sensitivity(n_iter=1),
+    Complexity(),
+])
+
+expr.run()
+vis = expr.visualize()

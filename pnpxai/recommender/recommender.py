@@ -6,6 +6,7 @@ from typing import List, Type
 from pnpxai.explainers import *
 from pnpxai.evaluator.mu_fidelity import MuFidelity
 from pnpxai.evaluator.sensitivity import Sensitivity
+from pnpxai.evaluator.complexity import Complexity
 from pnpxai.recommender._types import RecommenderOutput
 
 
@@ -22,8 +23,7 @@ class XaiRecommender:
         self.task_table = {
             'image': {
                 Lime, KernelShap,LRP, GuidedGradCam,RAP,
-                # TODO: memory issue in IG, 
-                # IntegratedGradients,
+                IntegratedGradients, # TODO: memory issue in IG, 
                 # TODO: add more explainers
                 # FullGrad, CEM, TCAV
             },
@@ -55,14 +55,14 @@ class XaiRecommender:
                 IntegratedGradients, FullGrad, CEM, TCAV, Anchors},
         }
         self.evaluation_metric_table = {
-            # Correctness -- Infidelity, Conitinuity -- Sensitivity
-            GuidedGradCam: {MuFidelity, Sensitivity},
-            Lime: {MuFidelity, Sensitivity},
-            KernelShap: {MuFidelity, Sensitivity},
-            IntegratedGradients: {MuFidelity, Sensitivity},
-            FullGrad: {MuFidelity, Sensitivity},
-            LRP: {MuFidelity, Sensitivity},
-            RAP: {MuFidelity, Sensitivity},
+            # Correctness -- MuFidelity, Conitinuity -- Sensitivity, Compactness -- Complexity
+            GuidedGradCam: {MuFidelity, Sensitivity, Complexity},
+            Lime: {MuFidelity, Sensitivity, Complexity},
+            KernelShap: {MuFidelity, Sensitivity, Complexity},
+            IntegratedGradients: {MuFidelity, Sensitivity, Complexity},
+            FullGrad: {MuFidelity, Sensitivity, Complexity},
+            LRP: {MuFidelity, Sensitivity, Complexity},
+            RAP: {MuFidelity, Sensitivity, Complexity},
 
             # Evaluation metric not implemented yet
             PDP: {},

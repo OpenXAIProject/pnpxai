@@ -1,4 +1,4 @@
-from typing import Any, Union, Tuple
+from typing import Any, Union, Tuple, Optional, Dict
 
 from captum.attr import Lime as LimeCaptum
 from captum._utils.typing import BaselineType, TargetType
@@ -6,7 +6,7 @@ from captum._utils.typing import BaselineType, TargetType
 from torch import Tensor
 
 from pnpxai.explainers.utils.feature_mask import get_default_feature_mask
-from pnpxai.core._types import Model, DataSource
+from pnpxai.core._types import Model, DataSource, Task
 from pnpxai.explainers._explainer import Explainer
 
 
@@ -40,4 +40,22 @@ class Lime(Explainer):
             perturbations_per_eval=perturbations_per_eval,
             return_input_shape=return_input_shape,
             show_progress=show_progress,
+        )
+
+    def format_outputs_for_visualization(
+        self,
+        inputs: DataSource,
+        targets: DataSource,
+        explanations: DataSource,
+        task: Task,
+        kwargs: Optional[Dict[str, Any]] = None,
+    ):
+        explanations = explanations.transpose(-1, -3)\
+            .transpose(-2, -3)
+        return super().format_outputs_for_visualization(
+            inputs=inputs,
+            targets=targets,
+            explanations=explanations,
+            task=task,
+            kwargs=kwargs
         )
