@@ -4,6 +4,7 @@ import axios from 'axios';
 interface ExperimentReq {
   inputs : number[];
   explainers: (number | undefined)[];
+  metrics: (number | undefined)[];
 }
 
 let API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:${window.location.port}/api`;
@@ -22,6 +23,7 @@ export const fetchInputsByExperimentId =
   (projectId: string, experimentId: string) => axios.get(`${API_BASE_URL}/projects/${projectId}/experiments/${experimentId}/inputs/`);
 
 export const fetchExperiment =
+  (projectId: string, experimentId: string) => axios.get(`${API_BASE_URL}/projects/${projectId}/experiments/${experimentId}/`);
+
+export const RunExperiment =
   (projectId: string, experimentId: string, data: ExperimentReq) => axios.put(`${API_BASE_URL}/projects/${projectId}/experiments/${experimentId}/`, data);
-
-
