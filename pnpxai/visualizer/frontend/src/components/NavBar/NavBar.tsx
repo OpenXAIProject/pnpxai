@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Box, AppBar, Toolbar, FormControl, InputLabel, Select, Menu, MenuItem, Button } from '@mui/material';
+import { Box, AppBar, Toolbar, Button, Menu, MenuItem } from '@mui/material';
 import logo from '../../assets/images/logo.svg';
 
 const NavBar: React.FC = () => {
   const projects = ['test project', 'project2', 'project3'];
-  const [menuAnchorEl, setMenuAnchorEl] = useState(null);
+  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [selectedProject, setSelectedProject] = useState<string>(projects[0]);
+  const [selectedMenu, setSelectedMenu] = useState<number | null>(0);
 
-  const handleMenuButtonClick = (event:any) => {
+  const handleSelectMenu = (menuKey: number) => {
+    setSelectedMenu(menuKey);
+  };
+
+  const handleMenuButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setMenuAnchorEl(event.currentTarget);
   };
 
@@ -15,8 +21,8 @@ const NavBar: React.FC = () => {
     setMenuAnchorEl(null);
   };
 
-  const handleSelectProject = (project:any) => {
-    // setSelectedItem(project); // If you want to keep track of the selected item
+  const handleSelectProject = (project: string) => {
+    // setSelectedProject(project);
     handleMenuClose();
   };
 
@@ -27,7 +33,35 @@ const NavBar: React.FC = () => {
           <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
             <img src={logo} alt="Logo" style={{ marginRight: 50, height: '50px' }} />
           </Link>
-          <Button style={{ marginRight: 50, color: 'inherit' }} onClick={handleMenuButtonClick}>
+          {/* Left of the menu bar */}
+          <Button 
+            component={Link} 
+            to="/model-info" 
+            onClick={() => handleSelectMenu(0)} 
+            style={{ 
+              marginRight: 50, 
+              color: 'inherit', 
+              fontWeight: selectedMenu === 0 ? 'bold' : 'normal'
+            }}
+          >
+            Model Architecture Information
+          </Button>
+          <Button 
+            component={Link} 
+            to="/model-explanation" 
+            onClick={() => handleSelectMenu(1)} 
+            style={{ 
+              marginRight: 50, 
+              color: 'inherit', 
+              fontWeight: selectedMenu === 1 ? 'bold' : 'normal' 
+            }}
+          >
+            Local Explanation
+          </Button>
+
+          <Box sx={{ flexGrow: 1 }} />
+          {/* Right of the menu bar */}
+          <Button style={{ color: 'inherit' }} onClick={handleMenuButtonClick}>
             Projects
           </Button>
           <Menu
@@ -36,20 +70,15 @@ const NavBar: React.FC = () => {
             onClose={handleMenuClose}
           >
             {projects.map((project, index) => (
-              // <MenuItem key={index} onClick={() => handleSelectProject(project)} component={Link} to={`project/${project}`}>
-              <MenuItem key={index} onClick={() => handleSelectProject(project)}>
+              <MenuItem 
+                key={index} 
+                onClick={() => handleSelectProject(project)}
+                style={{ fontWeight: project === selectedProject ? 'bold' : 'normal' }}
+              >
                 {project}
               </MenuItem>
             ))}
           </Menu>
-          <Button component={Link} to="/model-info" style={{ marginRight: 50, color: 'inherit' }}>
-            Model Architecture Information
-          </Button>
-          <Button component={Link} to="/model-explanation" style={{ marginRight: 50, color: 'inherit' }}>
-            Local Explanation
-          </Button>
-          {/* Spacer to push the box to the right */}
-          <Box sx={{ flexGrow: 1 }} />
         </Toolbar>
       </AppBar>
     </Box>
