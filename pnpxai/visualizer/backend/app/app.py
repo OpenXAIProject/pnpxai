@@ -4,19 +4,18 @@ import os
 
 
 def create_app(projects: dict):
-    # # Correct the path to the build directory
-    # current_script_dir = os.path.dirname(os.path.abspath(__file__))
+    # Correct the path to the build directory
+    current_script_dir = os.path.dirname(os.path.abspath(__file__))
 
-    # # Construct the path to the target directory
-    # frontend_build_path = os.path.normpath(
-    #     os.path.join(current_script_dir, '../../frontend/build')
-    # )
-    # application = Flask(
-    #     __name__,
-    #     static_folder=frontend_build_path,
-    #     static_url_path='/'
-    # )
-    application = Flask(__name__)
+    # Construct the path to the target directory
+    frontend_build_path = os.path.normpath(
+        os.path.join(current_script_dir, '../../frontend/build')
+    )
+    application = Flask(
+        __name__,
+        static_folder=frontend_build_path,
+        static_url_path='/'
+    )
 
     init(application, InitConfig(projects=projects))
 
