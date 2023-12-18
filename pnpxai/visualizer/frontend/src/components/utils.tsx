@@ -41,7 +41,7 @@ const modifyLayout = (layout: any) => {
   const modifiedLayout = {
       ...layout,
       template: null,
-      coloraxis: null,
+      coloraxis: {colorscale : colorScale, showscale: false},
       xaxis: { visible: false },
       yaxis: { visible: false },
       width: 240,
@@ -57,8 +57,6 @@ const modifyData = (data: any) => {
     const modifiedData = {
       ...data[0], 
       z : data[0].z.slice().reverse(),
-      coloraxis:  null,
-      showscale: false,
     }
 
     return [modifiedData];
