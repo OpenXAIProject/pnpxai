@@ -50,11 +50,15 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
   // Image Selection Handlers
   // Modal Handlers
   const handleImageClick = (imageId: number) => {
-    if (tmpInputs.includes(imageId)) {
-      setTmpInputs(prevSelection => prevSelection.filter(item => item !== imageId));
-    } else {
-      setTmpInputs(prevSelection => [...prevSelection, imageId]);
-    }
+    // Only 1 Input.
+    setTmpInputs([imageId]);
+
+    // Multiple Inputs.
+    // if (tmpInputs.includes(imageId)) {
+    //   setTmpInputs(prevSelection => prevSelection.filter(item => item !== imageId));
+    // } else {
+    //   setTmpInputs(prevSelection => [...prevSelection, imageId]);
+    // }
   };
 
   const handleConfirmSelection = () => {
@@ -149,6 +153,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
               <Visualizations 
                 inputs={selectedInputs}
                 explainers={selectedExplainers}
+                loading={loading}
                 setLoading={setLoading}
               />
             )}
@@ -176,20 +181,6 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
                   }}
                   onClick={() => handleImageClick(input.id)}
                 >
-                  <Paper
-                    sx={{
-                      height: "300px",
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      cursor: 'pointer',
-                      opacity: tmpInputs.includes(input.id) ? 0.5 : 1
-                    }}
-                    onClick={() => handleImageClick(input.id)}
-                  >
-                  </Paper>
-                    {/* <Plot data={input.imageObj.data} layout={input.imageObj.layout} /> */}
                     <img src={input.source} width={240} height={200} alt={String(input.id)} />
                     <Typography variant="subtitle1" align="center">{input.id}</Typography>
                 </Paper>
@@ -201,14 +192,6 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
           <Button onClick={handleCancelSelection}>Cancel</Button>
           <Button onClick={handleConfirmSelection}>OK</Button>
         </DialogActions>
-      </Dialog>
-
-       {/* Loading Dialog */}
-       <Dialog open={loading}>
-        <DialogContent sx={{ textAlign: 'center' }}>
-          <CircularProgress />
-          <Typography variant="h6" sx={{ mt: 2 }}>Loading</Typography>
-        </DialogContent>
       </Dialog>
 
     </Box>

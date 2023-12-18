@@ -10,20 +10,13 @@ import { fetchExperiment } from '../features/apiService';
 import { preprocess, AddMockData } from './utils';
 
 
-// 수정 방안
-// ExperimentComponent에서 Run Experiment 버튼을 누르면
-// Visualization 내부에서 experimentResult를 Fetch하도록 수정
-// ExperimentComponent에서는 fetch를 하기 위한 input data를 만들어서 보내주기만 하면 됨
-
-
-const Visualizations: React.FC<{ inputs: number[]; explainers: number[]; setLoading: any}> = ({ inputs, explainers, setLoading }) => {
+const Visualizations: React.FC<{ inputs: number[]; explainers: number[]; loading: boolean; setLoading: any}> = ({ inputs, explainers, loading, setLoading }) => {
   const [experimentResults, setExperimentResults] = React.useState<ExperimentResult[]>([]);
-  
 
   useEffect(() => {
     const fetchExperimentResults = async () => {
       try {
-        const response = await fetchExperiment(
+        let response = await fetchExperiment(
           'test_project',
           'test_experiment',
           {
@@ -31,8 +24,7 @@ const Visualizations: React.FC<{ inputs: number[]; explainers: number[]; setLoad
             explainers: explainers
           }
           );
-          console.log(response.data.data);
-          preprocess(response);
+          response = preprocess(response);
           AddMockData(response); // Add mock data for testing
           const experimentResults = response.data.data
           setExperimentResults(JSON.parse(JSON.stringify(experimentResults)));
@@ -47,7 +39,15 @@ const Visualizations: React.FC<{ inputs: number[]; explainers: number[]; setLoad
       fetchExperimentResults();
     }
   }
-  , [inputs, explainers]);
+  , [inputs, explainers])
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+        <CircularProgress />
+      </Box>
+    )
+  }
   
 
   return (
@@ -56,17 +56,17 @@ const Visualizations: React.FC<{ inputs: number[]; explainers: number[]; setLoad
         return (
           <Box key={index} sx={{ marginBottom: 4, paddingBottom: 2, borderBottom: '2px solid #e0e0e0' }}>
             {/* Info Cards */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-around', marginBottom: 2 }}>
+            {/* <Box sx={{ display: 'flex', justifyContent: 'space-around', marginBottom: 2 }}> */}
               {/* Label Card */}
-              <Card sx={{ minWidth: 275 }}>
+              {/* <Card sx={{ minWidth: 275 }}>
                 <CardContent>
                   <Typography variant="h5" component="div">True Label</Typography>
                   <Typography variant="body2">{result.prediction.label}</Typography>
                 </CardContent>
-              </Card>
+              </Card> */}
 
               {/* Probability Card */}
-              <Card sx={{ minWidth: 275 }}>
+              {/* <Card sx={{ minWidth: 275 }}>
                 <CardContent>
                   <Typography variant="h5" component="div">Probabilities</Typography>
                   {result.prediction.probPredictions.map((prob, index) => (
@@ -76,20 +76,20 @@ const Visualizations: React.FC<{ inputs: number[]; explainers: number[]; setLoad
                     </Box>
                   ))}
                 </CardContent>
-              </Card>
+              </Card> */}
 
               {/* Result Card */}
-              <Card sx={{ minWidth: 275, bgcolor: result.prediction.isCorrect ? 'lightgreen' : 'red' }}>
+              {/* <Card sx={{ minWidth: 275, bgcolor: result.prediction.isCorrect ? 'lightgreen' : 'red' }}>
                 <CardContent>
                   <Typography variant="h5" component="div">{result.prediction.isCorrect ? 'Correct' : 'False'}</Typography>
                 </CardContent>
-              </Card>
-            </Box>
+              </Card> */}
+            {/* </Box> */}
 
             {/* Image Cards */}
             <ImageList sx={{
               width: '100%', 
-              height: '300px', 
+              height: '400px', 
               gap: 20, // Adjust the gap size here
               rowHeight: 164,
               display: 'flex',
@@ -104,6 +104,22 @@ const Visualizations: React.FC<{ inputs: number[]; explainers: number[]; setLoad
                     layout={result.input.layout}
                   />
                   <Typography variant="subtitle1" align="center"> Original </Typography>
+                </Box>
+                <Box sx={{ p: 1}}>
+                  <Box sx={{ p : 1 }}>
+                    <Typography variant="body2" align="center"> True Label : {result.prediction.label} </Typography>
+                  </Box>
+                  <Box sx={{ p : 1 }}>
+                  {result.prediction.probPredictions.map((prob, index) => (
+                    <Typography variant="body2" align="center" key={index}>{prob.label}: {prob.score}%</Typography>
+                  ))}
+                  </Box>
+                  <Box sx={{ p : 1 }}>
+                  <Typography 
+                    sx={{color : result.prediction.isCorrect ? 'green' : 'red'}} 
+                    variant="body2" 
+                    align="center"> IsCorrect : {result.prediction.isCorrect ? 'True' : 'False'} </Typography>
+                  </Box>
                 </Box>
               </ImageListItem>
 

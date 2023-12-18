@@ -8,19 +8,12 @@ const ModelInfoPage: React.FC = () => {
     <Box sx={{ p: 2, maxWidth: 1400  }}>
       <Box>
         <Typography variant='h1'>
-          PnP XAI Introduction
+          Plug and Play XAI Introduction
         </Typography>            
         <Box sx={{ m : 2}}>
-          <Card>
-            <CardContent>
-              <Typography variant="h5" component="div">
-                PnP XAI
-              </Typography>
-              <Typography variant="body2">
-                PnP XAI is easy to use XAI framework AI developers
-              </Typography>
-            </CardContent>
-          </Card>
+          <Typography variant="body2">
+            PnP XAI is easy to use XAI framework AI developers
+          </Typography>
         </Box>
       </Box>
 
