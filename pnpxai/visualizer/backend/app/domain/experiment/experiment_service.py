@@ -1,6 +1,7 @@
 from torch import Tensor
 from torch.utils.data import DataLoader
 import plotly.express as px
+from typing import Optional, Sequence
 
 
 class ExperimentService:
@@ -32,7 +33,7 @@ class ExperimentService:
         formatted = []
         for datum in inputs:
             datum: Tensor = datum.cpu()
-            
+
             if visualizer is not None:
                 datum = visualizer(datum)
 
@@ -42,7 +43,13 @@ class ExperimentService:
         return formatted
 
     @classmethod
-    def run(cls, experiment, inputs=None, explainers=None):
-        experiment.run(inputs, explainers)
+    def run(
+        cls,
+        experiment,
+        inputs: Optional[Sequence[int]] = None,
+        explainers: Optional[Sequence[int]] = None,
+        metrics: Optional[Sequence[int]] = None
+    ):
+        experiment.run(inputs, explainers, metrics)
 
         return experiment

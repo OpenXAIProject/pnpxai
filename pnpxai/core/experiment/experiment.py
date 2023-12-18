@@ -1,11 +1,10 @@
-import warnings
 from typing import List, Any, Dict, Type, Callable, Optional, Sequence, Union
 
-from torch import Tensor
+import torch
 from torch.utils.data import DataLoader, Subset, Dataset
 
-from pnpxai.explainers import Explainer, ExplainerWArgs, AVAILABLE_EXPLAINERS
-from pnpxai.evaluator import XaiEvaluator
+from pnpxai.explainers import Explainer, ExplainerWArgs
+from pnpxai.evaluator import XaiEvaluator, EvaluationMetric
 from pnpxai.core._types import DataSource, Model
 from pnpxai.core.experiment.run import Run
 
@@ -60,6 +59,10 @@ class Experiment:
     def available_explainers(self) -> List[Type[Explainer]]:
         return list(map(lambda explainer: type(explainer.explainer), self.explainers_w_args))
 
+    @property
+    def available_metrics(self) -> List[Type[EvaluationMetric]]:
+        return [] if not self.evaluator else self.evaluator.available_metrics
+
     def add_explainer(
         self,
         explainer_type: Type[Explainer],
@@ -89,14 +92,14 @@ class Experiment:
             ]
             batch_size = min(self.data.batch_size, len(data_ids)) \
                 if self.data.batch_size is not None else None
-            print("BS:", batch_size)
+
             data = self.data.__class__(
                 dataset=Subset(self.data.dataset, data_ids), shuffle=False, batch_size=batch_size,
                 **{param: getattr(self.data, param) for param in duplicated_params}
             )
         elif isinstance(self.data, Dataset):
             data = Subset(self.data, data_ids)
-        else:
+        elif not torch.is_tensor(self.data):
             data = self.data[data_ids]
 
         return data
@@ -104,11 +107,14 @@ class Experiment:
     def run(
         self,
         data_ids: Optional[Sequence[int]] = None,
-        explainer_ids: Optional[Sequence[int]] = None
+        explainer_ids: Optional[Sequence[int]] = None,
+        metrics_ids: Optional[Sequence[int]] = None,
     ) -> 'Experiment':
         explainers = self.get_explainers_by_ids(explainer_ids)
         data = self.get_data_by_ids(data_ids)
         runs = []
+
+        self.evaluator.set_runable_metrics(metrics_ids)
 
         for explainer in explainers:
             run = Run(
