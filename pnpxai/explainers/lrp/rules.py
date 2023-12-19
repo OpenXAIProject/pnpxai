@@ -198,9 +198,9 @@ class AttentionHeadRule(HookWithKwargs):
             zero_attn_shape = (bsz * num_heads, 1, head_dim)
             k = torch.cat([k, torch.zeros(zero_attn_shape, dtype=k.dtype, device=k.device)], dim=1)
             if attn_mask is not None:
-                attn_mask = pad(attn_mask, (0, 1))
+                attn_mask = F.pad(attn_mask, (0, 1))
             if key_padding_mask is not None:
-                key_padding_mask = pad(key_padding_mask, (0, 1))
+                key_padding_mask = F.pad(key_padding_mask, (0, 1))
 
         # update source sequence length after adjustments
         src_len = k.size(1)
