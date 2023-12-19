@@ -1,13 +1,31 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '../../app/store';
+import { setCurrentProject } from '../../features/projectSlice';
 import { Link } from 'react-router-dom';
 import { Box, AppBar, Toolbar, Button, Menu, MenuItem } from '@mui/material';
 import logo from '../../assets/images/logo.svg';
 
 const NavBar: React.FC = () => {
-  const projects = ['test project', 'project2', 'project3'];
+  const routes = [
+    {
+      path: "/model-info",
+      name: "Model Architecture Information"
+    },
+    {
+      path: "/model-explanation",
+      name: "Local Explanation"
+    }
+  ]
+
+  const projectsData = useSelector((state: RootState) => state.projects.data);
+  const projectId = useSelector((state: RootState) => state.projects.currentProject.id);
+  const projects = projectsData?.map(project => project.id) || [];
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedProject, setSelectedProject] = useState<string>(projects[0]);
-  const [selectedMenu, setSelectedMenu] = useState<number | null>(0);
+  const [selectedProject, setSelectedProject] = useState<string>("");
+  const [selectedMenu, setSelectedMenu] = useState<number | null>(null);
+
+  const dispatch = useDispatch();
 
   const handleSelectMenu = (menuKey: number) => {
     setSelectedMenu(menuKey);
@@ -21,10 +39,21 @@ const NavBar: React.FC = () => {
     setMenuAnchorEl(null);
   };
 
-  const handleSelectProject = (project: string) => {
-    // setSelectedProject(project);
+  const handleSelectProject = (projectId: string) => {
+    setSelectedProject(projectId);
+    dispatch(setCurrentProject(projectId));
     handleMenuClose();
   };
+
+  useEffect(() => {
+    setSelectedMenu(routes.findIndex(route => route.path === window.location.pathname));
+  }
+  , []);
+
+  useEffect(() => {
+    setSelectedProject(projectId);
+  }
+  , [projectId]);
 
   return (
     <Box sx={{ flexGrow: 1 }}>
@@ -34,35 +63,28 @@ const NavBar: React.FC = () => {
             <img src={logo} alt="Logo" style={{ marginRight: 50, height: '50px' }} />
           </Link>
           {/* Left of the menu bar */}
-          <Button 
-            component={Link} 
-            to="/model-info" 
-            onClick={() => handleSelectMenu(0)} 
-            style={{ 
-              marginRight: 50, 
-              color: 'inherit', 
-              fontWeight: selectedMenu === 0 ? 'bold' : 'normal'
-            }}
-          >
-            Model Architecture Information
-          </Button>
-          <Button 
-            component={Link} 
-            to="/model-explanation" 
-            onClick={() => handleSelectMenu(1)} 
-            style={{ 
-              marginRight: 50, 
-              color: 'inherit', 
-              fontWeight: selectedMenu === 1 ? 'bold' : 'normal' 
-            }}
-          >
-            Local Explanation
-          </Button>
-
+          {routes.map((route, index) => {
+            return (
+              <Button 
+                key={index}
+                component={Link} 
+                to={route.path} 
+                onClick={() => handleSelectMenu(index)} 
+                style={{ 
+                  marginRight: 50, 
+                  color: 'inherit', 
+                  fontWeight: selectedMenu === index ? 'bold' : 'normal'
+                }}
+              >
+                {route.name}
+              </Button>
+            )
+          })}
+          
           <Box sx={{ flexGrow: 1 }} />
           {/* Right of the menu bar */}
           <Button style={{ color: 'inherit' }} onClick={handleMenuButtonClick}>
-            Projects
+            Projects : {selectedProject}
           </Button>
           <Menu
             anchorEl={menuAnchorEl}

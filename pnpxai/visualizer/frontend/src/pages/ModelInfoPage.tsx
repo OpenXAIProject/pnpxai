@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 const ModelInfoPage: React.FC = () => {
   const loaded = useSelector((state: RootState) => state.projects.loaded);
   const projectsData = useSelector((state: RootState) => state.projects.data);
-  const projectId = projectsData?.[0]?.id;
+  const projectId = useSelector((state: RootState) => state.projects.currentProject.id);
   const projectData = projectsData?.find(project => project.id === projectId);
 
 

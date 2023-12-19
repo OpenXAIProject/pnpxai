@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Box, Container, CardContent, Typography, Card, Alert, 
-  FormControl, InputLabel, Select, MenuItem, Button, Collapse
+  FormControl, InputLabel, Select, MenuItem, Button, Collapse, CircularProgress
 } from '@mui/material';
 import { RootState } from '../app/store';
 import ExperimentComponent from '../components/ExperimentComponent';
@@ -19,8 +19,9 @@ const ExperimentPage = () => {
     setTask(event.target.value);
   };
   
+  const loaded = useSelector((state: RootState) => state.projects.loaded);
   const projectsData = useSelector((state: RootState) => state.projects.data);
-  const projectId = projectsData?.[0]?.id;
+  const projectId = useSelector((state: RootState) => state.projects.currentProject.id);
   const projectData = projectsData?.find(project => project.id === projectId);
   const isAnyModelDetected = projectData?.experiments.some(experiment => experiment.id);
 
@@ -28,6 +29,22 @@ const ExperimentPage = () => {
   const handleCollapse = () => {
     setExpanded(!expanded);
   };
+
+  if (!loaded || !projectsData) {
+    return (
+      <Box sx={{ p: 2, maxWidth: 1400  }}>
+        <Box sx={{ m: 5, minHeight: "50px" }}>
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                <CircularProgress />
+              </Box>
+            </CardContent>
+          </Card>
+        </Box>
+      </Box>
+    )
+  }
 
   return (
     <Box sx={{ m: 1 }}>
@@ -52,7 +69,7 @@ const ExperimentPage = () => {
         </Container>
       </Box>
 
-      <Box sx={{maxWidth : '200px'}}>
+      <Box sx={{ml : 5, maxWidth : '200px'}}>
         <FormControl fullWidth>
           <InputLabel id="task-select"> Task </InputLabel>
           <Select
