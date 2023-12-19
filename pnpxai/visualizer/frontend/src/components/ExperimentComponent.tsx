@@ -117,7 +117,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
   return (
     <Box sx={{ mt: 3, mb: 3, ml: 1, pb: 3, borderBottom: 1, minHeight: "600px" }}>
       <Grid container spacing={2}>
-        <Grid item xs={12} md={3}>
+        <Grid item xs={12} md={2}>
           {/* Sidebar */}
           <Box sx={{ borderRight: 1, borderColor: 'divider', m: 2 }}>
             
@@ -180,7 +180,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
               </Box>
           </Box>
         </Grid>
-        <Grid item xs={12} md={9}>
+        <Grid item xs={12} md={10}>
           {/* Experiment Visualization */}
           <Box sx={{ pl: 2 }}>
             <Typography variant="h5">{experiment?.name}</Typography>
