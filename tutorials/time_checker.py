@@ -32,12 +32,16 @@ def time_recorder(model_name, device="cpu"):
     records = []
     default_record = {"device": device, "model": model.__class__.__name__}
     for explainer_type in recommended.explainers:
-        # TODO: fix RAP for inception
-        if model_name == "inception_v3" and explainer_type.__name__ == "RAP":
+        # TODO: fix RAP, GuidedGradCam for inception
+        excepted = ["RAP", "GuidedGradCam"]
+        if model_name == "inception_v3" and explainer_type.__name__ in excepted:
             continue
 
         record = {**default_record, "explainer": explainer_type.__name__}
         explainer = ExplainerWArgs(explainer=explainer_type(model))
+        # TODO: handle nan from MultiheadAttentionRule
+        if explainer_type.__name__ == "LRP":
+            explainer.kwargs = {"epsilon": .25}
 
         started = time_ns()
         attrs = explainer.attribute(inputs, labels)
@@ -76,12 +80,15 @@ def time_recorder(model_name, device="cpu"):
         records.append(record)
     return records
 
+
 records = []
 for model_name in ["resnet18", "vgg16", "inception_v3", "vit_b_16"]:
-    records += time_recorder(model_name)
-    if torch.cuda.is_available():
-        records += time_recorder(model_name, device="cuda")
-
+    try:
+        records += time_recorder(model_name)
+        if torch.cuda.is_available():
+            records += time_recorder(model_name, device="cuda")
+    except:
+        import pdb; pdb.set_trace()
 pd.DataFrame.from_records(records).to_csv("time_records.csv")
 
 # from pnpxai.explainers import RAP
