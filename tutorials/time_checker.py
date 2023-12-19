@@ -83,12 +83,9 @@ def time_recorder(model_name, device="cpu"):
 
 records = []
 for model_name in ["resnet18", "vgg16", "inception_v3", "vit_b_16"]:
-    try:
-        records += time_recorder(model_name)
-        if torch.cuda.is_available():
-            records += time_recorder(model_name, device="cuda")
-    except:
-        import pdb; pdb.set_trace()
+    records += time_recorder(model_name)
+    if torch.cuda.is_available():
+        records += time_recorder(model_name, device="cuda")
 pd.DataFrame.from_records(records).to_csv("time_records.csv")
 
 # from pnpxai.explainers import RAP
