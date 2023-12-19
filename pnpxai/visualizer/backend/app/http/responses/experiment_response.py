@@ -9,21 +9,23 @@ from pnpxai.visualizer.backend.app.domain.experiment import ExperimentService
 
 class ExperimentResponse(Response):
     @classmethod
-    def format_explainers(cls, explainers: list):
+    def format_classes_by_name(cls, values: list):
         return [
             {
                 APIItems.ID.value: idx,
-                APIItems.NAME.value: explainer.__name__,
+                APIItems.NAME.value: value.__name__,
             }
-            for idx, explainer in enumerate(explainers)
+            for idx, value in enumerate(values)
         ]
 
     @classmethod
     def to_dict(cls, experiment):
-        explainers = cls.format_explainers(experiment.available_explainers)
+        explainers = cls.format_classes_by_name(experiment.available_explainers)
+        metrics = cls.format_classes_by_name(experiment.available_metrics)
 
         fields = {
             APIItems.EXPLAINERS.value: explainers,
+            APIItems.METRICS.value: metrics,
         }
         if hasattr(experiment, 'name'):
             fields[APIItems.NAME.value] = experiment.name
@@ -40,7 +42,9 @@ class ExperimentInputsResponse(Response):
 class ExperimentRunsResponse(Response):
     @classmethod
     def format_run_inputs(cls, experiment):
-        run = next(iter(experiment.runs))
+        run = None
+        for run in experiment.runs:
+            break
         if run is None:
             return []
 
