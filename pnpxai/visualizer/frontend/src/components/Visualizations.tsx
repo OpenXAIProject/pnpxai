@@ -15,9 +15,7 @@ import { preprocess, AddMockData } from './utils';
 const Visualizations: React.FC<{ 
   experiment: string; inputs: number[]; explainers: number[]; metrics: number[]; loading: boolean; setLoading: any
 }> = ({ experiment, inputs, explainers, metrics, loading, setLoading }) => {
-  const projectId = useSelector((state: RootState) => {
-    return state.projects.data[0].id;
-  });
+  const projectId = useSelector((state: RootState) => state.projects.currentProject.id);
   const [experimentResults, setExperimentResults] = React.useState<ExperimentResult[]>([]);
   
 
@@ -38,7 +36,7 @@ const Visualizations: React.FC<{
 
     fetchExperimentResults();
   }
-  , [])
+  , [projectId])
 
   
   
@@ -117,15 +115,14 @@ const Visualizations: React.FC<{
             {/* Image Cards */}
             <ImageList sx={{
               width: '100%', 
-              height: '400px', 
+              height: '450px', 
               gap: 20, // Adjust the gap size here
-              rowHeight: 164,
               display: 'flex',
               flexDirection: 'row',
               overflowY: 'hidden', // Prevent vertical overflow
               overflowX: 'auto' // Allow horizontal scrolling
               }}>
-              <ImageListItem key={0} sx={{ width: '240px', minHeight: "300px" }}>
+              <ImageListItem key={0} sx={{ width: '200px', minHeight: "300px" }}>
                 <Box sx={{ p: 1}}>
                   <Plot
                     data={[result.input.data[0]]}
@@ -153,7 +150,7 @@ const Visualizations: React.FC<{
 
               {result.explanations.map((exp, index) => {
                 return exp.data && 
-                  <ImageListItem key={index+1} sx={{ width: '240px', minHeight: "300px" }}>
+                  <ImageListItem key={index+1} sx={{ width: '200px', minHeight: "300px" }}>
                     <Box sx={{ p: 1 }}>
                       <Plot 
                         data={[exp.data.data[0]]}
