@@ -53,7 +53,8 @@ class GuidedGradCam(Explainer):
             all=True,
         )
         assert pool_nodes, "Must have pooling layer"
-        return pool_nodes[-1].operator
+        target_module = getattr(self.model, pool_nodes[-1].prev.owning_module)
+        return target_module
 
     def attribute(
         self,
