@@ -29,11 +29,11 @@ class IntegratedGradients(Explainer):
             targets = [targets] * len(inputs)
         else:
             targets = targets.cpu()
-        _, attributions = self.source(
+        _, gradients = self.source(
             inputs,
             torch.eye(n_classes)[targets].to(self.device),
         )
-        return inputs * attributions
+        return inputs * gradients
 
     def format_outputs_for_visualization(
         self,
