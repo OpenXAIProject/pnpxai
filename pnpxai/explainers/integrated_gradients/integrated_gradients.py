@@ -27,6 +27,8 @@ class IntegratedGradients(Explainer):
             n_classes = self.model(inputs).shape[-1]
         if isinstance(targets, int):
             targets = [targets] * len(inputs)
+        else:
+            targets = targets.cpu()
         _, attributions = self.source(
             inputs,
             torch.eye(n_classes)[targets].to(self.device),
