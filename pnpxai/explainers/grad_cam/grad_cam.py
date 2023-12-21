@@ -47,7 +47,7 @@ class GradCam(Explainer):
         additional_forward_args: Any = None,
         attribute_to_layer_input: bool = False,
         relu_attributions: bool = False,
-        attr_dim_summation: bool = True,
+        # attr_dim_summation: bool = True,
     ) -> List[Tensor]:
         attributions = self.source.attribute(
             inputs=inputs,
@@ -55,7 +55,7 @@ class GradCam(Explainer):
             additional_forward_args=additional_forward_args,
             attribute_to_layer_input=attribute_to_layer_input,
             relu_attributions=relu_attributions,
-            attr_dim_summation=attr_dim_summation,
+            # attr_dim_summation=attr_dim_summation,
         )
         upsampled = LayerAttribution.interpolate(attributions, inputs.shape[2:], "bilinear")
         return upsampled
