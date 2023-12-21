@@ -156,7 +156,7 @@ class NodeInfo:
     def owning_module(self) -> Optional[str]:
         if self.opcode in ["call_module", "call_function"]:
             if self.meta.get("nn_module_stack"):
-                nm = next(reversed(self.meta["nn_module_stack"]))
+                nm = next(iter(self.meta["nn_module_stack"]))
                 return nm
         return
         

@@ -13,7 +13,7 @@ from pnpxai.recommender._types import RecommenderOutput
 class XaiRecommender:
     def __init__(self):
         self.question_table = {
-            'why': {GuidedGradCam, 
+            'why': {GradCam, GuidedGradCam, 
                     Lime, KernelShap,
                     IntegratedGradients, FullGrad, LRP, RAP, TCAV, Anchors},
             'how': {PDP},
@@ -22,8 +22,8 @@ class XaiRecommender:
         }
         self.task_table = {
             'image': {
-                Lime, KernelShap,LRP, GuidedGradCam,RAP,
-                IntegratedGradients, # TODO: memory issue in IG, 
+                Lime, KernelShap,LRP, GuidedGradCam, GradCam, RAP,
+                IntegratedGradients, 
                 # TODO: add more explainers
                 # FullGrad, CEM, TCAV
             },
@@ -38,10 +38,10 @@ class XaiRecommender:
             nn.Linear: {
                 Lime, KernelShap,
                 IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
-            nn.Conv1d: {GuidedGradCam, 
+            nn.Conv1d: {GuidedGradCam, GradCam, 
             Lime, KernelShap,
             IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
-            nn.Conv2d: {GuidedGradCam, 
+            nn.Conv2d: {GuidedGradCam, GradCam,
             Lime, KernelShap,
             IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
             nn.RNN: {
@@ -56,6 +56,7 @@ class XaiRecommender:
         }
         self.evaluation_metric_table = {
             # Correctness -- MuFidelity, Conitinuity -- Sensitivity, Compactness -- Complexity
+            GradCam: {MuFidelity, Sensitivity, Complexity},
             GuidedGradCam: {MuFidelity, Sensitivity, Complexity},
             Lime: {MuFidelity, Sensitivity, Complexity},
             KernelShap: {MuFidelity, Sensitivity, Complexity},
@@ -91,6 +92,7 @@ class XaiRecommender:
         if (nn.Conv1d in architecture or nn.Conv2d in architecture) and GuidedGradCam not in architecture_to_method:
             if nn.MultiheadAttention not in architecture:
                 architecture_to_method.append(GuidedGradCam)
+                architecture_to_method.append(GradCam)
 
         methods = self._find_overlap(
             question_to_method, task_to_method, architecture_to_method)
