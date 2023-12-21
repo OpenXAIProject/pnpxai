@@ -34,7 +34,7 @@ const ModelInfoPage: React.FC = () => {
 
   return (
     <Box sx={{ p: 2, maxWidth: 1400  }}>
-      <Box>
+      {/* <Box>
         <Typography variant='h1'>
           Plug and Play XAI Introduction
         </Typography>            
@@ -43,9 +43,10 @@ const ModelInfoPage: React.FC = () => {
             PnP XAI is easy to use XAI framework AI developers
           </Typography>
         </Box>
-      </Box>
+      </Box> */}
 
-      <Typography variant='h1'> Model Architecture Detection Results </Typography>
+      <Typography variant='h1'> Model Architecture Information </Typography>
+      <Typography variant='h6'> 3 models are detected </Typography>
       {!isNoModelDetected ? (
         projectData?.experiments.map((experiment, index) => {
           return <ModelInfoComponent key={index} experiment={experiment} showModel={index === 0 ? true : false}/>;

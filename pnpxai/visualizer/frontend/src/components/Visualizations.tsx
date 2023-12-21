@@ -123,23 +123,23 @@ const Visualizations: React.FC<{
               overflowX: 'auto' // Allow horizontal scrolling
               }}>
               <ImageListItem key={0} sx={{ width: '200px', minHeight: "300px" }}>
-                <Box sx={{ p: 1}}>
+                <Box sx={{ pt : 1}}>
                   <Plot
                     data={[result.input.data[0]]}
                     layout={result.input.layout}
                   />
                   <Typography variant="subtitle1" align="center"> Original </Typography>
                 </Box>
-                <Box sx={{ p: 1}}>
-                  <Box sx={{ p : 1 }}>
+                <Box sx={{}}>
+                  <Box sx={{}}>
                     <Typography variant="body2" align="center"> True Label : {result.prediction.label} </Typography>
                   </Box>
-                  <Box sx={{ p : 1 }}>
+                  <Box sx={{}}>
                   {result.prediction.probPredictions.map((prob, index) => (
                     <Typography variant="body2" align="center" key={index}>{prob.label}: {prob.score}%</Typography>
                   ))}
                   </Box>
-                  <Box sx={{ p : 1 }}>
+                  <Box sx={{}}>
                   <Typography 
                     sx={{color : result.prediction.isCorrect ? 'green' : 'red'}} 
                     variant="body2" 

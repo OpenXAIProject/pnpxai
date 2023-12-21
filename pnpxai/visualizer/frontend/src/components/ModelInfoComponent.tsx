@@ -91,7 +91,7 @@ const ModelInfoComponent: React.FC<{ experiment: Experiment, showModel: boolean}
                 <CardContent>
                   <Box sx={{ m: 1 }}>
                     <Typography variant='body1'> Model: {experiment.model.name} </Typography>
-                    <Typography variant='body1'> Availalbe XAI Algorithms: </Typography>
+                    <Typography variant='body1'> Recommend Explainers </Typography>
                     {experiment.explainers.map((explainer, index) => (
                       <Typography key={index}> {explainer.name} </Typography>
                     ))}

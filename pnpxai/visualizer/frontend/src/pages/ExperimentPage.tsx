@@ -48,7 +48,7 @@ const ExperimentPage = () => {
 
   return (
     <Box sx={{ m: 1 }}>
-      <Box sx={{ mt: 4, mb: 4}}>
+      {/* <Box sx={{ mt: 4, mb: 4}}>
         <Container>
           <Card>
             <CardContent>
@@ -67,9 +67,10 @@ const ExperimentPage = () => {
             </CardContent>
           </Card>
         </Container>
-      </Box>
+      </Box> */}
+      
 
-      <Box sx={{ml : 5, maxWidth : '200px'}}>
+      <Box sx={{m : 5, maxWidth : '200px'}}>
         <FormControl fullWidth>
           <InputLabel id="task-select"> Task </InputLabel>
           <Select
@@ -85,6 +86,14 @@ const ExperimentPage = () => {
           </Select>
         </FormControl>
       </Box>
+      
+      {/* <Box sx={{ ml : 40}}>
+      <Typography variant='h1'> Local Explanation </Typography>
+      <Typography variant='h6'> You can visualize the results </Typography>
+
+      </Box> */}
+
+
       <Box sx={{ m: 1 }}>
         {isAnyModelDetected ? (
           projectData?.experiments.filter(experiment => experiment.modelDetected).map((experiment, index) => (

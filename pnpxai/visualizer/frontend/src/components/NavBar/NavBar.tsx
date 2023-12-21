@@ -68,6 +68,43 @@ const NavBar: React.FC = () => {
           <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
             <img src={logo} alt="Logo" style={{ marginRight: 50, height: '50px' }} />
           </Link>
+          <Button style={{ color: 'inherit' }} onClick={handleMenuButtonClick}>
+            Task : {selectedProject}
+          </Button>
+          <Menu
+            anchorEl={menuAnchorEl}
+            open={Boolean(menuAnchorEl)}
+            onClose={handleMenuClose}
+          >
+            {projects.map((project, index) => (
+              <MenuItem 
+                key={index} 
+                onClick={() => handleSelectProject(project)}
+                style={{ fontWeight: project === selectedProject ? 'bold' : 'normal' }}
+              >
+                {project}
+              </MenuItem>
+            ))}
+          </Menu>
+          <Button style={{ color: 'inherit' }} onClick={handleMenuButtonClick}>
+            Projects : {selectedProject}
+          </Button>
+          <Menu
+            anchorEl={menuAnchorEl}
+            open={Boolean(menuAnchorEl)}
+            onClose={handleMenuClose}
+          >
+            {projects.map((project, index) => (
+              <MenuItem 
+                key={index} 
+                onClick={() => handleSelectProject(project)}
+                style={{ fontWeight: project === selectedProject ? 'bold' : 'normal' }}
+              >
+                {project}
+              </MenuItem>
+            ))}
+          </Menu>
+          
           {/* Left of the menu bar */}
           {routes.map((route, index) => {
             return (
@@ -89,24 +126,7 @@ const NavBar: React.FC = () => {
           
           <Box sx={{ flexGrow: 1 }} />
           {/* Right of the menu bar */}
-          <Button style={{ color: 'inherit' }} onClick={handleMenuButtonClick}>
-            Projects : {selectedProject}
-          </Button>
-          <Menu
-            anchorEl={menuAnchorEl}
-            open={Boolean(menuAnchorEl)}
-            onClose={handleMenuClose}
-          >
-            {projects.map((project, index) => (
-              <MenuItem 
-                key={index} 
-                onClick={() => handleSelectProject(project)}
-                style={{ fontWeight: project === selectedProject ? 'bold' : 'normal' }}
-              >
-                {project}
-              </MenuItem>
-            ))}
-          </Menu>
+          
         </Toolbar>
       </AppBar>
     </Box>

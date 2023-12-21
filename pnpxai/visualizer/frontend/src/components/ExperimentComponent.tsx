@@ -122,9 +122,9 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
           <Box sx={{ borderRight: 1, borderColor: 'divider', m: 2 }}>
             
             {/* Images Box */}
-            <Box sx={{ mb: 3, borderBottom: 1, borderColor: 'divider', padding: 2 }}>
-              <Typography variant="h6">Images</Typography>
-              <Button variant="contained" color="primary" onClick={() => setIsModalOpen(true)} sx={{ mt: 2 }}>Select Images</Button>
+            <Box sx={{ mb: 3, borderBottom: 1, borderColor: 'divider', padding: 1 }}>
+              <Typography variant="h6"> Select Instance </Typography>
+              <Button variant="contained" color="primary" onClick={() => setIsModalOpen(true)} sx={{ mt: 2 }}> Show Instances</Button>
               <Box sx={{ mt: 3 }}>
                 {inputs.map((image, index) => (
                   <Chip key={index} label={image} onDelete={() => handleChipCancel(image)} sx={{ mt: 1 }} />
@@ -134,7 +134,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
 
             {/* Algorithms Box */}
             <Box sx={{ mt: 3 }}>
-              <Typography variant="h6">Algorithms</Typography>
+              <Typography variant="h6"> Select Explainers</Typography>
               <Box sx={{ mt: 3, border: 1, borderColor: 'divider', padding: 1 }}>
                 {experiment.explainers
                   .filter(explainerObj => explainers.includes(explainerObj.id))
@@ -164,7 +164,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
               
               {/* Metrics Box */}
               <Box sx={{ mt : 3}}>
-                <Typography variant="h6"> Metrics </Typography>
+                <Typography variant="h6"> Select Evaluation Metrics </Typography>
                 {experiment.metrics.map(item => (
                   <FormControlLabel
                     key={item.id}
@@ -201,7 +201,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
       
       {/* Image Selection Dialog */}
       <Dialog open={isModalOpen} onClose={() => setIsModalOpen(false)} fullWidth maxWidth="md">
-        <DialogTitle>Select Images</DialogTitle>
+        <DialogTitle>Select Intances</DialogTitle>
         <DialogContent>
           <Grid container spacing={2}>
             {galleryInputs.map((input, index) => (
