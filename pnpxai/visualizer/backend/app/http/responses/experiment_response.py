@@ -1,7 +1,9 @@
 import torch
+from torch import Tensor
 from torch.utils.data import DataLoader
 
 from pnpxai.utils import class_to_string
+from pnpxai.evaluator._evaluator import weigh_metrics
 from pnpxai.visualizer.backend.app.core.generics import Response
 from pnpxai.visualizer.backend.app.core.constants import APIItems
 from pnpxai.visualizer.backend.app.domain.experiment import ExperimentService
@@ -13,15 +15,17 @@ class ExperimentResponse(Response):
         return [
             {
                 APIItems.ID.value: idx,
-                APIItems.NAME.value: value.__name__,
+                APIItems.NAME.value: class_to_string(value),
             }
             for idx, value in enumerate(values)
         ]
 
     @classmethod
     def to_dict(cls, experiment):
-        explainers = cls.format_classes_by_name(experiment.available_explainers)
-        metrics = cls.format_classes_by_name(experiment.available_metrics)
+        all_explainers = [
+            explainer.explainer for explainer in experiment.all_explainers]
+        explainers = cls.format_classes_by_name(all_explainers)
+        metrics = cls.format_classes_by_name(experiment.all_metrics)
 
         fields = {
             APIItems.EXPLAINERS.value: explainers,
@@ -41,57 +45,54 @@ class ExperimentInputsResponse(Response):
 
 class ExperimentRunsResponse(Response):
     @classmethod
-    def format_run_inputs(cls, experiment):
-        run = None
-        for run in experiment.runs:
-            break
-        if run is None:
-            return []
-
-        inputs = [run.input_extractor(datum) for datum in run.data]
-        if experiment.is_batched:
-            inputs = list(torch.concat(inputs, dim=0))
-
-        inputs = ExperimentService.get_task_formatted_inputs(
-            experiment, inputs
-        )
-
-        return inputs
+    def format_outputs_for_visualization(cls, outputs: Tensor, n_outputs: int = 3):
+        if outputs is None:
+            return outputs
+        return outputs.argsort(descending=True)[:n_outputs].tolist()
 
     @classmethod
     def to_dict(cls, experiment):
-        inputs = cls.format_run_inputs(experiment)
+        inputs = ExperimentService.get_task_formatted_inputs(
+            experiment, experiment.get_inputs_flattened())
+        targets = experiment.get_targets_flattened()
+        outputs = [
+            cls.format_outputs_for_visualization(output)
+            for output in experiment.get_outputs_flattened()
+        ]
+
         formatted = [
             {
                 APIItems.INPUT.value: datum.to_json(),
+                APIItems.TARGET.value: target,
+                APIItems.OUTPUTS.value: output,
                 APIItems.EXPLANATIONS.value: [],
             }
-            for datum in inputs
+            for (datum, target, output) in zip(inputs, targets, outputs)
         ]
 
-        for run in experiment.runs:
-            run_name = class_to_string(run.explainer.explainer)
-            run_visualizations = run.get_flattened_visualizations(
-                experiment.task
-            )
-            evaluations = run.flattened_evaluations or [
-                None for _ in range(len(run_visualizations))
-            ]
-            weighted_evaluations = run.flattened_weighted_evaluations
+        explainers = experiment.get_current_explainers()
+        metrics = experiment.get_current_metrics()
+        evaluations = experiment.get_evaluations_flattened()
+        visualizations = experiment.get_visualizations_flattened()
 
-            for idx, (visualization, evaluation, weighted_score) in enumerate(zip(run_visualizations, evaluations, weighted_evaluations)):
+        for explainer, explainer_visualizations, explainer_evaluations in zip(explainers, visualizations, evaluations):
+            for idx, visualization in enumerate(explainer_visualizations):
+                formatted_evaluations = {
+                    class_to_string(metric): metrics_evaluations[idx]
+                    for metric, metrics_evaluations in zip(metrics, explainer_evaluations)
+                }
+                
                 formatted[idx][APIItems.EXPLANATIONS.value].append({
-                    APIItems.EXPLAINER.value: run_name,
+                    APIItems.EXPLAINER.value: class_to_string(explainer.explainer),
                     APIItems.DATA.value: visualization.to_json() if visualization is not None else None,
-                    APIItems.EVALUATION.value: evaluation,
-                    APIItems.WEIGHTED_SCORE.value: weighted_score,
+                    APIItems.EVALUATION.value: formatted_evaluations,
+                    APIItems.WEIGHTED_SCORE.value: weigh_metrics(formatted_evaluations),
                 })
 
         for datum in formatted:
             datum[APIItems.EXPLANATIONS.value] = sorted(
                 datum[APIItems.EXPLANATIONS.value],
-                key=lambda x: x[APIItems.WEIGHTED_SCORE.value],
-                reverse=True,
+                key=lambda x: x[APIItems.WEIGHTED_SCORE.value]
             )
 
         return formatted

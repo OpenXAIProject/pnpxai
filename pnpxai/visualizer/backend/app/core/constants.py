@@ -10,6 +10,7 @@ class APIItems(Enum):
     NAME = 'name'
     SOURCE = 'source'
     TARGET = 'target'
+    OUTPUTS = 'outputs'
 
     EXPLANATIONS = 'explanations'
     WEIGHTED_SCORE = 'weighted_score'

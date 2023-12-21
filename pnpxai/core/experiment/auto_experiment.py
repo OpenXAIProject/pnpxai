@@ -1,11 +1,10 @@
-from typing import List, Type, Literal, Callable, Optional
+from typing import List, Type, Literal, Callable, Optional, Sequence
 
 from pnpxai.evaluator._evaluator import EvaluationMetric
 from pnpxai.core.experiment.experiment import Experiment
 from pnpxai.detector import ModelArchitectureDetector
 from pnpxai.explainers import Explainer, ExplainerWArgs
 from pnpxai.recommender.recommender import XaiRecommender, RecommenderOutput
-from pnpxai.evaluator import XaiEvaluator
 from pnpxai.core._types import DataSource, Model, Task, Question
 
 from pnpxai.core.experiment.experiment_explainer_defaults import EXPLAINER_AUTO_KWARGS
@@ -28,14 +27,14 @@ class AutoExperiment(Experiment):
 
         explainers = self.__get_init_explainers(
             model, recommender_output.explainers)
-        evaluator = self.__get_init_evaluator(recommender_output.evaluation_metrics)\
+        metrics = self.__get_init_evaluator(recommender_output.evaluation_metrics)\
             if evaluator_enabled else None
 
         super().__init__(
             model=model,
             data=data,
             explainers=explainers,
-            evaluator=evaluator,
+            metrics=metrics,
             task=task,
             input_extractor=input_extractor,
             target_extractor=target_extractor,
@@ -61,9 +60,8 @@ class AutoExperiment(Experiment):
             for explainer in explainers
         ]
 
-    def __get_init_evaluator(self, metrics: List[Type[EvaluationMetric]]) -> XaiEvaluator:
-        metrics = [
+    def __get_init_evaluator(self, metrics: List[Type[EvaluationMetric]]) -> Sequence[EvaluationMetric]:
+        return [
             metric(**EVALUATION_METRIC_AUTO_KWARGS.get(metric, {}))
             for metric in metrics
         ]
-        return XaiEvaluator(metrics)

@@ -6,20 +6,10 @@ from typing import Optional, Sequence
 
 class ExperimentService:
     @classmethod
-    def get_inputs_list(cls, experiment):
-        data = experiment.data
-        if isinstance(data, DataLoader):
-            data = data.dataset
-
-        data = list(map(experiment.input_extractor, data))
-
-        return data
-
-    @classmethod
     def get_task_formatted_inputs(cls, experiment, inputs=None):
         inputs = inputs \
             if inputs is not None else \
-            cls.get_inputs_list(experiment)
+            experiment.get_inputs_flattened()
 
         if experiment.is_image_task:
             inputs = cls._format_image_inputs(

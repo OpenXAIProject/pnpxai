@@ -14,6 +14,9 @@ class ExperimentController(Controller):
         if experiment is None:
             abort(404)
 
+        if not experiment.has_explanations:
+            return self.response(data=[])
+
         return self.response(data=ExperimentRunsResponse.dump(experiment))
 
     def put(self, project_id: str, experiment_id: str):
