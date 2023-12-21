@@ -100,7 +100,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
 
 
   const handleRunExperiment = () => {
-    if (inputs.length === 0 || explainers.length === 0) {
+    if (inputs.length === 0 || explainers.length === 0 || metrics.length === 0) {
       setShowDialog(true);
       return;
     }
@@ -238,7 +238,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
           onClose={() => setShowDialog(false)}
           >
           <DialogContent>
-            <Alert severity='info'>Please select at least 1 input and 1 explainer </Alert>
+            <Alert severity='info'>Please select at least 1 input and 1 explainer and 1 evaluation metric </Alert>
           </DialogContent>
         </Dialog>
       </Box>
