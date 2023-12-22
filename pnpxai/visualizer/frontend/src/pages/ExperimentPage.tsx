@@ -7,18 +7,6 @@ import { RootState } from '../app/store';
 import ExperimentComponent from '../components/ExperimentComponent';
 
 const ExperimentPage = () => {
-  const tasks = [
-    "Image Classification",
-    "Tabular Data Classification",
-    "Time Series Analysis",
-    "Text Classification",
-  ];
-  const [task, setTask] = useState(tasks[0]);
-
-  const handleChange = (event: any) => {
-    setTask(event.target.value);
-  };
-  
   const loaded = useSelector((state: RootState) => state.projects.loaded);
   const projectsData = useSelector((state: RootState) => state.projects.data);
   const projectId = useSelector((state: RootState) => state.projects.currentProject.id);
@@ -70,22 +58,6 @@ const ExperimentPage = () => {
       </Box> */}
       
 
-      <Box sx={{m : 5, maxWidth : '200px'}}>
-        <FormControl fullWidth>
-          <InputLabel id="task-select"> Task </InputLabel>
-          <Select
-            labelId="task-select"
-            id="task-select"
-            value={tasks[0]}
-            label="Task"
-            // onChange={handleChange}
-          >
-            {tasks.map((task, index) => (
-              <MenuItem key={index} value={task}>{task}</MenuItem>
-              ))}
-          </Select>
-        </FormControl>
-      </Box>
       
       {/* <Box sx={{ ml : 40}}>
       <Typography variant='h1'> Local Explanation </Typography>

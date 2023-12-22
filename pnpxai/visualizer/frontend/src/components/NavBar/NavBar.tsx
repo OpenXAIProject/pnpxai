@@ -7,6 +7,14 @@ import { Box, AppBar, Toolbar, Button, Menu, MenuItem } from '@mui/material';
 import logo from '../../assets/images/logo.svg';
 
 const NavBar: React.FC = () => {
+  const tasks = [
+    "Image Classification",
+    "Tabular Data Classification",
+    "Time Series Analysis",
+    "Text Classification",
+  ];
+
+  
   const routes = [
     {
       path: "/model-info",
@@ -21,7 +29,9 @@ const NavBar: React.FC = () => {
   const projectsData = useSelector((state: RootState) => state.projects.data);
   const projectId = useSelector((state: RootState) => state.projects.currentProject.id);
   const projects = projectsData?.map(project => project.id) || [];
-  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [taskAnchorEl, setTaskAnchorEl] = useState<null | HTMLElement>(null);
+  const [task, setTask] = useState(tasks[0]);
+  const [projectAnchorEl, setProjectAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedProject, setSelectedProject] = useState<string>("");
   const [selectedMenu, setSelectedMenu] = useState<number | null>(null);
 
@@ -31,18 +41,30 @@ const NavBar: React.FC = () => {
     setSelectedMenu(menuKey);
   };
 
-  const handleMenuButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setMenuAnchorEl(event.currentTarget);
+  const handleTaskMenuButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setTaskAnchorEl(event.currentTarget);
+  }
+
+  const handleTaskMenuClose = () => {
+    setTaskAnchorEl(null);
+  }
+
+  const handleTaskChange = (event: any) => {
+    // setTask(event.target.value);
+    handleTaskMenuClose();
+  };
+  const handleProjectMenuButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setProjectAnchorEl(event.currentTarget);
   };
 
-  const handleMenuClose = () => {
-    setMenuAnchorEl(null);
+  const handleProjectMenuClose = () => {
+    setProjectAnchorEl(null);
   };
 
   const handleSelectProject = (projectId: string) => {
     setSelectedProject(projectId);
     dispatch(setCurrentProject(projectId));
-    handleMenuClose();
+    handleProjectMenuClose();
   };
 
   useEffect(() => {
@@ -68,42 +90,47 @@ const NavBar: React.FC = () => {
           <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
             <img src={logo} alt="Logo" style={{ marginRight: 50, height: '50px' }} />
           </Link>
-          <Button style={{ color: 'inherit' }} onClick={handleMenuButtonClick}>
-            Task : {selectedProject}
-          </Button>
-          <Menu
-            anchorEl={menuAnchorEl}
-            open={Boolean(menuAnchorEl)}
-            onClose={handleMenuClose}
-          >
-            {projects.map((project, index) => (
-              <MenuItem 
-                key={index} 
-                onClick={() => handleSelectProject(project)}
-                style={{ fontWeight: project === selectedProject ? 'bold' : 'normal' }}
-              >
-                {project}
-              </MenuItem>
-            ))}
-          </Menu>
-          <Button style={{ color: 'inherit' }} onClick={handleMenuButtonClick}>
-            Projects : {selectedProject}
-          </Button>
-          <Menu
-            anchorEl={menuAnchorEl}
-            open={Boolean(menuAnchorEl)}
-            onClose={handleMenuClose}
-          >
-            {projects.map((project, index) => (
-              <MenuItem 
-                key={index} 
-                onClick={() => handleSelectProject(project)}
-                style={{ fontWeight: project === selectedProject ? 'bold' : 'normal' }}
-              >
-                {project}
-              </MenuItem>
-            ))}
-          </Menu>
+          <Box sx={{borderRight : 1}}>
+            <Button style={{ color: 'inherit' }} onClick={handleTaskMenuButtonClick}>
+              Task : {task}
+            </Button>
+            <Menu
+              anchorEl={taskAnchorEl}
+              open={Boolean(taskAnchorEl)}
+              onClose={handleTaskMenuClose}
+            >
+              {tasks.map((task, index) => (
+                <MenuItem 
+                  key={index}
+                  onClick={() => handleTaskChange(task)}
+                  style={{ fontWeight: task === tasks[0] ? 'bold' : 'normal' }}
+                >
+                  {task}
+                </MenuItem>
+              ))}
+            </Menu>
+          </Box>
+
+          <Box sx={{borderRight : 1}}>
+            <Button style={{ color: 'inherit' }} onClick={handleProjectMenuButtonClick}>
+              Projects : {selectedProject}
+            </Button>
+            <Menu
+              anchorEl={projectAnchorEl}
+              open={Boolean(projectAnchorEl)}
+              onClose={handleProjectMenuClose}
+            >
+              {projects.map((project, index) => (
+                <MenuItem 
+                  key={index} 
+                  onClick={() => handleSelectProject(project)}
+                  style={{ fontWeight: project === selectedProject ? 'bold' : 'normal' }}
+                >
+                  {project}
+                </MenuItem>
+              ))}
+            </Menu>
+          </Box>
           
           {/* Left of the menu bar */}
           {routes.map((route, index) => {
@@ -114,7 +141,7 @@ const NavBar: React.FC = () => {
                 to={route.path} 
                 onClick={() => handleSelectMenu(index)} 
                 style={{ 
-                  marginRight: 50, 
+                  marginLeft: 20, 
                   color: 'inherit', 
                   fontWeight: selectedMenu === index ? 'bold' : 'normal'
                 }}
