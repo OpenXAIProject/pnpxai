@@ -22,6 +22,7 @@ class AutoExperiment(Experiment):
         input_extractor: Optional[Callable] = None,
         target_extractor: Optional[Callable] = None,
         input_visualizer: Optional[Callable] = None,
+        target_visualizer: Optional[Callable] = None,
     ):
         recommender_output = self.recommend(model, question, task)
 
@@ -38,7 +39,8 @@ class AutoExperiment(Experiment):
             task=task,
             input_extractor=input_extractor,
             target_extractor=target_extractor,
-            input_visualizer=input_visualizer
+            input_visualizer=input_visualizer,
+            target_visualizer=target_visualizer
         )
 
     @staticmethod

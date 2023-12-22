@@ -34,6 +34,7 @@ class Project():
         input_extractor: Optional[Callable] = None,
         target_extractor: Optional[Callable] = None,
         input_visualizer: Optional[Callable] = None,
+        target_visualizer: Optional[Callable] = None,
     ) -> AutoExperiment:
         if name is None:
             name = self._generate_next_experiment_id()
@@ -47,6 +48,7 @@ class Project():
             input_extractor=input_extractor,
             target_extractor=target_extractor,
             input_visualizer=input_visualizer,
+            target_visualizer=target_visualizer
         )
         self.experiments[name] = experiment
         return experiment
@@ -62,6 +64,7 @@ class Project():
         input_extractor: Optional[Callable] = None,
         target_extractor: Optional[Callable] = None,
         input_visualizer: Optional[Callable] = None,
+        target_visualizer: Optional[Callable] = None,
     ) -> Experiment:
         if name is None:
             name = self._generate_next_experiment_id()
@@ -75,6 +78,7 @@ class Project():
             input_extractor=input_extractor,
             target_extractor=target_extractor,
             input_visualizer=input_visualizer,
+            target_visualizer=target_visualizer
         )
         self.experiments[name] = experiment
         return experiment

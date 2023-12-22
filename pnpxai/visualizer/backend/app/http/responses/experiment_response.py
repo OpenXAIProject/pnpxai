@@ -42,20 +42,19 @@ class ExperimentInputsResponse(Response):
 
 class ExperimentRunsResponse(Response):
     @classmethod
-    def format_outputs_for_visualization(cls, outputs: Tensor, n_outputs: int = 3):
-        if outputs is None:
-            return outputs
-        return outputs.argsort(descending=True)[:n_outputs].tolist()
-
-    @classmethod
     def to_dict(cls, experiment):
         inputs = ExperimentService.get_task_formatted_inputs(
             experiment, experiment.get_inputs_flattened())
+        n_inputs = len(inputs)
+        default_filler = [None] * n_inputs
+
         targets = experiment.get_targets_flattened()
-        outputs = [
-            cls.format_outputs_for_visualization(output)
-            for output in experiment.get_outputs_flattened()
-        ]
+        targets = ExperimentService.get_task_formatted_targets(
+            experiment, targets) if targets is not None else default_filler
+
+        outputs = experiment.get_outputs_flattened()
+        outputs = ExperimentService.get_task_formatted_outputs(
+            experiment, outputs) if outputs is not None else default_filler
 
         formatted = [
             {

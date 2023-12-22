@@ -34,6 +34,7 @@ class Experiment:
         input_extractor: Optional[Callable[[Any], Any]] = None,
         target_extractor: Optional[Callable[[Any], Any]] = None,
         input_visualizer: Optional[Callable[[Any], Any]] = None,
+        target_visualizer: Optional[Callable[[Any], Any]] = None,
     ):
         self.model = model
         self.manager = ExperimentManager(
@@ -49,6 +50,7 @@ class Experiment:
             if target_extractor is not None \
             else default_target_extractor
         self.input_visualizer = input_visualizer
+        self.target_visualizer = target_visualizer
         self.task = task
 
     @property
@@ -228,7 +230,7 @@ class Experiment:
         evaluations = np.array(self.get_evaluations_flattened(), dtype=float)
         if evaluations.ndim < 3:
             return None
-        
+
         n_explainers = evaluations.shape[0]
         # (data, metrics, explainers)
         evaluations = evaluations.transpose([2, 1, 0])
