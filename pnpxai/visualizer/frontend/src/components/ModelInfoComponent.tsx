@@ -110,7 +110,7 @@ const ModelInfoComponent: React.FC<{ experiment: Experiment, showModel: boolean}
                         </Box>
                         <CustomTabPanel value={value} index={0}>
                           {nodes.map((node: any, index: number) => (
-                            <Typography key={index} component='div'> {node.id} </Typography> 
+                            <Typography key={index} component='div'> {node.operator} </Typography> 
                           ))}
                         </CustomTabPanel>
                         {/* <CustomTabPanel value={value} index={1}>
