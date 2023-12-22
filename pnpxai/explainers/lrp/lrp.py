@@ -15,7 +15,7 @@ class LRP(Explainer):
         self,
         inputs: DataSource,
         targets: TargetType = None,
-        epsilon: float = 1e-6,
+        epsilon: float = .25,
         n_classes: Optional[int] = 1000,
     ) -> DataSource:
         if n_classes is None:
