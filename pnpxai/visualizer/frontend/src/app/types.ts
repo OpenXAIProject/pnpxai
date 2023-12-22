@@ -50,8 +50,8 @@ interface ExperimentResult {
     }]
     layout: {};
   };
-  target: number;
-  outputs: number[];
+  target: string;
+  outputs: string[];
   explanations: {
     explainer : string;
     data: {

@@ -25,6 +25,7 @@ const Visualizations: React.FC<{
         let response = await fetchExperiment(projectId, experiment);
         response = preprocess(response);
         const experimentResults = response.data.data
+        console.log(experimentResults)
         setExperimentResults(JSON.parse(JSON.stringify(experimentResults)));
         setLoading(false);
       }

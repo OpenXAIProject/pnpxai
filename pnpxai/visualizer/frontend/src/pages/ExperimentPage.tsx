@@ -13,11 +13,6 @@ const ExperimentPage = () => {
   const projectData = projectsData?.find(project => project.id === projectId);
   const isAnyModelDetected = projectData?.experiments.some(experiment => experiment.id);
 
-  const [expanded, setExpanded] = useState(false);
-  const handleCollapse = () => {
-    setExpanded(!expanded);
-  };
-
   if (!loaded || !projectsData) {
     return (
       <Box sx={{ p: 2, maxWidth: 1400  }}>
