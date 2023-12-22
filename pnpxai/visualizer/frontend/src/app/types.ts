@@ -11,10 +11,16 @@ interface Experiment {
   inputs: InputData[];  // Specify the correct type
   model: Model;
   explainers: Explainer[];
+  metrics: Metric[];
   modelDetected: boolean;
 }
 
 interface Explainer {
+  id: number;
+  name: string;
+}
+
+interface Metric {
   id: number;
   name: string;
 }
@@ -44,7 +50,7 @@ interface ExperimentResult {
     }]
     layout: {};
   };
-  visualizations: {
+  explanations: {
     explainer : string;
     data: {
       data : [{
@@ -53,10 +59,12 @@ interface ExperimentResult {
       }]
       layout: {};
     };
-    metrics: {
-      faithfulness: number;
-      robustness: number;
+    evaluation: {
+      MuFidelity: number;
+      Sensitivity: number;
+      Complexity: number;
     };
+    weighted_score : number;
   }[];
   prediction: {
     label: string;
@@ -68,4 +76,4 @@ interface ExperimentResult {
   };
 }
 
-export type { Project, Experiment, Explainer, Model, InputData, imageObj, ExperimentResult}
+export type { Project, Experiment, Explainer, Metric, Model, InputData, imageObj, ExperimentResult}
