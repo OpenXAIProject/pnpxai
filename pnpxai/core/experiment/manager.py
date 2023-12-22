@@ -185,11 +185,11 @@ class ExperimentManager:
         )
 
     @property
-    def all_explainers(self):
+    def all_explainers(self) -> Sequence[ExplainerWArgs]:
         return self._explainers_w_args
 
     @property
-    def all_metrics(self):
+    def all_metrics(self) -> Sequence[EvaluationMetric]:
         return self._metrics
 
     @property

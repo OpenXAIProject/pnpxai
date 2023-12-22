@@ -1,8 +1,9 @@
-from typing import Any, Callable, Optional, Sequence, Union
+from typing import Any, Callable, Optional, Sequence, Union, List
 import time
 import warnings
 
 from torch import Tensor
+import numpy as np
 from plotly import express as px
 from plotly.graph_objects import Figure
 
@@ -10,6 +11,7 @@ from pnpxai.utils import class_to_string
 from pnpxai.core.experiment.manager import ExperimentManager
 from pnpxai.explainers import Explainer, ExplainerWArgs
 from pnpxai.evaluator import EvaluationMetric
+from pnpxai.evaluator.mu_fidelity import MuFidelity
 from pnpxai.core._types import DataSource, Model, Task
 
 
@@ -32,6 +34,7 @@ class Experiment:
         input_extractor: Optional[Callable[[Any], Any]] = None,
         target_extractor: Optional[Callable[[Any], Any]] = None,
         input_visualizer: Optional[Callable[[Any], Any]] = None,
+        target_visualizer: Optional[Callable[[Any], Any]] = None,
     ):
         self.model = model
         self.manager = ExperimentManager(
@@ -47,20 +50,21 @@ class Experiment:
             if target_extractor is not None \
             else default_target_extractor
         self.input_visualizer = input_visualizer
+        self.target_visualizer = target_visualizer
         self.task = task
 
     @property
-    def all_explainers(self):
+    def all_explainers(self) -> Sequence[ExplainerWArgs]:
         return self.manager.all_explainers
 
     @property
-    def all_metrics(self):
+    def all_metrics(self) -> Sequence[EvaluationMetric]:
         return self.manager.all_metrics
 
-    def get_current_explainers(self) -> Sequence[ExplainerWArgs]:
+    def get_current_explainers(self) -> List[ExplainerWArgs]:
         return self.manager.get_explainers()[0]
 
-    def get_current_metrics(self) -> Sequence[EvaluationMetric]:
+    def get_current_metrics(self) -> List[EvaluationMetric]:
         return self.manager.get_metrics()[0]
 
     def run(
@@ -142,7 +146,7 @@ class Experiment:
         print(f'[Experiment] Computed {metric_name} in {elaped_time} sec')
         return evaluations
 
-    def visualize_flat(self):
+    def get_visualizations_flattened(self) -> Sequence[Sequence[Figure]]:
         explainers, explainer_ids = self.manager.get_explainers()
         # Get all data ids
         experiment_data_ids = self.manager.get_data_ids()
@@ -173,11 +177,12 @@ class Experiment:
                 if not self.manager.is_batched:
                     formatted_visualizations = formatted_visualizations[0]
                 explainer_visualizations.append(formatted_visualizations)
-            
+
             flat_explainer_visualizations = self.manager.flatten_if_batched(
                 explainer_visualizations, data)
             # Set visualizaions of all data ids as None
-            explainer_visualizations = {idx: None for idx in experiment_data_ids}
+            explainer_visualizations = {
+                idx: None for idx in experiment_data_ids}
             # Fill all valid visualizations
             for visualization, data_id in zip(flat_explainer_visualizations, data_ids):
                 explainer_visualizations[data_id] = visualization
@@ -216,13 +221,37 @@ class Experiment:
 
         return formatted
 
-    def get_visualizations_flattened(self) -> Sequence[Sequence[Figure]]:
-        return self.visualize_flat()
+    def get_explainers_ranks(self) -> Optional[Sequence[Sequence[int]]]:
+        mu_fidelity_idx = next((
+            i for (i, metric) in enumerate(self.get_current_metrics()) if isinstance(metric, MuFidelity)
+        ), None)
+
+        # (explainers, metrics, data)
+        evaluations = np.array(self.get_evaluations_flattened(), dtype=float)
+        if evaluations.ndim < 3:
+            return None
+
+        n_explainers = evaluations.shape[0]
+        # (data, metrics, explainers)
+        evaluations = evaluations.transpose([2, 1, 0])
+        # (data, explainers)
+        scores: np.ndarray = evaluations.argsort(axis=-1).mean(axis=-2)
+
+        if mu_fidelity_idx is not None:
+            mufidelity_scores = evaluations[:, mu_fidelity_idx, :]\
+                .argsort(axis=-1)
+            scores = scores * n_explainers + mufidelity_scores
+
+        scores = scores.argsort(axis=-1)
+        # (explainers, data)
+        scores = scores.transpose([1, 0])
+
+        return scores.tolist()
 
     @property
     def is_image_task(self):
         return self.task == 'image'
-    
+
     @property
     def has_explanations(self):
         return self.manager.has_explanations

@@ -1,7 +1,5 @@
-from torch import Tensor
-from torch.utils.data import DataLoader
-import plotly.express as px
 from typing import Optional, Sequence
+from pnpxai.visualizer.backend.app.domain.experiment.task_visualizers.visualizer_factory import VisualizerFactory
 
 
 class ExperimentService:
@@ -11,26 +9,23 @@ class ExperimentService:
             if inputs is not None else \
             experiment.get_inputs_flattened()
 
-        if experiment.is_image_task:
-            inputs = cls._format_image_inputs(
-                inputs, experiment.input_visualizer
-            )
-
-        return inputs
+        return VisualizerFactory.get_visualizer(experiment).format_inputs(inputs, experiment.input_visualizer)
 
     @classmethod
-    def _format_image_inputs(cls, inputs, visualizer=None):
-        formatted = []
-        for datum in inputs:
-            datum: Tensor = datum.cpu()
+    def get_task_formatted_targets(cls, experiment, targets=None):
+        targets = targets \
+            if targets is not None else \
+            experiment.get_targets_flattened()
 
-            if visualizer is not None:
-                datum = visualizer(datum)
+        return VisualizerFactory.get_visualizer(experiment).format_targets(targets, experiment.target_visualizer)
 
-            fig = px.imshow(datum)
-            formatted.append(fig)
+    @classmethod
+    def get_task_formatted_outputs(cls, experiment, outputs=None, n_outputs=3):
+        outputs = outputs \
+            if outputs is not None else \
+            experiment.get_outputs_flattened()
 
-        return formatted
+        return VisualizerFactory.get_visualizer(experiment).format_outputs(outputs, experiment.target_visualizer, n_outputs)
 
     @classmethod
     def run(

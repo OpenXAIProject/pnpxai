@@ -15,7 +15,7 @@ class APIItems(Enum):
     OUTPUTS = 'outputs'
 
     EXPLANATIONS = 'explanations'
-    WEIGHTED_SCORE = 'weighted_score'
+    RANK = 'rank'
     EVALUATION = 'evaluation'
     INPUT = 'input'
     EXPLAINER = 'explainer'

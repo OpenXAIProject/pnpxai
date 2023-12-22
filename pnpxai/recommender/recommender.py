@@ -12,17 +12,17 @@ from pnpxai.recommender._types import RecommenderOutput
 class XaiRecommender:
     def __init__(self):
         self.question_table = {
-            'why': {GradCam, GuidedGradCam, 
-                    Lime, KernelShap,
-                    IntegratedGradients, FullGrad, LRP, RAP, TCAV, Anchors},
+            'why': {
+                # GuidedGradCam,
+                GradCam, Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, TCAV, Anchors},
             'how': {PDP},
             'why not': {CEM},
             'how to still be this': {Anchors},
         }
         self.task_table = {
             'image': {
-                Lime, KernelShap,LRP, GuidedGradCam, GradCam, RAP,
-                IntegratedGradients, 
+                # GuidedGradCam,
+                Lime, KernelShap, LRP,  GradCam, RAP, IntegratedGradients,
                 # TODO: add more explainers
                 # FullGrad, CEM, TCAV
             },
@@ -33,14 +33,13 @@ class XaiRecommender:
         }
         self.architecture_table = {
             nn.Linear: {
-                Lime, KernelShap,
-                IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
-            nn.Conv1d: {GuidedGradCam, GradCam, 
-            Lime, KernelShap,
-            IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
-            nn.Conv2d: {GuidedGradCam, GradCam,
-            Lime, KernelShap,
-            IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
+                Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
+            nn.Conv1d: {
+                # GuidedGradCam,
+                GradCam, Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
+            nn.Conv2d: {
+                # GuidedGradCam,
+                GradCam, Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
             nn.RNN: {
                 Lime, KernelShap,
                 IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
@@ -54,7 +53,7 @@ class XaiRecommender:
         self.evaluation_metric_table = {
             # Correctness -- MuFidelity, Conitinuity -- Sensitivity, Compactness -- Complexity
             GradCam: {MuFidelity, Sensitivity, Complexity},
-            GuidedGradCam: {MuFidelity, Sensitivity, Complexity},
+            # GuidedGradCam: {MuFidelity, Sensitivity, Complexity},
             Lime: {MuFidelity, Sensitivity, Complexity},
             KernelShap: {MuFidelity, Sensitivity, Complexity},
             IntegratedGradients: {MuFidelity, Sensitivity, Complexity},
