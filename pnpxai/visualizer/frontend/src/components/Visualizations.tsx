@@ -24,7 +24,6 @@ const Visualizations: React.FC<{
       try {
         let response = await fetchExperiment(projectId, experiment);
         response = preprocess(response);
-        AddMockData(response); // Add mock data for testing
         const experimentResults = response.data.data
         setExperimentResults(JSON.parse(JSON.stringify(experimentResults)));
         setLoading(false);
@@ -53,6 +52,7 @@ const Visualizations: React.FC<{
           response = preprocess(response);
           AddMockData(response); // Add mock data for testing
           const experimentResults = response.data.data
+          console.log(experimentResults)
           setExperimentResults(JSON.parse(JSON.stringify(experimentResults)));
           setLoading(false);
         }
@@ -81,37 +81,6 @@ const Visualizations: React.FC<{
       {experimentResults.map((result, index) => {
         return (
           <Box key={index} sx={{ marginBottom: 4, paddingBottom: 2, borderBottom: '2px solid #e0e0e0' }}>
-            {/* Info Cards */}
-            {/* <Box sx={{ display: 'flex', justifyContent: 'space-around', marginBottom: 2 }}> */}
-              {/* Label Card */}
-              {/* <Card sx={{ minWidth: 275 }}>
-                <CardContent>
-                  <Typography variant="h5" component="div">True Label</Typography>
-                  <Typography variant="body2">{result.prediction.label}</Typography>
-                </CardContent>
-              </Card> */}
-
-              {/* Probability Card */}
-              {/* <Card sx={{ minWidth: 275 }}>
-                <CardContent>
-                  <Typography variant="h5" component="div">Probabilities</Typography>
-                  {result.prediction.probPredictions.map((prob, index) => (
-                    <Box key={index} sx={{ mb: 1 }}>
-                      <Typography variant="body2">{prob.label}: {prob.score}%</Typography>
-                      <LinearProgress variant="determinate" value={prob.score} />
-                    </Box>
-                  ))}
-                </CardContent>
-              </Card> */}
-
-              {/* Result Card */}
-              {/* <Card sx={{ minWidth: 275, bgcolor: result.prediction.isCorrect ? 'lightgreen' : 'red' }}>
-                <CardContent>
-                  <Typography variant="h5" component="div">{result.prediction.isCorrect ? 'Correct' : 'False'}</Typography>
-                </CardContent>
-              </Card> */}
-            {/* </Box> */}
-
             {/* Image Cards */}
             <ImageList sx={{
               width: '100%', 
@@ -132,18 +101,18 @@ const Visualizations: React.FC<{
                 </Box>
                 <Box sx={{}}>
                   <Box sx={{}}>
-                    <Typography variant="body2" align="center"> True Label : {result.prediction.label} </Typography>
+                    <Typography variant="body2" align="center"> True Label : {result.target} </Typography>
                   </Box>
                   <Box sx={{}}>
-                  {result.prediction.probPredictions.map((prob, index) => (
-                    <Typography variant="body2" align="center" key={index}>{prob.label}: {prob.score}%</Typography>
+                  {result.outputs.map((prob, index) => (
+                    <Typography variant="body2" align="center" key={index}> Prediction {index} : {prob}</Typography>
                   ))}
                   </Box>
                   <Box sx={{}}>
                   <Typography 
-                    sx={{color : result.prediction.isCorrect ? 'green' : 'red'}} 
+                    sx={{color : result.target === result.outputs[0] ? 'green' : 'red'}} 
                     variant="body2" 
-                    align="center"> IsCorrect : {result.prediction.isCorrect ? 'True' : 'False'} </Typography>
+                    align="center"> IsCorrect : {result.target === result.outputs[0] ? 'True' : 'False'} </Typography>
                   </Box>
                 </Box>
               </ImageListItem>
@@ -163,8 +132,6 @@ const Visualizations: React.FC<{
                         return (
                           <Typography key={key} variant="body2" sx={{ textAlign: 'center' }}> {key} ({value.toFixed(3)}) </Typography>
                       )})}
-                      
-                      <Typography variant="body2" sx={{ textAlign: 'center' }}> Weighted score ({exp.weighted_score.toFixed(3)})</Typography>
                     </Box>
                   </ImageListItem>
                 }
