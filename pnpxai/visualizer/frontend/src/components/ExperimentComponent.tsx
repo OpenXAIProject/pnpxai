@@ -100,7 +100,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
 
 
   const handleRunExperiment = () => {
-    if (inputs.length === 0 || explainers.length === 0 || metrics.length === 0) {
+    if (inputs.length === 0 || explainers.length === 0) {
       setShowDialog(true);
       return;
     }
