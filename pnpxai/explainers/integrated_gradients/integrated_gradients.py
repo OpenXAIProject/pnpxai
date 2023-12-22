@@ -1,8 +1,12 @@
 from typing import Sequence, Any, Union, Literal, Optional, Dict
+
+import torch
 from torch import Tensor
 
-from captum.attr import IntegratedGradients as IntegratedGradientsCaptum
+# from captum.attr import IntegratedGradients as IntegratedGradientsCaptum
 from captum._utils.typing import BaselineType, TargetType
+
+from zennit.attribution import IntegratedGradients as IntegratedGradientsZennit
 
 from pnpxai.core._types import Model, DataSource, Task
 from pnpxai.explainers._explainer import Explainer
@@ -11,30 +15,25 @@ from pnpxai.explainers._explainer import Explainer
 class IntegratedGradients(Explainer):
     def __init__(self, model: Model):
         super().__init__(model=model)
-        self.source = IntegratedGradientsCaptum(self.model)
+        self.source = IntegratedGradientsZennit(self.model)
 
     def attribute(
         self,
         inputs: DataSource,
         targets: TargetType = None,
-        baselines: BaselineType = None,
-        additional_forward_args: Any = None,
-        n_steps: int = 50,
-        method: str = "gausslegendre",
-        internal_batch_size: Union[None, int] = None,
-        return_convergence_delta: Literal[True] = False
+        n_classes: Optional[int] = None,
     ) -> Tensor:
-        attributions = self.source.attribute(
+        if n_classes is None:
+            n_classes = self.model(inputs).shape[-1]
+        if isinstance(targets, int):
+            targets = [targets] * len(inputs)
+        else:
+            targets = targets.cpu()
+        _, gradients = self.source(
             inputs,
-            baselines,
-            targets,
-            additional_forward_args,
-            n_steps,
-            method,
-            internal_batch_size,
-            return_convergence_delta
+            torch.eye(n_classes)[targets].to(self.device),
         )
-        return attributions
+        return inputs * gradients
 
     def format_outputs_for_visualization(
         self,

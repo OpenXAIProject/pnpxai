@@ -156,13 +156,13 @@ class NodeInfo:
     def owning_module(self) -> Optional[str]:
         if self.opcode in ["call_module", "call_function"]:
             if self.meta.get("nn_module_stack"):
-                nm = next(reversed(self.meta["nn_module_stack"]))
+                nm = next(iter(self.meta["nn_module_stack"]))
                 return nm
         return
         
     # convert data format
     def to_dict(self):
-        return asdict(self)
+        return {**asdict(self), "operator": self.operator}
     
     # [TODO] to_json for visualization
     def to_json_serializable(self):
