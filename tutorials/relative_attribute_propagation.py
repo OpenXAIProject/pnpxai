@@ -51,6 +51,5 @@ experiment = project.create_experiment(
     input_visualizer=input_visualizer
 )
 experiment.run()
-run = experiment.runs[0]
-vis = run.get_flattened_visualizations(experiment.task)
-vis[0].show()
+visualizations = experiment.get_visualizations_flattened()[0]
+visualizations[0].write_image('test.png')

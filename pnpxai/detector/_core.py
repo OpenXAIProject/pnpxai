@@ -162,7 +162,7 @@ class NodeInfo:
         
     # convert data format
     def to_dict(self):
-        return asdict(self)
+        return {**asdict(self), "operator": self.operator}
     
     # [TODO] to_json for visualization
     def to_json_serializable(self):

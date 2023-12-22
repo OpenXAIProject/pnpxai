@@ -5,6 +5,7 @@ import { Input } from '@mui/material';
 
 const initialState = {
   data: [] as Project[], // Initialize as an empty array
+  currentProject: {} as Project,
   loaded: false, // Add a flag to track if the data is loaded
 };
 
@@ -59,15 +60,26 @@ export const fetchProjects = createAsyncThunk(
 const projectSlice = createSlice({
   name: 'projects',
   initialState,
-  reducers: {},
+  reducers: {
+    // Define setCurrentProject reducer
+    setCurrentProject(state, action: PayloadAction<string>) {
+      const projectId = action.payload;
+      const foundProject = state.data.find(project => project.id === projectId);
+      if (foundProject) {
+        state.currentProject = foundProject;
+      }
+    },
+  },
   extraReducers: (builder) => {
     builder.addCase(fetchProjects.fulfilled, (state, action) => {
       state.data = action.payload;
+      state.currentProject = action.payload[0] || {} as Project;
       state.loaded = true; // Set the flag when data is loaded
     });
     // Handle other cases
   },
 });
+export const { setCurrentProject } = projectSlice.actions;
 
 export default projectSlice.reducer;
 

@@ -5,16 +5,18 @@ import os
 
 def create_app(projects: dict):
     # Correct the path to the build directory
-    frontend_build_path = os.path.join(
-        os.path.dirname(__file__), '../../../frontend/build'
-    )
+    current_script_dir = os.path.dirname(os.path.abspath(__file__))
 
+    # Construct the path to the target directory
+    frontend_build_path = os.path.normpath(
+        os.path.join(current_script_dir, '../../frontend/build')
+    )
     application = Flask(
         __name__,
         static_folder=frontend_build_path,
         static_url_path='/'
     )
-    # application.config.from_object(Config)
+
     init(application, InitConfig(projects=projects))
 
     from pnpxai.visualizer.backend.app.routing.api import api_bp

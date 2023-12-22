@@ -10,6 +10,7 @@ export default defineConfig({
   build: {
     outDir: "build",
     sourcemap: true,
+    chunkSizeWarningLimit: 1000, // Increase the limit to 1000 KB
   },
   test: {
     globals: true,

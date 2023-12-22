@@ -23,18 +23,12 @@ class RAP(Explainer):
         return pred_one_hot
 
     def attribute(self, inputs: DataSource, targets: DataSource, *args: Any, **kwargs: Any) -> DataSource:
-        attributions = []
-
         datum = inputs.to(self.device)
         outputs = self.model(datum)
         preds = self.compute_pred(outputs)
         relprop = self.method.relprop(preds, *args, **kwargs)
         return relprop
-        # relprop = relprop.sum(dim=1, keepdim=True)
-        # attributions = relprop.permute(0, 2, 3, 1)
 
-        # return attributions
-    
     def format_outputs_for_visualization(
         self,
         inputs: DataSource,
@@ -45,10 +39,13 @@ class RAP(Explainer):
     ):
         explanations = explanations.transpose(-1, -3)\
             .transpose(-2, -3)
-        return super().format_outputs_for_visualization(
+        formatted = super().format_outputs_for_visualization(
             inputs=inputs,
             targets=targets,
             explanations=explanations,
             task=task,
             kwargs=kwargs
         )
+        # Normalize between -1 and 1
+        formatted = formatted * 2 - 1
+        return formatted

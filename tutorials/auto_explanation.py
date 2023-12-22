@@ -25,8 +25,7 @@ model = model.to(device)
 # ------------------------------------ data -----------------------------------#
 # -----------------------------------------------------------------------------#
 
-dataset = get_imagenet_dataset(transform, subset_size=100)
-dataset = Subset(dataset, list(range(25)))
+dataset = get_imagenet_dataset(transform, subset_size=25)
 loader = DataLoader(dataset, batch_size=10)
 def input_extractor(x): return x[0].to(device)
 def target_extractor(x): return x[1].to(device)
@@ -37,7 +36,7 @@ def target_extractor(x): return x[1].to(device)
 
 
 def input_visualizer(x): return denormalize_image(x, transform.mean, transform.std)
-
+def target_visualizer(x): return dataset.dataset.idx_to_label(x.item())
 
 project = Project('test_project')
 experiment = project.create_auto_experiment(
@@ -46,6 +45,7 @@ experiment = project.create_auto_experiment(
     name='test_experiment',
     input_extractor=input_extractor,
     target_extractor=target_extractor,
-    input_visualizer=input_visualizer
+    input_visualizer=input_visualizer,
+    target_visualizer=target_visualizer,
 )
 project.get_server().serve(debug=True, host='0.0.0.0', port=5001)

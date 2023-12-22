@@ -1,21 +1,18 @@
 // src/components/ExperimentComponent.tsx
 import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { RootState } from '../app/store';
 import { 
   Grid, Box, Typography, 
   Button, Chip, 
   Dialog, DialogActions, DialogContent, DialogTitle, 
-  CircularProgress,
+  Alert, FormControlLabel,
   Checkbox, Paper
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import Visualizations from './Visualizations';
-import { Experiment, InputData } from '../app/types';
+import { Experiment, Metric } from '../app/types';
 
 const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {experiment} ) => {
   // Basic Data
-  const projectId = "test_project";
   const galleryInputs = experiment.inputs.map(input => {
     return {id: input.id, source: input.imageObj.data[0].source}
   });
@@ -26,6 +23,9 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
   const [selectedInputs, setSelectedInputs] = useState<number[]>([]);
   const [explainers, setExplainers] = useState<number[]>([]);
   const [selectedExplainers, setSelectedExplainers] = useState<number[]>([]);
+  const [metrics, setMetrics] = useState<Metric[]>(experiment.metrics.filter(metric => metric.name === "Complexity"));
+  const [selectedMetrics, setSelectedMetrics] = useState<number[]>(experiment.metrics.map(metric => metric.id));
+
 
 
   // const inputs: InputData[] = JSON.parse(JSON.stringify(experiment.inputs));
@@ -34,6 +34,10 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
 
   const [isExperimentRun, setIsExperimentRun] = useState(false); // New state to track if experiment is run
   const [loading, setLoading] = React.useState<boolean>(false);
+  const [showDialog, setShowDialog] = React.useState(false);
+
+  
+
   
 
   
@@ -50,11 +54,15 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
   // Image Selection Handlers
   // Modal Handlers
   const handleImageClick = (imageId: number) => {
-    if (tmpInputs.includes(imageId)) {
-      setTmpInputs(prevSelection => prevSelection.filter(item => item !== imageId));
-    } else {
-      setTmpInputs(prevSelection => [...prevSelection, imageId]);
-    }
+    // Only 1 Input.
+    setTmpInputs([imageId]);
+
+    // Multiple Inputs.
+    // if (tmpInputs.includes(imageId)) {
+    //   setTmpInputs(prevSelection => prevSelection.filter(item => item !== imageId));
+    // } else {
+    //   setTmpInputs(prevSelection => [...prevSelection, imageId]);
+    // }
   };
 
   const handleConfirmSelection = () => {
@@ -82,29 +90,41 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
     setExplainers(explainers.filter(alg => alg !== explainer));
   };
 
+  const handleCheckboxChange = (item: Metric, isChecked: boolean) => {
+    if (isChecked) {
+      setMetrics(prevItems => [...prevItems, item]);
+    } else {
+      setMetrics(prevItems => prevItems.filter(i => i.id !== item.id));
+    }
+  };
+
 
   const handleRunExperiment = () => {
+    if (inputs.length === 0 || explainers.length === 0) {
+      setShowDialog(true);
+      return;
+    }
+
     setLoading(true);
     setIsExperimentRun(true);
     setSelectedInputs(inputs.map(input => Number(input)));
     setSelectedExplainers(explainers.map(explainer => Number(explainer)));
-
-    console.log(experiment.explainers);
-    console.log(inputs);
-    console.log(explainers);
+    setSelectedMetrics(metrics.map(metric => metric.id));
   };
+
+
 
   return (
     <Box sx={{ mt: 3, mb: 3, ml: 1, pb: 3, borderBottom: 1, minHeight: "600px" }}>
       <Grid container spacing={2}>
-        <Grid item xs={12} md={3}>
+        <Grid item xs={12} md={2}>
           {/* Sidebar */}
           <Box sx={{ borderRight: 1, borderColor: 'divider', m: 2 }}>
             
             {/* Images Box */}
-            <Box sx={{ mb: 3, borderBottom: 1, borderColor: 'divider', padding: 2 }}>
-              <Typography variant="h6">Images</Typography>
-              <Button variant="contained" color="primary" onClick={() => setIsModalOpen(true)} sx={{ mt: 2 }}>Select Images</Button>
+            <Box sx={{ mb: 3, borderBottom: 1, borderColor: 'divider', padding: 1 }}>
+              <Typography variant="h6"> Select Instance </Typography>
+              <Button variant="contained" color="primary" onClick={() => setIsModalOpen(true)} sx={{ mt: 2 }}> Show Instances</Button>
               <Box sx={{ mt: 3 }}>
                 {inputs.map((image, index) => (
                   <Chip key={index} label={image} onDelete={() => handleChipCancel(image)} sx={{ mt: 1 }} />
@@ -114,7 +134,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
 
             {/* Algorithms Box */}
             <Box sx={{ mt: 3 }}>
-              <Typography variant="h6">Algorithms</Typography>
+              <Typography variant="h6"> Select Explainers</Typography>
               <Box sx={{ mt: 3, border: 1, borderColor: 'divider', padding: 1 }}>
                 {experiment.explainers
                   .filter(explainerObj => explainers.includes(explainerObj.id))
@@ -141,21 +161,39 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
                   ))}
               </Box>
             </Box>
+              
+              {/* Metrics Box */}
+              <Box sx={{ mt : 3}}>
+                <Typography variant="h6"> Select Evaluation Metrics </Typography>
+                {experiment.metrics.map(item => (
+                  <FormControlLabel
+                    key={item.id}
+                    control={
+                      <Checkbox
+                        checked={metrics.some(i => i.id === item.id)}
+                        onChange={(e) => handleCheckboxChange(item, e.target.checked)}
+                      />
+                    }
+                    label={item.name}
+                  />
+                ))}
+              </Box>
           </Box>
         </Grid>
-        <Grid item xs={12} md={9}>
+        <Grid item xs={12} md={10}>
           {/* Experiment Visualization */}
           <Box sx={{ pl: 2 }}>
             <Typography variant="h5">{experiment?.name}</Typography>
             <Button variant="contained" color="secondary" onClick={handleRunExperiment} sx={{ mt: 2 }}>Run Experiment</Button>
             {/* Experiment Visualization */}
-            {isExperimentRun && (
-              <Visualizations 
-                inputs={selectedInputs}
-                explainers={selectedExplainers}
-                setLoading={setLoading}
-              />
-            )}
+            <Visualizations
+              experiment={experiment.name}
+              inputs={selectedInputs}
+              explainers={selectedExplainers}
+              metrics={selectedMetrics}
+              loading={loading}
+              setLoading={setLoading}
+            />
           </Box>
         </Grid>
       </Grid>
@@ -163,7 +201,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
       
       {/* Image Selection Dialog */}
       <Dialog open={isModalOpen} onClose={() => setIsModalOpen(false)} fullWidth maxWidth="md">
-        <DialogTitle>Select Images</DialogTitle>
+        <DialogTitle>Select Intances</DialogTitle>
         <DialogContent>
           <Grid container spacing={2}>
             {galleryInputs.map((input, index) => (
@@ -180,20 +218,6 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
                   }}
                   onClick={() => handleImageClick(input.id)}
                 >
-                  <Paper
-                    sx={{
-                      height: "300px",
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      cursor: 'pointer',
-                      opacity: tmpInputs.includes(input.id) ? 0.5 : 1
-                    }}
-                    onClick={() => handleImageClick(input.id)}
-                  >
-                  </Paper>
-                    {/* <Plot data={input.imageObj.data} layout={input.imageObj.layout} /> */}
                     <img src={input.source} width={240} height={200} alt={String(input.id)} />
                     <Typography variant="subtitle1" align="center">{input.id}</Typography>
                 </Paper>
@@ -206,15 +230,19 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
           <Button onClick={handleConfirmSelection}>OK</Button>
         </DialogActions>
       </Dialog>
-
-       {/* Loading Dialog */}
-       <Dialog open={loading}>
-        <DialogContent sx={{ textAlign: 'center' }}>
-          <CircularProgress />
-          <Typography variant="h6" sx={{ mt: 2 }}>Loading</Typography>
-        </DialogContent>
-      </Dialog>
-
+      
+      
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <Dialog 
+          open={showDialog}
+          onClose={() => setShowDialog(false)}
+          >
+          <DialogContent>
+            <Alert severity='info'>Please select at least 1 input and 1 explainer and 1 evaluation metric </Alert>
+          </DialogContent>
+        </Dialog>
+      </Box>
+      
     </Box>
   );
 }

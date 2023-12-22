@@ -7,12 +7,15 @@ class APIItems(Enum):
     ERRORS = 'errors'
 
     ID = 'id'
+    OPCODE = 'opcode'
+    OPERATOR = 'operator'
     NAME = 'name'
     SOURCE = 'source'
     TARGET = 'target'
+    OUTPUTS = 'outputs'
 
     EXPLANATIONS = 'explanations'
-    WEIGHTED_SCORE = 'weighted_score'
+    RANK = 'rank'
     EVALUATION = 'evaluation'
     INPUT = 'input'
     EXPLAINER = 'explainer'

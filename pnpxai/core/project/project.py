@@ -3,7 +3,7 @@ from typing import Optional, Dict, Callable, Sequence, Union
 from pnpxai.core._types import DataSource, Model, Task, Question
 from pnpxai.core.experiment import Experiment, AutoExperiment
 from pnpxai.explainers._explainer import Explainer, ExplainerWArgs
-from pnpxai.evaluator import XaiEvaluator
+from pnpxai.evaluator import EvaluationMetric
 from pnpxai.visualizer.server import Server
 
 EXPERIMENT_PREFIX = "experiment"
@@ -34,6 +34,7 @@ class Project():
         input_extractor: Optional[Callable] = None,
         target_extractor: Optional[Callable] = None,
         input_visualizer: Optional[Callable] = None,
+        target_visualizer: Optional[Callable] = None,
     ) -> AutoExperiment:
         if name is None:
             name = self._generate_next_experiment_id()
@@ -47,6 +48,7 @@ class Project():
             input_extractor=input_extractor,
             target_extractor=target_extractor,
             input_visualizer=input_visualizer,
+            target_visualizer=target_visualizer
         )
         self.experiments[name] = experiment
         return experiment
@@ -57,11 +59,12 @@ class Project():
         data: DataSource,
         name: Optional[str] = None,
         explainers: Optional[Sequence[Union[ExplainerWArgs, Explainer]]] = None,
-        evaluator: Optional[XaiEvaluator] = None,
+        metrics: Optional[Sequence[EvaluationMetric]] = None,
         task: Task = "image",
         input_extractor: Optional[Callable] = None,
         target_extractor: Optional[Callable] = None,
         input_visualizer: Optional[Callable] = None,
+        target_visualizer: Optional[Callable] = None,
     ) -> Experiment:
         if name is None:
             name = self._generate_next_experiment_id()
@@ -70,11 +73,12 @@ class Project():
             model=model,
             data=data,
             explainers=explainers,
-            evaluator=evaluator,
+            metrics=metrics,
             task=task,
             input_extractor=input_extractor,
             target_extractor=target_extractor,
             input_visualizer=input_visualizer,
+            target_visualizer=target_visualizer
         )
         self.experiments[name] = experiment
         return experiment
