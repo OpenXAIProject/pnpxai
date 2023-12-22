@@ -1,4 +1,3 @@
-from dataclasses import dataclass
 import warnings
 import torch.nn as nn
 from typing import List, Type
@@ -13,46 +12,30 @@ from pnpxai.recommender._types import RecommenderOutput
 class XaiRecommender:
     def __init__(self):
         self.question_table = {
-            'why': {GuidedGradCam, 
-                    Lime, KernelShap,
-                    IntegratedGradients, FullGrad, LRP, RAP, TCAV, Anchors},
+            'why': {GuidedGradCam, Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, TCAV, Anchors},
             'how': {PDP},
             'why not': {CEM},
             'how to still be this': {Anchors},
         }
         self.task_table = {
             'image': {
-                Lime, KernelShap,LRP, GuidedGradCam,RAP,
-                IntegratedGradients, # TODO: memory issue in IG, 
+                Lime, KernelShap, LRP, GuidedGradCam, RAP,
+                IntegratedGradients,  # TODO: memory issue in IG,
                 # TODO: add more explainers
                 # FullGrad, CEM, TCAV
             },
-            'tabular': {
-                Lime, KernelShap,
-                PDP, CEM, Anchors},
+            'tabular': {Lime, KernelShap, PDP, CEM, Anchors},
             'text': {
                 # Lime, KernelShap,
                 IntegratedGradients, FullGrad, LRP, RAP, CEM},
         }
         self.architecture_table = {
-            nn.Linear: {
-                Lime, KernelShap,
-                IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
-            nn.Conv1d: {GuidedGradCam, 
-            Lime, KernelShap,
-            IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
-            nn.Conv2d: {GuidedGradCam, 
-            Lime, KernelShap,
-            IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
-            nn.RNN: {
-                Lime, KernelShap,
-                IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
-            nn.Transformer: {
-                Lime, KernelShap, LRP,
-                IntegratedGradients, FullGrad, CEM, TCAV, Anchors},
-            nn.MultiheadAttention: {
-                Lime, KernelShap, LRP,
-                IntegratedGradients, FullGrad, CEM, TCAV, Anchors},
+            nn.Linear: {Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
+            nn.Conv1d: {GuidedGradCam, Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
+            nn.Conv2d: {GuidedGradCam, Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
+            nn.RNN: {Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
+            nn.Transformer: {Lime, KernelShap, LRP, IntegratedGradients, FullGrad, CEM, TCAV, Anchors},
+            nn.MultiheadAttention: {Lime, KernelShap, LRP, IntegratedGradients, FullGrad, CEM, TCAV, Anchors},
         }
         self.evaluation_metric_table = {
             # Correctness -- MuFidelity, Conitinuity -- Sensitivity, Compactness -- Complexity
@@ -105,9 +88,14 @@ class XaiRecommender:
         metrics = self._find_overlap(*method_to_metric)
         return metrics
 
+    def _sort_by_name(self, vals):
+        return list(sorted(vals, key=lambda x: x.__name__))
+
     def __call__(self, question, task, architecture):
         methods = self.filter_methods(question, task, architecture)
+        methods = self._sort_by_name(methods)
         metrics = self.suggest_metrics(methods)
+        metrics = self._sort_by_name(metrics)
         return RecommenderOutput(
             explainers=methods,
             evaluation_metrics=metrics,

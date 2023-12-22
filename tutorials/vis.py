@@ -37,4 +37,4 @@ expr.evaluator = XaiEvaluator(metrics=[
 ])
 
 expr.run()
-vis = expr.visualize()
+vis = expr.visualize_flat()

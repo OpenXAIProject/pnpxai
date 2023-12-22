@@ -1,7 +1,10 @@
-from flask import jsonify
 from flask_restx import Resource
+from json import JSONEncoder as BaseJSONEncoder
 from abc import abstractclassmethod
 from pnpxai.visualizer.backend.app.core.constants import APIItems
+import numpy as np
+import torch
+from torch import Tensor
 
 
 class Controller(Resource):
@@ -31,3 +34,19 @@ class Response:
             data = cls.to_dict(object)
 
         return data
+
+
+class JSONEncoder(BaseJSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif torch.is_tensor(obj):
+            if obj.ndim == 0:
+                return obj.item()
+            return obj.tolist()
+
+        return super(JSONEncoder, self).default(obj)

@@ -1,6 +1,7 @@
 from flask import g
 from flask_cors import CORS
 from dataclasses import dataclass
+from pnpxai.visualizer.backend.app.core.generics import JSONEncoder
 
 
 @dataclass
@@ -26,6 +27,11 @@ def init_cors(app):
     app.config['CORS_HEADER'] = 'Content-Type'
 
 
+def init_json_encoder(app):
+    app.config["RESTX_JSON"] = {"cls": JSONEncoder}
+
+
 def init(app, config: InitConfig):
     init_cors(app)
+    init_json_encoder(app)
     init_projects(config.projects)
