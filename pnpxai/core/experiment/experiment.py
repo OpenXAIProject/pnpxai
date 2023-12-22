@@ -142,7 +142,7 @@ class Experiment:
         print(f'[Experiment] Computed {metric_name} in {elaped_time} sec')
         return evaluations
 
-    def visualize_flat(self):
+    def get_visualizations_flattened(self) -> Sequence[Sequence[Figure]]:
         explainers, explainer_ids = self.manager.get_explainers()
         # Get all data ids
         experiment_data_ids = self.manager.get_data_ids()
@@ -173,11 +173,12 @@ class Experiment:
                 if not self.manager.is_batched:
                     formatted_visualizations = formatted_visualizations[0]
                 explainer_visualizations.append(formatted_visualizations)
-            
+
             flat_explainer_visualizations = self.manager.flatten_if_batched(
                 explainer_visualizations, data)
             # Set visualizaions of all data ids as None
-            explainer_visualizations = {idx: None for idx in experiment_data_ids}
+            explainer_visualizations = {
+                idx: None for idx in experiment_data_ids}
             # Fill all valid visualizations
             for visualization, data_id in zip(flat_explainer_visualizations, data_ids):
                 explainer_visualizations[data_id] = visualization
@@ -216,13 +217,10 @@ class Experiment:
 
         return formatted
 
-    def get_visualizations_flattened(self) -> Sequence[Sequence[Figure]]:
-        return self.visualize_flat()
-
     @property
     def is_image_task(self):
         return self.task == 'image'
-    
+
     @property
     def has_explanations(self):
         return self.manager.has_explanations
