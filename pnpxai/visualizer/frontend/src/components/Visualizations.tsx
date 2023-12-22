@@ -50,9 +50,7 @@ const Visualizations: React.FC<{
           }
           );
           response = preprocess(response);
-          AddMockData(response); // Add mock data for testing
           const experimentResults = response.data.data
-          console.log(experimentResults)
           setExperimentResults(JSON.parse(JSON.stringify(experimentResults)));
           setLoading(false);
         }
