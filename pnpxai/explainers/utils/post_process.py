@@ -5,7 +5,7 @@ import numpy as np
 
 def postprocess_attr(
     attr: torch.Tensor,
-    sign: Literal["absolute", "positive", "negative"] = 'absolute'
+    sign: Literal["absolute", "positive", "negative"] = 'absolute',
 ) -> np.array:
     if sign == 'absolute':
         attr = torch.abs(attr)

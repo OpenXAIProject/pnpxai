@@ -105,7 +105,7 @@ class AttentionHeadRule(HookWithKwargs):
             create_graph=grad_output[0].requires_grad,
         )
         relevance_in_proj_output = in_proj_output * gradients[0]
-        print(f'relevance_in_proj_output: , {grad_output[0].sum()}, {relevance_in_proj_output.sum()}')
+        # print(f'relevance_in_proj_output: , {grad_output[0].sum()}, {relevance_in_proj_output.sum()}')
 
         # Relevance: in_proj_intermediate
         grad_outputs = relevance_in_proj_output[0] / stabilizer_fn(in_proj_output)
@@ -115,7 +115,7 @@ class AttentionHeadRule(HookWithKwargs):
             grad_outputs=grad_outputs,
         )
         relevance_in_proj_intermediate = in_proj_intermediate * gradients[0]
-        print(f'relevance_in_proj_intermediate: , {relevance_in_proj_output.sum()}, {relevance_in_proj_intermediate.sum()}')
+        # print(f'relevance_in_proj_intermediate: , {relevance_in_proj_output.sum()}, {relevance_in_proj_intermediate.sum()}')
 
         # Relevance: value
         grad_outputs = relevance_in_proj_intermediate[0] / stabilizer_fn(in_proj_intermediate)
@@ -125,10 +125,10 @@ class AttentionHeadRule(HookWithKwargs):
             grad_outputs=grad_outputs,
         )
         relevance_value = value * gradients[0]
-        print(f'relevance_value: , {relevance_in_proj_intermediate.sum()}, {relevance_value.sum()}')
+        # print(f'relevance_value: , {relevance_in_proj_intermediate.sum()}, {relevance_value.sum()}')
 
         # print(f'\nattn_output\n{attn_output}\n')
-        print(f'{module.__class__}: , {grad_output[0].sum()}, {relevance_value.sum()}')
+        # print(f'{module.__class__}: , {grad_output[0].sum()}, {relevance_value.sum()}')
 
         if module.batch_first and is_batched:
             query, key, relevance_value = (x.transpose(1, 0) for x in (query, key, relevance_value))
@@ -321,7 +321,7 @@ class LayerNormRule(Hook):
             create_graph=grad_output[0].requires_grad
         )
         relevance = input * gradients[0]
-        print(module.__class__, grad_output[0].sum(), relevance.sum())
+        # print(module.__class__, grad_output[0].sum(), relevance.sum())
         return tuple(relevance if original.shape == relevance.shape else None for original in grad_input)
 
     def copy(self):

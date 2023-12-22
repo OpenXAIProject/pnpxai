@@ -26,7 +26,6 @@ class LRP(Explainer):
             epsilon=epsilon,
             n_classes=n_classes,
         )
-
         return attributions
 
     def format_outputs_for_visualization(
