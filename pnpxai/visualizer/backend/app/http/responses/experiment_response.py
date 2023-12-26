@@ -67,13 +67,18 @@ class ExperimentRunsResponse(Response):
         ]
 
         explainers = experiment.get_current_explainers()
+        visualizations = experiment.get_visualizations_flattened()
         metrics = experiment.get_current_metrics()
         evaluations = experiment.get_evaluations_flattened()
-        visualizations = experiment.get_visualizations_flattened()
         ranks = experiment.get_explainers_ranks()
 
-        for explainer, explainer_visualizations, explainer_evaluations, explainer_ranks in zip(explainers, visualizations, evaluations, ranks):
+        for explainer_id, (explainer, explainer_visualizations) in enumerate(zip(explainers, visualizations)):
             n_entries = len(explainer_visualizations)
+            explainer_evaluations = evaluations[explainer_id] if evaluations is not None else\
+                [None] * n_entries
+            explainer_ranks = ranks[explainer_id] if ranks is not None else \
+                [None] * n_entries
+
             for idx in range(n_entries):
                 formatted_evaluations = {
                     class_to_string(metric): metrics_evaluations[idx]
