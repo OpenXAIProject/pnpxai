@@ -12,6 +12,12 @@ import Visualizations from './Visualizations';
 import { Experiment, Metric } from '../app/types';
 
 const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {experiment} ) => {
+  const nickname = [
+    {"name": "Complexity", "nickname": "Compactness"},
+    {"name": "MuFidelity", "nickname": "Correctness"},
+    {"name": "Sensitivity", "nickname": "Continuity"},
+  ]
+  
   // Basic Data
   const galleryInputs = experiment.inputs.map(input => {
     return {id: input.id, source: input.imageObj.data[0].source}
@@ -23,8 +29,11 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
   const [selectedInputs, setSelectedInputs] = useState<number[]>([]);
   const [explainers, setExplainers] = useState<number[]>([]);
   const [selectedExplainers, setSelectedExplainers] = useState<number[]>([]);
-  const [metrics, setMetrics] = useState<Metric[]>(experiment.metrics.filter(metric => metric.name === "Complexity"));
+  const [metrics, setMetrics] = useState<Metric[]>([]);
   const [selectedMetrics, setSelectedMetrics] = useState<number[]>(experiment.metrics.map(metric => metric.id));
+  const sortedExplainers = [...experiment.explainers].sort((a, b) =>
+    a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+  );
 
 
 
@@ -37,11 +46,6 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
   const [showDialog, setShowDialog] = React.useState(false);
 
   
-
-  
-
-  
-
   useEffect(() => {
     // Synchronize modalSelection with selectedImages
     if (isModalOpen) {
@@ -90,6 +94,14 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
     setExplainers(explainers.filter(alg => alg !== explainer));
   };
 
+  const handleAlgorithmCheckboxChange = (explainerId: number, isChecked: boolean) => {
+    if (isChecked) {
+      setExplainers([...explainers, explainerId]);
+    } else {
+      setExplainers(explainers.filter(id => id !== explainerId));
+    }
+  };
+
   const handleCheckboxChange = (item: Metric, isChecked: boolean) => {
     if (isChecked) {
       setMetrics(prevItems => [...prevItems, item]);
@@ -115,14 +127,21 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
 
 
   return (
-    <Box sx={{ mt: 3, mb: 3, ml: 1, pb: 3, borderBottom: 1, minHeight: "600px" }}>
+    <Box>
       <Grid container spacing={2}>
         <Grid item xs={12} md={2}>
           {/* Sidebar */}
           <Box sx={{ borderRight: 1, borderColor: 'divider', m: 2 }}>
+            {/* Experiment Info Box */}
+            <Box sx={{ mb: 3, borderBottom: 1, borderColor: 'divider', padding: 1 }}>
+              <Typography variant="h6"> Experiment Name </Typography>
+              <Typography variant="body1"> {experiment.name} </Typography>
+              <Typography variant="h6"> Model Name </Typography>
+              <Typography variant="body1"> {experiment.model.name} </Typography>
+            </Box>
             
             {/* Images Box */}
-            <Box sx={{ mb: 3, borderBottom: 1, borderColor: 'divider', padding: 1 }}>
+            <Box sx={{ mb: 3, mr : 1, borderBottom: 1, borderColor: 'divider', padding: 1 }}>
               <Typography variant="h6"> Select Instance </Typography>
               <Button variant="contained" color="primary" onClick={() => setIsModalOpen(true)} sx={{ mt: 2 }}> Show Instances</Button>
               <Box sx={{ mt: 3 }}>
@@ -133,59 +152,48 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
             </Box>
 
             {/* Algorithms Box */}
-            <Box sx={{ mt: 3 }}>
-              <Typography variant="h6"> Select Explainers</Typography>
-              <Box sx={{ mt: 3, border: 1, borderColor: 'divider', padding: 1 }}>
-                {experiment.explainers
-                  .filter(explainerObj => explainers.includes(explainerObj.id))
-                  .map((explainerObj, index) => (
-                  <Chip 
-                    key={index} 
-                    label={explainerObj.name}
-                    onDelete={() => removeAlgorithm(explainerObj.id)} 
-                    deleteIcon={<CloseIcon />}
-                    sx={{ m: 0.5 }}
-                  />
-                ))}
-              </Box>
-              <Box sx={{ mt: 2 }}>
-                {experiment.explainers
-                  .filter(explainerObj => !explainers.includes(explainerObj.id))
-                  .map((explainerObj, index) => (
-                    <Chip 
-                      key={index} 
-                      label={explainerObj.name} 
-                      onClick={() => addAlgorithm(explainerObj.id)}
-                      sx={{ m: 0.5 }}
+            <Box sx={{ mb: 3, mr: 1, borderBottom: 1, borderColor: 'divider', padding: 1 }}>
+              <Typography variant="h6">Select Explainers</Typography>
+              {sortedExplainers.map((explainerObj, index) => (
+                <FormControlLabel
+                  key={explainerObj.id}
+                  control={
+                    <Checkbox
+                      checked={explainers.includes(explainerObj.id)}
+                      onChange={(e) => handleAlgorithmCheckboxChange(explainerObj.id, e.target.checked)}
                     />
-                  ))}
-              </Box>
+                  }
+                  label={explainerObj.name}
+                />
+              ))}
             </Box>
               
-              {/* Metrics Box */}
-              <Box sx={{ mt : 3}}>
-                <Typography variant="h6"> Select Evaluation Metrics </Typography>
-                {experiment.metrics.map(item => (
-                  <FormControlLabel
-                    key={item.id}
-                    control={
-                      <Checkbox
-                        checked={metrics.some(i => i.id === item.id)}
-                        onChange={(e) => handleCheckboxChange(item, e.target.checked)}
-                      />
-                    }
-                    label={item.name}
-                  />
-                ))}
-              </Box>
+            {/* Metrics Box */}
+            <Box sx={{ mb: 3, mr : 1, borderBottom: 1, borderColor: 'divider', padding: 1 }}>
+              <Typography variant="h6"> Select Evaluation Metrics </Typography>
+              {experiment.metrics.map(item => (
+                <FormControlLabel
+                  key={item.id}
+                  control={
+                    <Checkbox
+                      checked={metrics.some(i => i.id === item.id)}
+                      onChange={(e) => handleCheckboxChange(item, e.target.checked)}
+                    />
+                  }
+                  label={nickname.find(n => n.name === item.name)?.nickname}
+                />
+              ))}
+            </Box>
+            
+            {/* Run Experiment Button */}
+            <Box sx={{ mb: 3, padding: 1 }}>
+            <Button variant="contained" color="secondary" onClick={handleRunExperiment} sx={{ mt: 2 }}>Run Experiment</Button>
+            </Box>
           </Box>
         </Grid>
         <Grid item xs={12} md={10}>
           {/* Experiment Visualization */}
-          <Box sx={{ pl: 2 }}>
-            <Typography variant="h5">{experiment?.name}</Typography>
-            <Button variant="contained" color="secondary" onClick={handleRunExperiment} sx={{ mt: 2 }}>Run Experiment</Button>
-            {/* Experiment Visualization */}
+          <Box sx={{ mt: 30, pl: 2 }}>
             <Visualizations
               experiment={experiment.name}
               inputs={selectedInputs}

@@ -7,6 +7,7 @@ const initialState = {
   data: [] as Project[], // Initialize as an empty array
   currentProject: {} as Project,
   loaded: false, // Add a flag to track if the data is loaded
+  error: false
 };
 
 export const fetchProjects = createAsyncThunk(
@@ -71,12 +72,19 @@ const projectSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(fetchProjects.fulfilled, (state, action) => {
+    builder
+    .addCase(fetchProjects.pending, (state) => {
+      state.error = false; // Reset error state on new fetch
+    })
+    .addCase(fetchProjects.fulfilled, (state, action) => {
       state.data = action.payload;
       state.currentProject = action.payload[0] || {} as Project;
-      state.loaded = true; // Set the flag when data is loaded
+      state.loaded = true;
+      state.error = false; // Reset error state on successful fetch
+    })
+    .addCase(fetchProjects.rejected, (state) => {
+      state.error = true; // Set error state on fetch failure
     });
-    // Handle other cases
   },
 });
 export const { setCurrentProject } = projectSlice.actions;

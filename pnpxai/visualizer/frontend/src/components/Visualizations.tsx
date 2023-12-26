@@ -15,6 +15,11 @@ import { preprocess, AddMockData } from './utils';
 const Visualizations: React.FC<{ 
   experiment: string; inputs: number[]; explainers: number[]; metrics: number[]; loading: boolean; setLoading: any
 }> = ({ experiment, inputs, explainers, metrics, loading, setLoading }) => {
+  const nickname = [
+    {"name": "Complexity", "nickname": "Compactness"},
+    {"name": "MuFidelity", "nickname": "Correctness"},
+    {"name": "Sensitivity", "nickname": "Continuity"},
+  ]
   const projectId = useSelector((state: RootState) => state.projects.currentProject.id);
   const [experimentResults, setExperimentResults] = React.useState<ExperimentResult[]>([]);
   
@@ -25,7 +30,9 @@ const Visualizations: React.FC<{
         let response = await fetchExperiment(projectId, experiment);
         response = preprocess(response);
         const experimentResults = response.data.data
-        console.log(experimentResults)
+        experimentResults.forEach((experimentResult: ExperimentResult) => {
+          experimentResult.explanations.sort((a, b) => a.rank - b.rank);
+        });
         setExperimentResults(JSON.parse(JSON.stringify(experimentResults)));
         setLoading(false);
       }
@@ -52,6 +59,9 @@ const Visualizations: React.FC<{
           );
           response = preprocess(response);
           const experimentResults = response.data.data
+          experimentResults.forEach((experimentResult: ExperimentResult) => {
+            experimentResult.explanations.sort((a, b) => a.rank - b.rank);
+          });
           setExperimentResults(JSON.parse(JSON.stringify(experimentResults)));
           setLoading(false);
         }
@@ -83,7 +93,7 @@ const Visualizations: React.FC<{
             {/* Image Cards */}
             <ImageList sx={{
               width: '100%', 
-              height: '450px', 
+              minheight: '450px', 
               gap: 20, // Adjust the gap size here
               display: 'flex',
               flexDirection: 'row',
@@ -129,7 +139,7 @@ const Visualizations: React.FC<{
                       
                       {Object.entries(exp.evaluation).map(([key, value]) => {
                         return (
-                          <Typography key={key} variant="body2" sx={{ textAlign: 'center' }}> {key} ({value.toFixed(3)}) </Typography>
+                          <Typography key={key} variant="body2" sx={{ textAlign: 'center' }}> {nickname.find(n => n.name === key)?.nickname} ({value.toFixed(3)}) </Typography>
                       )})}
                     </Box>
                   </ImageListItem>

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import NotFoundPage from '../pages/NotFoundPage';
-import ModelInfoPage from '../pages/ModelInfoPage';
+import ModelInfoPage from '../pages/ExperimentInfoPage';
 import ExperimentPage from '../pages/ExperimentPage';
 import TestPage from '../pages/testPage';
 

@@ -66,16 +66,8 @@ interface ExperimentResult {
       Sensitivity: number;
       Complexity: number;
     };
-    weighted_score : number;
+    rank : number;
   }[];
-  prediction: {
-    label: string;
-    probPredictions: {
-      label: string;
-      score: number;
-    }[];
-    isCorrect: boolean;
-  };
 }
 
 export type { Project, Experiment, Explainer, Metric, Model, InputData, imageObj, ExperimentResult}
