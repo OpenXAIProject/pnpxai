@@ -25,6 +25,12 @@ export const fetchProjects = createAsyncThunk(
           for (let i = 0; i < project.experiments.length; i++) {
             const experiment = project.experiments[i];
             experiment.id = experiment.name;
+            if (models[i].name === 'VisionTransformer') {
+              models[i].name = 'VisionTransformer16';
+            } else if (models[i].name === 'ResNet') {
+              models[i].name = 'ResNet18';
+            }
+            
             experiment.model = models[i];
             experiment.modelDetected = true;
 
