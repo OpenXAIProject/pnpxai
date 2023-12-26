@@ -94,6 +94,14 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
     setExplainers(explainers.filter(alg => alg !== explainer));
   };
 
+  const handleAlgorithmCheckboxChange = (explainerId: number, isChecked: boolean) => {
+    if (isChecked) {
+      setExplainers([...explainers, explainerId]);
+    } else {
+      setExplainers(explainers.filter(id => id !== explainerId));
+    }
+  };
+
   const handleCheckboxChange = (item: Metric, isChecked: boolean) => {
     if (isChecked) {
       setMetrics(prevItems => [...prevItems, item]);
@@ -144,33 +152,20 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
             </Box>
 
             {/* Algorithms Box */}
-            <Box sx={{ mb: 3, mr : 1, borderBottom: 1, borderColor: 'divider', padding: 1 }}>
-              <Typography variant="h6"> Select Explainers</Typography>
-              <Box sx={{ mt: 2, border : 0.5 }}>
-                {sortedExplainers
-                  .filter(explainerObj => explainers.includes(explainerObj.id))
-                  .map((explainerObj, index) => (
-                  <Chip 
-                    key={index} 
-                    label={explainerObj.name}
-                    onDelete={() => removeAlgorithm(explainerObj.id)} 
-                    deleteIcon={<CloseIcon />}
-                    sx={{ m: 0.5 }}
-                  />
-                ))}
-              </Box>
-              <Box sx={{ mt: 2 }}>
-                {sortedExplainers
-                  .filter(explainerObj => !explainers.includes(explainerObj.id))
-                  .map((explainerObj, index) => (
-                    <Chip 
-                      key={index} 
-                      label={explainerObj.name} 
-                      onClick={() => addAlgorithm(explainerObj.id)}
-                      sx={{ m: 0.5 }}
+            <Box sx={{ mb: 3, mr: 1, borderBottom: 1, borderColor: 'divider', padding: 1 }}>
+              <Typography variant="h6">Select Explainers</Typography>
+              {sortedExplainers.map((explainerObj, index) => (
+                <FormControlLabel
+                  key={explainerObj.id}
+                  control={
+                    <Checkbox
+                      checked={explainers.includes(explainerObj.id)}
+                      onChange={(e) => handleAlgorithmCheckboxChange(explainerObj.id, e.target.checked)}
                     />
-                  ))}
-              </Box>
+                  }
+                  label={explainerObj.name}
+                />
+              ))}
             </Box>
               
             {/* Metrics Box */}
