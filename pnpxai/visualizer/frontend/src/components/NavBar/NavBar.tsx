@@ -5,6 +5,8 @@ import { setCurrentProject } from '../../features/projectSlice';
 import { Link } from 'react-router-dom';
 import { Box, AppBar, Toolbar, Button, Menu, MenuItem } from '@mui/material';
 import logo from '../../assets/images/logo.svg';
+import { useLocation } from 'react-router-dom';
+
 
 const NavBar: React.FC = () => {
   const tasks = [
@@ -18,7 +20,7 @@ const NavBar: React.FC = () => {
   const routes = [
     {
       path: "/model-info",
-      name: "Model Architecture Information"
+      name: "Experiment Information"
     },
     {
       path: "/model-explanation",
@@ -26,14 +28,16 @@ const NavBar: React.FC = () => {
     }
   ]
 
+  
   const projectsData = useSelector((state: RootState) => state.projects.data);
   const projectId = useSelector((state: RootState) => state.projects.currentProject.id);
   const projects = projectsData?.map(project => project.id) || [];
   const [taskAnchorEl, setTaskAnchorEl] = useState<null | HTMLElement>(null);
-  const [task, setTask] = useState(tasks[0]);
+  const [task, setTask] = useState<string>("");
   const [projectAnchorEl, setProjectAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedProject, setSelectedProject] = useState<string>("");
   const [selectedMenu, setSelectedMenu] = useState<number | null>(null);
+  const location = useLocation();
 
   const dispatch = useDispatch();
 
@@ -76,10 +80,13 @@ const NavBar: React.FC = () => {
       setSelectedMenu(0);
     }
   }
-  , []);
+  , [location]);
 
   useEffect(() => {
     setSelectedProject(projectId);
+    if (projectId) {
+      setTask(tasks[0]);
+    }
   }
   , [projectId]);
 

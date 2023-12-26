@@ -11,6 +11,8 @@ const ModelInfoPage: React.FC = () => {
   const projectId = useSelector((state: RootState) => state.projects.currentProject.id);
   const projectData = projectsData?.find(project => project.id === projectId);
 
+  const intro = `${projectData?.experiments.length} models are detected for this project.`
+
 
   const isNoModelDetected = projectData?.experiments.every((experiment) => {
     return !experiment.id;
@@ -45,8 +47,10 @@ const ModelInfoPage: React.FC = () => {
         </Box>
       </Box> */}
 
-      <Typography variant='h1'> Model Architecture Information </Typography>
-      <Typography variant='h6'> 3 models are detected </Typography>
+      <Typography variant='h1'> Experiment Information </Typography>
+      <Box sx={{ m : 1}}>
+        <Typography variant='h5'> {intro} </Typography>
+      </Box>
       {!isNoModelDetected ? (
         projectData?.experiments.map((experiment, index) => {
           return <ModelInfoComponent key={index} experiment={experiment} showModel={index === 0 ? true : false}/>;
@@ -62,16 +66,13 @@ const ModelInfoPage: React.FC = () => {
       )}
 
       <Box sx={{ mt : 1, textAlign : "right"}}>
-        <Typography sx={{ mb: 1 }}>
-          설명 알고리즘 적용하기
-        </Typography>
         <Button 
           variant="contained" 
           color="primary" 
           component={Link} 
           to="/model-explanation"
         >
-          Model Explanation
+          Go to Local Explanation
         </Button>
       </Box>
       

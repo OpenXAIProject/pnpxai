@@ -126,10 +126,13 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
         <Grid item xs={12} md={2}>
           {/* Sidebar */}
           <Box sx={{ borderRight: 1, borderColor: 'divider', m: 2 }}>
-            <Typography variant="h5"> Experiment Name </Typography>
-            <Typography variant="subtitle1"> {experiment.name} </Typography>
-            <Typography variant="h5"> Model Name </Typography>
-            <Typography variant="subtitle1"> {experiment.model.name} </Typography>
+            {/* Experiment Info Box */}
+            <Box sx={{ mb: 3, borderBottom: 1, borderColor: 'divider', padding: 1 }}>
+              <Typography variant="h6"> Experiment Name </Typography>
+              <Typography variant="body1"> {experiment.name} </Typography>
+              <Typography variant="h6"> Model Name </Typography>
+              <Typography variant="body1"> {experiment.model.name} </Typography>
+            </Box>
             
             {/* Images Box */}
             <Box sx={{ mb: 3, borderBottom: 1, borderColor: 'divider', padding: 1 }}>
@@ -143,9 +146,8 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
             </Box>
 
             {/* Algorithms Box */}
-            <Box sx={{ mt: 3, mr: 2 }}>
+            <Box sx={{ mb: 3, borderBottom: 1, borderColor: 'divider', padding: 1 }}>
               <Typography variant="h6"> Select Explainers</Typography>
-              <Box sx={{ mt: 3, border: 1, borderColor: 'divider', padding: 1 }}>
                 {experiment.explainers
                   .filter(explainerObj => explainers.includes(explainerObj.id))
                   .map((explainerObj, index) => (
@@ -157,8 +159,6 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
                     sx={{ m: 0.5 }}
                   />
                 ))}
-              </Box>
-              <Box sx={{ mt: 2 }}>
                 {experiment.explainers
                   .filter(explainerObj => !explainers.includes(explainerObj.id))
                   .map((explainerObj, index) => (
@@ -169,11 +169,10 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
                       sx={{ m: 0.5 }}
                     />
                   ))}
-              </Box>
             </Box>
               
-              {/* Metrics Box */}
-            <Box sx={{ mt : 3}}>
+            {/* Metrics Box */}
+            <Box sx={{ mb: 3, borderBottom: 1, borderColor: 'divider', padding: 1 }}>
               <Typography variant="h6"> Select Evaluation Metrics </Typography>
               {experiment.metrics.map(item => (
                 <FormControlLabel
@@ -188,8 +187,11 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
                 />
               ))}
             </Box>
-
+            
+            {/* Run Experiment Button */}
+            <Box sx={{ mb: 3, padding: 1 }}>
             <Button variant="contained" color="secondary" onClick={handleRunExperiment} sx={{ mt: 2 }}>Run Experiment</Button>
+            </Box>
           </Box>
         </Grid>
         <Grid item xs={12} md={10}>

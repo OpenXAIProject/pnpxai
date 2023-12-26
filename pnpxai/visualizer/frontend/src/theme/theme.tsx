@@ -45,7 +45,7 @@ const theme = createTheme({
       'sans-serif',
     ].join(','), // Ensure fonts with spaces have " " surrounding it.
     h1: {
-      fontSize: '2.5rem',
+      fontSize: '2.25rem',
       fontWeight: 500,
     },
     h2: {
