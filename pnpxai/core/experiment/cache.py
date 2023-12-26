@@ -1,5 +1,5 @@
 from typing import Any, Optional
-from typing import Any
+import torch
 
 
 class ExperimentCache:
@@ -22,17 +22,22 @@ class ExperimentCache:
         key = self._get_key(data_id, explainer_id, metric_id)
         return self._global_cache.get(key, None)
 
+    def _format_before_caching(self, data: Any) -> Any:
+        if torch.is_tensor(data):
+            return data.detach().cpu()
+        return data
+
     def set_output(self, data_id: int, output: Any):
         key = self._get_key(data_id)
-        self._global_cache[key] = output
+        self._global_cache[key] = self._format_before_caching(output)
 
     def set_explanation(self, data_id: int, explainer_id: int, explanation: Any):
         key = self._get_key(data_id, explainer_id)
-        self._global_cache[key] = explanation
+        self._global_cache[key] = self._format_before_caching(explanation)
 
     def set_evaluation(self, data_id: int, explainer_id: int, metric_id: int, evaluation: Any):
         key = self._get_key(data_id, explainer_id, metric_id)
-        self._global_cache[key] = evaluation
+        self._global_cache[key] = self._format_before_caching(evaluation)
 
     def _get_key(self, data_id: int, explainer_id: Optional[int] = None, metric_id: Optional[int] = None):
         key = f"{self.__DATA_KEY}_{data_id}"
