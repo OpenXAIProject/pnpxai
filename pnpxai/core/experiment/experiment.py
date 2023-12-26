@@ -7,11 +7,11 @@ import numpy as np
 from plotly import express as px
 from plotly.graph_objects import Figure
 
+from pnpxai.core.experiment.experiment_metrics_defaults import EVALUATION_METRIC_REVERSE_SORT, EVALUATION_METRIC_SORT_PRIORITY
 from pnpxai.utils import class_to_string
 from pnpxai.core.experiment.manager import ExperimentManager
 from pnpxai.explainers import Explainer, ExplainerWArgs
 from pnpxai.evaluator import EvaluationMetric
-from pnpxai.evaluator.mu_fidelity import MuFidelity
 from pnpxai.core._types import DataSource, Model, Task
 
 
@@ -222,31 +222,34 @@ class Experiment:
         return formatted
 
     def get_explainers_ranks(self) -> Optional[Sequence[Sequence[int]]]:
-        mu_fidelity_idx = next((
-            i for (i, metric) in enumerate(self.get_current_metrics()) if isinstance(metric, MuFidelity)
-        ), None)
-
         # (explainers, metrics, data)
         evaluations = np.array(self.get_evaluations_flattened(), dtype=float)
-        if evaluations.ndim < 3:
+        if evaluations.ndim != 3:
             return None
 
+        evaluations = evaluations.argsort(axis=-3).argsort(axis=-3) + 1
         n_explainers = evaluations.shape[0]
-        # (data, metrics, explainers)
-        evaluations = evaluations.transpose([2, 1, 0])
-        # (data, explainers)
-        scores: np.ndarray = evaluations.argsort(axis=-1).mean(axis=-2)
+        metric_name_to_idx = {}
 
-        if mu_fidelity_idx is not None:
-            mufidelity_scores = evaluations[:, mu_fidelity_idx, :]\
-                .argsort(axis=-1)
-            scores = scores * n_explainers + mufidelity_scores
+        for idx, metric in enumerate(self.get_current_metrics()):
+            metric_name = class_to_string(metric)
+            evaluations[:, idx, :] = evaluations[:, idx, :]
+            if EVALUATION_METRIC_REVERSE_SORT.get(metric_name, False):
+                evaluations[:, idx, :] = \
+                    n_explainers - evaluations[:, idx, :] + 1
 
-        scores = scores.argsort(axis=-1)
+            metric_name_to_idx[metric_name] = idx
         # (explainers, data)
-        scores = scores.transpose([1, 0])
+        scores: np.ndarray = evaluations.sum(axis=-2)
 
-        return scores.tolist()
+        for metric_name in EVALUATION_METRIC_SORT_PRIORITY:
+            if metric_name not in metric_name_to_idx:
+                continue
+
+            idx = metric_name_to_idx[metric_name]
+            scores = scores * n_explainers + evaluations[:, idx, :]
+
+        return scores.argsort(axis=-2).argsort(axis=-2).tolist()
 
     @property
     def is_image_task(self):
