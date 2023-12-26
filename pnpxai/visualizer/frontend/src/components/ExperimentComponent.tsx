@@ -12,6 +12,12 @@ import Visualizations from './Visualizations';
 import { Experiment, Metric } from '../app/types';
 
 const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {experiment} ) => {
+  const nickname = [
+    {"name": "Complexity", "nickname": "Compactness"},
+    {"name": "MuFidelity", "nickname": "Correctness"},
+    {"name": "Sensitivity", "nickname": "Continuity"},
+  ]
+  
   // Basic Data
   const galleryInputs = experiment.inputs.map(input => {
     return {id: input.id, source: input.imageObj.data[0].source}
@@ -23,7 +29,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
   const [selectedInputs, setSelectedInputs] = useState<number[]>([]);
   const [explainers, setExplainers] = useState<number[]>([]);
   const [selectedExplainers, setSelectedExplainers] = useState<number[]>([]);
-  const [metrics, setMetrics] = useState<Metric[]>(experiment.metrics.filter(metric => metric.name === "Complexity"));
+  const [metrics, setMetrics] = useState<Metric[]>([]);
   const [selectedMetrics, setSelectedMetrics] = useState<number[]>(experiment.metrics.map(metric => metric.id));
 
 
@@ -120,6 +126,10 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
         <Grid item xs={12} md={2}>
           {/* Sidebar */}
           <Box sx={{ borderRight: 1, borderColor: 'divider', m: 2 }}>
+            <Typography variant="h5"> Experiment Name </Typography>
+            <Typography variant="subtitle1"> {experiment.name} </Typography>
+            <Typography variant="h5"> Model Name </Typography>
+            <Typography variant="subtitle1"> {experiment.model.name} </Typography>
             
             {/* Images Box */}
             <Box sx={{ mb: 3, borderBottom: 1, borderColor: 'divider', padding: 1 }}>
@@ -133,7 +143,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
             </Box>
 
             {/* Algorithms Box */}
-            <Box sx={{ mt: 3 }}>
+            <Box sx={{ mt: 3, mr: 2 }}>
               <Typography variant="h6"> Select Explainers</Typography>
               <Box sx={{ mt: 3, border: 1, borderColor: 'divider', padding: 1 }}>
                 {experiment.explainers
@@ -163,29 +173,28 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
             </Box>
               
               {/* Metrics Box */}
-              <Box sx={{ mt : 3}}>
-                <Typography variant="h6"> Select Evaluation Metrics </Typography>
-                {experiment.metrics.map(item => (
-                  <FormControlLabel
-                    key={item.id}
-                    control={
-                      <Checkbox
-                        checked={metrics.some(i => i.id === item.id)}
-                        onChange={(e) => handleCheckboxChange(item, e.target.checked)}
-                      />
-                    }
-                    label={item.name}
-                  />
-                ))}
-              </Box>
+            <Box sx={{ mt : 3}}>
+              <Typography variant="h6"> Select Evaluation Metrics </Typography>
+              {experiment.metrics.map(item => (
+                <FormControlLabel
+                  key={item.id}
+                  control={
+                    <Checkbox
+                      checked={metrics.some(i => i.id === item.id)}
+                      onChange={(e) => handleCheckboxChange(item, e.target.checked)}
+                    />
+                  }
+                  label={nickname.find(n => n.name === item.name)?.nickname}
+                />
+              ))}
+            </Box>
+
+            <Button variant="contained" color="secondary" onClick={handleRunExperiment} sx={{ mt: 2 }}>Run Experiment</Button>
           </Box>
         </Grid>
         <Grid item xs={12} md={10}>
           {/* Experiment Visualization */}
           <Box sx={{ pl: 2 }}>
-            <Typography variant="h5">{experiment?.name}</Typography>
-            <Button variant="contained" color="secondary" onClick={handleRunExperiment} sx={{ mt: 2 }}>Run Experiment</Button>
-            {/* Experiment Visualization */}
             <Visualizations
               experiment={experiment.name}
               inputs={selectedInputs}
