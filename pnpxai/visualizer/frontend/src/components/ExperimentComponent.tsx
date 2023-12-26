@@ -31,6 +31,9 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
   const [selectedExplainers, setSelectedExplainers] = useState<number[]>([]);
   const [metrics, setMetrics] = useState<Metric[]>([]);
   const [selectedMetrics, setSelectedMetrics] = useState<number[]>(experiment.metrics.map(metric => metric.id));
+  const sortedExplainers = [...experiment.explainers].sort((a, b) =>
+    a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+  );
 
 
 
@@ -43,11 +46,6 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
   const [showDialog, setShowDialog] = React.useState(false);
 
   
-
-  
-
-  
-
   useEffect(() => {
     // Synchronize modalSelection with selectedImages
     if (isModalOpen) {
@@ -121,7 +119,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
 
 
   return (
-    <Box sx={{ mt: 3, mb: 3, ml: 1, pb: 3, borderBottom: 1, minHeight: "600px" }}>
+    <Box>
       <Grid container spacing={2}>
         <Grid item xs={12} md={2}>
           {/* Sidebar */}
@@ -135,7 +133,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
             </Box>
             
             {/* Images Box */}
-            <Box sx={{ mb: 3, borderBottom: 1, borderColor: 'divider', padding: 1 }}>
+            <Box sx={{ mb: 3, mr : 1, borderBottom: 1, borderColor: 'divider', padding: 1 }}>
               <Typography variant="h6"> Select Instance </Typography>
               <Button variant="contained" color="primary" onClick={() => setIsModalOpen(true)} sx={{ mt: 2 }}> Show Instances</Button>
               <Box sx={{ mt: 3 }}>
@@ -146,9 +144,10 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
             </Box>
 
             {/* Algorithms Box */}
-            <Box sx={{ mb: 3, borderBottom: 1, borderColor: 'divider', padding: 1 }}>
+            <Box sx={{ mb: 3, mr : 1, borderBottom: 1, borderColor: 'divider', padding: 1 }}>
               <Typography variant="h6"> Select Explainers</Typography>
-                {experiment.explainers
+              <Box sx={{ mt: 2, border : 0.5 }}>
+                {sortedExplainers
                   .filter(explainerObj => explainers.includes(explainerObj.id))
                   .map((explainerObj, index) => (
                   <Chip 
@@ -159,7 +158,9 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
                     sx={{ m: 0.5 }}
                   />
                 ))}
-                {experiment.explainers
+              </Box>
+              <Box sx={{ mt: 2 }}>
+                {sortedExplainers
                   .filter(explainerObj => !explainers.includes(explainerObj.id))
                   .map((explainerObj, index) => (
                     <Chip 
@@ -169,10 +170,11 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
                       sx={{ m: 0.5 }}
                     />
                   ))}
+              </Box>
             </Box>
               
             {/* Metrics Box */}
-            <Box sx={{ mb: 3, borderBottom: 1, borderColor: 'divider', padding: 1 }}>
+            <Box sx={{ mb: 3, mr : 1, borderBottom: 1, borderColor: 'divider', padding: 1 }}>
               <Typography variant="h6"> Select Evaluation Metrics </Typography>
               {experiment.metrics.map(item => (
                 <FormControlLabel
@@ -196,7 +198,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
         </Grid>
         <Grid item xs={12} md={10}>
           {/* Experiment Visualization */}
-          <Box sx={{ pl: 2 }}>
+          <Box sx={{ mt: 30, pl: 2 }}>
             <Visualizations
               experiment={experiment.name}
               inputs={selectedInputs}
