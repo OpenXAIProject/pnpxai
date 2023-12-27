@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../app/store';
 import ModelInfoComponent from '../components/ModelInfoComponent'; // Adjust the import path as per your project structure

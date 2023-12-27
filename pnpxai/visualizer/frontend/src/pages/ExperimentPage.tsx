@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useSelector } from 'react-redux';
-import { Box, Container, CardContent, Typography, Card, Alert, 
-  FormControl, InputLabel, Select, MenuItem, Button, Collapse, CircularProgress
+import { Box, CardContent, Card, Alert, CircularProgress
 } from '@mui/material';
 import { RootState } from '../app/store';
 import ExperimentComponent from '../components/ExperimentComponent';
 
-const ExperimentPage = () => {
+const ExperimentPage: React.FC = () => {
   const loaded = useSelector((state: RootState) => state.projects.loaded);
   const projectsData = useSelector((state: RootState) => state.projects.data);
   const projectId = useSelector((state: RootState) => state.projects.currentProject.id);
