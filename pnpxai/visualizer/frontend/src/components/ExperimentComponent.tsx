@@ -5,7 +5,7 @@ import {
   Button, Chip, 
   Dialog, DialogActions, DialogContent, DialogTitle, 
   Alert, FormControlLabel,
-  Checkbox, Paper, Card
+  Checkbox, Paper, Card, Tooltip, CardContent, tooltipClasses
 } from '@mui/material';
 import Visualizations from './Visualizations';
 import { Experiment, Metric } from '../app/types';
@@ -16,6 +16,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
     {"name": "MuFidelity", "nickname": "Correctness"},
     {"name": "Sensitivity", "nickname": "Continuity"},
   ]
+  const domain_extension_plan = "The task will be extended to other domains(Tabular, Text, Time Series) in the future."
   
   // Basic Data
   const galleryInputs = experiment.inputs.map(input => {
@@ -127,7 +128,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
 
   return (
     <Box sx={{ m: 1 }}>
-      <Box sx={{ mt: 3, mb: 3, ml: 1, pb: 3, borderBottom: 1, minHeight: "600px" }}>
+      <Box sx={{ mt: 3, mb: 3, ml: 1, pb: 3}}>
       <Card>
         <Grid container spacing={2}>
           <Grid item xs={12}>
@@ -140,10 +141,20 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
                 <Typography variant="h6"> Model Name </Typography>
                 <Typography variant="body1"> {experiment.model.name} </Typography>
               </Box>
-              <Box>
-                <Typography variant="h6"> Task </Typography>
-                <Typography variant="body1"> Image Classification </Typography>
-              </Box>
+              <Tooltip 
+                title={(
+                  <Card>
+                    <CardContent>
+                      <Typography variant="body1"> {domain_extension_plan} </Typography>
+                    </CardContent>
+                  </Card>
+                )}
+                >
+                  <Box>
+                    <Typography variant="h6"> Task </Typography>
+                    <Typography variant="body1"> Image Classification </Typography>
+                  </Box>
+              </Tooltip>
             </Box>
           </Grid>
           <Grid item xs={12} md={2} sx={{borderRight: 1, borderColor: 'divider'}}>
