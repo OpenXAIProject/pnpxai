@@ -137,6 +137,8 @@ class Experiment:
             inputs = self.input_extractor(datum)
             targets = self.target_extractor(datum)
             try:
+                if class_to_string(metric) == "MuFidelity":
+                    raise NotImplementedError
                 evaluations[i] = metric(
                     self.model, explainer, inputs, targets, explanation
                 )
