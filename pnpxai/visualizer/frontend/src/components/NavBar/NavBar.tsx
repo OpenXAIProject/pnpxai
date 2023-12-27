@@ -4,7 +4,7 @@ import { RootState } from '../../app/store';
 import { setCurrentProject } from '../../features/projectSlice';
 import { Link } from 'react-router-dom';
 import { Box, AppBar, Toolbar, Button, Menu, MenuItem, Popover, IconButton, Tooltip, Typography } from '@mui/material';
-import logo from '../../assets/images/logo.svg';
+import logo from '../../assets/images/SVG/XAI-Top-PnP.svg';
 import { useLocation } from 'react-router-dom';
 import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
 
