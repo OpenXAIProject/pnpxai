@@ -105,6 +105,36 @@ class Add(RelPropSimple):
         module = module or (lambda x: torch.add(*x))
         super().__init__(module)
 
+    def relprop(self, r: _TensorOrTensors, inputs: Optional[_TensorOrTensors] = None, outputs: Optional[_TensorOrTensors] = None):
+        inputs = inputs if inputs is not None else self.X
+        inputs = [F.relu(input) for input in inputs]
+
+        def backward(_r):
+            if self.module is None and (inputs is None or outputs is None):
+                return r
+
+            Z = outputs if outputs is not None else self.module(inputs)
+            Sp = safe_divide(_r, Z)
+
+            Cp = self.gradprop(Z, inputs, Sp)[0]
+            if torch.is_tensor(inputs) == False:
+                Rp = []
+                Rp.append(inputs[0] * Cp)
+                Rp.append(inputs[1] * Cp)
+            else:
+                Rp = inputs * (Cp)
+            return Rp
+        if torch.is_tensor(r) == False:
+            idx = len(r)
+            tmp_r = r
+            Rp = []
+            for i in range(idx):
+                Rp_tmp = backward(tmp_r[i])
+                Rp.append(Rp_tmp)
+        else:
+            Rp = backward(r)
+        return Rp
+
 
 class Flatten(RelProp):
     captures_in_out: bool = True
