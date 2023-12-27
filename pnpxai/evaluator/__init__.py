@@ -1,2 +1,1 @@
 from pnpxai.evaluator._evaluator import EvaluationMetric
-from pnpxai.evaluator.config import default_evaluator_kwargs

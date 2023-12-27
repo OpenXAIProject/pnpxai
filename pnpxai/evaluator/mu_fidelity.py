@@ -12,7 +12,7 @@ from pnpxai.evaluator._evaluator import EvaluationMetric
 class MuFidelity(EvaluationMetric):
     def __init__(
             self,
-            n_perturbations: int=200,
+            n_perturbations: int=150,
             noise_scale: int=0.2,
             batch_size: int=32,
             grid_size: int=9,

@@ -1,5 +1,5 @@
 import torch
-from torch.utils.data import DataLoader, Subset
+from torch.utils.data import DataLoader
 
 # Load Plug and Play XAI Manager
 from pnpxai.utils import set_seed
