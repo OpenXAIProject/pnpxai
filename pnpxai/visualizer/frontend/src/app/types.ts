@@ -51,7 +51,10 @@ interface ExperimentResult {
     layout: {};
   };
   target: string;
-  outputs: string[];
+  outputs: {
+    key: string;
+    value: number;
+  }[];
   explanations: {
     explainer : string;
     data: {

@@ -113,15 +113,16 @@ const Visualizations: React.FC<{
                     <Typography variant="body2" align="center"> True Label : {result.target} </Typography>
                   </Box>
                   <Box sx={{}}>
+                    <Typography variant="body2" align="center"> Predictions </Typography>
                   {result.outputs.map((prob, index) => (
-                    <Typography variant="body2" align="center" key={index}> Prediction {index} : {prob}</Typography>
+                    <Typography variant="body2" align="center" key={index}> {prob.key} : {(prob.value*100).toFixed(2)}%</Typography>
                   ))}
                   </Box>
                   <Box sx={{}}>
                   <Typography 
-                    sx={{color : result.target === result.outputs[0] ? 'green' : 'red'}} 
+                    sx={{color : result.target === result.outputs[0].key ? 'green' : 'red'}} 
                     variant="body2" 
-                    align="center"> IsCorrect : {result.target === result.outputs[0] ? 'True' : 'False'} </Typography>
+                    align="center"> IsCorrect : {result.target === result.outputs[0].key ? 'True' : 'False'} </Typography>
                   </Box>
                 </Box>
               </ImageListItem>
@@ -135,7 +136,9 @@ const Visualizations: React.FC<{
                         layout={exp.data.layout}
                         />
                       <Typography variant="subtitle1" align="center">{exp.explainer}</Typography>
-                      <Typography variant="body2" sx={{ textAlign: 'center' }}> Rank {index+1}</Typography>
+                      {(Object.keys(exp.evaluation).length > 0) && (
+                        <Typography variant="body2" sx={{ textAlign: 'center' }}> Rank {index+1}</Typography>
+                      )}
                       
                       {Object.entries(exp.evaluation).map(([key, value]) => {
                         return (
