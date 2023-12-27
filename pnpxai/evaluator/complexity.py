@@ -25,7 +25,6 @@ class Complexity(EvaluationMetric):
             device = next(model.parameters()).device
             inputs = inputs.to(device)
             outputs = model(inputs)
-            _, n_classes = outputs.shape
             if targets is None:
                 targets = outputs.argmax(1)
             targets = targets.to(device)

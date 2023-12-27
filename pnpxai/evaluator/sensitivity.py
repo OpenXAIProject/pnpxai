@@ -9,7 +9,7 @@ from pnpxai.evaluator._evaluator import EvaluationMetric
 class Sensitivity(EvaluationMetric):
     def __init__(
             self,
-            n_iter: int=10,
+            n_iter: int=8,
             epsilon: float=0.2
         ):
         self.n_iter = n_iter
