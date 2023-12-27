@@ -137,6 +137,8 @@ class Experiment:
             inputs = self.input_extractor(datum)
             targets = self.target_extractor(datum)
             try:
+                if class_to_string(metric) == "MuFidelity":
+                    raise NotImplementedError
                 evaluations[i] = metric(
                     self.model, explainer, inputs, targets, explanation
                 )
@@ -223,15 +225,14 @@ class Experiment:
         return formatted
 
     def get_explainers_ranks(self) -> Optional[Sequence[Sequence[int]]]:
-        evaluations = self.get_evaluations_flattened()
-        evaluations = [
-            data_evaluation.cpu().detach() if data_evaluation is not None else None
-            for explainer_evaluations in evaluations
-            for metric_evaluations in explainer_evaluations
-            for data_evaluation in metric_evaluations
-        ]
+        evaluations = [[[
+            data_evaluation.detach().cpu() if data_evaluation is not None else None
+            for data_evaluation in metric_data
+        ]for metric_data in explainer_data
+        ]for explainer_data in self.get_evaluations_flattened()]
         # (explainers, metrics, data)
-        evaluations = np.array(self.get_evaluations_flattened(), dtype=float)
+        evaluations = np.array(evaluations, dtype=float)
+        evaluations = np.nan_to_num(evaluations, nan=-np.inf)
         if evaluations.ndim != 3:
             return None
 
