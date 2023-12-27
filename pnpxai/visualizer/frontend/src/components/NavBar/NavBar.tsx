@@ -81,10 +81,6 @@ const NavBar: React.FC = () => {
     } else {
       setSelectedMenu(0);
     }
-    console.log(currentPath)
-    console.log(currentMenu)
-    console.log(window.location.hash)
-
   }
   , [location]);
 
