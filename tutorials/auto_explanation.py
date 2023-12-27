@@ -35,8 +35,12 @@ def target_extractor(x): return x[1].to(device)
 # -----------------------------------------------------------------------------#
 
 
-def input_visualizer(x): return denormalize_image(x, transform.mean, transform.std)
-def target_visualizer(x): return dataset.dataset.idx_to_label(x.item())
+def input_visualizer(x):
+    return denormalize_image(x, transform.mean, transform.std)
+
+
+def target_visualizer(x):
+    return dataset.dataset.idx_to_label(x.item())
 
 
 experiment = project.create_auto_experiment(
@@ -66,6 +70,7 @@ def target_extractor(x): return x[1].to(device)
 # ---------------------------------- explain ----------------------------------#
 # -----------------------------------------------------------------------------#
 
+
 experiment = project.create_auto_experiment(
     model,
     loader,
@@ -76,6 +81,4 @@ experiment = project.create_auto_experiment(
     target_visualizer=target_visualizer,
 )
 
-def input_visualizer(x): return denormalize_image(x, transform.mean, transform.std)
-def target_visualizer(x): return dataset.dataset.idx_to_label(x.item())
 project.get_server().serve(debug=True, host='0.0.0.0', port=5001)

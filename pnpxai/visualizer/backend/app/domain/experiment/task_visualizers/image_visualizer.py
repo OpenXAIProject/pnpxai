@@ -33,17 +33,26 @@ class ImageVisualizer(BaseVisualizer):
         return targets
 
     @classmethod
+    def default_outputs_visualizer(cls, output, idx):
+        return output, idx
+
+    @classmethod
     def format_outputs(cls, outputs, visualizer=None, n_outputs=3):
         formatted = []
         for output in outputs:
             if output is None:
                 formatted.append(None)
                 continue
-            output: Tensor = output.cpu()
-            top_outputs = output.argsort(descending=True)[:n_outputs]
+            output: Tensor = output.softmax(-1).cpu()
+            top_outputs, top_indices = output.sort(descending=True)
+            top_outputs = top_outputs[:n_outputs]
+            top_indices = top_indices[:n_outputs]
+            visualizer = visualizer or cls.default_outputs_visualizer
 
-            if visualizer is not None:
-                top_outputs = [visualizer(output) for output in top_outputs]
+            top_outputs = [
+                (visualizer(idx), output)
+                for output, idx in zip(top_outputs, top_indices)
+            ]
 
             formatted.append(top_outputs)
 
