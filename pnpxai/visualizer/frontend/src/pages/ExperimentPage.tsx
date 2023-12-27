@@ -1,7 +1,6 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
-import { Box, CardContent, Card, Alert, CircularProgress
-} from '@mui/material';
+import { Box, CardContent, Card, Alert, CircularProgress, Typography} from '@mui/material';
 import { RootState } from '../app/store';
 import ExperimentComponent from '../components/ExperimentComponent';
 
@@ -29,7 +28,11 @@ const ExperimentPage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ m: 1 }}>
+    <Box sx={{ p: 2 }}>
+      <Typography variant='h1'> Local Explanation </Typography>
+      <Box sx={{ m : 1}}>
+        <Typography variant='h5'> Visualize the Explainers </Typography>
+      </Box>
       <Box sx={{ m: 1 }}>
         {isAnyModelDetected ? (
           projectData?.experiments.filter(experiment => experiment.modelDetected).map((experiment, index) => (

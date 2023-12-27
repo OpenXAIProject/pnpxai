@@ -79,27 +79,27 @@ const ModelInfoComponent: React.FC<{ experiment: Experiment, showModel: boolean}
       <Card>
         <Grid container spacing={2}>
           {/* Side Bar Area */}
-          <Grid item xs={12} md={3} sx={{borderRight: 1, borderColor: 'divider'}}>
-            <Box sx={{ m: 2 }}>
-            <Box sx={{ mb: 3 }}>
+          <Grid item xs={12} md={2} sx={{borderRight: 1, borderColor: 'divider'}}>
+          <Box sx={{ m: 1 }}>
+            <Box sx={{ ml: 1, mr : 1, borderBottom: 1, borderColor: 'divider', p: 1 }}>
               <Typography variant='h6'> Experiment Name </Typography>
-              <Typography variant='h3'> {experiment.name} </Typography>
+              <Typography variant='h4'> {experiment.name} </Typography>
             </Box>
-            <Box sx={{ mb: 3 }}>
+            <Box sx={{ ml: 1, mr : 1, borderBottom: 1, borderColor: 'divider', p: 1 }}>
               <Typography variant='h6'> Model Name </Typography>
-              <Typography variant='h3'> {experiment.model.name} </Typography>
+              <Typography variant='h4'> {experiment.model.name} </Typography>
             </Box>
-            <Box sx={{ mb: 3 }}>
+            <Box sx={{ ml: 1, mr : 1, borderBottom: 1, borderColor: 'divider', p: 1 }}>
               <Typography variant='h6'> Task </Typography>
-              <Typography variant='h3'> Image Classification </Typography>
+              <Typography variant='h4'> Image Classification </Typography>
             </Box>
-            <Box sx={{ mb: 3 }}>
+            <Box sx={{ ml: 1, mr : 1, borderBottom: 1, borderColor: 'divider', p: 1 }}>
               <Typography variant='h6'> Model Detection Result </Typography>
-              <Typography variant='body1' style={toolbarStyle}> Model Detected </Typography>
+              <Typography variant='h4' style={toolbarStyle}> Model Detected </Typography>
             </Box>
             </Box>
           </Grid>
-          <Grid item xs={12} md={9}>
+          <Grid item xs={12} md={10}>
             <Box  sx={{ m: 1 }}>
               <Box sx={{ m : 3}}>
                 <Typography variant='h2'> Model Information </Typography>

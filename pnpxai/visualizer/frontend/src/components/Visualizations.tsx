@@ -2,10 +2,7 @@
 import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../app/store';
-import { Card, CardContent, Typography, Box, 
-  LinearProgress, ImageList, ImageListItem,
-  Dialog, DialogContent, CircularProgress
-} from '@mui/material';
+import { Typography, Box, ImageList, ImageListItem, CircularProgress, Grid, Divider} from '@mui/material';
 import Plot from 'react-plotly.js';
 import { ExperimentResult } from '../app/types';
 import { RunExperiment, fetchExperiment } from '../features/apiService';
@@ -78,7 +75,7 @@ const Visualizations: React.FC<{
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+      <Box sx={{ mt: 15, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
         <CircularProgress />
       </Box>
     )
@@ -86,10 +83,10 @@ const Visualizations: React.FC<{
   
 
   return (
-    <Box sx={{ mt: 4 }}>
+    <Box sx={{ mt: 15 }}>
       {experimentResults.map((result, index) => {
         return (
-          <Box key={index} sx={{ marginBottom: 4, paddingBottom: 2, borderBottom: '2px solid #e0e0e0' }}>
+          <Box key={index}>
             {/* Image Cards */}
             <ImageList sx={{
               width: '100%', 
@@ -108,22 +105,32 @@ const Visualizations: React.FC<{
                   />
                   <Typography variant="subtitle1" align="center"> Original </Typography>
                 </Box>
-                <Box sx={{}}>
-                  <Box sx={{}}>
-                    <Typography variant="body2" align="center"> True Label : {result.target} </Typography>
-                  </Box>
-                  <Box sx={{}}>
-                    <Typography variant="body2" align="center"> Predictions </Typography>
-                  {result.outputs.map((prob, index) => (
-                    <Typography variant="body2" align="center" key={index}> {prob.key} : {(prob.value*100).toFixed(2)}%</Typography>
-                  ))}
-                  </Box>
-                  <Box sx={{}}>
-                  <Typography 
-                    sx={{color : result.target === result.outputs[0].key ? 'green' : 'red'}} 
-                    variant="body2" 
-                    align="center"> IsCorrect : {result.target === result.outputs[0].key ? 'True' : 'False'} </Typography>
-                  </Box>
+                <Box sx={{ width: '100%' }}>
+                  <Grid container spacing={2} alignItems="center" justifyContent="center">
+                    <Grid item xs={12}>
+                      <Typography variant="body2" align="center">True Label: {result.target}</Typography>
+                    </Grid>
+                    <Grid item xs={12}>
+                      <Divider variant="middle" />
+                      <Typography variant="body2" align="center">Top 3 Predictions</Typography>
+                    </Grid>
+                    {result.outputs.map((prob, index) => (
+                      <Grid item xs={12} key={index}>
+                        <Typography variant="body2" align="center">
+                          {prob.key}: {(prob.value * 100).toFixed(2)}%
+                        </Typography>
+                      </Grid>
+                    ))}
+                    <Grid item xs={12}>
+                      <Divider variant="middle" />
+                      <Typography 
+                        sx={{ color: result.target === result.outputs[0].key ? 'green' : 'red' }} 
+                        variant="body2" 
+                        align="center">
+                        IsCorrect: {result.target === result.outputs[0].key ? 'True' : 'False'}
+                      </Typography>
+                    </Grid>
+                  </Grid>
                 </Box>
               </ImageListItem>
 
@@ -150,8 +157,6 @@ const Visualizations: React.FC<{
               )}
             </ImageList>
           </Box>
-
-          
         );
       })}
     </Box>

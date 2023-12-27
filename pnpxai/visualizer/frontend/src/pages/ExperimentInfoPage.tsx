@@ -11,7 +11,7 @@ const ModelInfoPage: React.FC = () => {
   const projectId = useSelector((state: RootState) => state.projects.currentProject.id);
   const projectData = projectsData?.find(project => project.id === projectId);
 
-  const intro = `${projectData?.experiments.length} models are detected for this project.`
+  const intro = `${projectData?.experiments.length} models are detected for this project`
 
 
   const isNoModelDetected = projectData?.experiments.every((experiment) => {
@@ -35,7 +35,7 @@ const ModelInfoPage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ p: 2, maxWidth: 1400  }}>
+    <Box sx={{ p: 2  }}>
       <Typography variant='h1'> Experiment Information </Typography>
       <Box sx={{ m : 1}}>
         <Typography variant='h5'> {intro} </Typography>

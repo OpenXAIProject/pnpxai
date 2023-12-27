@@ -95,7 +95,7 @@ const NavBar: React.FC = () => {
       <AppBar position="static" sx={{ bgcolor: 'primary.main' }}>
         <Toolbar>
           <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <img src={logo} alt="Logo" style={{ marginRight: 50, height: '50px' }} />
+            <img src={logo} alt="Logo" style={{ marginRight: 30, height: '40px' }} />
           </Link>
           <Box sx={{pr : 2, borderRight : 1}}>
             <Button style={{ color: 'inherit' }} onClick={handleProjectMenuButtonClick}>

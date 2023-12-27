@@ -126,27 +126,34 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
 
 
   return (
-    <Box>
-      <Card sx={{m : 3}}>
+    <Box sx={{ m: 1 }}>
+      <Box sx={{ mt: 3, mb: 3, ml: 1, pb: 3, borderBottom: 1, minHeight: "600px" }}>
+      <Card>
         <Grid container spacing={2}>
-          <Grid item xs={12} md={2} sx={{borderRight: 1, borderColor: 'divider'}}>
-            {/* Sidebar */}
-            <Box sx={{ m: 2 }}>
-              {/* Experiment Info Box */}
-              <Box sx={{ mb: 3, borderBottom: 1, borderColor: 'divider', padding: 1 }}>
+          <Grid item xs={12}>
+            <Box sx={{ pl:4, p: 2, borderBottom: 1, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+              <Box>
                 <Typography variant="h6"> Experiment Name </Typography>
                 <Typography variant="body1"> {experiment.name} </Typography>
+              </Box>
+              <Box>
                 <Typography variant="h6"> Model Name </Typography>
                 <Typography variant="body1"> {experiment.model.name} </Typography>
+              </Box>
+              <Box>
                 <Typography variant="h6"> Task </Typography>
                 <Typography variant="body1"> Image Classification </Typography>
               </Box>
-              
+            </Box>
+          </Grid>
+          <Grid item xs={12} md={2} sx={{borderRight: 1, borderColor: 'divider'}}>
+            {/* Sidebar */}
+            <Box sx={{ m: 1 }}>
               {/* Images Box */}
-              <Box sx={{ mb: 3, mr : 1, borderBottom: 1, borderColor: 'divider', padding: 1 }}>
+              <Box sx={{ ml: 1, mr : 1, borderBottom: 1, borderColor: 'divider', p: 1 }}>
                 <Typography variant="h6"> Select Instance </Typography>
                 <Button variant="contained" color="primary" onClick={() => setIsModalOpen(true)} sx={{ mt: 2 }}> Show Instances</Button>
-                <Box sx={{ mt: 3 }}>
+                <Box sx={{ mt: 2 }}>
                   {inputs.map((image, index) => (
                     <Chip key={index} label={image} onDelete={() => handleChipCancel(image)} sx={{ mt: 1 }} />
                   ))}
@@ -154,7 +161,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
               </Box>
 
               {/* Algorithms Box */}
-              <Box sx={{ mb: 3, mr: 1, borderBottom: 1, borderColor: 'divider', padding: 1 }}>
+              <Box sx={{ ml: 1, mr : 1, borderBottom: 1, borderColor: 'divider', p: 1}}>
                 <Typography variant="h6">Select Explainers</Typography>
                 {sortedExplainers.map((explainerObj, index) => (
                   <FormControlLabel
@@ -166,12 +173,13 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
                       />
                     }
                     label={explainerObj.name}
+                    sx={{ fontSize: '0.75rem' }} // Smaller font size for labels
                   />
                 ))}
               </Box>
                 
               {/* Metrics Box */}
-              <Box sx={{ mb: 3, mr : 1, borderBottom: 1, borderColor: 'divider', padding: 1 }}>
+              <Box sx={{ ml: 1, mr : 1, borderBottom: 1, borderColor: 'divider', p: 1 }}>
                 <Typography variant="h6"> Select Evaluation Metrics </Typography>
                 {experiment.metrics.map(item => (
                   <FormControlLabel
@@ -188,14 +196,14 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
               </Box>
               
               {/* Run Experiment Button */}
-              <Box sx={{ mb: 3, padding: 1 }}>
-              <Button variant="contained" color="secondary" onClick={handleRunExperiment} sx={{ mt: 2 }}>Run Experiment</Button>
+              <Box sx={{ ml: 1, mr : 1, p: 1 }}>
+                <Button variant="contained" color="secondary" onClick={handleRunExperiment} sx={{ mt: 2 }}>Run Experiment</Button>
               </Box>
             </Box>
           </Grid>
           <Grid item xs={12} md={10}>
             {/* Experiment Visualization */}
-            <Box sx={{ mt: 30, pl: 2 }}>
+            <Box sx={{ mt: 2, pl: 2 }}>
               <Visualizations
                 experiment={experiment.name}
                 inputs={selectedInputs}
@@ -252,7 +260,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
           </DialogContent>
         </Dialog>
       </Box>
-      
+      </Box>                  
     </Box>
   );
 }
