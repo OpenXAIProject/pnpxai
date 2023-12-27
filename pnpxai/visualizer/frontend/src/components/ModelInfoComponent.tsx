@@ -16,7 +16,8 @@ interface TabPanelProps {
 }
 
 const ModelInfoComponent: React.FC<{ experiment: Experiment, showModel: boolean}> = ({ experiment, showModel }) => {
-  const [expanded, setExpanded] = useState<boolean>(showModel ? true : false);
+  // const [expanded, setExpanded] = useState<boolean>(showModel ? true : false);
+  const [expanded, setExpanded] = useState<boolean>(false);
   const [nodes, setNodes] = React.useState<any[]>([]);
   const [links, setLinks] = React.useState<any[]>([]);
   const [value, setValue] = React.useState(0); // It should be extended to save data for each experiment
@@ -75,10 +76,11 @@ const ModelInfoComponent: React.FC<{ experiment: Experiment, showModel: boolean}
   return (
     <Box sx={{ m: 1 }}>
       <Box sx={{ mt: 3, mb: 3, ml: 1, pb: 3, borderBottom: 1, minHeight: "600px" }}>
+      <Card>
         <Grid container spacing={2}>
           {/* Side Bar Area */}
-          <Grid item xs={12} md={3}>
-            <Box sx={{ borderRight: 1, borderColor: 'divider', m: 2 }}>
+          <Grid item xs={12} md={3} sx={{borderRight: 1, borderColor: 'divider'}}>
+            <Box sx={{ m: 2 }}>
             <Box sx={{ mb: 3 }}>
               <Typography variant='h6'> Experiment Name </Typography>
               <Typography variant='h3'> {experiment.name} </Typography>
@@ -95,57 +97,50 @@ const ModelInfoComponent: React.FC<{ experiment: Experiment, showModel: boolean}
           </Grid>
           <Grid item xs={12} md={9}>
             <Box  sx={{ m: 1 }}>
-              <Card>
-                <Box sx={{ m : 3}}>
-                  <Typography variant='h2'> Model Information </Typography>
-                </Box>
-
-                <CardContent>
-                  <Box sx={{ m: 1 }}>
-                    <Box sx={{ m: 2 }}>
-                      <Box sx={{ mb: 2 }}>
-                        <Typography variant='h3'> Recommended Explainers </Typography>
-                      </Box>
-                      {experiment.explainers.map((explainer, index) => (
-                        <Box key={index} sx={{ m: 1 }}>
-                          <Card sx={{ p: 2 }}>
-                            <Typography> {explainer.name} </Typography>
-                          </Card>
-                        </Box>
-                      ))}
-                    </Box>
-                    <Box sx={{ m: 2 }}>
-                      <Box sx={{ mb: 3 }}>
-                        <Typography variant='h3'> Model Architecture </Typography>
-                      </Box>
-                      <Button onClick={() => handleCollapse()}> {buttonName} </Button>
-                        <Collapse in={expanded} timeout="auto" unmountOnExit>
-                          <Box sx={{ m: 2}}>
-                            <Tabs value={value} onChange={handleTabChange}>
-                              <Tab label="Text View" />
-                              {/* <Tab label="Tree View" /> */}
-                            </Tabs>
-                          </Box>
-                          <CustomTabPanel value={value} index={0}>
-                            {nodes.map((node: any, index: number) => (
-                              <Typography key={index} component='div'> {node.operator} </Typography> 
-                            ))}
-                          </CustomTabPanel>
-                          {/* <CustomTabPanel value={value} index={1}>
-                            Tree View
-                            <TreeGraph nodes={nodes} links={links} />
-                          </CustomTabPanel> */}
-                        </Collapse>
-                    </Box>
-
-
-
+              <Box sx={{ m : 3}}>
+                <Typography variant='h2'> Model Information </Typography>
+              </Box>
+              <Box sx={{ m: 1 }}>
+                <Box sx={{ m: 2 }}>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant='h3'> Recommended Explainers </Typography>
                   </Box>
-                </CardContent>
-              </Card>
+                  {experiment.explainers.map((explainer, index) => (
+                    <Box key={index} sx={{ m: 1 }}>
+                      <Card sx={{ p: 2 }}>
+                        <Typography> {explainer.name} </Typography>
+                      </Card>
+                    </Box>
+                  ))}
+                </Box>
+                <Box sx={{ m: 2 }}>
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant='h3'> Model Architecture </Typography>
+                  </Box>
+                  <Button onClick={() => handleCollapse()}> {buttonName} </Button>
+                    <Collapse in={expanded} timeout="auto" unmountOnExit>
+                      <Box sx={{ m: 2}}>
+                        <Tabs value={value} onChange={handleTabChange}>
+                          <Tab label="Text View" />
+                          {/* <Tab label="Tree View" /> */}
+                        </Tabs>
+                      </Box>
+                      <CustomTabPanel value={value} index={0}>
+                        {nodes.map((node: any, index: number) => (
+                          <Typography key={index} component='div'> {node.operator} </Typography> 
+                        ))}
+                      </CustomTabPanel>
+                      {/* <CustomTabPanel value={value} index={1}>
+                        Tree View
+                        <TreeGraph nodes={nodes} links={links} />
+                      </CustomTabPanel> */}
+                    </Collapse>
+                </Box>
+              </Box>
             </Box>
           </Grid>
         </Grid>
+        </Card>
       </Box>
     </Box>
   );

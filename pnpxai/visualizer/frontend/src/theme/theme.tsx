@@ -27,7 +27,7 @@ const theme = createTheme({
     },
     background: {
       default: '#ECEFF1',
-      paper: '#CFD8DC',
+      paper: '#F5F5F5', // Set this to a nearly white color
     },
     text: {
       primary: '#212121',
