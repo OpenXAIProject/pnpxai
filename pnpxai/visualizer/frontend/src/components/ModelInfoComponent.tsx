@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { 
   Typography, Card, CardContent, CardHeader, Box, Alert,
-  Toolbar, Collapse, Button,
+  Toolbar, Collapse, Button, Tooltip,
   Tabs, Tab, Grid
 } from '@mui/material';
 import { RootState } from '../app/store'; // Import your RootState type
@@ -17,6 +17,7 @@ interface TabPanelProps {
 
 const ModelInfoComponent: React.FC<{ experiment: Experiment, showModel: boolean}> = ({ experiment, showModel }) => {
   // const [expanded, setExpanded] = useState<boolean>(showModel ? true : false);
+  const domain_extension_plan = "The task will be extended to other domains(Tabular, Text, Time Series) in the future."
   const [expanded, setExpanded] = useState<boolean>(false);
   const [nodes, setNodes] = React.useState<any[]>([]);
   const [links, setLinks] = React.useState<any[]>([]);
@@ -89,10 +90,20 @@ const ModelInfoComponent: React.FC<{ experiment: Experiment, showModel: boolean}
               <Typography variant='h6'> Model Name </Typography>
               <Typography variant='h4'> {experiment.model.name} </Typography>
             </Box>
-            <Box sx={{ ml: 1, mr : 1, borderBottom: 1, borderColor: 'divider', p: 1 }}>
-              <Typography variant='h6'> Task </Typography>
-              <Typography variant='h4'> Image Classification </Typography>
-            </Box>
+            <Tooltip 
+              title={(
+              <Card>
+                <CardContent>
+                  <Typography variant="body1"> {domain_extension_plan} </Typography>
+                </CardContent>
+              </Card>
+              )}
+              >
+              <Box sx={{ ml: 1, mr : 1, borderBottom: 1, borderColor: 'divider', p: 1 }}>
+                <Typography variant='h6'> Task </Typography>
+                <Typography variant='h4'> Image Classification </Typography>
+              </Box>
+            </Tooltip>
             <Box sx={{ ml: 1, mr : 1, borderBottom: 1, borderColor: 'divider', p: 1 }}>
               <Typography variant='h6'> Model Detection Result </Typography>
               <Typography variant='h4' style={toolbarStyle}> Model Detected </Typography>
