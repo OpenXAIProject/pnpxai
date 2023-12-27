@@ -54,7 +54,7 @@ def get_imagenet_dataset(
     ):
     os.chdir(Path(__file__).parent) # ensure path
     dataset = ImageNetDataset(root_dir=root_dir, transform=transform)
-    if indices is None:
+    if indices is not None:
         return Subset(dataset, indices=indices)
     indices = list(range(len(dataset)))
     subset = Subset(dataset, indices=indices[:subset_size])
