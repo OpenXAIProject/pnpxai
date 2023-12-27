@@ -90,6 +90,10 @@ const ModelInfoComponent: React.FC<{ experiment: Experiment, showModel: boolean}
               <Typography variant='h3'> {experiment.model.name} </Typography>
             </Box>
             <Box sx={{ mb: 3 }}>
+              <Typography variant='h6'> Task </Typography>
+              <Typography variant='h3'> Image Classification </Typography>
+            </Box>
+            <Box sx={{ mb: 3 }}>
               <Typography variant='h6'> Model Detection Result </Typography>
               <Typography variant='body1' style={toolbarStyle}> Model Detected </Typography>
             </Box>

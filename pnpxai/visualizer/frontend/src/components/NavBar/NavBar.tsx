@@ -11,14 +11,6 @@ import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
 
 const NavBar: React.FC = () => {
   const helptext = "Correctness evaluates the truthfulness/reliability of explanations about a prediction model (AI model). That is, it indicates how truthful the explanation is compared to the operation of the black box model. Completeness assesses the extent to which a prediction model (AI model) is explained. Providing 'the whole truth' of the black box model represents high completeness, but a good explanation should balance conciseness and correctness. Continuity evaluates how continuous (i.e., smooth) an explanation is. An explanation function with high continuity ensures that small changes in the input do not bring about significant changes in the explanation. Compactness assesses the size/amount of an explanation. It ensures that complex and redundant explanations that are difficult to understand are not presented."
-  const tasks = [
-    "Image Classification",
-    "Tabular Data Classification",
-    "Time Series Analysis",
-    "Text Classification",
-  ];
-
-  
   const routes = [
     {
       path: "/model-info",
@@ -34,8 +26,6 @@ const NavBar: React.FC = () => {
   const projectsData = useSelector((state: RootState) => state.projects.data);
   const projectId = useSelector((state: RootState) => state.projects.currentProject.id);
   const projects = projectsData?.map(project => project.id) || [];
-  const [taskAnchorEl, setTaskAnchorEl] = useState<null | HTMLElement>(null);
-  const [task, setTask] = useState<string>("");
   const [projectAnchorEl, setProjectAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedProject, setSelectedProject] = useState<string>("");
   const [selectedMenu, setSelectedMenu] = useState<number | null>(null);
@@ -47,18 +37,6 @@ const NavBar: React.FC = () => {
     setSelectedMenu(menuKey);
   };
 
-  const handleTaskMenuButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setTaskAnchorEl(event.currentTarget);
-  }
-
-  const handleTaskMenuClose = () => {
-    setTaskAnchorEl(null);
-  }
-
-  const handleTaskChange = (event: any) => {
-    // setTask(event.target.value);
-    handleTaskMenuClose();
-  };
   const handleProjectMenuButtonClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setProjectAnchorEl(event.currentTarget);
   };
@@ -86,9 +64,6 @@ const NavBar: React.FC = () => {
 
   useEffect(() => {
     setSelectedProject(projectId);
-    if (projectId) {
-      setTask(tasks[0]);
-    }
   }
   , [projectId]);
 
@@ -114,28 +89,7 @@ const NavBar: React.FC = () => {
           <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
             <img src={logo} alt="Logo" style={{ marginRight: 50, height: '50px' }} />
           </Link>
-          <Box sx={{borderRight : 1}}>
-            <Button style={{ color: 'inherit' }} onClick={handleTaskMenuButtonClick}>
-              Task : {task}
-            </Button>
-            <Menu
-              anchorEl={taskAnchorEl}
-              open={Boolean(taskAnchorEl)}
-              onClose={handleTaskMenuClose}
-            >
-              {tasks.map((task, index) => (
-                <MenuItem 
-                  key={index}
-                  onClick={() => handleTaskChange(task)}
-                  style={{ fontWeight: task === tasks[0] ? 'bold' : 'normal' }}
-                >
-                  {task}
-                </MenuItem>
-              ))}
-            </Menu>
-          </Box>
-
-          <Box sx={{borderRight : 1}}>
+          <Box sx={{pr : 2, borderRight : 1}}>
             <Button style={{ color: 'inherit' }} onClick={handleProjectMenuButtonClick}>
               Projects : {selectedProject}
             </Button>

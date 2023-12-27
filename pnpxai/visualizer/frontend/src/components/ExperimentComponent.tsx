@@ -138,6 +138,8 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
                 <Typography variant="body1"> {experiment.name} </Typography>
                 <Typography variant="h6"> Model Name </Typography>
                 <Typography variant="body1"> {experiment.model.name} </Typography>
+                <Typography variant="h6"> Task </Typography>
+                <Typography variant="body1"> Image Classification </Typography>
               </Box>
               
               {/* Images Box */}
