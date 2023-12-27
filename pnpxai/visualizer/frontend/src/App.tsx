@@ -1,6 +1,6 @@
 // src/App.tsx
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router } from 'react-router-dom';
+import { HashRouter as Router } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import theme from './theme/theme';
 import AppRoutes from './routes/AppRoutes';
