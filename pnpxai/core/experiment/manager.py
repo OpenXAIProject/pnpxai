@@ -118,7 +118,7 @@ class ExperimentManager:
 
     def get_flat_evaluations(self, explainer_id: int, metric_id: int, data_ids: Optional[Sequence[int]] = None) -> Sequence[Tensor]:
         data_ids = data_ids if data_ids is not None else self._data_ids
-        return [self._cache.get_evaluation(idx, explainer_id, metric_id).cpu() for idx in data_ids]
+        return [self._cache.get_evaluation(idx, explainer_id, metric_id) for idx in data_ids]
 
     def get_flat_outputs(self, data_ids: Optional[Sequence[int]] = None) -> Tuple[DataSource, List[int]]:
         data_ids = data_ids if data_ids is not None else self._data_ids
@@ -146,6 +146,15 @@ class ExperimentManager:
         for idx, output in zip(data_ids, outputs):
             self._cache.set_output(idx, output)
 
+    def _get_batch_size(self, data: DataSource) -> Optional[int]:
+        if torch.is_tensor(data):
+            return len(data)
+        for item in data:
+            item_len = self._get_batch_size(item)
+            if item_len is not None:
+                return item_len
+        return None
+
     def flatten_if_batched(self, values: DataSource, length_reference: DataSource):
         if not self.is_batched:
             return values
@@ -155,7 +164,8 @@ class ExperimentManager:
         flattened = []
         for batch, reference in zip(values, length_reference):
             if batch is None:
-                batch = [None] * len(reference)
+                reference_len = self._get_batch_size(reference) or 1
+                batch = [None] * reference_len
             flattened.extend(list(batch))
         return flattened
 
@@ -195,7 +205,7 @@ class ExperimentManager:
     @property
     def has_metrics(self):
         return len(self._metrics) > 0
-    
+
     @property
     def has_explanations(self):
         for explainer_id in self._explainer_ids:
