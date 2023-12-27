@@ -45,5 +45,5 @@ class ExperimentInputsController(Controller):
         if experiment is None:
             abort(404)
 
-        figures = ExperimentService.get_task_formatted_inputs(experiment)
+        figures = ExperimentService.get_task_formatted_inputs(experiment, experiment.get_all_inputs_flattened())
         return self.response(data=ExperimentInputsResponse.dump(figures, many=True))

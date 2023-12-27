@@ -195,6 +195,11 @@ class Experiment:
         data, _ = self.manager.get_data()
         data = [self.input_extractor(datum) for datum in data]
         return self.manager.flatten_if_batched(data, data)
+    
+    def get_all_inputs_flattened(self) -> Sequence[Tensor]:
+        data = self.manager.get_all_data()
+        data = [self.input_extractor(datum) for datum in data]
+        return self.manager.flatten_if_batched(data, data)
 
     def get_targets_flattened(self) -> Sequence[Tensor]:
         data, _ = self.manager.get_data()
