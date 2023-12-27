@@ -118,7 +118,7 @@ class ExperimentManager:
 
     def get_flat_evaluations(self, explainer_id: int, metric_id: int, data_ids: Optional[Sequence[int]] = None) -> Sequence[Tensor]:
         data_ids = data_ids if data_ids is not None else self._data_ids
-        return [self._cache.get_evaluation(idx, explainer_id, metric_id) for idx in data_ids]
+        return [self._cache.get_evaluation(idx, explainer_id, metric_id).cpu() for idx in data_ids]
 
     def get_flat_outputs(self, data_ids: Optional[Sequence[int]] = None) -> Tuple[DataSource, List[int]]:
         data_ids = data_ids if data_ids is not None else self._data_ids
