@@ -7,9 +7,11 @@ class APIItems(Enum):
     ERRORS = 'errors'
 
     ID = 'id'
+    KEY = 'key'
     OPCODE = 'opcode'
     OPERATOR = 'operator'
     NAME = 'name'
+    VALUE = 'value'
     SOURCE = 'source'
     TARGET = 'target'
     OUTPUTS = 'outputs'
