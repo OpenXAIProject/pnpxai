@@ -50,4 +50,4 @@ class Sensitivity(EvaluationMetric):
             attr_diff = attr - perturbed_attr
             sens = max([torch.linalg.norm(diff)/attr_norm for diff in attr_diff])
             evaluations.append(sens)
-        return torch.stack(evaluations)
+        return torch.stack(evaluations).detach()
