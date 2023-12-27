@@ -8,9 +8,12 @@ import logo from '../../assets/images/SVG/XAI-Top-PnP.svg';
 import { useLocation } from 'react-router-dom';
 import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
 
+interface HelpText {
+  [key: string]: string;
+}
 
 const NavBar: React.FC = () => {
-  const helptext = {
+  const helptext: HelpText = {
     "Correctness" : "the truthfulness/reliability of explanations about a prediction model (AI model). That is, it indicates how truthful the explanation is compared to the operation of the black box model.",
     "Continuity" : "how continuous (i.e., smooth) an explanation is. An explanation function with high continuity ensures that small changes in the input do not bring about significant changes in the explanation.",
     "Compactness" : "the size/amount of an explanation. It ensures that complex and redundant explanations that are difficult to understand are not presented.",
