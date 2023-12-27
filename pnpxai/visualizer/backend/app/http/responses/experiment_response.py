@@ -57,8 +57,6 @@ class ExperimentRunsResponse(Response):
         outputs = ExperimentService.get_task_formatted_outputs(
             experiment, outputs) if outputs is not None else default_outputs
 
-        print(outputs)
-
         formatted = [
             {
                 APIItems.INPUT.value: datum.to_json(),
