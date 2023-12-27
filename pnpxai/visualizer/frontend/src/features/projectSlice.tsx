@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { fetchProjects as fetchProjectsApi, fetchModelsByProjectId, fetchInputsByExperimentId } from './apiService';
 import { Project, Experiment, Model, InputData, imageObj } from '../app/types';
 import { Input } from '@mui/material';
+import { Metric } from '../app/types';
 
 const initialState = {
   data: [] as Project[], // Initialize as an empty array
@@ -9,6 +10,29 @@ const initialState = {
   loaded: false, // Add a flag to track if the data is loaded
   error: false
 };
+
+interface Nickname {
+  name: string;
+  nickname: string;
+}
+
+const nickname: Nickname[] = [
+  { "name": "MuFidelity", "nickname": "Correctness" },
+  { "name": "Sensitivity", "nickname": "Continuity" },
+  { "name": "Complexity", "nickname": "Compactness" },
+];
+
+
+const metricSortOrder = new Map<string, number>(nickname.map((item, index) => [item.name, index]));
+
+function sortMetrics(metrics: Metric[], sortOrder: Map<string, number>): Metric[] {
+  return metrics.sort((a, b) => {
+    let orderA = sortOrder.get(a.name) ?? Number.MAX_VALUE;
+    let orderB = sortOrder.get(b.name) ?? Number.MAX_VALUE;
+    return orderA - orderB;
+  });
+}
+
 
 export const fetchProjects = createAsyncThunk(
   'projects/fetchProjects',
@@ -31,6 +55,10 @@ export const fetchProjects = createAsyncThunk(
               models[i].name = 'ResNet18';
             }
             
+            if (experiment.metrics) {
+              experiment.metrics = sortMetrics(experiment.metrics, metricSortOrder);
+            }
+
             experiment.model = models[i];
             experiment.modelDetected = true;
 
