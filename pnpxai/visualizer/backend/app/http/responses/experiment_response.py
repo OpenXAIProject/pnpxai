@@ -46,24 +46,28 @@ class ExperimentRunsResponse(Response):
         inputs = ExperimentService.get_task_formatted_inputs(
             experiment, experiment.get_inputs_flattened())
         n_inputs = len(inputs)
-        default_filler = [None] * n_inputs
 
+        default_targets = [None] * n_inputs
         targets = experiment.get_targets_flattened()
         targets = ExperimentService.get_task_formatted_targets(
-            experiment, targets) if targets is not None else default_filler
+            experiment, targets) if targets is not None else default_targets
 
+        default_outputs = [None, None] * n_inputs
         outputs = experiment.get_outputs_flattened()
         outputs = ExperimentService.get_task_formatted_outputs(
-            experiment, outputs) if outputs is not None else default_filler
+            experiment, outputs) if outputs is not None else default_outputs
 
         formatted = [
             {
                 APIItems.INPUT.value: datum.to_json(),
                 APIItems.TARGET.value: target,
-                APIItems.OUTPUTS.value: output,
+                APIItems.OUTPUTS.value: [{
+                    APIItems.KEY.value: output_id,
+                    APIItems.VALUE.value: output
+                } for output_id, output in outputs],
                 APIItems.EXPLANATIONS.value: list(),
             }
-            for (datum, target, output) in zip(inputs, targets, outputs)
+            for (datum, target, outputs) in zip(inputs, targets, outputs)
         ]
 
         explainers = experiment.get_current_explainers()
