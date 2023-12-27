@@ -3,14 +3,19 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../app/store';
 import { setCurrentProject } from '../../features/projectSlice';
 import { Link } from 'react-router-dom';
-import { Box, AppBar, Toolbar, Button, Menu, MenuItem, Popover, IconButton, Tooltip, Typography } from '@mui/material';
+import { Box, AppBar, Toolbar, Button, Menu, MenuItem, Popover, IconButton, Tooltip, Typography, List, ListItem } from '@mui/material';
 import logo from '../../assets/images/SVG/XAI-Top-PnP.svg';
 import { useLocation } from 'react-router-dom';
 import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
 
 
 const NavBar: React.FC = () => {
-  const helptext = "Correctness evaluates the truthfulness/reliability of explanations about a prediction model (AI model). That is, it indicates how truthful the explanation is compared to the operation of the black box model. Completeness assesses the extent to which a prediction model (AI model) is explained. Providing 'the whole truth' of the black box model represents high completeness, but a good explanation should balance conciseness and correctness. Continuity evaluates how continuous (i.e., smooth) an explanation is. An explanation function with high continuity ensures that small changes in the input do not bring about significant changes in the explanation. Compactness assesses the size/amount of an explanation. It ensures that complex and redundant explanations that are difficult to understand are not presented."
+  const helptext = {
+    "Correctness" : "the truthfulness/reliability of explanations about a prediction model (AI model). That is, it indicates how truthful the explanation is compared to the operation of the black box model.",
+    "Continuity" : "how continuous (i.e., smooth) an explanation is. An explanation function with high continuity ensures that small changes in the input do not bring about significant changes in the explanation.",
+    "Compactness" : "the size/amount of an explanation. It ensures that complex and redundant explanations that are difficult to understand are not presented.",
+    // "Completeness" : " the extent to which a prediction model (AI model) is explained. Providing 'the whole truth' of the black box model represents high completeness, but a good explanation should balance conciseness and correctness.",
+  }
   const routes = [
     {
       path: "/model-info",
@@ -153,7 +158,15 @@ const NavBar: React.FC = () => {
             }}
           >
             <Typography sx={{ p: 2 }}> Meaning of Evaluation Metric </Typography>
-            <Typography sx={{ p: 2 }}> {helptext} </Typography> 
+            <List sx={{ p: 1 }}>
+              {Object.keys(helptext).map((key, index) => (
+                  <ListItem key={index}>
+                  <Typography key={index} sx={{ p: 1 }}>
+                  <strong>{key}</strong> evaluates {helptext[key]}
+                  </Typography>
+                  </ListItem>
+                ))}
+            </List>
           </Popover>
         </Toolbar>
       </AppBar>
