@@ -90,6 +90,7 @@ class Experiment:
                     explainer_id, metric_id)
                 explanations, data_ids = self.manager.get_valid_explanations(
                     explainer_id, data_ids)
+                data, _ = self.manager.get_data(data_ids)
                 evaluations = self._evaluate(
                     data, explanations, explainer, metric)
                 self.manager.save_evaluations(
@@ -227,8 +228,14 @@ class Experiment:
         return formatted
 
     def get_explainers_ranks(self) -> Optional[Sequence[Sequence[int]]]:
+        evaluations = [[[
+            data_evaluation.detach().cpu() if data_evaluation is not None else None
+            for data_evaluation in metric_data
+        ]for metric_data in explainer_data
+        ]for explainer_data in self.get_evaluations_flattened()]
         # (explainers, metrics, data)
-        evaluations = np.array(self.get_evaluations_flattened(), dtype=float)
+        evaluations = np.array(evaluations, dtype=float)
+        evaluations = np.nan_to_num(evaluations, nan=-np.inf)
         if evaluations.ndim != 3:
             return None
 
