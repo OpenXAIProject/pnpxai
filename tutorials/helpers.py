@@ -1,6 +1,6 @@
+from typing import Optional, List
 import os
 import json
-import random
 from pathlib import Path
 
 import torchvision
@@ -46,11 +46,17 @@ def get_torchvision_model(model_name):
     transform = weights.transforms()
     return model, transform
 
-def get_imagenet_dataset(transform, subset_size: int=100, root_dir="./data/ImageNet"):
+def get_imagenet_dataset(
+        transform,
+        subset_size: int=100, # ignored if indices is not None
+        root_dir="./data/ImageNet",
+        indices: Optional[List[int]]=None,
+    ):
     os.chdir(Path(__file__).parent) # ensure path
     dataset = ImageNetDataset(root_dir=root_dir, transform=transform)
+    if indices is None:
+        return Subset(dataset, indices=indices)
     indices = list(range(len(dataset)))
-    # random.shuffle(indices)
     subset = Subset(dataset, indices=indices[:subset_size])
     return subset
 
