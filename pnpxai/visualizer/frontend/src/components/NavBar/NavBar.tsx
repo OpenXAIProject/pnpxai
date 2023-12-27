@@ -74,13 +74,17 @@ const NavBar: React.FC = () => {
   };
 
   useEffect(() => {
-    const currentPath = window.location.pathname;
+    const currentPath = window.location.hash.split('#')[1];
     const currentMenu = routes.findIndex(route => route.path === currentPath);
     if (currentMenu !== -1) {
       setSelectedMenu(currentMenu);
     } else {
       setSelectedMenu(0);
     }
+    console.log(currentPath)
+    console.log(currentMenu)
+    console.log(window.location.hash)
+
   }
   , [location]);
 
