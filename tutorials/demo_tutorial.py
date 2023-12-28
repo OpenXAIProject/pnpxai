@@ -12,7 +12,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def create_experiment(project, model_name, dataset_subset_size=25, batch_size=10):
     model, transform = get_torchvision_model(model_name)
     model = model.to(device)
-    dataset = get_imagenet_dataset(transform, subset_size=dataset_subset_size)
+    images_for_demo = [0, 86, 148, 163, 596, 608, 840, 983, 916]
+    dataset = get_imagenet_dataset(transform, indices=images_for_demo)
     loader = DataLoader(dataset, batch_size=batch_size)
     def input_extractor(x): return x[0].to(device)
     def target_extractor(x): return x[1].to(device)
@@ -21,7 +22,7 @@ def create_experiment(project, model_name, dataset_subset_size=25, batch_size=10
     
     return project.create_auto_experiment(
         model,
-        loader,
+        loader, 
         name=f'{model_name} Experiment',
         input_extractor=input_extractor,
         target_extractor=target_extractor,
