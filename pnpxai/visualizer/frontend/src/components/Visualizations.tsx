@@ -17,6 +17,15 @@ const Visualizations: React.FC<{
     {"name": "MuFidelity", "nickname": "Correctness"},
     {"name": "Sensitivity", "nickname": "Continuity"},
   ]
+
+  const explainerNickname = [
+    { "name": "GuidedGradCam", "nickname": "Guided Grad-CAM" },
+    { "name": "IntegratedGradients", "nickname": "Integrated Gradients" },
+    { "name": "KernelShap", "nickname": "kernelSHAP" },
+    { "name": "LRP", "nickname": "LRP" },
+    { "name": "Lime", "nickname": "LIME" },
+    { "name": "RAP", "nickname": "RAP" },
+  ];
   const projectId = useSelector((state: RootState) => state.projects.currentProject.id);
   const [experimentResults, setExperimentResults] = React.useState<ExperimentResult[]>([]);
   
@@ -142,7 +151,9 @@ const Visualizations: React.FC<{
                         data={[exp.data.data[0]]}
                         layout={exp.data.layout}
                         />
-                      <Typography variant="subtitle1" align="center">{exp.explainer}</Typography>
+                      <Typography variant="subtitle1" align="center">
+                        {explainerNickname.find(n => n.name === exp.explainer)?.nickname}
+                        </Typography>
                       {(Object.keys(exp.evaluation).length > 0) && (
                         <Typography variant="body2" sx={{ textAlign: 'center' }}> Rank {index+1}</Typography>
                       )}
