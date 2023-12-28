@@ -27,10 +27,11 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
   // User Input
   const [inputs, setInputs] = useState<number[]>([]);
   const [selectedInputs, setSelectedInputs] = useState<number[]>([]);
-  const [explainers, setExplainers] = useState<number[]>([]);
+  const [explainers, setExplainers] = useState<number[]>(experiment.explainers.map(explainer => explainer.id));
   const [selectedExplainers, setSelectedExplainers] = useState<number[]>([]);
-  const [metrics, setMetrics] = useState<Metric[]>([]);
-  const [selectedMetrics, setSelectedMetrics] = useState<number[]>(experiment.metrics.map(metric => metric.id));
+  const defaultMetrics = experiment.metrics.filter(metric => metric.name === 'MuFidelity');
+  const [metrics, setMetrics] = useState<Metric[]>(defaultMetrics ? defaultMetrics : []) ;
+  const [selectedMetrics, setSelectedMetrics] = useState<number[]>([]);
   const sortedExplainers = [...experiment.explainers].sort((a, b) =>
     a.name.toLowerCase().localeCompare(b.name.toLowerCase())
   );
