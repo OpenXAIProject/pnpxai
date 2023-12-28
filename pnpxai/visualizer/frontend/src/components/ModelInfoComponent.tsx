@@ -76,20 +76,12 @@ const ModelInfoComponent: React.FC<{ experiment: Experiment, showModel: boolean}
   
   return (
     <Box sx={{ m: 1 }}>
-      <Box sx={{ mt: 3, mb: 3, ml: 1, pb: 3, borderBottom: 1, minHeight: "600px" }}>
+      <Box sx={{ mt: 3, mb: 3, ml: 1, pb: 3, minHeight: "600px" }}>
       <Card>
         <Grid container spacing={2}>
           {/* Side Bar Area */}
           <Grid item xs={12} md={2} sx={{borderRight: 1, borderColor: 'divider'}}>
           <Box sx={{ m: 1 }}>
-            <Box sx={{ ml: 1, mr : 1, borderBottom: 1, borderColor: 'divider', p: 1 }}>
-              <Typography variant='h6'> Experiment Name </Typography>
-              <Typography variant='h4'> {experiment.name} </Typography>
-            </Box>
-            <Box sx={{ ml: 1, mr : 1, borderBottom: 1, borderColor: 'divider', p: 1 }}>
-              <Typography variant='h6'> Model Name </Typography>
-              <Typography variant='h4'> {experiment.model.name} </Typography>
-            </Box>
             <Tooltip 
               title={(
               <Card>
@@ -100,13 +92,21 @@ const ModelInfoComponent: React.FC<{ experiment: Experiment, showModel: boolean}
               )}
               >
               <Box sx={{ ml: 1, mr : 1, borderBottom: 1, borderColor: 'divider', p: 1 }}>
-                <Typography variant='h6'> Task </Typography>
-                <Typography variant='h4'> Image Classification </Typography>
+                <Typography variant='h6' color="textSecondary"> Task </Typography>
+                <Typography variant='h5'> Image Classification </Typography>
               </Box>
             </Tooltip>
             <Box sx={{ ml: 1, mr : 1, borderBottom: 1, borderColor: 'divider', p: 1 }}>
-              <Typography variant='h6'> Model Detection Result </Typography>
-              <Typography variant='h4' style={toolbarStyle}> Model Detected </Typography>
+              <Typography variant='h6' color="textSecondary"> Experiment Name </Typography>
+              <Typography variant='h5'> {experiment.name} </Typography>
+            </Box>
+            <Box sx={{ ml: 1, mr : 1, borderBottom: 1, borderColor: 'divider', p: 1 }}>
+              <Typography variant='h6' color="textSecondary"> Model Name </Typography>
+              <Typography variant='h5'> {experiment.model.name} </Typography>
+            </Box>
+            <Box sx={{ ml: 1, mr : 1, borderBottom: 1, borderColor: 'divider', p: 1 }}>
+              <Typography variant='h6' color="textSecondary"> Model Detection Result </Typography>
+              <Typography variant='h5' style={toolbarStyle}> Model Detected </Typography>
             </Box>
             </Box>
           </Grid>
@@ -118,7 +118,7 @@ const ModelInfoComponent: React.FC<{ experiment: Experiment, showModel: boolean}
               <Box sx={{ m: 1 }}>
                 <Box sx={{ m: 2 }}>
                   <Box sx={{ mb: 2 }}>
-                    <Typography variant='h3'> Recommended Explainers </Typography>
+                    <Typography variant='h3'> Applicable Explainers </Typography>
                   </Box>
                   {experiment.explainers.map((explainer, index) => (
                     <Box key={index} sx={{ m: 1 }}>

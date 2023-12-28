@@ -22,6 +22,15 @@ const nickname: Nickname[] = [
   { "name": "Complexity", "nickname": "Compactness" },
 ];
 
+const explainerNickname: Nickname[] = [
+  { "name": "GuidedGradCam", "nickname": "Guided Grad-CAM" },
+  { "name": "IntegratedGradients", "nickname": "Integrated Gradients" },
+  { "name": "KernelShap", "nickname": "kernelSHAP" },
+  { "name": "LRP", "nickname": "LRP" },
+  { "name": "Lime", "nickname": "LIME" },
+  { "name": "RAP", "nickname": "RAP" },
+];
+
 
 const metricSortOrder = new Map<string, number>(nickname.map((item, index) => [item.name, index]));
 
@@ -57,6 +66,11 @@ export const fetchProjects = createAsyncThunk(
             
             if (experiment.metrics) {
               experiment.metrics = sortMetrics(experiment.metrics, metricSortOrder);
+            }
+            
+            for (let j = 0; j < experiment.explainers.length; j++) {
+              const explainer = experiment.explainers[j];
+              explainer.name = explainerNickname.find((item) => item.name === explainer.name)?.nickname ?? explainer.name;
             }
 
             experiment.model = models[i];

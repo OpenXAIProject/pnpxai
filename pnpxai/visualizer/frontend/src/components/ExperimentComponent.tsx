@@ -133,14 +133,6 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <Box sx={{ pl:4, p: 2, borderBottom: 1, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-              <Box>
-                <Typography variant="h6"> Experiment Name </Typography>
-                <Typography variant="body1"> {experiment.name} </Typography>
-              </Box>
-              <Box>
-                <Typography variant="h6"> Model Name </Typography>
-                <Typography variant="body1"> {experiment.model.name} </Typography>
-              </Box>
               <Tooltip 
                 title={(
                   <Card>
@@ -155,6 +147,14 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
                     <Typography variant="body1"> Image Classification </Typography>
                   </Box>
               </Tooltip>
+              <Box>
+                <Typography variant="h6"> Experiment Name </Typography>
+                <Typography variant="body1"> {experiment.name} </Typography>
+              </Box>
+              <Box>
+                <Typography variant="h6"> Model Name </Typography>
+                <Typography variant="body1"> {experiment.model.name} </Typography>
+              </Box>
             </Box>
           </Grid>
           <Grid item xs={12} md={2} sx={{borderRight: 1, borderColor: 'divider'}}>
@@ -208,7 +208,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
               
               {/* Run Experiment Button */}
               <Box sx={{ ml: 1, mr : 1, p: 1 }}>
-                <Button variant="contained" color="secondary" onClick={handleRunExperiment} sx={{ mt: 2 }}>Run Experiment</Button>
+                <Button variant="contained" color="primary" onClick={handleRunExperiment} sx={{ mt: 2 }}>Run Experiment</Button>
               </Box>
             </Box>
           </Grid>
