@@ -5,6 +5,7 @@ from torch import Tensor, nn
 from pnpxai.core._types import Model, DataSource, Task
 from pnpxai.explainers._explainer import Explainer
 from pnpxai.explainers.rap.rap import RelativeAttributePropagation
+from pnpxai.explainers.utils.post_process import postprocess_attr
 
 
 class RAP(Explainer):
@@ -39,13 +40,7 @@ class RAP(Explainer):
     ):
         explanations = explanations.transpose(-1, -3)\
             .transpose(-2, -3)
-        formatted = super().format_outputs_for_visualization(
-            inputs=inputs,
-            targets=targets,
-            explanations=explanations,
-            task=task,
-            kwargs=kwargs
+        return postprocess_attr(
+            attr=explanations,
+            sign="positive"
         )
-        # Normalize between -1 and 1
-        formatted = formatted * 2 - 1
-        return formatted
