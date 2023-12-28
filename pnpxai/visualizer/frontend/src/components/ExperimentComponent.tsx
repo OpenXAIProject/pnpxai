@@ -124,7 +124,23 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
     setSelectedMetrics(metrics.map(metric => metric.id));
   };
 
-
+  const handleAutoExplain = () => {
+    // Select all explainer IDs
+    const allExplainerIds = experiment.explainers.map(explainer => explainer.id);
+    setExplainers(allExplainerIds);
+  
+    // Select all metrics
+    const allMetrics = experiment.metrics;
+    setMetrics(allMetrics);
+  
+    // Set selected states which are used in the Experiment run
+    setSelectedInputs(inputs.map(input => Number(input)));
+    setSelectedExplainers(allExplainerIds);
+    setSelectedMetrics(allMetrics.map(metric => metric.id));
+  
+    setLoading(true);
+    setIsExperimentRun(true);
+  };
 
   return (
     <Box sx={{ m: 1 }}>
@@ -171,7 +187,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
                 </Box>
               </Box>
 
-              {/* Algorithms Box */}
+              {/* Explainer Box */}
               <Box sx={{ ml: 1, mr : 1, borderBottom: 1, borderColor: 'divider', p: 1}}>
                 <Typography variant="h6">Select Explainers</Typography>
                 {sortedExplainers.map((explainerObj, index) => (
@@ -208,6 +224,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
               
               {/* Run Experiment Button */}
               <Box sx={{ ml: 1, mr : 1, p: 1 }}>
+                {/* <Button variant="contained" color="primary" onClick={handleAutoExplain} sx={{ mt: 2 }}>Auto Explain</Button> */}
                 <Button variant="contained" color="primary" onClick={handleRunExperiment} sx={{ mt: 2 }}>Run Experiment</Button>
               </Box>
             </Box>
