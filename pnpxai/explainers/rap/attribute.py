@@ -19,7 +19,7 @@ class RAP(Explainer):
         pred = output.max(1, keepdim=True)[1]
         pred = pred.squeeze(-1)
 
-        pred_one_hot = nn.functional.one_hot(pred, 1000) * 1.0
+        pred_one_hot = nn.functional.one_hot(pred, output.shape[-1]) * 1.0
         pred_one_hot = pred_one_hot.to(self.device)
         return pred_one_hot
 
