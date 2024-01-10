@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from pnpxai.explainers import Explainer
 
 TEST_IMAGE_TENSOR_SIZE = (3, 2, 2)
 TEST_CLASSIFIER_OUTPUT_DIM = 2
@@ -11,7 +12,7 @@ def get_test_input_image(batch=True, size=None):
         return img.unsqueeze(0)
     return img
 
-class _TestModelCNN(nn.Module):
+class ToyCNN(nn.Module):
     def __init__(self, with_pool=True):
         super().__init__()
         self.with_pool = with_pool
@@ -37,3 +38,11 @@ class _TestModelCNN(nn.Module):
         if self.with_pool:
             return self.relu
         return None
+
+
+class ToyExplainer(Explainer):
+    def __init__(self, model):
+        super().__init__(model=model)
+
+    def attribute(self, inputs, targets):
+        return torch.randn_like(inputs)

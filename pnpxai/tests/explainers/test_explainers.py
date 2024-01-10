@@ -6,12 +6,12 @@ from pnpxai.explainers import (
     GradCam, GuidedGradCam, Lime, KernelShap,
     IntegratedGradients, LRP, RAP, ExplainerWArgs
 )
-from helpers import _TestModelCNN, get_test_input_image
+from pnpxai.tests.helpers import ToyCNN, get_test_input_image
 
 class _TestExplainer:
     @pytest.fixture
     def model(self):
-        return _TestModelCNN()
+        return ToyCNN()
     
     @pytest.fixture
     def valid_input(self):
@@ -56,7 +56,7 @@ class TestGradCam(_TestExplainer):
         assert explainer.source.layer is model.target_layer
     
     def test_find_target_layer_raises_without_pool(self, explainer_type):
-        model_without_pool = _TestModelCNN(with_pool=False)
+        model_without_pool = ToyCNN(with_pool=False)
         with pytest.raises(AssertionError):
             explainer_type(model_without_pool)
     
