@@ -4,8 +4,9 @@ from torch import nn
 TEST_IMAGE_TENSOR_SIZE = (3, 2, 2)
 TEST_CLASSIFIER_OUTPUT_DIM = 2
 
-def get_test_input_image(batch=True):
-    img = torch.randn(*TEST_IMAGE_TENSOR_SIZE)
+def get_test_input_image(batch=True, size=None):
+    size = size if size else TEST_IMAGE_TENSOR_SIZE
+    img = torch.randn(*size)
     if batch:
         return img.unsqueeze(0)
     return img

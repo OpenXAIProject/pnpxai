@@ -14,8 +14,8 @@ class _TestExplainer:
         return _TestModelCNN()
     
     @pytest.fixture
-    def input(self):
-        return get_test_input_image()
+    def valid_input(self):
+        return get_test_input_image(batch=True)
 
     @abstractmethod
     @pytest.fixture
@@ -30,8 +30,21 @@ class _TestExplainer:
     def explainer_w_args(self, explainer):
         return ExplainerWArgs(explainer)
     
-    def test_attribute(self, explainer, input):
-        explainer.attribute(input, 0)
+    def test_attribute(self, explainer, valid_input):
+        explainer.attribute(valid_input, 0)
+
+    def test_attribute_with_invalid_inputs(self, explainer):
+        # all explainers raise RuntimeError when forwarding input through model
+        # if input is not valid.
+        sizes = [
+            (2, 2), # lesser dim case
+            (1, 2, 2), # wrong channel case
+            (1, 1, 2, 2), # larger dim case
+        ]
+        for size in sizes:
+            invalid_input = get_test_input_image(size=size)
+            with pytest.raises(RuntimeError):
+                explainer.model(invalid_input)
 
 
 class TestGradCam(_TestExplainer):
@@ -68,14 +81,14 @@ class TestKernelShap(_TestExplainer):
         # valid <=> n superpixels > 1
         return torch.eye(2).long().unsqueeze(0)
 
-    def test_attribute(self, explainer, input, valid_feature_mask):
-        explainer.attribute(input, 0, feature_mask=valid_feature_mask)
+    def test_attribute(self, explainer, valid_input, valid_feature_mask):
+        explainer.attribute(valid_input, 0, feature_mask=valid_feature_mask)
     
-    def test_attribute_raises_with_invalid_feature_mask(self, explainer, input):
-        # Default feature mask has only one superpixel for the test input.
-        # Finally, ValueError occurs from captum without AssertionError.
+    def test_attribute_raises_with_invalid_feature_mask(self, explainer, valid_input):
+        # Default feature mask has only one superpixel for the test valid_input.
+        # Finally, ValueError occurs from captum.
         with pytest.raises(AssertionError):
-            explainer.attribute(input, 0)
+            explainer.attribute(valid_input, 0)
 
 
 class TestIntegratedGradients(_TestExplainer):
