@@ -12,6 +12,7 @@ import { preprocess, AddMockData } from './utils';
 const Visualizations: React.FC<{ 
   experiment: string; inputs: number[]; explainers: number[]; metrics: number[]; loading: boolean; setLoading: any
 }> = ({ experiment, inputs, explainers, metrics, loading, setLoading }) => {
+  // TODO: change this nickname to the real name
   const nickname = [
     {"name": "Complexity", "nickname": "Compactness"},
     {"name": "MuFidelity", "nickname": "Correctness"},

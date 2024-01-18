@@ -11,6 +11,7 @@ import Visualizations from './Visualizations';
 import { Experiment, Metric } from '../app/types';
 
 const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {experiment} ) => {
+  // TODO: change this nickname to the real name
   const nickname = [
     {"name": "Complexity", "nickname": "Compactness"},
     {"name": "MuFidelity", "nickname": "Correctness"},

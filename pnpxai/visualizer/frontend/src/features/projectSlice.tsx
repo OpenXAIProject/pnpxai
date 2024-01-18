@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { fetchProjects as fetchProjectsApi, fetchModelsByProjectId, fetchInputsByExperimentId } from './apiService';
 import { Project, Experiment, Model, InputData, imageObj } from '../app/types';
-import { Input } from '@mui/material';
 import { Metric } from '../app/types';
 
 const initialState = {
@@ -11,6 +10,7 @@ const initialState = {
   error: false
 };
 
+// TODO: change this nickname to the real name
 interface Nickname {
   name: string;
   nickname: string;
@@ -58,11 +58,6 @@ export const fetchProjects = createAsyncThunk(
           for (let i = 0; i < project.experiments.length; i++) {
             const experiment = project.experiments[i];
             experiment.id = experiment.name;
-            if (models[i].name === 'VisionTransformer') {
-              models[i].name = 'VisionTransformer16';
-            } else if (models[i].name === 'ResNet') {
-              models[i].name = 'ResNet18';
-            }
             
             if (experiment.metrics) {
               experiment.metrics = sortMetrics(experiment.metrics, metricSortOrder);
