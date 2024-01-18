@@ -1,3 +1,4 @@
+# Load torch and PnP XAI Manager Package
 import torch
 from torch.utils.data import DataLoader
 from pnpxai.utils import set_seed
@@ -9,12 +10,17 @@ set_seed(seed=0)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Define common functions
-def create_experiment(project, model_name, dataset_subset_size=25, batch_size=10):
+def create_experiment(project, model_name, batch_size=10):
+    # Model : Load Pretrained Model From torchvision
     model, transform = get_torchvision_model(model_name)
     model = model.to(device)
-    images_for_demo = [0, 86, 148, 163, 596, 608, 840, 983, 916]
+
+    # Image Data : Select some images for demo purpose(locally saved images)
+    images_for_demo = [0, 7, 148, 163, 608, 108]
     dataset = get_imagenet_dataset(transform, indices=images_for_demo)
     loader = DataLoader(dataset, batch_size=batch_size)
+
+    # Callbacks
     def input_extractor(x): return x[0].to(device)
     def target_extractor(x): return x[1].to(device)
     def input_visualizer(x): return denormalize_image(x, transform.mean, transform.std)
@@ -45,6 +51,3 @@ experiment_project2 = create_experiment(project2, "vit_b_16")
 
 # Serve projects
 project1.get_server().serve(debug=True, host='0.0.0.0', port=5001)
-
-# You can run multiple projects in parallel by running only 1 project
-# project2.get_server().serve(debug=True, host='0.0.0.0', port=5002)
