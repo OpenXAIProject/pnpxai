@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { fetchProjects as fetchProjectsApi, fetchModelsByProjectId, fetchInputsByExperimentId } from './apiService';
 import { Project, Experiment, Model, InputData, imageObj } from '../app/types';
-import { Input } from '@mui/material';
 import { Metric } from '../app/types';
 
 const initialState = {
@@ -11,6 +10,7 @@ const initialState = {
   error: false
 };
 
+// TODO: change this nickname to the real name
 interface Nickname {
   name: string;
   nickname: string;
@@ -20,6 +20,15 @@ const nickname: Nickname[] = [
   { "name": "MuFidelity", "nickname": "Correctness" },
   { "name": "Sensitivity", "nickname": "Continuity" },
   { "name": "Complexity", "nickname": "Compactness" },
+];
+
+const explainerNickname: Nickname[] = [
+  { "name": "GuidedGradCam", "nickname": "Guided Grad-CAM" },
+  { "name": "IntegratedGradients", "nickname": "Integrated Gradients" },
+  { "name": "KernelShap", "nickname": "kernelSHAP" },
+  { "name": "LRP", "nickname": "LRP" },
+  { "name": "Lime", "nickname": "LIME" },
+  { "name": "RAP", "nickname": "RAP" },
 ];
 
 
@@ -49,14 +58,14 @@ export const fetchProjects = createAsyncThunk(
           for (let i = 0; i < project.experiments.length; i++) {
             const experiment = project.experiments[i];
             experiment.id = experiment.name;
-            if (models[i].name === 'VisionTransformer') {
-              models[i].name = 'VisionTransformer16';
-            } else if (models[i].name === 'ResNet') {
-              models[i].name = 'ResNet18';
-            }
             
             if (experiment.metrics) {
               experiment.metrics = sortMetrics(experiment.metrics, metricSortOrder);
+            }
+            
+            for (let j = 0; j < experiment.explainers.length; j++) {
+              const explainer = experiment.explainers[j];
+              explainer.name = explainerNickname.find((item) => item.name === explainer.name)?.nickname ?? explainer.name;
             }
 
             experiment.model = models[i];

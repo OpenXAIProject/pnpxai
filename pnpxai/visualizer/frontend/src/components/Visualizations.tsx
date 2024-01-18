@@ -12,66 +12,61 @@ import { preprocess, AddMockData } from './utils';
 const Visualizations: React.FC<{ 
   experiment: string; inputs: number[]; explainers: number[]; metrics: number[]; loading: boolean; setLoading: any
 }> = ({ experiment, inputs, explainers, metrics, loading, setLoading }) => {
+  // TODO: change this nickname to the real name
   const nickname = [
     {"name": "Complexity", "nickname": "Compactness"},
     {"name": "MuFidelity", "nickname": "Correctness"},
     {"name": "Sensitivity", "nickname": "Continuity"},
   ]
+
+  const explainerNickname = [
+    { "name": "GuidedGradCam", "nickname": "Guided Grad-CAM" },
+    { "name": "IntegratedGradients", "nickname": "Integrated Gradients" },
+    { "name": "KernelShap", "nickname": "kernelSHAP" },
+    { "name": "LRP", "nickname": "LRP" },
+    { "name": "Lime", "nickname": "LIME" },
+    { "name": "RAP", "nickname": "RAP" },
+  ];
   const projectId = useSelector((state: RootState) => state.projects.currentProject.id);
   const [experimentResults, setExperimentResults] = React.useState<ExperimentResult[]>([]);
   
 
   useEffect(() => {
-    const fetchExperimentResults = async () => {
-      try {
-        let response = await fetchExperiment(projectId, experiment);
-        response = preprocess(response);
-        const experimentResults = response.data.data
-        experimentResults.forEach((experimentResult: ExperimentResult) => {
-          experimentResult.explanations.sort((a, b) => a.rank - b.rank);
-        });
-        setExperimentResults(JSON.parse(JSON.stringify(experimentResults)));
-        setLoading(false);
-      }
-      catch (err) {
-        console.log(err);
-      }
-    }
-
-    fetchExperimentResults();
-  }
-  , [projectId])
+    fetchExperiment(projectId, experiment).then((response) => {
+      response = preprocess(response);
+      const experimentResults = response.data.data
+      experimentResults.forEach((experimentResult: ExperimentResult) => {
+        experimentResult.explanations.sort((a, b) => a.rank - b.rank);
+      });
+      setExperimentResults(JSON.parse(JSON.stringify(experimentResults)));
+      setLoading(false);
+    }).catch((err) => {
+      console.log(err);
+    })
+  }, [projectId])
 
   
   
   useEffect(() => {
-    const runExperimentResults = async () => {
-      try {
-        let response = await RunExperiment(projectId, experiment,
-          {
-            inputs: inputs,
-            explainers: explainers,
-            metrics: metrics
-          }
-          );
-          response = preprocess(response);
-          const experimentResults = response.data.data
-          experimentResults.forEach((experimentResult: ExperimentResult) => {
-            experimentResult.explanations.sort((a, b) => a.rank - b.rank);
-          });
-          setExperimentResults(JSON.parse(JSON.stringify(experimentResults)));
-          setLoading(false);
-        }
-      catch (err) {
-        console.log(err);
-      }
-    }
-    
-    if (inputs.length > 0 && explainers.length > 0) {
-      runExperimentResults();
-    }
-  }
-  , [inputs, explainers])
+    if (!(inputs.length > 0 && explainers.length > 0))
+      return
+
+    RunExperiment(projectId, experiment, {
+      inputs: inputs,
+      explainers: explainers,
+      metrics: metrics
+    }).then((response) => {
+      response = preprocess(response);
+      const experimentResults = response.data.data
+      experimentResults.forEach((experimentResult: ExperimentResult) => {
+        experimentResult.explanations.sort((a, b) => a.rank - b.rank);
+      });
+      setExperimentResults(JSON.parse(JSON.stringify(experimentResults)));
+      setLoading(false);
+    }).catch((err) => {
+      console.log(err);
+    })
+  }, [inputs, explainers])
 
   if (loading) {
     return (
@@ -142,7 +137,9 @@ const Visualizations: React.FC<{
                         data={[exp.data.data[0]]}
                         layout={exp.data.layout}
                         />
-                      <Typography variant="subtitle1" align="center">{exp.explainer}</Typography>
+                      <Typography variant="subtitle1" align="center">
+                        {explainerNickname.find(n => n.name === exp.explainer)?.nickname}
+                        </Typography>
                       {(Object.keys(exp.evaluation).length > 0) && (
                         <Typography variant="body2" sx={{ textAlign: 'center' }}> Rank {index+1}</Typography>
                       )}

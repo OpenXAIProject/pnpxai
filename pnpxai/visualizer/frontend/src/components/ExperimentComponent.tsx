@@ -11,6 +11,7 @@ import Visualizations from './Visualizations';
 import { Experiment, Metric } from '../app/types';
 
 const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {experiment} ) => {
+  // TODO: change this nickname to the real name
   const nickname = [
     {"name": "Complexity", "nickname": "Compactness"},
     {"name": "MuFidelity", "nickname": "Correctness"},
@@ -27,10 +28,11 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
   // User Input
   const [inputs, setInputs] = useState<number[]>([]);
   const [selectedInputs, setSelectedInputs] = useState<number[]>([]);
-  const [explainers, setExplainers] = useState<number[]>([]);
+  const [explainers, setExplainers] = useState<number[]>(experiment.explainers.map(explainer => explainer.id));
   const [selectedExplainers, setSelectedExplainers] = useState<number[]>([]);
-  const [metrics, setMetrics] = useState<Metric[]>([]);
-  const [selectedMetrics, setSelectedMetrics] = useState<number[]>(experiment.metrics.map(metric => metric.id));
+  const defaultMetrics = experiment.metrics.filter(metric => metric.name === 'MuFidelity');
+  const [metrics, setMetrics] = useState<Metric[]>(defaultMetrics ? defaultMetrics : []) ;
+  const [selectedMetrics, setSelectedMetrics] = useState<number[]>([]);
   const sortedExplainers = [...experiment.explainers].sort((a, b) =>
     a.name.toLowerCase().localeCompare(b.name.toLowerCase())
   );
@@ -124,7 +126,23 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
     setSelectedMetrics(metrics.map(metric => metric.id));
   };
 
-
+  const handleAutoExplain = () => {
+    // Select all explainer IDs
+    const allExplainerIds = experiment.explainers.map(explainer => explainer.id);
+    setExplainers(allExplainerIds);
+  
+    // Select all metrics
+    const allMetrics = experiment.metrics;
+    setMetrics(allMetrics);
+  
+    // Set selected states which are used in the Experiment run
+    setSelectedInputs(inputs.map(input => Number(input)));
+    setSelectedExplainers(allExplainerIds);
+    setSelectedMetrics(allMetrics.map(metric => metric.id));
+  
+    setLoading(true);
+    setIsExperimentRun(true);
+  };
 
   return (
     <Box sx={{ m: 1 }}>
@@ -133,14 +151,6 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
         <Grid container spacing={2}>
           <Grid item xs={12}>
             <Box sx={{ pl:4, p: 2, borderBottom: 1, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
-              <Box>
-                <Typography variant="h6"> Experiment Name </Typography>
-                <Typography variant="body1"> {experiment.name} </Typography>
-              </Box>
-              <Box>
-                <Typography variant="h6"> Model Name </Typography>
-                <Typography variant="body1"> {experiment.model.name} </Typography>
-              </Box>
               <Tooltip 
                 title={(
                   <Card>
@@ -155,6 +165,14 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
                     <Typography variant="body1"> Image Classification </Typography>
                   </Box>
               </Tooltip>
+              <Box>
+                <Typography variant="h6"> Experiment Name </Typography>
+                <Typography variant="body1"> {experiment.name} </Typography>
+              </Box>
+              <Box>
+                <Typography variant="h6"> Model Name </Typography>
+                <Typography variant="body1"> {experiment.model.name} </Typography>
+              </Box>
             </Box>
           </Grid>
           <Grid item xs={12} md={2} sx={{borderRight: 1, borderColor: 'divider'}}>
@@ -171,7 +189,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
                 </Box>
               </Box>
 
-              {/* Algorithms Box */}
+              {/* Explainer Box */}
               <Box sx={{ ml: 1, mr : 1, borderBottom: 1, borderColor: 'divider', p: 1}}>
                 <Typography variant="h6">Select Explainers</Typography>
                 {sortedExplainers.map((explainerObj, index) => (
@@ -208,7 +226,8 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
               
               {/* Run Experiment Button */}
               <Box sx={{ ml: 1, mr : 1, p: 1 }}>
-                <Button variant="contained" color="secondary" onClick={handleRunExperiment} sx={{ mt: 2 }}>Run Experiment</Button>
+                {/* <Button variant="contained" color="primary" onClick={handleAutoExplain} sx={{ mt: 2 }}>Auto Explain</Button> */}
+                <Button variant="contained" color="primary" onClick={handleRunExperiment} sx={{ mt: 2 }}>Run Experiment</Button>
               </Box>
             </Box>
           </Grid>

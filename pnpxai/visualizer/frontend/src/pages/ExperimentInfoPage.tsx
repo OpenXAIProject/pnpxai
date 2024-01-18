@@ -42,7 +42,7 @@ const ModelInfoPage: React.FC = () => {
       </Box>
       {!isNoModelDetected ? (
         projectData?.experiments.map((experiment, index) => {
-          return <ModelInfoComponent key={index} experiment={experiment} showModel={index === 0 ? true : false}/>;
+          return <ModelInfoComponent key={index} experiment={experiment} showModel={false}/>;
         })
       ) : (
         <Box sx={{ m: 5, minHeight: "50px" }}>
