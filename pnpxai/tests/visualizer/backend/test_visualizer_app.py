@@ -1,4 +1,6 @@
 import pytest
+import json
+
 from torch import nn, Tensor
 from torch.utils.data import DataLoader, Dataset
 
@@ -23,7 +25,7 @@ class DummyDataset(Dataset):
 class TestVisualizerApp:
     @pytest.fixture
     def app_projects(self):
-        model = nn.Linear(1, 1)
+        model = nn.Linear(3, 1)
         loader = DataLoader(DummyDataset([
             (Tensor([0, 0, 0]), Tensor([0]))
         ]))
@@ -98,3 +100,16 @@ class TestVisualizerApp:
         assert payload['message'] == 'Success'
         assert payload['data'][exp_id]['name'] == class_to_string(
             experiment.model)
+
+    def test_api_post_experiment_run(self, client, app_projects):
+        project = list(app_projects.values())[0]
+        exp_name, experiment = list(project.experiments.items())[0]
+        response = client.put(
+            f'/api/projects/{project.name}/experiments/{exp_name}/',
+            data=json.dumps({
+                "inputs": [0],
+            }),
+            headers={'Content-Type': 'application/json'}
+        )
+        payload = response.get_json()
+        assert payload['message'] == 'Success'
