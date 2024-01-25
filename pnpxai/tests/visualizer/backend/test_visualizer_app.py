@@ -69,7 +69,6 @@ class TestVisualizerApp:
         exp_name, experiment = list(project.experiments.items())[0]
         response = client.get(
             f'/api/projects/{project.name}/experiments/{exp_name}/')
-        print(response)
         payload = response.get_json()
         assert payload['message'] == 'Success'
 
@@ -78,7 +77,6 @@ class TestVisualizerApp:
         exp_name, experiment = list(project.experiments.items())[0]
         response = client.get(
             f'/api/projects/{project.name}/experiments/{exp_name}/')
-        print(response)
         payload = response.get_json()
         assert payload['message'] == 'Success'
 

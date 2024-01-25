@@ -14,6 +14,8 @@ from pnpxai.explainers.full_grad import FullGrad
 from pnpxai.explainers.pdp import PDP
 from pnpxai.explainers.tcav import TCAV
 
-AVAILABLE_EXPLAINERS = [
+from typing import List, Type
+
+AVAILABLE_EXPLAINERS: List[Type[Explainer]] = [
     Lime, KernelShap, GuidedGradCam, IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors, PDP
 ]
