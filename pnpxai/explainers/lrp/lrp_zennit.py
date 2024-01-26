@@ -68,7 +68,7 @@ class LRPZennit(Explainer):
         inputs: DataSource,
         targets: TargetType,
         epsilon: float = 1e-6,
-        n_classes: int = 1000,
+        n_classes: int = None,
     ) -> List[torch.Tensor]:
         model = self._replace_add_func_with_mod()
         if isinstance(targets, int):
@@ -77,6 +77,8 @@ class LRPZennit(Explainer):
             targets = targets.tolist()
         else:
             raise Exception(f"[LRP] Unsupported target type: {type(targets)}")
+        if n_classes is None:
+            n_classes = self.model(inputs).shape[-1]
         
         layer_map = [
             (Linear, Epsilon(epsilon=epsilon)),

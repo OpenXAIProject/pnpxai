@@ -31,7 +31,7 @@ class KernelShap(Explainer):
     ) -> List[Tensor]:
         if feature_mask is None:
             feature_mask = get_default_feature_mask(inputs, self.device)
-
+        assert len(feature_mask.unique()) > 1, "The number of feature_mask must be more than one"
         attributions = self.source.attribute(
             inputs=inputs,
             baselines=baselines,

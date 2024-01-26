@@ -15,6 +15,7 @@ SUPPORTED_MODULES: Dict[type[nn.Module], type[rules.RelProp]] = {
     nn.BatchNorm2d: rules.BatchNorm2d,
     nn.Linear: rules.Linear,
     nn.Conv2d: rules.Conv2d,
+    nn.Flatten: rules.Flatten,
 }
 SUPPORTED_FUNCTIONS: Dict[callable, type[rules.RelProp]] = {
     torch.add: rules.Add,

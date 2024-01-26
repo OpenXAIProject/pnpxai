@@ -16,10 +16,8 @@ class LRP(Explainer):
         inputs: DataSource,
         targets: TargetType = None,
         epsilon: float = .25,
-        n_classes: Optional[int] = 1000,
+        n_classes: Optional[int] = None,
     ) -> DataSource:
-        if n_classes is None:
-            n_classes = self.model(inputs).shape[-1]
         attributions = self.source.attribute(
             inputs=inputs,
             targets=targets,

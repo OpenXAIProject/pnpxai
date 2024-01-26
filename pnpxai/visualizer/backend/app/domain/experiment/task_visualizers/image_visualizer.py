@@ -33,8 +33,8 @@ class ImageVisualizer(BaseVisualizer):
         return targets
 
     @classmethod
-    def default_outputs_visualizer(cls, output, idx):
-        return output, idx
+    def default_outputs_visualizer(cls, idx):
+        return idx
 
     @classmethod
     def format_outputs(cls, outputs, visualizer=None, n_outputs=3):
