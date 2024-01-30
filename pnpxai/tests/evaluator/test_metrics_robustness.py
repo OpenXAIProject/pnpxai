@@ -22,7 +22,7 @@ class TestRobustness():
     def test_computation_time(self):
         batch_size = 64
         device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-        model = torchvision.models.get_model("resnet18")
+        model = torchvision.models.get_model("resnet18").eval()
         model = model.to(device)
         explainer_w_args = ExplainerWArgs(LRP(model))
         data = get_dummy_imagenet_dataset(n_samples=100)
