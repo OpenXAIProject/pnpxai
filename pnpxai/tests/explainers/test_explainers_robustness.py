@@ -2,21 +2,25 @@ import time
 
 from torch.utils.data import DataLoader
 import torch
+import torchvision
 
 from pnpxai.explainers import AVAILABLE_EXPLAINERS
-from tutorials.helpers import get_torchvision_model, get_imagenet_dataset
+from pnpxai.tests.helpers import get_dummy_imagenet_dataset
 
 
 class TestRobustness():
     def test_computation_time(self):
         batch_size = 64
         device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-        model, transform = get_torchvision_model("resnet18")
+        model = torchvision.models.get_model("resnet18").eval()
         model = model.to(device)
-        data = get_imagenet_dataset(transform, subset_size=100)
+        data = get_dummy_imagenet_dataset(n_samples=100)
         loader = DataLoader(data, batch_size=batch_size)
 
         for explainer_type in AVAILABLE_EXPLAINERS:
+            # TODO: memory issues of RAP on gpu
+            if torch.cuda.is_available() and explainer_type.__name__ == "RAP":
+                continue
             explainer = explainer_type(model)
 
             for input, target in loader:
