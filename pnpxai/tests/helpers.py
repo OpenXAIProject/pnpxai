@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from torch.utils.data import TensorDataset
 from pnpxai.explainers import Explainer
 
 TEST_IMAGE_TENSOR_SIZE = (3, 2, 2)
@@ -11,6 +12,7 @@ def get_test_input_image(batch=True, size=None):
     if batch:
         return img.unsqueeze(0)
     return img
+
 
 class ToyCNN(nn.Module):
     def __init__(self, with_pool=True):
@@ -46,3 +48,9 @@ class ToyExplainer(Explainer):
 
     def attribute(self, inputs, targets):
         return torch.randn_like(inputs)
+
+
+def get_dummy_imagenet_dataset(n_samples=100):
+    dummy_images = torch.randn(n_samples, 3, 224, 224)
+    dummy_labels = torch.zeros(n_samples).long()
+    return TensorDataset(dummy_images, dummy_labels)
