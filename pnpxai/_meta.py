@@ -5,6 +5,6 @@ author = "Team SAIL"
 author_email = "open.xai@gmail.com"
 version = "0.0.1"
 full_version = "0.0.1"
-git_version = '0c4e3831c497e67b120513791b9b89bd3118c693'
+git_version = '7bd0d7e35e51f967fe216a1e55a5ffccef158522'
 release = False
 homepage = "https://github.com/OpenXAIProject/pnpxai"
