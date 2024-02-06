@@ -15,24 +15,12 @@ REPLACE_PREFIX = "_replaced_"
 @dataclass
 class NodeInfo:
     """
-    NodeInfo is a dataclass representing a node: `torch.fx.Node`
-    in a graph: `torch.fx.Graph`. There are 3 types of constructor:
-    `from_node`, `from_module`, and `from_function`.
+    Represents information about a node in a computation graph.
 
-    - `from_node` clones a node in a graph
-    - `from_module` generates an instance to replace with a node
-       or to be inserted in a graph from a module
-    - `from_function` generates an instance to replace with a node
-       or to be inserted in a graph from a function
-    
-    Attributions
-    - `opcode` is an operation code of a node, which is one of
-      [
-        "placeholder", "get_attr", "call_function",
-        "call_module", "call_method", "output",
-      ]
-    - `name` is a name of node auto-assigned by `torch.fx.symbolic_graph`
-    - `target` is an accessible name of node
+    Attributes:
+    - opcode (Literal[str]): The operation code associated with the node.
+    - name (str): The name of the node.
+    - target (Union[Callable, str]): The target of the node, which could be a callable object or a string.
     """
     opcode: Literal[
         "placeholder", "get_attr", "call_function",
@@ -43,6 +31,15 @@ class NodeInfo:
 
     @classmethod
     def from_node(cls, n: Node):
+        """
+        Constructs a NodeInfo object from a given Node.
+
+        Args:
+        - n (Node): The node from which to construct the NodeInfo object.
+
+        Returns:
+        - NodeInfo: The NodeInfo object constructed from the given Node.
+        """
         self = cls(
             opcode = n.op,
             name = n.name,
@@ -54,6 +51,16 @@ class NodeInfo:
 
     @classmethod
     def from_module(cls, module: torch.nn.Module, **kwargs):
+        """
+        Constructs a NodeInfo object from a given torch.nn.Module.
+
+        Args:
+        - module (torch.nn.Module): The module from which to construct the NodeInfo object.
+        - **kwargs: Additional keyword arguments.
+
+        Returns:
+        - NodeInfo: The NodeInfo object constructed from the given module.
+        """
         self = cls(
             opcode = "call_module",
             name = None,
@@ -66,6 +73,16 @@ class NodeInfo:
 
     @classmethod
     def from_function(cls, func: Callable, **kwargs):
+        """
+        Constructs a NodeInfo object from a given callable function.
+
+        Args:
+        - func (Callable): The function from which to construct the NodeInfo object.
+        - **kwargs: Additional keyword arguments.
+
+        Returns:
+        - NodeInfo: The NodeInfo object constructed from the given function.
+        """
         self = cls(
             opcode = "call_function",
             name = None,
@@ -103,10 +120,22 @@ class NodeInfo:
     # cloning main attributions
     @property
     def meta(self):
+        """
+        Property to access the meta information of the node.
+
+        Returns:
+        - Any: The meta information of the node.
+        """
         return self._node.meta
     
     @property
     def args(self):
+        """
+        Property to access the arguments of the node.
+
+        Returns:
+        - tuple: The arguments of the node.
+        """
         return tuple([
             NodeInfo.from_node(a) if isinstance(a, Node) else a
             for a in self._node.args
@@ -114,6 +143,12 @@ class NodeInfo:
     
     @property
     def kwargs(self):
+        """
+        Property to access the keyword arguments of the node.
+
+        Returns:
+        - dict: The keyword arguments of the node.
+        """
         return {
             k: NodeInfo.from_node(v) if isinstance(v, Node) else v
             for k, v in self._node.kwargs.items()
@@ -121,6 +156,12 @@ class NodeInfo:
     
     @property
     def users(self):
+        """
+        Property to access the users of the node.
+
+        Returns:
+        - tuple: The users of the node.
+        """
         return tuple([
             NodeInfo.from_node(u)
             for u in self._node.users.keys()
@@ -128,12 +169,24 @@ class NodeInfo:
     
     @property
     def next(self):
+        """
+        Property to access the next node.
+
+        Returns:
+        - NodeInfo: The next node.
+        """
         if self._node.next.op == "root":
             return
         return NodeInfo.from_node(self._node.next)
     
     @property
     def prev(self):
+        """
+        Property to access the previous node.
+
+        Returns:
+        - NodeInfo: The previous node.
+        """
         if self._node.prev.op == "root":
             return
         return NodeInfo.from_node(self._node.prev)
@@ -141,6 +194,12 @@ class NodeInfo:
     # additional properties for detection
     @property
     def operator(self) -> Optional[Callable]:
+        """
+        Property to access the operator.
+
+        Returns:
+        - Optional[Callable]: The operator.
+        """
         if self._mode == "from_node":
             if self.opcode == "call_module":
                 return self._get_operator(self.target.split("."))
@@ -154,6 +213,12 @@ class NodeInfo:
     
     @property
     def owning_module(self) -> Optional[str]:
+        """
+        Property to access the owning module.
+
+        Returns:
+        - Optional[str]: The owning module.
+        """
         if self.opcode in ["call_module", "call_function"]:
             if self.meta.get("nn_module_stack"):
                 nm = next(iter(self.meta["nn_module_stack"]))
@@ -162,6 +227,12 @@ class NodeInfo:
         
     # convert data format
     def to_dict(self):
+        """
+        Converts the NodeInfo object to a dictionary.
+
+        Returns:
+        - dict: The dictionary representation of the NodeInfo object.
+        """
         return {**asdict(self), "operator": self.operator}
     
     # [TODO] to_json for visualization
@@ -170,10 +241,20 @@ class NodeInfo:
 
 class ModelArchitecture:
     """
-    ModelArchitecture is a helper class to manipulate a graph generated
-    by `torch.fx.symbolic_graph`.
+    Represents the architecture of a model with methods for manipulating nodes.
+
+    Attributes:
+    - model: The model for which the architecture is defined.
+    - traced_model: The traced version of the model.
+    - _replacing: A flag indicating whether a node replacement is in progress.
     """
     def __init__(self, model):
+        """
+        Initializes a ModelArchitecture object.
+
+        Args:
+        - model: The model for which the architecture is defined.
+        """        
         self.model = model
         self.traced_model = symbolic_trace(model)
 
@@ -181,13 +262,22 @@ class ModelArchitecture:
     
     def list_nodes(self) -> List[NodeInfo]:
         """
-        List all nodes in graph.
+        Lists all nodes in the model.
+
+        Returns:
+        - List[NodeInfo]: A list of NodeInfo objects representing the nodes in the model.
         """
         return [NodeInfo.from_node(n) for n in self.traced_model.graph.nodes]
     
     def get_node(self, name: str) -> NodeInfo:
         """
-        Get a node in graph by name.
+        Retrieves a node by its name.
+
+        Args:
+        - name (str): The name of the node to retrieve.
+
+        Returns:
+        - NodeInfo: The NodeInfo object corresponding to the specified node name.
         """
         for n in self.traced_model.graph.nodes:
             if n.name == name:
@@ -196,8 +286,15 @@ class ModelArchitecture:
         
     def find_node(self, filter_func: Callable, root: Optional[NodeInfo]=None, all=False):
         """
-        Find a node satisfying `filter_func` in graph.
-        Searching is started from `root` node.
+        Finds a node based on a filtering function.
+
+        Args:
+        - filter_func (Callable): The function used to filter nodes.
+        - root (Optional[NodeInfo]): The root node from which to start the search.
+        - all (bool): Whether to find all nodes matching the criteria.
+
+        Returns:
+        - Union[NodeInfo, List[NodeInfo]]: The found node(s) or None if no node is found.
         """
         # [TODO] breadth first / depth first
         if not root:
@@ -233,7 +330,14 @@ class ModelArchitecture:
     
     def replace_node(self, node: NodeInfo, new_node: NodeInfo) -> NodeInfo:
         """
-        Replace a `node` with `new_node`.
+        Replaces a node in the model with a new node.
+
+        Args:
+        - node (NodeInfo): The node to replace.
+        - new_node (NodeInfo): The new node to insert.
+
+        Returns:
+        - NodeInfo: The inserted node.
         """
         self._replacing = True
         self._validate_new_node(new_node)
@@ -249,7 +353,15 @@ class ModelArchitecture:
     
     def insert_node(self, new_node: NodeInfo, base_node: NodeInfo, before=False) -> NodeInfo:
         """
-        Insert a `new_node` after `base_node`.
+        Inserts a new node into the model.
+
+        Args:
+        - new_node (NodeInfo): The new node to insert.
+        - base_node (NodeInfo): The node before which or after which to insert the new node.
+        - before (bool): Whether to insert the new node before the base node.
+
+        Returns:
+        - NodeInfo: The inserted node.
         """
         self._validate_new_node(new_node)
         inserting = self.traced_model.graph.inserting_before if before else self.traced_model.graph.inserting_after
@@ -294,7 +406,10 @@ class ModelArchitecture:
 
     def to_dict(self):
         """
-        Convert the model architecture into dict in order to visualize.
+        Converts the model architecture to a dictionary representation.
+
+        Returns:
+        - dict: A dictionary containing nodes and edges of the model architecture.
         """
         nodes = []
         edges = []

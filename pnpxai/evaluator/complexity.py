@@ -10,7 +10,19 @@ from pnpxai.explainers._explainer import ExplainerWArgs
 from pnpxai.evaluator._evaluator import EvaluationMetric
 
 class Complexity(EvaluationMetric):
+    """
+    Measures the complexity of model inputs based on their attributions.
+
+    Attributes:
+    - n_bins (int): The number of bins for histogram computation.
+    """
     def __init__(self, n_bins: int=10):
+        """
+        Initializes a Complexity object.
+
+        Args:
+        - n_bins (int): The number of bins for histogram computation.
+        """
         self.n_bins = n_bins
                 
     def __call__(
@@ -21,6 +33,19 @@ class Complexity(EvaluationMetric):
             targets: Optional[torch.Tensor]=None,
             attributions: Optional[torch.Tensor]=None,
         ) -> torch.Tensor:
+        """
+        Computes the complexity of model inputs.
+
+        Args:
+        - model (Model): The model to evaluate.
+        - explainer_w_args (ExplainerWArgs): The explainer with arguments.
+        - inputs (torch.Tensor): The input data.
+        - targets (Optional[torch.Tensor]): The target labels for the inputs (default: None).
+        - attributions (Optional[torch.Tensor]): The attributions of the inputs (default: None).
+
+        Returns:
+        - torch.Tensor: The complexity evaluations.
+        """        
         if attributions is None:
             device = next(model.parameters()).device
             inputs = inputs.to(device)

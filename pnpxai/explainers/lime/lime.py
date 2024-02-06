@@ -11,7 +11,20 @@ from pnpxai.explainers._explainer import Explainer
 
 
 class Lime(Explainer):
+    """
+    Computes LIME explanations for a given model.
+
+    Attributes:
+    - model (Model): The model for which LIME explanations are computed.
+    - source (LimeCaptum): The LIME source for explanations.
+    """
     def __init__(self, model: Model):
+        """
+        Initializes a Lime object.
+
+        Args:
+        - model (Model): The model for which LIME explanations are computed.
+        """
         super().__init__(model=model)
         self.source = LimeCaptum(model)
 
@@ -27,6 +40,23 @@ class Lime(Explainer):
         return_input_shape: bool = True,
         show_progress: bool = False
     ):
+        """
+        Computes LIME attributions for the given inputs.
+
+        Args:
+        - inputs (DataSource): The input data.
+        - targets (TargetType): The target labels for the inputs (default: None).
+        - baselines (BaselineType): The baselines for attribution (default: None).
+        - additional_forward_args (Any): Additional arguments for forward pass (default: None).
+        - feature_mask (Union[None, Tensor, Tuple[Tensor, ...]]): The feature mask (default: None).
+        - n_samples (int): Number of samples (default: 25).
+        - perturbations_per_eval (int): Number of perturbations per evaluation (default: 1).
+        - return_input_shape (bool): Whether to return input shape (default: True).
+        - show_progress (bool): Whether to show progress (default: False).
+
+        Returns:
+        - LIME attributions.
+        """        
         if feature_mask is None:
             feature_mask = get_default_feature_mask(inputs, self.device)
 

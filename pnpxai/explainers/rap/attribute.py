@@ -9,12 +9,36 @@ from pnpxai.explainers.utils.post_process import postprocess_attr
 
 
 class RAP(Explainer):
+    """
+    Computes Relative Attribute Propagation (RAP) explanations for a given model.
+
+    Attributes:
+    - model (Model): The model for which RAP explanations are computed.
+    - method (RelativeAttributePropagation): The RAP method for attribute propagation.
+    - device (torch.device): The device on which the model parameters reside.
+    """
+
     def __init__(self, model: Model):
+        """
+        Initializes an RAP object.
+
+        Args:
+        - model (Model): The model for which RAP explanations are computed.
+        """
         super().__init__(model)
         self.method = RelativeAttributePropagation(model)
         self.device = next(self.model.parameters()).device
 
     def compute_pred(self, output):
+        """
+        Computes the predicted class probabilities.
+
+        Args:
+        - output (Tensor): The model output.
+
+        Returns:
+        - Tensor: The one-hot encoded predicted class probabilities.
+        """
         # get the index of the max log-probability
         pred = output.max(1, keepdim=True)[1]
         pred = pred.squeeze(-1)
@@ -24,6 +48,18 @@ class RAP(Explainer):
         return pred_one_hot
 
     def attribute(self, inputs: DataSource, targets: DataSource, *args: Any, **kwargs: Any) -> DataSource:
+        """
+        Computes RAP attributions for the given inputs.
+
+        Args:
+        - inputs (DataSource): The input data.
+        - targets (DataSource): The target labels.
+        - *args (Any): Additional positional arguments.
+        - **kwargs (Any): Additional keyword arguments.
+
+        Returns:
+        - DataSource: RAP attributions.
+        """
         datum = inputs.to(self.device)
         outputs = self.model(datum)
         preds = self.compute_pred(outputs)

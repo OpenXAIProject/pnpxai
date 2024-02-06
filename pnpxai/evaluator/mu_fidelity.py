@@ -10,6 +10,17 @@ from pnpxai.evaluator._evaluator import EvaluationMetric
 
 
 class MuFidelity(EvaluationMetric):
+    """
+    Measures the fidelity of a model's explanations using perturbations.
+
+    Attributes:
+    - n_perturbations (int): Number of perturbations to generate.
+    - noise_scale (int): Scale factor for Gaussian random noise.
+    - batch_size (int): Batch size for model evaluation.
+    - grid_size (int): Size of the grid for creating subsets.
+    - baseline (Union[float, torch.Tensor]): Baseline value for masked subsets.
+    """
+
     def __init__(
             self,
             n_perturbations: int=150,
@@ -18,6 +29,16 @@ class MuFidelity(EvaluationMetric):
             grid_size: int=9,
             baseline: Union[float, torch.Tensor]=0.0,
         ):
+        """
+        Initializes a MuFidelity object.
+
+        Args:
+        - n_perturbations (int): Number of perturbations to generate.
+        - noise_scale (int): Scale factor for Gaussian random noise.
+        - batch_size (int): Batch size for model evaluation.
+        - grid_size (int): Size of the grid for creating subsets.
+        - baseline (Union[float, torch.Tensor]): Baseline value for masked subsets.
+        """
         self.n_perturbations = n_perturbations
         self.noise_scale = noise_scale
         self.batch_size = batch_size
@@ -26,6 +47,12 @@ class MuFidelity(EvaluationMetric):
 
     @property
     def subset_size(self) -> int:
+        """
+        Computes the size of the subset based on the grid size and noise scale.
+
+        Returns:
+        - int: The size of the subset.
+        """
         return int(self.grid_size ** 2 * self.noise_scale)
     
     @staticmethod
@@ -48,6 +75,19 @@ class MuFidelity(EvaluationMetric):
             targets: Optional[torch.Tensor] = None,
             attributions: Optional[torch.Tensor] = None,
         ) -> torch.Tensor:
+        """
+        Computes the MuFidelity metric for the model.
+
+        Args:
+        - model (Model): The model to evaluate.
+        - explainer_w_args (ExplainerWArgs): The explainer with arguments.
+        - inputs (torch.Tensor): The input data.
+        - targets (Optional[torch.Tensor]): The target labels for the inputs (default: None).
+        - attributions (Optional[torch.Tensor]): The attributions of the inputs (default: None).
+
+        Returns:
+        - torch.Tensor: The MuFidelity evaluations.
+        """
         device = next(model.parameters()).device
         inputs = inputs.to(device)
         outputs = model(inputs)

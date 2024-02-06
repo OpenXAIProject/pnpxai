@@ -13,7 +13,21 @@ from typing import Union, Optional, Dict
 
 
 class KernelShap(Explainer):
+    """
+    Computes KernelSHAP explanations for a given model.
+
+    Attributes:
+    - model (Model): The model for which KernelSHAP explanations are computed.
+    - source (KernelShapeCaptum): The KernelSHAP source for explanations.
+    """
+
     def __init__(self, model: Model):
+        """
+        Initializes a KernelShap object.
+
+        Args:
+        - model (Model): The model for which KernelSHAP explanations are computed.
+        """
         super().__init__(model)
         self.source = KernelShapeCaptum(model)
 
@@ -29,6 +43,23 @@ class KernelShap(Explainer):
         return_input_shape: bool = True,
         show_progress: bool = False
     ) -> List[Tensor]:
+        """
+        Computes KernelSHAP attributions for the given inputs.
+
+        Args:
+        - inputs (DataSource): The input data.
+        - targets (TargetType): The target labels for the inputs (default: None).
+        - baselines (BaselineType): The baselines for attribution (default: None).
+        - additional_forward_args (Any): Additional arguments for forward pass (default: None).
+        - feature_mask (Union[None, Tensor, Tuple[Tensor, ...]]): The feature mask (default: None).
+        - n_samples (int): Number of samples (default: 25).
+        - perturbations_per_eval (int): Number of perturbations per evaluation (default: 1).
+        - return_input_shape (bool): Whether to return input shape (default: True).
+        - show_progress (bool): Whether to show progress (default: False).
+
+        Returns:
+        - List[Tensor]: KernelSHAP attributions.
+        """
         if feature_mask is None:
             feature_mask = get_default_feature_mask(inputs, self.device)
         assert len(feature_mask.unique()) > 1, "The number of feature_mask must be more than one"

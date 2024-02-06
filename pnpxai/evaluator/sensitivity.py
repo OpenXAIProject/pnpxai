@@ -7,11 +7,25 @@ from pnpxai.evaluator._evaluator import EvaluationMetric
 
 
 class Sensitivity(EvaluationMetric):
+    """
+    Measures the sensitivity of the model's explanations to perturbations.
+
+    Attributes:
+    - n_iter (int): Number of iterations for perturbation.
+    - epsilon (float): Magnitude of random uniform noise.
+    """
     def __init__(
             self,
             n_iter: int=8,
             epsilon: float=0.2
         ):
+        """
+        Initializes a Sensitivity object.
+
+        Args:
+        - n_iter (int): Number of iterations for perturbation.
+        - epsilon (float): Magnitude of random uniform noise.
+        """
         self.n_iter = n_iter
         self.epsilon = epsilon
         
@@ -23,6 +37,19 @@ class Sensitivity(EvaluationMetric):
             targets: Optional[torch.Tensor]=None,
             attributions: Optional[torch.Tensor]=None,
         ) -> torch.Tensor:
+        """
+        Computes the sensitivity metric for the model.
+
+        Args:
+        - model (Model): The model to evaluate.
+        - explainer_w_args (ExplainerWArgs): The explainer with arguments.
+        - inputs (torch.Tensor): The input data.
+        - targets (Optional[torch.Tensor]): The target labels for the inputs (default: None).
+        - attributions (Optional[torch.Tensor]): The attributions of the inputs (default: None).
+
+        Returns:
+        - torch.Tensor: The sensitivity evaluations.
+        """
         device = next(model.parameters()).device
         inputs = inputs.to(device)
         if targets is None:

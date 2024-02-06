@@ -19,28 +19,25 @@ class Pool2d(metaclass=SubclassMeta):
     )
 
 class GuidedGradCam(Explainer):
+    """
+    Computes Guided Grad-CAM explanations for a given model.
+
+    Attributes:
+    - model (Model): The model for which Guided Grad-CAM explanations are computed.
+    - source (GuidedGradCamCaptum): The Guided Grad-CAM source for explanations.
+    """
     def __init__(self, model: Model):
+        """
+        Initializes a GuidedGradCam object.
+
+        Args:
+        - model (Model): The model for which Guided Grad-CAM explanations are computed.
+        """
         super().__init__(model=model)
         self.source = GuidedGradCamCaptum(
             self.model,
-            # layer=self._find_last_conv_layer()
             layer=self._find_target_layer(),
         )
-
-    # def _find_last_conv_layer(self) -> Optional[nn.Conv2d]:
-    #     op_graph = OperationGraph(self.model)
-    #     if op_graph.tail is None:
-    #         return None
-
-    #     nodes_to_visit = [op_graph.tail]
-    #     while len(nodes_to_visit) > 0:
-    #         node = nodes_to_visit.pop()
-    #         if isinstance(node.operator, nn.Conv2d):
-    #             return node.operator
-
-    #         nodes_to_visit.extend(node.prev_nodes)
-
-    #     return None
     
     def _find_target_layer(self) -> Optional[Union[nn.Conv2d, Pool2d]]:
         ma = ModelArchitecture(self.model)
@@ -64,6 +61,19 @@ class GuidedGradCam(Explainer):
         interpolate_mode: str = "nearest",
         attribute_to_layer_input: bool = False,
     ) -> List[Tensor]:
+        """
+        Computes Guided Grad-CAM attributions for the given inputs.
+
+        Args:
+        - inputs (DataSource): The input data.
+        - targets (TargetType): The target labels for the inputs (default: None).
+        - additional_forward_args (Any): Additional arguments for forward pass (default: None).
+        - interpolate_mode (str): Interpolation mode for resizing (default: "nearest").
+        - attribute_to_layer_input (bool): Whether to attribute to layer input (default: False).
+
+        Returns:
+        - List[Tensor]: Guided Grad-CAM attributions.
+        """
         attributions = self.source.attribute(
             inputs=inputs,
             target=targets,
