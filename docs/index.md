@@ -1,6 +1,6 @@
-# Welcome to MkDocs
+# Welcome to Plug & Play XAI Platform
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
+Here you can find documentation for the `pnpxai` library.
 
 ## Commands
 
@@ -15,3 +15,7 @@ For full documentation visit [mkdocs.org](https://www.mkdocs.org).
     docs/
         index.md  # The documentation homepage.
         ...       # Other markdown pages, images and other files.
+
+.. code-block:: bash
+
+   pip install pnp_xai

@@ -10,6 +10,16 @@ EXPERIMENT_PREFIX = "experiment"
 
 
 class Project():
+    """
+    A class representing a machine learning project.
+
+    Parameters:
+    - name (str): The name of the project.
+
+    Attributes:
+    - name (str): The name of the project.
+    - experiments (Dict[str, Experiment]): A dictionary containing experiment names as keys and corresponding Experiment objects.
+    """
     def __init__(self, name: str):
         self.name = name
         self.experiments: Dict[str, Experiment] = {}
@@ -36,6 +46,12 @@ class Project():
         input_visualizer: Optional[Callable] = None,
         target_visualizer: Optional[Callable] = None,
     ) -> AutoExperiment:
+        """
+        Create an AutoExperiment and add it to the project.
+
+        Returns:
+        - AutoExperiment: The created AutoExperiment object.
+        """
         if name is None:
             name = self._generate_next_experiment_id()
 
@@ -66,6 +82,12 @@ class Project():
         input_visualizer: Optional[Callable] = None,
         target_visualizer: Optional[Callable] = None,
     ) -> Experiment:
+        """
+        Create an Experiment and add it to the project.
+
+        Returns:
+        - Experiment: The created Experiment object.
+        """
         if name is None:
             name = self._generate_next_experiment_id()
 
@@ -84,7 +106,16 @@ class Project():
         return experiment
 
     def __del__(self):
+        """
+        Destructor method to unregister the project from the associated server when the object is deleted.
+        """
         self.__server.unregister(self)
 
     def get_server(self):
+        """
+        Get the server instance associated with the project.
+
+        Returns:
+        - Server: The server instance.
+        """
         return self.__server
