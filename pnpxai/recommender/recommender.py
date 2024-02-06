@@ -10,7 +10,16 @@ from pnpxai.recommender._types import RecommenderOutput
 
 
 class XaiRecommender:
-    def __init__(self):
+    """
+    Recommends explainability methods and associated evaluation metrics based on user's question, task, and model architecture.
+
+    Attributes:
+        question_table (dict): Maps questions ('why', 'how', 'why not', 'how to still be this') to supported explainers.
+        task_table (dict): Maps tasks ('image', 'tabular', 'text') to supported explainers.
+        architecture_table (dict): Maps neural network module types (e.g., nn.Linear, nn.Conv2d) to supported explainers.
+        evaluation_metric_table (dict): Maps explainers to supported evaluation metrics (MuFidelity, Sensitivity, Complexity).
+    """
+        def __init__(self):
         self.question_table = {
             'why': {
                 GuidedGradCam, Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, TCAV, Anchors
@@ -70,10 +79,34 @@ class XaiRecommender:
         }
 
     def _find_overlap(self, *sets):
+        """
+        Finds the unique intersection of any number of sets.
+        This function is specifically used to deduplicate elements across multiple sets during the filtering process.
+        - For explainers: It removes instances where an explainer is supported by multiple criteria (e.g., question, task, and architecture),
+          ensuring only one unique recommendation per explainer.
+        - For evaluation metrics: It eliminates redundant suggestions arising from overlaps between compatible explainers and their supported metrics.
+
+        Args:
+        - *sets: Sets to perform intersection on.
+
+        Returns:
+        - List: The list of unique elements present in all sets.
+        """
         sets = sets or [set()]
         return list(set.intersection(*sets))
 
     def filter_methods(self, question, task, architecture) -> List[Type[Explainer]]:
+        """
+        Filters explainers based on the user's question, task, and model architecture.
+
+        Args:
+        - question (str): User's question type ('why', 'how', 'why not', 'how to still be this').
+        - task (str): Task type ('image', 'tabular', 'text').
+        - architecture (List[Type]): List of neural network module types (e.g., nn.Linear, nn.Conv2d).
+
+        Returns:
+        - List[Type[Explainer]]: List of compatible explainers based on the given inputs.
+        """
         question_to_method = self.question_table[question]
         task_to_method = self.task_table[task]
 
@@ -97,6 +130,15 @@ class XaiRecommender:
         return methods
 
     def suggest_metrics(self, methods):
+        """
+        Suggests evaluation metrics based on the list of compatible explainers.
+
+        Args:
+        - methods (List[Type[Explainer]]): List of explainers supported for the given scenario.
+
+        Returns:
+        - List[Type[EvaluationMetric]]: List of compatible evaluation metrics for the explainers.
+        """
         method_to_metric = [
             self.evaluation_metric_table[method]
             for method in methods if method in self.evaluation_metric_table
@@ -105,9 +147,29 @@ class XaiRecommender:
         return metrics
 
     def _sort_by_name(self, vals):
+        """
+        Sorts a list of values by their names.
+
+        Args:
+        - vals (List): List of values to sort.
+
+        Returns:
+        - List: Sorted list of values based on their names.
+        """
         return list(sorted(vals, key=lambda x: x.__name__))
 
     def __call__(self, question, task, architecture):
+        """
+        Recommends explainers and evaluation metrics based on the user's input.
+
+        Args:
+        - question (str): User's question type ('why', 'how', 'why not', 'how to still be this').
+        - task (str): Task type ('image', 'tabular', 'text').
+        - architecture (List[Type]): List of neural network module types (e.g., nn.Linear, nn.Conv2d).
+
+        Returns:
+        - RecommenderOutput: An object containing recommended explainers and evaluation metrics.
+        """
         methods = self.filter_methods(question, task, architecture)
         methods = self._sort_by_name(methods)
         metrics = self.suggest_metrics(methods)
