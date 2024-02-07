@@ -19,7 +19,7 @@ class XaiRecommender:
         architecture_table (dict): Maps neural network module types (e.g., nn.Linear, nn.Conv2d) to supported explainers.
         evaluation_metric_table (dict): Maps explainers to supported evaluation metrics (MuFidelity, Sensitivity, Complexity).
     """
-        def __init__(self):
+    def __init__(self):
         self.question_table = {
             'why': {
                 GuidedGradCam, Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, TCAV, Anchors
