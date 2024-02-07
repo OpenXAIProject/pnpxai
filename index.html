@@ -12,11 +12,11 @@
       
       
       
-        <link rel="next" href="api/">
+        <link rel="next" href="api/project/">
       
       
       <link rel="icon" href="assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.7">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.8">
     
     
       
@@ -211,9 +211,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#project-layout" class="md-nav__link">
+  <a href="#project-structure" class="md-nav__link">
     <span class="md-ellipsis">
-      Project layout
+      Project Structure
     </span>
   </a>
   
@@ -250,7 +250,7 @@
             
   
   <span class="md-ellipsis">
-    Reference
+    API
   </span>
   
 
@@ -260,30 +260,9 @@
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
-            Reference
+            API
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="api/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    API
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
             
               
                 
@@ -391,9 +370,9 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#project-layout" class="md-nav__link">
+  <a href="#project-structure" class="md-nav__link">
     <span class="md-ellipsis">
-      Project layout
+      Project Structure
     </span>
   </a>
   
@@ -418,19 +397,15 @@
 <p>Here you can find documentation for the <code>pnpxai</code> library.</p>
 <h2 id="commands">Commands</h2>
 <ul>
-<li><code>mkdocs new [dir-name]</code> - Create a new project.</li>
-<li><code>mkdocs serve</code> - Start the live-reloading docs server.</li>
-<li><code>mkdocs build</code> - Build the documentation site.</li>
-<li><code>mkdocs -h</code> - Print help message and exit.</li>
+<li><code>pip install -e .</code> - Installs the project and all required libraries.</li>
+<li><code>pytest</code> - Runs tests on the whole project.</li>
 </ul>
-<h2 id="project-layout">Project layout</h2>
-<pre><code>mkdocs.yml    # The configuration file.
-docs/
-    index.md  # The documentation homepage.
-    ...       # Other markdown pages, images and other files.
-</code></pre>
-<p>.. code-block:: bash</p>
-<p>pip install pnp_xai</p>
+<h2 id="project-structure">Project Structure</h2>
+<ul>
+<li><a href="api/project/">Project</a> -- class, designed for combining semantically similar experiments for side-to-side comparison</li>
+<li><a href="api/experiment/">Experiment</a> -- class, responsible for data manipulation, model explanation and explanations' evaluation</li>
+<li><a href="api/auto_experiment/">Auto Experiment</a> -- class, responsible for data manipulation, model explanation and explanations' evaluation</li>
+</ul>
 
 
 
@@ -480,7 +455,7 @@ docs/
     <script id="__config" type="application/json">{"base": ".", "features": [], "search": "assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="assets/javascripts/bundle.caa56a14.min.js"></script>
+      <script src="assets/javascripts/bundle.8fd75fb4.min.js"></script>
       
     
   </body>

@@ -11,14 +11,14 @@
         <link rel="canonical" href="https://openxaiproject.github.io/pnpxai/api/project/">
       
       
-        <link rel="prev" href="../">
+        <link rel="prev" href="../..">
       
       
         <link rel="next" href="../experiment/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.7">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.8">
     
     
       
@@ -196,7 +196,7 @@
             
   
   <span class="md-ellipsis">
-    Reference
+    API
   </span>
   
 
@@ -206,30 +206,9 @@
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
-            Reference
+            API
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    API
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-              
             
               
                 
@@ -477,11 +456,73 @@
 
   
       <p>A class representing a machine learning project.</p>
-<p>Parameters:
-- name (str): The name of the project.</p>
-<p>Attributes:
-- name (str): The name of the project.
-- experiments (Dict[str, Experiment]): A dictionary containing experiment names as keys and corresponding Experiment objects.</p>
+
+
+
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>name</code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The name of the project.</p>
+            </div>
+          </td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+  <p><strong>Attributes:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code><span title="pnpxai.core.project.Project.name">name</span></code></td>
+          <td>
+                <code>str</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The name of the project.</p>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><code><span title="pnpxai.core.project.Project.experiments">experiments</span></code></td>
+          <td>
+                <code><span title="typing.Dict">Dict</span>[str, <a class="autorefs autorefs-internal" title="pnpxai.core.experiment.Experiment" href="../experiment/#pnpxai.core.experiment.experiment.Experiment">Experiment</a>]</code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>A dictionary containing experiment names as keys and corresponding Experiment objects.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
 
             <details class="quote">
               <summary>Source code in <code>pnpxai/core/project/project.py</code></summary>
@@ -598,12 +639,12 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class representing a machine learning project.</span>
 
-<span class="sd">    Parameters:</span>
-<span class="sd">    - name (str): The name of the project.</span>
+<span class="sd">    Args:</span>
+<span class="sd">        name (str): The name of the project.</span>
 
 <span class="sd">    Attributes:</span>
-<span class="sd">    - name (str): The name of the project.</span>
-<span class="sd">    - experiments (Dict[str, Experiment]): A dictionary containing experiment names as keys and corresponding Experiment objects.</span>
+<span class="sd">        name (str): The name of the project.</span>
+<span class="sd">        experiments (Dict[str, Experiment]): A dictionary containing experiment names as keys and corresponding Experiment objects.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
@@ -635,7 +676,7 @@
 <span class="sd">        Create an AutoExperiment and add it to the project.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">        - AutoExperiment: The created AutoExperiment object.</span>
+<span class="sd">            The created AutoExperiment object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_next_experiment_id</span><span class="p">()</span>
@@ -671,7 +712,7 @@
 <span class="sd">        Create an Experiment and add it to the project.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">        - Experiment: The created Experiment object.</span>
+<span class="sd">            The created Experiment object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_next_experiment_id</span><span class="p">()</span>
@@ -701,7 +742,7 @@
 <span class="sd">        Get the server instance associated with the project.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">        - Server: The server instance.</span>
+<span class="sd">            The server instance.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__server</span>
 </code></pre></div></td></tr></table></div>
@@ -765,8 +806,30 @@
   <div class="doc doc-contents ">
   
       <p>Create an AutoExperiment and add it to the project.</p>
-<p>Returns:
-- AutoExperiment: The created AutoExperiment object.</p>
+
+
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="pnpxai.core.experiment.AutoExperiment" href="../auto_experiment/#pnpxai.core.experiment.auto_experiment.AutoExperiment">AutoExperiment</a></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The created AutoExperiment object.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
 
           <details class="quote">
             <summary>Source code in <code>pnpxai/core/project/project.py</code></summary>
@@ -821,7 +884,7 @@
 <span class="sd">    Create an AutoExperiment and add it to the project.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">    - AutoExperiment: The created AutoExperiment object.</span>
+<span class="sd">        The created AutoExperiment object.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_next_experiment_id</span><span class="p">()</span>
@@ -859,8 +922,30 @@
   <div class="doc doc-contents ">
   
       <p>Create an Experiment and add it to the project.</p>
-<p>Returns:
-- Experiment: The created Experiment object.</p>
+
+
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+                <code><a class="autorefs autorefs-internal" title="pnpxai.core.experiment.Experiment" href="../experiment/#pnpxai.core.experiment.experiment.Experiment">Experiment</a></code>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The created Experiment object.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
 
           <details class="quote">
             <summary>Source code in <code>pnpxai/core/project/project.py</code></summary>
@@ -915,7 +1000,7 @@
 <span class="sd">    Create an Experiment and add it to the project.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">    - Experiment: The created Experiment object.</span>
+<span class="sd">        The created Experiment object.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_next_experiment_id</span><span class="p">()</span>
@@ -953,8 +1038,29 @@
   <div class="doc doc-contents ">
   
       <p>Get the server instance associated with the project.</p>
-<p>Returns:
-- Server: The server instance.</p>
+
+
+
+  <p><strong>Returns:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td>
+          </td>
+          <td>
+            <div class="doc-md-description">
+              <p>The server instance.</p>
+            </div>
+          </td>
+        </tr>
+    </tbody>
+  </table>
 
           <details class="quote">
             <summary>Source code in <code>pnpxai/core/project/project.py</code></summary>
@@ -970,7 +1076,7 @@
 <span class="sd">    Get the server instance associated with the project.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">    - Server: The server instance.</span>
+<span class="sd">        The server instance.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__server</span>
 </code></pre></div></td></tr></table></div>
@@ -1036,7 +1142,7 @@
     <script id="__config" type="application/json">{"base": "../..", "features": [], "search": "../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.caa56a14.min.js"></script>
+      <script src="../../assets/javascripts/bundle.8fd75fb4.min.js"></script>
       
     
   </body>
