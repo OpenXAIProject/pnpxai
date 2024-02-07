@@ -12,6 +12,20 @@ from pnpxai.core.experiment.experiment_metrics_defaults import EVALUATION_METRIC
 
 
 class AutoExperiment(Experiment):
+    """
+    An extension of Experiment class with automatic explainers and evaluation metrics recommendation.
+
+    Parameters:
+        model (Model): The machine learning model to be analyzed.
+        data (DataSource): The data source used for the experiment.
+        task (Literal["image", "tabular"], optional): The task type, either "image" or "tabular". Defaults to "image".
+        question (Literal["why", "how"], optional): The type of question the experiment aims to answer, either "why" or "how". Defaults to "why".
+        evaluator_enabled (bool, optional): Whether to enable the evaluator. Defaults to True.
+        input_extractor (Optional[Callable], optional): Custom function to extract input features. Defaults to None.
+        target_extractor (Optional[Callable], optional): Custom function to extract target labels. Defaults to None.
+        input_visualizer (Optional[Callable], optional): Custom function for visualizing input features. Defaults to None.
+        target_visualizer (Optional[Callable], optional): Custom function for visualizing target labels. Defaults to None.
+    """
     def __init__(
         self,
         model: Model,
@@ -45,6 +59,17 @@ class AutoExperiment(Experiment):
 
     @staticmethod
     def recommend(model: Model, question: Question, task: Task) -> RecommenderOutput:
+        """
+        Recommend explainers and metrics based on the model architecture.
+
+        Parameters:
+            model (Model): The machine learning model to recommend explainers for.
+            question (Question): The type of question the experiment aims to answer.
+            task (Task): The type of task the model is designed for.
+
+        Returns:
+            RecommenderOutput: Output containing recommended explainers and metrics.
+        """
         detector = ModelArchitectureDetector()
         model_arch = detector(model).architecture
 
@@ -54,6 +79,16 @@ class AutoExperiment(Experiment):
         return recommender_out
 
     def __get_init_explainers(self, model: Model, explainers: List[Type[Explainer]]) -> List[ExplainerWArgs]:
+        """
+        Initialize and configure explainer instances with default arguments.
+
+        Parameters:
+            model (Model): The machine learning model for which explainers are initialized.
+            explainers (List[Type[Explainer]]): List of explainer classes to be initialized.
+
+        Returns:
+            List[ExplainerWArgs]: List of initialized ExplainerWArgs instances.
+        """
         return [
             ExplainerWArgs(
                 explainer=explainer(model),
@@ -63,6 +98,15 @@ class AutoExperiment(Experiment):
         ]
 
     def __get_init_evaluator(self, metrics: List[Type[EvaluationMetric]]) -> Sequence[EvaluationMetric]:
+        """
+        Initialize and configure evaluator metrics with default arguments.
+
+        Parameters:
+            metrics (List[Type[EvaluationMetric]]): List of metric classes to be initialized.
+
+        Returns:
+            Sequence[EvaluationMetric]: Sequence of initialized EvaluationMetric instances.
+        """
         return [
             metric(**EVALUATION_METRIC_AUTO_KWARGS.get(metric, {}))
             for metric in metrics

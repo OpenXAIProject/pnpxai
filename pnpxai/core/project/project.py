@@ -13,12 +13,12 @@ class Project():
     """
     A class representing a machine learning project.
 
-    Parameters:
-    - name (str): The name of the project.
+    Args:
+        name (str): The name of the project.
 
     Attributes:
-    - name (str): The name of the project.
-    - experiments (Dict[str, Experiment]): A dictionary containing experiment names as keys and corresponding Experiment objects.
+        name (str): The name of the project.
+        experiments (Dict[str, Experiment]): A dictionary containing experiment names as keys and corresponding Experiment objects.
     """
     def __init__(self, name: str):
         self.name = name
@@ -50,7 +50,7 @@ class Project():
         Create an AutoExperiment and add it to the project.
 
         Returns:
-        - AutoExperiment: The created AutoExperiment object.
+            The created AutoExperiment object.
         """
         if name is None:
             name = self._generate_next_experiment_id()
@@ -86,7 +86,7 @@ class Project():
         Create an Experiment and add it to the project.
 
         Returns:
-        - Experiment: The created Experiment object.
+            The created Experiment object.
         """
         if name is None:
             name = self._generate_next_experiment_id()
@@ -116,6 +116,6 @@ class Project():
         Get the server instance associated with the project.
 
         Returns:
-        - Server: The server instance.
+            The server instance.
         """
         return self.__server
