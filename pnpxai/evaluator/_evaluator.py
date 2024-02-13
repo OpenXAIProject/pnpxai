@@ -5,12 +5,6 @@ from pnpxai.core._types import Model, DataSource, TensorOrTensorSequence
 
 class EvaluationMetric():
     @abstractmethod
-    def __call__(
-        self,
-        model: Model,
-        explainer_w_args: ExplainerWArgs,
-        inputs: DataSource,
-        targets: DataSource,
-        explanations: TensorOrTensorSequence
-    ):
+    def __call__(self, *args, **kwargs):
         raise NotImplementedError()
+    
