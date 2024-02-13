@@ -9,75 +9,48 @@ from pnpxai.evaluator.complexity import Complexity
 from pnpxai.recommender._types import RecommenderOutput
 
 
+QUESTION_TO_EXPLAINERS = {
+    "why": {GuidedGradCam, Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, TCAV, Anchors},
+    "how": {PDP},
+    "why not": {CEM},
+    "how to still be this": {Anchors},
+}
+
+TASK_TO_EXPLAINERS = {
+    "image": {GuidedGradCam, Lime, KernelShap, IntegratedGradients, LRP, RAP},
+    "tabular": {Lime, KernelShap, PDP, CEM, Anchors},
+    "text": {IntegratedGradients, FullGrad, LRP, RAP, CEM},
+}
+
+ARCHITECTURE_TO_EXPLAINERS = {
+    "linear": {Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
+    "cnn": {GuidedGradCam, Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
+    "rnn": {Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
+    "transformer": {Lime, KernelShap, LRP, IntegratedGradients, FullGrad, CEM, TCAV, Anchors},
+}
+
+EXPLAINER_TO_METRICS = {
+    # Correctness -- MuFidelity, Conitinuity -- Sensitivity, Compactness -- Complexity
+    # GradCam: {MuFidelity, Sensitivity, Complexity},
+    GuidedGradCam: {MuFidelity, Sensitivity, Complexity},
+    Lime: {MuFidelity, Sensitivity, Complexity},
+    KernelShap: {MuFidelity, Sensitivity, Complexity},
+    IntegratedGradients: {MuFidelity, Sensitivity, Complexity},
+    FullGrad: {MuFidelity, Sensitivity, Complexity},
+    LRP: {MuFidelity, Sensitivity, Complexity},
+    RAP: {MuFidelity, Sensitivity, Complexity},
+
+    # Evaluation metric not implemented yet
+    PDP: {},
+    CEM: {MuFidelity, Sensitivity},
+    TCAV: {MuFidelity, Sensitivity},
+    Anchors: {MuFidelity, Sensitivity},
+}
+
 class XaiRecommender:
     """
     Recommends explainability methods and associated evaluation metrics based on user's question, task, and model architecture.
-
-    Attributes:
-        question_table (dict): Maps questions ('why', 'how', 'why not', 'how to still be this') to supported explainers.
-        task_table (dict): Maps tasks ('image', 'tabular', 'text') to supported explainers.
-        architecture_table (dict): Maps neural network module types (e.g., nn.Linear, nn.Conv2d) to supported explainers.
-        evaluation_metric_table (dict): Maps explainers to supported evaluation metrics (MuFidelity, Sensitivity, Complexity).
     """
-    def __init__(self):
-        self.question_table = {
-            'why': {
-                GuidedGradCam, Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, TCAV, Anchors
-                # ,GradCam
-                },
-            'how': {PDP},
-            'why not': {CEM},
-            'how to still be this': {Anchors},
-        }
-        self.task_table = {
-            'image': {
-                GuidedGradCam, Lime, KernelShap, LRP, RAP, IntegratedGradients,
-                # GradCam
-                # TODO: add more explainers
-                # FullGrad, CEM, TCAV
-            },
-            'tabular': {Lime, KernelShap, PDP, CEM, Anchors},
-            'text': {
-                # Lime, KernelShap,
-                IntegratedGradients, FullGrad, LRP, RAP, CEM},
-        }
-        self.architecture_table = {
-            nn.Linear: {
-                Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
-            nn.Conv1d: {
-                # GradCam,
-                GuidedGradCam, Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
-            nn.Conv2d: {
-                # GradCam,
-                GuidedGradCam, Lime, KernelShap, IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
-            nn.RNN: {
-                Lime, KernelShap,
-                IntegratedGradients, FullGrad, LRP, RAP, CEM, TCAV, Anchors},
-            nn.Transformer: {
-                Lime, KernelShap, LRP,
-                IntegratedGradients, FullGrad, CEM, TCAV, Anchors},
-            nn.MultiheadAttention: {
-                Lime, KernelShap, LRP,
-                IntegratedGradients, FullGrad, CEM, TCAV, Anchors},
-        }
-        self.evaluation_metric_table = {
-            # Correctness -- MuFidelity, Conitinuity -- Sensitivity, Compactness -- Complexity
-            # GradCam: {MuFidelity, Sensitivity, Complexity},
-            GuidedGradCam: {MuFidelity, Sensitivity, Complexity},
-            Lime: {MuFidelity, Sensitivity, Complexity},
-            KernelShap: {MuFidelity, Sensitivity, Complexity},
-            IntegratedGradients: {MuFidelity, Sensitivity, Complexity},
-            FullGrad: {MuFidelity, Sensitivity, Complexity},
-            LRP: {MuFidelity, Sensitivity, Complexity},
-            RAP: {MuFidelity, Sensitivity, Complexity},
-
-            # Evaluation metric not implemented yet
-            PDP: {},
-            CEM: {MuFidelity, Sensitivity},
-            TCAV: {MuFidelity, Sensitivity},
-            Anchors: {MuFidelity, Sensitivity},
-        }
-
     def _find_overlap(self, *sets):
         """
         Finds the unique intersection of any number of sets.
@@ -107,23 +80,9 @@ class XaiRecommender:
         Returns:
         - List[Type[Explainer]]: List of compatible explainers based on the given inputs.
         """
-        question_to_method = self.question_table[question]
-        task_to_method = self.task_table[task]
-
-        architecture_to_method = []
-        for module in architecture:
-            try:
-                architecture_to_method.append(self.architecture_table[module])
-            except KeyError:
-                warnings.warn(
-                    f"\n[Recommender] Warning: {repr(module)} is not currently supported.")
-
-        architecture_to_method = self._find_overlap(*architecture_to_method)
-        if (nn.Conv1d in architecture or nn.Conv2d in architecture) and GuidedGradCam not in architecture_to_method:
-            if nn.MultiheadAttention not in architecture:
-                architecture_to_method.append(GuidedGradCam)
-                architecture_to_method.append(GradCam)
-
+        question_to_method = QUESTION_TO_EXPLAINERS[question]
+        task_to_method = TASK_TO_EXPLAINERS[task]
+        architecture_to_method = ARCHITECTURE_TO_EXPLAINERS[architecture.representative]
         methods = self._find_overlap(
             question_to_method, task_to_method, architecture_to_method)
 

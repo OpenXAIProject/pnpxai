@@ -71,7 +71,7 @@ class AutoExperiment(Experiment):
             RecommenderOutput: Output containing recommended explainers and metrics.
         """
         detector = ModelArchitectureDetector()
-        model_arch = detector(model).architecture
+        model_arch = detector(model)
 
         recommender = XaiRecommender()
         recommender_out = recommender(question, task, model_arch)
