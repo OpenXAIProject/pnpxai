@@ -76,7 +76,7 @@ experiment = project.create_auto_experiment(
 	task='image',
 	question='why',
 	input_extractor=input_extractor,
-  target_extractor=target_extractor,
+  	target_extractor=target_extractor,
 )
 project.get_server().serve()
 ```
@@ -109,7 +109,7 @@ experiment = project.create_experiment(
 	loader,
 	name='YOUR_XAI_EXPERIMENT_NAME',
 	explainers=[LRP(model)],
-  metrics=[MuFidelity()],
+  	metrics=[MuFidelity()],
 	task='image',
 	question='why',
 	input_extractor=input_extractor,
