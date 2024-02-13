@@ -2,7 +2,7 @@ from typing import List, Type, Literal, Callable, Optional, Sequence
 
 from pnpxai.evaluator._evaluator import EvaluationMetric
 from pnpxai.core.experiment.experiment import Experiment
-from pnpxai.detector import ModelArchitectureDetector
+from pnpxai.detector import detect_model_architecture
 from pnpxai.explainers import Explainer, ExplainerWArgs
 from pnpxai.recommender.recommender import XaiRecommender, RecommenderOutput
 from pnpxai.core._types import DataSource, Model, Task, Question
@@ -70,8 +70,7 @@ class AutoExperiment(Experiment):
         Returns:
             RecommenderOutput: Output containing recommended explainers and metrics.
         """
-        detector = ModelArchitectureDetector()
-        model_arch = detector(model)
+        model_arch = detect_model_architecture(model)
 
         recommender = XaiRecommender()
         recommender_out = recommender(question, task, model_arch)

@@ -80,9 +80,9 @@ class XaiRecommender:
         Returns:
         - List[Type[Explainer]]: List of compatible explainers based on the given inputs.
         """
-        question_to_method = QUESTION_TO_EXPLAINERS[question]
-        task_to_method = TASK_TO_EXPLAINERS[task]
-        architecture_to_method = ARCHITECTURE_TO_EXPLAINERS[architecture.representative]
+        question_to_method = QUESTION_TO_EXPLAINERS.get(question, set())
+        task_to_method = TASK_TO_EXPLAINERS.get(task, set())
+        architecture_to_method = ARCHITECTURE_TO_EXPLAINERS.get(architecture.representative, set())
         methods = self._find_overlap(
             question_to_method, task_to_method, architecture_to_method)
 
@@ -99,8 +99,8 @@ class XaiRecommender:
         - List[Type[EvaluationMetric]]: List of compatible evaluation metrics for the explainers.
         """
         method_to_metric = [
-            self.evaluation_metric_table[method]
-            for method in methods if method in self.evaluation_metric_table
+            EXPLAINER_TO_METRICS.get(method, set())
+            for method in methods if method in EXPLAINER_TO_METRICS
         ]
         metrics = self._find_overlap(*method_to_metric)
         return metrics
