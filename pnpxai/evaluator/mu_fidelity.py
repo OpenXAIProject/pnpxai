@@ -66,14 +66,14 @@ class MuFidelity(EvaluationMetric):
             outputs.append(model(inputs[curr_indices]))
         model.training = training_mode
         return torch.cat(outputs).detach()
-
+    
     def __call__(
             self,
             model: Model,
-            explainer_w_args: ExplainerWArgs,
             inputs: torch.Tensor,
-            targets: Optional[torch.Tensor] = None,
-            attributions: Optional[torch.Tensor] = None,
+            targets: torch.Tensor,
+            attributions: torch.Tensor,
+            **kwargs,
         ) -> torch.Tensor:
         """
         Computes the MuFidelity metric for the model.
@@ -90,14 +90,15 @@ class MuFidelity(EvaluationMetric):
         """
         device = next(model.parameters()).device
         inputs = inputs.to(device)
+        targets = targets.to(device)
+        attributions = attributions.to(device)
+
+        # get predictions
         outputs = model(inputs)
         _, n_classes = outputs.shape
-        if targets is None:
-            targets = outputs.argmax(1)
-        targets = targets.to(device)
         preds = (outputs * torch.eye(n_classes).to(device)[targets]).sum(dim=-1).detach()
-        if attributions is None:
-            attributions = explainer_w_args.attribute(inputs, targets, **explainer_w_args.kwargs)
+
+        # input, target, attr, pred
         evaluations = []
         for input, target, attr, pred in zip(
             inputs, targets, attributions, preds,

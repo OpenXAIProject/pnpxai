@@ -19,6 +19,7 @@ def default_input_extractor(x):
     return x[0]
 
 
+
 def default_target_extractor(x):
     return x[1]
 
@@ -174,8 +175,13 @@ class Experiment:
             inputs = self.input_extractor(datum)
             targets = self.target_extractor(datum)
             try:
+                # [GH] input args as kwargs to compute metric in an experiment
                 evaluations[i] = metric(
-                    self.model, explainer, inputs, targets, explanation
+                    model=self.model,
+                    explainer_w_args=explainer,
+                    inputs=inputs,
+                    targets=targets,
+                    attributions=explanation,
                 )
             except Exception as e:
                 warnings.warn(

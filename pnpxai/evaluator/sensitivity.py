@@ -32,10 +32,11 @@ class Sensitivity(EvaluationMetric):
     def __call__(
             self,
             model: Model,
-            explainer_w_args: ExplainerWArgs,
             inputs: torch.Tensor,
-            targets: Optional[torch.Tensor]=None,
+            targets: torch.Tensor,
+            explainer_w_args: ExplainerWArgs,
             attributions: Optional[torch.Tensor]=None,
+            **kwargs,
         ) -> torch.Tensor:
         """
         Computes the sensitivity metric for the model.
@@ -52,11 +53,9 @@ class Sensitivity(EvaluationMetric):
         """
         device = next(model.parameters()).device
         inputs = inputs.to(device)
-        if targets is None:
-            outputs = model(inputs)
-            targets = outputs.argmax(1)
+        targets = targets.to(device)
         if attributions is None:
-            attributions = explainer_w_args.attribute(inputs, targets, **explainer_w_args.kwargs)
+            attributions = explainer_w_args.attribute(inputs, targets)
 
         evaluations = []
         for input, target, attr in zip(inputs, targets, attributions):
