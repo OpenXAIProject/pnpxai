@@ -33,7 +33,7 @@ class LRPZennit(Explainer):
         add_func_nodes = ma.find_node(
             lambda n: n.operator is add and all(
                 isinstance(arg, NodeInfo) for arg in n.args),
-            all=True
+            get_all=True
         )
         if add_func_nodes:
             traced_model = self.__get_model_with_functional_nodes(ma, add_func_nodes)

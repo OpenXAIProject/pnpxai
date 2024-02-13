@@ -21,7 +21,7 @@ METRICS_LIMIT_MAP = {
 class TestRobustness():
     def test_computation_time(self):
         batch_size = 64
-        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         model = torchvision.models.get_model("resnet18").eval()
         model = model.to(device)
         explainer_w_args = ExplainerWArgs(LRP(model))
