@@ -5,6 +5,8 @@ class APIItems(Enum):
     MESSAGE = 'message'
     DATA = 'data'
     ERRORS = 'errors'
+    
+    TRACE = 'trace'
 
     ID = 'id'
     KEY = 'key'

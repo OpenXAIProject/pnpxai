@@ -1,6 +1,7 @@
 from typing import Any, Callable, Optional, Sequence, Union, List
 import time
 import warnings
+import traceback
 
 from torch import Tensor
 import numpy as np
@@ -42,9 +43,11 @@ class Experiment:
     Attributes:
         all_explainers (Sequence[ExplainerWArgs]): All explainer objects used in the experiment.
         all_metrics (Sequence[EvaluationMetric]): All evaluation metrics used in the experiment.
+        errors (Sequence[Error]): 
         is_image_task (bool): True if the task is an image-related task, False otherwise.
         has_explanations (bool): True if the experiment has explanations, False otherwise.
     """
+
     def __init__(
         self,
         model: Model,
@@ -73,6 +76,14 @@ class Experiment:
         self.input_visualizer = input_visualizer
         self.target_visualizer = target_visualizer
         self.task = task
+        self.reset_errors()
+
+    def reset_errors(self):
+        self._errors: List[BaseException] = []
+
+    @property
+    def errors(self):
+        return self._errors
 
     @property
     def all_explainers(self) -> Sequence[ExplainerWArgs]:
@@ -152,12 +163,14 @@ class Experiment:
                     inputs=inputs,
                     targets=targets,
                 )
-            except NotImplementedError:
+            except NotImplementedError as error:
                 warnings.warn(
                     f"\n[Experiment] Warning: {explainer_name} is not currently supported.")
+                raise error
             except Exception as e:
                 warnings.warn(
                     f"\n[Experiment] Warning: Explaining {explainer_name} produced an error: {e}.")
+                self._errors.append(e)
         return explanations
 
     def _evaluate(self, data: DataSource, explanations: DataSource, explainer: ExplainerWArgs, metric: EvaluationMetric):
@@ -186,6 +199,7 @@ class Experiment:
             except Exception as e:
                 warnings.warn(
                     f"\n[Experiment] Warning: Evaluating {metric_name} of {explainer_name} produced an error: {e}.")
+                self._errors.append(e)
         elaped_time = time.time() - started_at
         print(f'[Experiment] Computed {metric_name} in {elaped_time} sec')
         return evaluations
@@ -256,7 +270,7 @@ class Experiment:
         data, _ = self.manager.get_data()
         data = [self.input_extractor(datum) for datum in data]
         return self.manager.flatten_if_batched(data, data)
-    
+
     def get_all_inputs_flattened(self) -> Sequence[Tensor]:
         """
         Retrieve and flatten all input data.
