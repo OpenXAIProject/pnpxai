@@ -47,10 +47,12 @@ EXPLAINER_TO_METRICS = {
     Anchors: {MuFidelity, Sensitivity},
 }
 
+
 class XaiRecommender:
     """
     Recommends explainability methods and associated evaluation metrics based on user's question, task, and model architecture.
     """
+
     def _find_overlap(self, *sets):
         """
         Finds the unique intersection of any number of sets.
@@ -99,8 +101,8 @@ class XaiRecommender:
         - List[Type[EvaluationMetric]]: List of compatible evaluation metrics for the explainers.
         """
         method_to_metric = [
-            self.evaluation_metric_table[method]
-            for method in methods if method in self.evaluation_metric_table
+            EXPLAINER_TO_METRICS.get(method, {})
+            for method in methods
         ]
         metrics = self._find_overlap(*method_to_metric)
         return metrics
