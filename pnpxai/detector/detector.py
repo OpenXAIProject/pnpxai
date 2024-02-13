@@ -1,9 +1,10 @@
+from typing import Callable
 from dataclasses import dataclass
 
 from torch import nn
 import torch.nn.functional as F
 
-from ._core import ModelArchitecture
+from ._core import ModelArchitecture, NodeInfo
 
 @dataclass
 class ModelArchitectureSummary:
@@ -33,19 +34,23 @@ class ModelArchitectureSummary:
             raise Exception("Cannot determine the representative of model architecture.")
 
 
-class ModelArchitectureDetector:
-    def __call__(self, model):
-        ma = ModelArchitecture(model)
-        return ModelArchitectureSummary(
-            has_linear=_has_linear(ma),
-            has_conv=_has_conv(ma),
-            has_rnn=_has_rnn(ma),
-            has_transformer=_has_transformer(ma),
-        )
+def detect_model_architecture(model) -> ModelArchitectureSummary:
+    ma = ModelArchitecture(model)
+    return ModelArchitectureSummary(
+        has_linear=_has_linear(ma),
+        has_conv=_has_conv(ma),
+        has_rnn=_has_rnn(ma),
+        has_transformer=_has_transformer(ma),
+    )
 
 
-_is_module_of = lambda node, module: node.opcode == "call_module" and isinstance(node.operator, module)
-_is_function_of = lambda node, func: node.opcode == "call_function" and node.operator is func
+def _is_module_of(node: NodeInfo, module: nn.Module):
+    return node.opcode == "call_module" and isinstance(node.operator, module)
+
+
+def _is_function_of(node: NodeInfo, func: Callable):
+    return node.opcode == "call_function" and node.operator is func
+
 
 def _has_linear(ma: ModelArchitecture):
     linear_node = ma.find_node(
@@ -55,6 +60,7 @@ def _has_linear(ma: ModelArchitecture):
         )
     )
     return linear_node is not None
+
 
 def _has_conv(ma: ModelArchitecture):
     conv_node = ma.find_node(
@@ -67,6 +73,7 @@ def _has_conv(ma: ModelArchitecture):
     )
     return conv_node is not None
 
+
 def _has_rnn(ma: ModelArchitecture):
     rnn_node = ma.find_node(
         lambda node: (
@@ -74,6 +81,7 @@ def _has_rnn(ma: ModelArchitecture):
         )
     )
     return rnn_node is not None
+
 
 def _has_transformer(ma: ModelArchitecture):
     transformer_node = ma.find_node(
