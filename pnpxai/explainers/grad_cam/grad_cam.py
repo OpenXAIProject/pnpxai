@@ -49,9 +49,9 @@ class GradCam(Explainer):
             root=last_conv_node,
             get_all=True,
         )
-        assert pool_nodes, "Must have pooling layer"
-        target_module = getattr(self.model, pool_nodes[-1].prev.owning_module)
-        return target_module
+        if pool_nodes:
+            return getattr(self.model, pool_nodes[-1].prev.owning_module)
+        return last_conv_node.operator
 
     def attribute(
         self,
