@@ -12,6 +12,7 @@ SUPPORTED_FUNCTION_MODULES = {
 
 REPLACE_PREFIX = "_replaced_"
 
+
 @dataclass
 class NodeInfo:
     """
@@ -41,9 +42,9 @@ class NodeInfo:
         - NodeInfo: The NodeInfo object constructed from the given Node.
         """
         self = cls(
-            opcode = n.op,
-            name = n.name,
-            target = n._pretty_print_target(n.target),
+            opcode=n.op,
+            name=n.name,
+            target=n._pretty_print_target(n.target),
         )
         self._mode = "from_node"
         self._set_node(n.graph)
@@ -62,9 +63,9 @@ class NodeInfo:
         - NodeInfo: The NodeInfo object constructed from the given module.
         """
         self = cls(
-            opcode = "call_module",
-            name = None,
-            target = None,
+            opcode="call_module",
+            name=None,
+            target=None,
         )
         self._mode = "from_module"
         self._set_operator(module)
@@ -84,9 +85,9 @@ class NodeInfo:
         - NodeInfo: The NodeInfo object constructed from the given function.
         """
         self = cls(
-            opcode = "call_function",
-            name = None,
-            target = None,
+            opcode="call_function",
+            name=None,
+            target=None,
         )
         self._mode = "from_function"
         self._set_operator(func)
@@ -100,7 +101,7 @@ class NodeInfo:
         for n in graph.nodes:
             if n.name == self.name:
                 self._node = n
-    
+
     def _set_operator(self, operator: Callable):
         assert self._mode != "from_node"
         self._valid_operator(operator)
@@ -110,13 +111,13 @@ class NodeInfo:
     # [TODO] validation for operator
     def _valid_operator(self, operator: Callable):
         pass
-    
+
     def _get_operator(self, targets: List[str], root_module=None):
         operator = root_module if root_module else self._node.graph.owning_module
         for s in targets:
             operator = getattr(operator, s)
         return operator
-    
+
     # cloning main attributions
     @property
     def meta(self):
@@ -127,7 +128,7 @@ class NodeInfo:
         - Any: The meta information of the node.
         """
         return self._node.meta
-    
+
     @property
     def args(self):
         """
@@ -140,7 +141,7 @@ class NodeInfo:
             NodeInfo.from_node(a) if isinstance(a, Node) else a
             for a in self._node.args
         ])
-    
+
     @property
     def kwargs(self):
         """
@@ -153,7 +154,7 @@ class NodeInfo:
             k: NodeInfo.from_node(v) if isinstance(v, Node) else v
             for k, v in self._node.kwargs.items()
         }
-    
+
     @property
     def users(self):
         """
@@ -166,7 +167,7 @@ class NodeInfo:
             NodeInfo.from_node(u)
             for u in self._node.users.keys()
         ])
-    
+
     @property
     def next(self):
         """
@@ -178,7 +179,7 @@ class NodeInfo:
         if self._node.next.op == "root":
             return
         return NodeInfo.from_node(self._node.next)
-    
+
     @property
     def prev(self):
         """
@@ -190,7 +191,7 @@ class NodeInfo:
         if self._node.prev.op == "root":
             return
         return NodeInfo.from_node(self._node.prev)
-    
+
     # additional properties for detection
     @property
     def operator(self) -> Optional[Callable]:
@@ -210,7 +211,7 @@ class NodeInfo:
                     return self._get_operator(targets, root_module)
             return
         return self._operator
-    
+
     @property
     def owning_module(self) -> Optional[str]:
         """
@@ -224,7 +225,7 @@ class NodeInfo:
                 nm = next(iter(self.meta["nn_module_stack"]))
                 return nm
         return
-        
+
     # convert data format
     def to_dict(self):
         """
@@ -234,10 +235,11 @@ class NodeInfo:
         - dict: The dictionary representation of the NodeInfo object.
         """
         return {**asdict(self), "operator": self.operator}
-    
+
     # [TODO] to_json for visualization
     def to_json_serializable(self):
         pass
+
 
 class ModelArchitecture:
     """
@@ -248,18 +250,19 @@ class ModelArchitecture:
     - traced_model: The traced version of the model.
     - _replacing: A flag indicating whether a node replacement is in progress.
     """
+
     def __init__(self, model):
         """
         Initializes a ModelArchitecture object.
 
         Args:
         - model: The model for which the architecture is defined.
-        """        
+        """
         self.model = model
         self.traced_model = symbolic_trace(model)
 
         self._replacing = False
-    
+
     def list_nodes(self) -> List[NodeInfo]:
         """
         Lists all nodes in the model.
@@ -268,7 +271,7 @@ class ModelArchitecture:
         - List[NodeInfo]: A list of NodeInfo objects representing the nodes in the model.
         """
         return [NodeInfo.from_node(n) for n in self.traced_model.graph.nodes]
-    
+
     def get_node(self, name: str) -> NodeInfo:
         """
         Retrieves a node by its name.
@@ -282,42 +285,41 @@ class ModelArchitecture:
         for n in self.traced_model.graph.nodes:
             if n.name == name:
                 return NodeInfo.from_node(n)
-        return # [TODO] Error for no result?
-        
-    def find_node(self, filter_func: Callable, root: Optional[NodeInfo]=None, all=False):
+        return  # [TODO] Error for no result?
+
+    def find_node(
+        self,
+        filter_func: Callable[[NodeInfo], bool],
+        root: Optional[NodeInfo] = None,
+        get_all: bool = False
+    ) -> Union[NodeInfo, List[NodeInfo]]:
         """
         Finds a node based on a filtering function.
 
         Args:
-        - filter_func (Callable): The function used to filter nodes.
-        - root (Optional[NodeInfo]): The root node from which to start the search.
-        - all (bool): Whether to find all nodes matching the criteria.
+            filter_func (Callable): The function used to filter nodes.
+            root (Optional[NodeInfo]): The root node from which to start the search.
+            get_all (bool): Whether to find all nodes matching the criteria.
 
         Returns:
-        - Union[NodeInfo, List[NodeInfo]]: The found node(s) or None if no node is found.
+            Union[NodeInfo, List[NodeInfo]]: The found node(s) or None if no node is found.
         """
-        # [TODO] breadth first / depth first
-        if not root:
-            root = self.list_nodes()[0]
-        def _find_node(n):
-            if n == None:
-                return None
-            if filter_func(n):
-                return n
-            else:
-                return _find_node(n.next)
-        if not all:
-            return _find_node(root)
+        if root is None:
+            # Take the first node
+            root = NodeInfo.from_node(next(iter(self.traced_model.graph.nodes)))
+
+        node = root
         nodes = []
-        n = root
-        while True:
-            found = _find_node(n)
-            if not found:
-                break
-            nodes.append(found)
-            n = found.next
+        while node is not None:
+            is_found = filter_func(node)
+            if is_found:
+                if not get_all:
+                    return node
+                nodes.append(node)
+            node = node.next
+
         return nodes
-    
+
     def _validate_new_node(self, new_node: NodeInfo):
         if new_node.name is not None:
             exists = self.get_node(name=new_node.name)
@@ -327,7 +329,7 @@ class ModelArchitecture:
     def _ensure_graph(self) -> None:
         self.traced_model.graph.lint()
         self.traced_model.recompile()
-    
+
     def replace_node(self, node: NodeInfo, new_node: NodeInfo) -> NodeInfo:
         """
         Replaces a node in the model with a new node.
@@ -350,7 +352,7 @@ class ModelArchitecture:
         finally:
             self._replacing = False
         return inserted
-    
+
     def insert_node(self, new_node: NodeInfo, base_node: NodeInfo, before=False) -> NodeInfo:
         """
         Inserts a new node into the model.
@@ -370,8 +372,10 @@ class ModelArchitecture:
             _inserted_kwargs = base_node._node.kwargs
             pass
         elif before:
-            _inserted_args = tuple(arg for arg in base_node._node.args if isinstance(arg, Node))
-            _inserted_kwargs = {kw: arg for kw, arg in base_node._node.kwargs.items() if isinstance(arg, Node)}
+            _inserted_args = tuple(
+                arg for arg in base_node._node.args if isinstance(arg, Node))
+            _inserted_kwargs = {
+                kw: arg for kw, arg in base_node._node.kwargs.items() if isinstance(arg, Node)}
             _inserted_kwargs = {**_inserted_kwargs, **new_node._kwargs}
         else:
             _inserted_args = (base_node,)
@@ -381,7 +385,8 @@ class ModelArchitecture:
         # insert
         with inserting(base_node._node):
             if new_node._mode == "from_module":
-                self.traced_model.add_submodule(new_node.name, new_node.operator)
+                self.traced_model.add_submodule(
+                    new_node.name, new_node.operator)
                 _inserted = self.traced_model.graph.call_module(
                     new_node.name,
                     _inserted_args,
@@ -393,16 +398,18 @@ class ModelArchitecture:
                     _inserted_args,
                     _inserted_kwargs,
                 )
-        
+
         if self._replacing or not before:
             base_node._node.replace_all_uses_with(_inserted)
             pass
         elif before:
-            _not_inserted_args = [arg for arg in base_node._node.args if not isinstance(arg, Node)]
+            _not_inserted_args = [
+                arg for arg in base_node._node.args if not isinstance(arg, Node)]
             base_node._node.args = tuple([_inserted] + _not_inserted_args)
-            base_node._node.kwargs = {kw: arg for kw, arg in base_node._node.kwargs.items() if not isinstance(arg, Node)}
+            base_node._node.kwargs = {
+                kw: arg for kw, arg in base_node._node.kwargs.items() if not isinstance(arg, Node)}
         self._ensure_graph()
-        return NodeInfo.from_node(_inserted)        
+        return NodeInfo.from_node(_inserted)
 
     def to_dict(self):
         """

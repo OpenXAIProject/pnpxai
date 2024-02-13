@@ -41,13 +41,13 @@ class GradCam(Explainer):
     
     def _find_target_layer(self) -> Optional[Union[nn.Conv2d, Pool2d]]:
         ma = ModelArchitecture(self.model)
-        conv_nodes = ma.find_node(lambda n: isinstance(n.operator, nn.Conv2d), all=True)
+        conv_nodes = ma.find_node(lambda n: isinstance(n.operator, nn.Conv2d), get_all=True)
         assert conv_nodes, "Must have nn.Conv2d"
         last_conv_node = conv_nodes[-1]
         pool_nodes = ma.find_node(
             lambda n: isinstance(n.operator, Pool2d),
             root=last_conv_node,
-            all=True,
+            get_all=True,
         )
         assert pool_nodes, "Must have pooling layer"
         target_module = getattr(self.model, pool_nodes[-1].prev.owning_module)
