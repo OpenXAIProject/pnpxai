@@ -99,7 +99,7 @@ class XaiRecommender:
         - List[Type[EvaluationMetric]]: List of compatible evaluation metrics for the explainers.
         """
         method_to_metric = [
-            EXPLAINER_TO_METRICS.get(method)
+            EXPLAINER_TO_METRICS.get(method, set())
             for method in methods if method in EXPLAINER_TO_METRICS
         ]
         metrics = self._find_overlap(*method_to_metric)
