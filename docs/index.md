@@ -1,17 +1,14 @@
-# Welcome to MkDocs
+# Welcome to Plug & Play XAI Platform
 
-For full documentation visit [mkdocs.org](https://www.mkdocs.org).
+Here you can find documentation for the `pnpxai` library.
 
 ## Commands
 
-* `mkdocs new [dir-name]` - Create a new project.
-* `mkdocs serve` - Start the live-reloading docs server.
-* `mkdocs build` - Build the documentation site.
-* `mkdocs -h` - Print help message and exit.
+* `pip install -e .` - Installs the project and all required libraries.
+* `pytest` - Runs tests on the whole project.
 
-## Project layout
+## Project Structure
 
-    mkdocs.yml    # The configuration file.
-    docs/
-        index.md  # The documentation homepage.
-        ...       # Other markdown pages, images and other files.
+* [Project](api/project.md) -- class, designed for combining semantically similar experiments for side-to-side comparison
+* [Experiment](api/experiment.md) -- class, responsible for data manipulation, model explanation and explanations' evaluation
+* [Auto Experiment](api/auto_experiment.md) -- class, responsible for data manipulation, model explanation and explanations' evaluation

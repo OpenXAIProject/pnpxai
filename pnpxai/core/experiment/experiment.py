@@ -24,6 +24,26 @@ def default_target_extractor(x):
 
 
 class Experiment:
+    """
+    A class representing an experiment for model interpretability.
+
+    Args:
+        model (Model): The machine learning model to be interpreted.
+        data (DataSource): The data used for the experiment.
+        explainers (Sequence[Union[ExplainerWArgs, Explainer]]): Explainer objects or their arguments for interpreting the model.
+        metrics (Optional[Sequence[EvaluationMetric]]): Evaluation metrics used to assess model interpretability.
+        task (Task): The type of task the model is designed for (default: "image").
+        input_extractor (Optional[Callable[[Any], Any]]): Function to extract inputs from data (default: None).
+        target_extractor (Optional[Callable[[Any], Any]]): Function to extract targets from data (default: None).
+        input_visualizer (Optional[Callable[[Any], Any]]): Function to visualize input data (default: None).
+        target_visualizer (Optional[Callable[[Any], Any]]): Function to visualize target data (default: None).
+
+    Attributes:
+        all_explainers (Sequence[ExplainerWArgs]): All explainer objects used in the experiment.
+        all_metrics (Sequence[EvaluationMetric]): All evaluation metrics used in the experiment.
+        is_image_task (bool): True if the task is an image-related task, False otherwise.
+        has_explanations (bool): True if the experiment has explanations, False otherwise.
+    """
     def __init__(
         self,
         model: Model,
@@ -73,6 +93,23 @@ class Experiment:
         explainer_ids: Optional[Sequence[int]] = None,
         metrics_ids: Optional[Sequence[int]] = None,
     ) -> 'Experiment':
+        """
+        Run the experiment by processing data, generating explanations, evaluating with metrics, caching and retrieving the data.
+
+        Args:
+            data_ids (Optional[Sequence[int]]): A sequence of data IDs to specify the subset of data to process.
+            explainer_ids (Optional[Sequence[int]]): A sequence of explainer IDs to specify the subset of explainers to use.
+            metrics_ids (Optional[Sequence[int]]): A sequence of metric IDs to specify the subset of metrics to evaluate.
+
+        Returns:
+            The Experiment instance with updated results and state.
+
+        This method orchestrates the experiment by configuring the manager, obtaining explainer and metric instances,
+        processing data, generating explanations, and evaluating metrics. It then saves the results in the manager.
+
+        Note: The input parameters allow for flexibility in specifying subsets of data, explainers, and metrics to process.
+        If not provided, the method processes all available data, explainers, and metrics.
+        """
         self.manager.set_config(data_ids, explainer_ids, metrics_ids)
         explainers, explainer_ids = self.manager.get_explainers()
 
@@ -148,6 +185,16 @@ class Experiment:
         return evaluations
 
     def get_visualizations_flattened(self) -> Sequence[Sequence[Figure]]:
+        """
+        Generate flattened visualizations for each data point based on explanations.
+
+        Returns:
+            List of visualizations for each data point across explainers.
+
+        This method retrieves valid explanations for each explainer, formats them for visualization,
+        and generates visualizations using Plotly Express. The results are flattened based on the data points
+        and returned as a list of lists of figures.
+        """
         explainers, explainer_ids = self.manager.get_explainers()
         # Get all data ids
         experiment_data_ids = self.manager.get_data_ids()
@@ -192,24 +239,64 @@ class Experiment:
         return visualizations
 
     def get_inputs_flattened(self) -> Sequence[Tensor]:
+        """
+        Retrieve and flatten last run input data.
+
+        Returns:
+            Flattened input data.
+
+        This method retrieves input data using the input extractor and flattens it for further processing.
+        """
         data, _ = self.manager.get_data()
         data = [self.input_extractor(datum) for datum in data]
         return self.manager.flatten_if_batched(data, data)
     
     def get_all_inputs_flattened(self) -> Sequence[Tensor]:
+        """
+        Retrieve and flatten all input data.
+
+        Returns:
+            Flattened input data from all available data.
+
+        This method retrieves input data from all available data points using the input extractor and flattens it.
+        """
         data = self.manager.get_all_data()
         data = [self.input_extractor(datum) for datum in data]
         return self.manager.flatten_if_batched(data, data)
 
     def get_targets_flattened(self) -> Sequence[Tensor]:
+        """
+        Retrieve and flatten target data.
+
+        Returns:
+            Flattened target data.
+
+        This method retrieves target data using the target extractor and flattens it for further processing.
+        """
         data, _ = self.manager.get_data()
         targets = [self.target_extractor(datum)for datum in data]
         return self.manager.flatten_if_batched(targets, data)
 
     def get_outputs_flattened(self) -> Sequence[Tensor]:
+        """
+        Retrieve and flatten model outputs.
+
+        Returns:
+            Flattened model outputs.
+
+        This method retrieves flattened model outputs using the manager's get_flat_outputs method.
+        """
         return self.manager.get_flat_outputs()
 
     def get_explanations_flattened(self) -> Sequence[Sequence[Tensor]]:
+        """
+        Retrieve and flatten explanations from all explainers.
+
+        Returns:
+            Flattened explanations from all explainers.
+
+        This method retrieves flattened explanations for each explainer using the manager's get_flat_explanations method.
+        """
         _, explainer_ids = self.manager.get_explainers()
         return [
             self.manager.get_flat_explanations(explainer_id)
@@ -217,6 +304,15 @@ class Experiment:
         ]
 
     def get_evaluations_flattened(self) -> Sequence[Sequence[Sequence[Tensor]]]:
+        """
+        Retrieve and flatten evaluations for all explainers and metrics.
+
+        Returns:
+            Flattened evaluations for all explainers and metrics.
+
+        This method retrieves flattened evaluations for each explainer and metric using the manager's
+        get_flat_evaluations method.
+        """
         _, explainer_ids = self.manager.get_explainers()
         _, metric_ids = self.manager.get_metrics()
 
@@ -228,6 +324,15 @@ class Experiment:
         return formatted
 
     def get_explainers_ranks(self) -> Optional[Sequence[Sequence[int]]]:
+        """
+        Calculate and return rankings for explainers based on evaluations.
+
+        Returns:
+            Rankings of explainers. Returns None if rankings cannot be calculated.
+
+        This method calculates rankings for explainers based on evaluations and metric scores. It considers
+        metric priorities and sorting preferences to produce rankings.
+        """
         evaluations = [[[
             data_evaluation.detach().cpu() if data_evaluation is not None else None
             for data_evaluation in metric_data
