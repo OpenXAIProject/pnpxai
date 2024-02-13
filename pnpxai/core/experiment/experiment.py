@@ -276,7 +276,3 @@ class Experiment:
     @property
     def has_explanations(self):
         return self.manager.has_explanations
-
-
-def _select_metric_args(metric, model, explainer, inputs, targets, explanation):
-    pass
