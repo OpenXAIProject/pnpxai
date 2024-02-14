@@ -19,13 +19,13 @@ This command sets up the server, allowing access through a specified local URL.
 
 On the Experiment Information Page, users have the capability to confirm the accuracy of their model detections using our sophisticated algorithms. Moreover, this page provides an option to visualize the model's architecture, offering insights into its operational framework.
 
-![Homepage](assets/experiment_info.png)
+![Homepage](/assets/experiment_info.png)
 
 ### Explainer Results
 
 The cornerstone of our web application is its ability to generate and display a variety of explainer results. Users equipped with their own data and models can utilize this feature to obtain detailed evaluation outcomes. This process aids in the comprehension of the model's decision-making processes and identifies areas for improvement.
 
-![Explainer View](assets/local_explain.png)
+![Explainer View](/assets/local_explanation.png)
 
 ## Caveats and Recommendations
 
