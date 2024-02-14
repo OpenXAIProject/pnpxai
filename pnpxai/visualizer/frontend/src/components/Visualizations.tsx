@@ -2,12 +2,66 @@
 import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../app/store';
-import { Typography, Box, ImageList, ImageListItem, CircularProgress, Grid, Divider} from '@mui/material';
+import { Typography, Box, ImageList, ImageListItem, CircularProgress, Grid, Divider,
+  Alert, AlertTitle, Snackbar
+} from '@mui/material';
 import Plot from 'react-plotly.js';
 import { ExperimentResult } from '../app/types';
 import { RunExperiment, fetchExperiment } from '../features/apiService';
 import { preprocess, AddMockData } from './utils';
 
+interface ErrorProps {
+  name: string;
+  message: string;
+  trace?: string;
+}
+
+const ErrorSnackbar: React.FC<ErrorProps> = ({ name, message, trace }) => {
+  const [open, setOpen] = React.useState(true);
+
+  const handleClose = () => setOpen(false);
+
+  const addTraceTitle = () => {
+    if (trace) {
+      return (
+        <AlertTitle>
+          {name}: {message}
+        </AlertTitle>
+      );
+    } else {
+      return <AlertTitle>{name}</AlertTitle>;
+    }
+  };
+
+  const renderTrace = (trace: string) => {
+    console.log(trace);
+    console.log(trace.split("\\n"));
+    return trace.slice(0, -2).split('\\n').map((line, index) => {
+      let toPrint = line;
+      if (index % 3 === 0) {
+        toPrint = line.replace("'", "").replace(",", "").replace(" '", "").replace("[", "");
+      }
+
+      return (
+        <pre key={index}>
+          {toPrint}
+        </pre>
+      );
+    });
+  };
+
+
+  return (
+    <Snackbar anchorOrigin={{ vertical : 'top', horizontal : 'right' }} open={open} onClose={handleClose}>
+      <Alert severity="error" onClose={handleClose}>
+        {addTraceTitle()}
+        {trace && (
+          renderTrace(trace)
+        )}
+      </Alert>
+    </Snackbar>
+  );
+};
 
 const Visualizations: React.FC<{ 
   experiment: string; inputs: number[]; explainers: number[]; metrics: number[]; loading: boolean; setLoading: any
@@ -29,6 +83,8 @@ const Visualizations: React.FC<{
   ];
   const projectId = useSelector((state: RootState) => state.projects.currentProject.id);
   const [experimentResults, setExperimentResults] = React.useState<ExperimentResult[]>([]);
+  const [isError, setIsError] = React.useState<boolean>(false);
+  const [errorInfo, setErrorInfo] = React.useState<ErrorProps[]>([]);
   
 
   useEffect(() => {
@@ -56,15 +112,21 @@ const Visualizations: React.FC<{
       explainers: explainers,
       metrics: metrics
     }).then((response) => {
-      response = preprocess(response);
-      const experimentResults = response.data.data
-      experimentResults.forEach((experimentResult: ExperimentResult) => {
-        experimentResult.explanations.sort((a, b) => a.rank - b.rank);
-      });
-      setExperimentResults(JSON.parse(JSON.stringify(experimentResults)));
-      setLoading(false);
+      if (response.data.errors.length === 0) {
+        response = preprocess(response);
+        const experimentResults = response.data.data
+        experimentResults.forEach((experimentResult: ExperimentResult) => {
+          experimentResult.explanations.sort((a, b) => a.rank - b.rank);
+        });
+        setExperimentResults(JSON.parse(JSON.stringify(experimentResults)));
+      } else {
+        setIsError(true);
+        setErrorInfo(response.data.errors);
+      }
     }).catch((err) => {
       console.log(err);
+    }).finally(() => {
+      setLoading(false);
     })
   }, [inputs, explainers])
 
@@ -74,6 +136,16 @@ const Visualizations: React.FC<{
         <CircularProgress />
       </Box>
     )
+  }
+
+  if (isError) {
+    return (
+      <Box sx={{ mt: 15 }}>
+        {errorInfo.map((error, index) => (
+          <ErrorSnackbar key={index} name={error.name} message={error.message} trace={error.trace} />
+        ))}
+      </Box>
+    );
   }
   
 
