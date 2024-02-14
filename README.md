@@ -7,7 +7,7 @@ pnpxai is a Python package that provides a modular and easy-to-use framework for
 - [**Core**](pnpxai/core): The core module contains …
 - [**Detector**](pnpxai/detector): The detector module provides automatic detection of AI models implemented in PyTorch.
 - [**Evaluator**](pnpxai/evaluator): The evaluator module provides various ways to evaluate and compare the performance and explainability of AI models, such as [correctness](pnpxai/evaluator/infidelity.py), and [continuity](pnpxai/evaluator/sensitivity.py).
-- [**Explainers**](pnpxai/evaluator): The explainers module contains a collection of state-of-the-art XAI methods that can generate global or local explanations for any AI model, such as [SHAP](pnpxai/explainers/kernel_shap), [LIME](pnpxai/explainers/lime), [IG](pnpxai/explainers/integrated_gradients), [LRP](pnpxai/explainers/lrp), and [RAP](pnpxai/explainers/rap).
+- [**Explainers**](pnpxai/explainers): The explainers module contains a collection of state-of-the-art XAI methods that can generate global or local explanations for any AI model, such as [SHAP](pnpxai/explainers/kernel_shap), [LIME](pnpxai/explainers/lime), [IG](pnpxai/explainers/integrated_gradients), [LRP](pnpxai/explainers/lrp), and [RAP](pnpxai/explainers/rap).
 - [**Recommender**](pnpxai/recommender): The recommender module offers a recommender system that can suggest the most suitable XAI methods for a given model and dataset, based on the user’s preferences and goals.
 - [**Visualizer**](pnpxai/visualizer): The visualizer module enables users to interact with and explore the results of XAI methods in a web-based dashboard, using various charts, graphs, and widgets.
 
@@ -118,7 +118,6 @@ experiment = project.create_experiment(
 project.get_server().serve()
 ```
 
-(**EXAMPLE RESULTS FIGURES**)
 
 ## Contact
 
