@@ -122,6 +122,7 @@ class Experiment:
         Note: The input parameters allow for flexibility in specifying subsets of data, explainers, and metrics to process.
         If not provided, the method processes all available data, explainers, and metrics.
         """
+        self.reset_errors()
         self.manager.set_config(data_ids, explainer_ids, metrics_ids)
         explainers, explainer_ids = self.manager.get_explainers()
 
