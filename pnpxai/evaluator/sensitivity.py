@@ -19,13 +19,6 @@ class Sensitivity(EvaluationMetric):
             n_iter: int=8,
             epsilon: float=0.2
         ):
-        """
-        Initializes a Sensitivity object.
-
-        Args:
-        - n_iter (int): Number of iterations for perturbation.
-        - epsilon (float): Magnitude of random uniform noise.
-        """
         self.n_iter = n_iter
         self.epsilon = epsilon
         
@@ -39,17 +32,15 @@ class Sensitivity(EvaluationMetric):
             **kwargs,
         ) -> torch.Tensor:
         """
-        Computes the sensitivity metric for the model.
+        Computes the sensitivity of attributions.
 
         Args:
-        - model (Model): The model to evaluate.
-        - explainer_w_args (ExplainerWArgs): The explainer with arguments.
-        - inputs (torch.Tensor): The input data.
-        - targets (Optional[torch.Tensor]): The target labels for the inputs (default: None).
-        - attributions (Optional[torch.Tensor]): The attributions of the inputs (default: None).
-
-        Returns:
-        - torch.Tensor: The sensitivity evaluations.
+            model (Model): The model to evaluate.
+            explainer_w_args (ExplainerWArgs): The explainer with arguments.
+            inputs (torch.Tensor): The input data (N x C x H x W).
+            targets (torch.Tensor): The target labels for the inputs (N x 1).
+            attributions (Optional[torch.Tensor]): The attributions of the inputs (default: None).
+            **kwargs: Additional kwargs to compute metric in an experiment. Not required for single usage.
         """
         device = next(model.parameters()).device
         inputs = inputs.to(device)

@@ -10,18 +10,14 @@ class LRP(Explainer):
     """
     Computes Layer-wise Relevance Propagation (LRP) explanations for a given model.
 
+    Args:
+        model (Model): The model for which LRP explanations are computed.
+
     Attributes:
-    - model (Model): The model for which LRP explanations are computed.
-    - source (LRPZennit): The LRP source for explanations.
+        source (LRPZennit): The LRP source for explanations.
     """
 
     def __init__(self, model: Model):
-        """
-        Initializes an LRP object.
-
-        Args:
-        - model (Model): The model for which LRP explanations are computed.
-        """
         super(LRP, self).__init__(model)
         self.source = LRPZennit(model)
 
@@ -36,13 +32,10 @@ class LRP(Explainer):
         Computes LRP attributions for the given inputs.
 
         Args:
-        - inputs (DataSource): The input data.
-        - targets (TargetType): The target labels for the inputs (default: None).
-        - epsilon (float): The epsilon value for numerical stability (default: 0.25).
-        - n_classes (Optional[int]): Number of classes (default: None).
-
-        Returns:
-        - DataSource: LRP attributions.
+            inputs (DataSource): The input data (N x C x H x W).
+            targets (TargetType): The target labels for the inputs (N x 1, default: None).
+            epsilon (float): The epsilon value for numerical stability (default: 0.25).
+            n_classes (Optional[int]): Number of classes (default: None).
         """        
         attributions = self.source.attribute(
             inputs=inputs,

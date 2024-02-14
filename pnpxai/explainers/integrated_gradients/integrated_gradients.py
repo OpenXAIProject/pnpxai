@@ -16,17 +16,13 @@ class IntegratedGradients(Explainer):
     """
     Computes Integrated Gradients explanations for a given model.
 
+    Args:
+        model (Model): The model for which Integrated Gradients explanations are computed.
+
     Attributes:
-    - model (Model): The model for which Integrated Gradients explanations are computed.
-    - source (IntegratedGradientsZennit): The Integrated Gradients source for explanations.
+        source (IntegratedGradientsZennit): The Integrated Gradients source for explanations.
     """
     def __init__(self, model: Model):
-        """
-        Initializes an IntegratedGradients object.
-
-        Args:
-        - model (Model): The model for which Integrated Gradients explanations are computed.
-        """
         super().__init__(model=model)
         self.source = IntegratedGradientsZennit(self.model)
 
@@ -40,12 +36,9 @@ class IntegratedGradients(Explainer):
         Computes Integrated Gradients attributions for the given inputs.
 
         Args:
-        - inputs (DataSource): The input data.
-        - targets (TargetType): The target labels for the inputs (default: None).
-        - n_classes (Optional[int]): The number of classes (default: None).
-
-        Returns:
-        - Tensor: Integrated Gradients attributions.
+            inputs (DataSource): The input data (N x C x H x W).
+            targets (TargetType): The target labels for the inputs (N x 1, default: None).
+            n_classes (Optional[int]): The number of classes (default: None).
         """
         if n_classes is None:
             n_classes = self.model(inputs).shape[-1]
