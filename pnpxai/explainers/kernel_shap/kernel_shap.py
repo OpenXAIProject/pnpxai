@@ -2,7 +2,7 @@ from typing import Any, List, Tuple
 
 from torch import Tensor
 
-from captum.attr import KernelShap as KernelShapeCaptum
+from captum.attr import KernelShap as KernelShapCaptum
 from captum._utils.typing import BaselineType, TargetType
 
 from pnpxai.core._types import Model, DataSource, Task
@@ -18,7 +18,7 @@ class KernelShap(Explainer):
 
     Attributes:
     - model (Model): The model for which KernelSHAP explanations are computed.
-    - source (KernelShapeCaptum): The KernelSHAP source for explanations.
+    - source (KernelShapCaptum): The KernelSHAP source for explanations.
     """
 
     def __init__(self, model: Model):
@@ -29,7 +29,7 @@ class KernelShap(Explainer):
         - model (Model): The model for which KernelSHAP explanations are computed.
         """
         super().__init__(model)
-        self.source = KernelShapeCaptum(model)
+        self.source = KernelShapCaptum(model)
 
     def attribute(
         self,
