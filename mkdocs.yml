@@ -21,7 +21,12 @@ plugins:
                   heading_level: 4
 nav:
   - Home: index.md
+  - Detector: detector.md
+  - Evaluator: evaluator.md
   - API:
-    - Project: api/project.md
-    - Experiment: api/experiment.md
-    - 'Auto Experiment': api/auto_experiment.md
+    - Core:
+      - Project: api/core/project.md
+      - Experiment: api/core/experiment.md
+      - 'Auto Experiment': api/core/auto_experiment.md
+    - Detector: api/detector.md
+    - Evaluator: api/evaluator.md

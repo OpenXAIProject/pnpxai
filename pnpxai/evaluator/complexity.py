@@ -1,12 +1,8 @@
-from typing import Optional
-
 import torch
 import numpy as np
 from torchvision.transforms.functional import rgb_to_grayscale
 from scipy.stats import entropy
 
-from pnpxai.core._types import Model
-from pnpxai.explainers._explainer import ExplainerWArgs
 from pnpxai.evaluator._evaluator import EvaluationMetric
 
 class Complexity(EvaluationMetric):
