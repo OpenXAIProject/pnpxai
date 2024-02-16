@@ -3,8 +3,9 @@ import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../app/store';
 import { Typography, Box, ImageList, ImageListItem, CircularProgress, Grid, Divider,
-  Alert, AlertTitle, Snackbar
+  Alert, AlertTitle, Snackbar, Accordion, AccordionSummary, AccordionDetails
 } from '@mui/material';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import Plot from 'react-plotly.js';
 import { ExperimentResult } from '../app/types';
 import { RunExperiment, fetchExperiment } from '../features/apiService';
@@ -34,8 +35,6 @@ const ErrorSnackbar: React.FC<ErrorProps> = ({ name, message, trace }) => {
   };
 
   const renderTrace = (trace: string) => {
-    console.log(trace);
-    console.log(trace.split("\\n"));
     return trace.slice(0, -2).split('\\n').map((line, index) => {
       let toPrint = line;
       if (index % 3 === 0) {
@@ -50,13 +49,22 @@ const ErrorSnackbar: React.FC<ErrorProps> = ({ name, message, trace }) => {
     });
   };
 
-
   return (
     <Snackbar anchorOrigin={{ vertical : 'top', horizontal : 'right' }} open={open} onClose={handleClose}>
       <Alert severity="error" onClose={handleClose}>
         {addTraceTitle()}
         {trace && (
-          renderTrace(trace)
+          <Box sx={{ mt : 3 }}>
+            <Accordion sx={{ backgroundColor : '#FF9999', boxShadow : 0}}>
+              <AccordionSummary >
+              <ArrowDropDownIcon />
+                Trace
+              </AccordionSummary>
+              <AccordionDetails>
+                {renderTrace(trace)}
+              </AccordionDetails>
+            </Accordion>
+          </Box>
         )}
       </Alert>
     </Snackbar>
