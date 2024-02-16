@@ -1,11 +1,10 @@
-from typing import Optional, Union
+from typing import Union
 
 import torch
 from torchvision import transforms
 from scipy.stats import spearmanr
 
 from pnpxai.core._types import Model
-from pnpxai.explainers import ExplainerWArgs
 from pnpxai.evaluator._evaluator import EvaluationMetric
 
 

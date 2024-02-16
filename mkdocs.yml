@@ -22,6 +22,13 @@ plugins:
 nav:
   - Home: index.md
   - API:
-    - Project: api/project.md
-    - Experiment: api/experiment.md
-    - 'Auto Experiment': api/auto_experiment.md
+    - Core:
+      - Project: api/core/project.md
+      - Experiment: api/core/experiment.md
+      - 'Auto Experiment': api/core/auto_experiment.md
+    - Recommender: api/recommender.md
+    - Detector: api/detector.md
+    - Evaluator: api/evaluator.md
+  - Detector: detector.md
+  - Recommender: recommender.md
+  - Evaluator: evaluator.md

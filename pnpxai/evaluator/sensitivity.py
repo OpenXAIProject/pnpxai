@@ -11,8 +11,8 @@ class Sensitivity(EvaluationMetric):
     Measures the sensitivity of the model's explanations to perturbations.
 
     Attributes:
-    - n_iter (int): Number of iterations for perturbation.
-    - epsilon (float): Magnitude of random uniform noise.
+        n_iter (int): Number of iterations for perturbation.
+        epsilon (float): Magnitude of random uniform noise.
     """
     def __init__(
             self,
