@@ -14,6 +14,10 @@ interface HelpText {
   [key: string]: string;
 }
 
+interface ColorScales {
+  [key: string]: { [key: string]: any };
+}
+
 const NavBar: React.FC = () => {
   const helptext: HelpText = {
     "Correctness" : "the truthfulness/reliability of explanations about a prediction model (AI model). That is, it indicates how truthful the explanation is compared to the operation of the black box model.",
@@ -22,8 +26,8 @@ const NavBar: React.FC = () => {
     // "Completeness" : " the extent to which a prediction model (AI model) is explained. Providing 'the whole truth' of the black box model represents high completeness, but a good explanation should balance conciseness and correctness.",
   }
 
-  const colorMaps = Object.keys(ColorScales);
-
+  const colorScales: ColorScales = ColorScales;
+  console.log(colorScales);
   const routes = [
     {
       path: "/model-info",
@@ -83,7 +87,9 @@ const NavBar: React.FC = () => {
 
   const [helperAnchor, setHelperAnchor] = useState(null);
   const [settingAnchor, setSettingAnchor] = useState(null);
-  const [selectedColorMap, setSelectedColorMap] = useState(colorMaps[0]); // Default colormap
+  const [selectedColorMap, setSelectedColorMap] = useState({
+    'seq' : colorScales.seq[0], 'diverge' : colorScales.diverge[0]
+  }); // Default colormap
 
 
   const handleHelperClick = (event: any) => {
@@ -184,14 +190,28 @@ const NavBar: React.FC = () => {
                 }
               }}
             >
-              <Typography sx={{ p: 2 }}> Color Maps </Typography>
+              <Typography sx={{ p: 2 }}> Sequential Color Maps </Typography>
               {/* ColorMap buttons */}
               <Box sx={{ p: 2 }}>
-                {colorMaps.map((colorMap) => (
+                {Object.keys(colorScales.seq).map((colorMap: any) => (
                   <Button
                     key={colorMap}
-                    variant={selectedColorMap === colorMap ? 'contained' : 'outlined'}
-                    onClick={() => handleColorMapChange(colorMap)}
+                    variant={selectedColorMap.seq === colorMap ? 'contained' : 'outlined'}
+                    onClick={() => handleColorMapChange({'seq' : colorMap, 'diverge' : selectedColorMap.diverge})}
+                    sx={{ margin: 0.5 }}
+                  >
+                    {colorMap}
+                  </Button>
+                ))}
+              </Box>
+              <Typography sx={{ p: 2 }}> Diverge Color Maps </Typography>
+              {/* ColorMap buttons */}
+              <Box sx={{ p: 2 }}>
+                {Object.keys(colorScales.diverge).map((colorMap:any) => (
+                  <Button
+                    key={colorMap}
+                    variant={selectedColorMap.diverge === colorMap ? 'contained' : 'outlined'}
+                    onClick={() => handleColorMapChange({'seq' : selectedColorMap.seq, 'diverge' : colorMap})}
                     sx={{ margin: 0.5 }}
                   >
                     {colorMap}

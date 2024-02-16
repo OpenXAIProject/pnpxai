@@ -8,7 +8,7 @@ const initialState = {
   currentProject: {} as Project,
   loaded: false, // Add a flag to track if the data is loaded
   error: false,
-  colorMap: 'Reds'
+  colorMap: {'seq' : 'Reds', 'diverge' : 'bwr'}
 };
 
 // TODO: change this nickname to the real name
@@ -114,7 +114,7 @@ const projectSlice = createSlice({
         state.currentProject = foundProject;
       }
     },
-    setColorMap(state, action: PayloadAction<string>) {
+    setColorMap(state, action: PayloadAction<any>) {
       state.colorMap = action.payload;
     },
   },

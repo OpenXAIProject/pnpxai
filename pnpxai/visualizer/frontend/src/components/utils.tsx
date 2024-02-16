@@ -2,18 +2,19 @@
 import ColorScales from '../assets/styles/colorScale.json';
 
 interface ColorScales {
-  [key: string]: (string | number)[][];
+  [key: string]: { [key: string]: any[][] };
 }
 
 const colorScales: ColorScales = ColorScales;
 
 const modifyLayout = (layout: any, params: any) => {
-  // let colorScaleName = 'Reds';
-  let colorKey = params.colorScale;
+  // TODO : Get colorType from params (Backend)
+  let colorType = 'seq';
+  let colorKey = params.colorScale[colorType];
   const modifiedLayout = {
       ...layout,
       template: null,
-      coloraxis: {colorscale : colorScales[colorKey], showscale: false},
+      coloraxis: {colorscale : colorScales[colorType][colorKey], showscale: false},
       xaxis: { visible: false },
       yaxis: { visible: false },
       width: 200,
