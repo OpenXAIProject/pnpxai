@@ -7,7 +7,8 @@ const initialState = {
   data: [] as Project[], // Initialize as an empty array
   currentProject: {} as Project,
   loaded: false, // Add a flag to track if the data is loaded
-  error: false
+  error: false,
+  colorMap: 'Reds'
 };
 
 // TODO: change this nickname to the real name
@@ -113,6 +114,9 @@ const projectSlice = createSlice({
         state.currentProject = foundProject;
       }
     },
+    setColorMap(state, action: PayloadAction<string>) {
+      state.colorMap = action.payload;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -130,7 +134,7 @@ const projectSlice = createSlice({
     });
   },
 });
-export const { setCurrentProject } = projectSlice.actions;
+export const { setCurrentProject, setColorMap } = projectSlice.actions;
 
 export default projectSlice.reducer;
 

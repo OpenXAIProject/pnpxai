@@ -90,6 +90,7 @@ const Visualizations: React.FC<{
     { "name": "RAP", "nickname": "RAP" },
   ];
   const projectId = useSelector((state: RootState) => state.projects.currentProject.id);
+  const colorScale = useSelector((state: RootState) => state.projects.colorMap);
   const [experimentResults, setExperimentResults] = React.useState<ExperimentResult[]>([]);
   const [isError, setIsError] = React.useState<boolean>(false);
   const [errorInfo, setErrorInfo] = React.useState<ErrorProps[]>([]);
@@ -97,7 +98,7 @@ const Visualizations: React.FC<{
 
   useEffect(() => {
     fetchExperiment(projectId, experiment).then((response) => {
-      response = preprocess(response);
+      response = preprocess(response, {colorScale: colorScale});
       const experimentResults = response.data.data
       experimentResults.forEach((experimentResult: ExperimentResult) => {
         experimentResult.explanations.sort((a, b) => a.rank - b.rank);
@@ -121,7 +122,7 @@ const Visualizations: React.FC<{
       metrics: metrics
     }).then((response) => {
       if (response.data.errors.length === 0) {
-        response = preprocess(response);
+        response = preprocess(response, {colorScale: colorScale});
         const experimentResults = response.data.data
         experimentResults.forEach((experimentResult: ExperimentResult) => {
           experimentResult.explanations.sort((a, b) => a.rank - b.rank);
