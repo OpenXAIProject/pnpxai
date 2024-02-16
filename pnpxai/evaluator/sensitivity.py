@@ -33,6 +33,9 @@ class Sensitivity(EvaluationMetric):
         ) -> torch.Tensor:
         """
         Computes the sensitivity of attributions.
+        
+        Given a `model`, `inputs` and a explainer, the sensitivity is calculated by maximum norm of difference of explanations,
+        ``evalutions = max(norm(explainer(model, inputs) - explainer(model, perturbed)))``.
 
         Args:
             model (Model): The model to evaluate.
@@ -41,6 +44,9 @@ class Sensitivity(EvaluationMetric):
             targets (torch.Tensor): The target labels for the inputs (N x 1).
             attributions (Optional[torch.Tensor]): The attributions of the inputs (default: None).
             **kwargs: Additional kwargs to compute metric in an experiment. Not required for single usage.
+            
+        Reference:
+            C.-K. Yeh, C.-Y. Hsieh, A.S. Suggala, D.I. Inouye, and P. Ravikumar. On the (in)fidelity and sensitivity of explanations. In Proceedings of the NeurIPS (2019).
         """
         device = next(model.parameters()).device
         inputs = inputs.to(device)
