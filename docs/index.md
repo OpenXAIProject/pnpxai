@@ -6,9 +6,9 @@ pnpxai is a Python package that provides a modular and easy-to-use framework for
 
 - [**Detector**](detector): The detector module provides automatic detection of AI models implemented in PyTorch.
 - [**Evaluator**](evaluator): The evaluator module provides various ways to evaluate and compare the performance and explainability of AI models, such as [correctness](api/evaluator), and [continuity](api/evaluator).
-- [**Explainers**](pnpxai/explainers): The explainers module contains a collection of state-of-the-art XAI methods that can generate global or local explanations for any AI model, such as [SHAP](pnpxai/explainers/kernel_shap), [LIME](pnpxai/explainers/lime), [IG](pnpxai/explainers/integrated_gradients), [LRP](pnpxai/explainers/lrp), and [RAP](pnpxai/explainers/rap).
-- [**Recommender**](pnpxai/recommender): The recommender module offers a recommender system that can suggest the most suitable XAI methods for a given model and dataset, based on the user’s preferences and goals.
-- [**Visualizer**](pnpxai/visualizer): The visualizer module enables users to interact with and explore the results of XAI methods in a web-based dashboard, using various charts, graphs, and widgets.
+- **Explainers**: The explainers module contains a collection of state-of-the-art XAI methods that can generate global or local explanations for any AI model, such as [SHAP](https://github.com/openxaiproject/pnpxai/explainers/kernel_shap), [LIME](https://github.com/openxaiproject/pnpxai/explainers/lime), [IG](https://github.com/openxaiproject/pnpxai/explainers/integrated_gradients), [LRP](https://github.com/openxaiproject/pnpxai/explainers/lrp), and [RAP](https://github.com/openxaiproject/pnpxai/explainers/rap).
+- [**Recommender**](recommender): The recommender module offers a recommender system that can suggest the most suitable XAI methods for a given model and dataset, based on the user’s preferences and goals.
+- **Visualizer**: The visualizer module enables users to interact with and explore the results of XAI methods in a web-based dashboard, using various charts, graphs, and widgets.
 
 ## Project Core API
 
