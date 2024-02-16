@@ -1,0 +1,651 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+        <link rel="canonical" href="https://openxaiproject.github.io/pnpxai/recommender/">
+      
+      
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.7">
+    
+    
+      
+        <title>Recommender [source] - PnP XAI Docs</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.f2e4d321.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#recommender-source" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="PnP XAI Docs" class="md-header__button md-logo" aria-label="PnP XAI Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PnP XAI Docs
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Recommender <small>[source]</small>
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="PnP XAI Docs" class="md-nav__button md-logo" aria-label="PnP XAI Docs" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    PnP XAI Docs
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../detector/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Detector
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evaluator/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Evaluator
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    API
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            API
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_1" id="__nav_4_1_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Core
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_1">
+            <span class="md-nav__icon md-icon"></span>
+            Core
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/core/project/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Project
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/core/experiment/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Experiment
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/core/auto_experiment/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Auto Experiment
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/detector/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Detector
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/evaluator/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Evaluator
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#key-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Key Features
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#supported-methods-and-metrics" class="md-nav__link">
+    <span class="md-ellipsis">
+      Supported Methods and Metrics
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Usage
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#customization" class="md-nav__link">
+    <span class="md-ellipsis">
+      Customization
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+<h1 id="recommender-source">Recommender <small>[<a href="../api/recommender">source</a>]</small></h1>
+<p>The Recommender module in <code>pnpxai</code> assists you in selecting the most suitable explanation method and evaluation metric for your specific Explainable AI (XAI) needs. It considers various factors like question types, tasks, neural network architectures, and your desired evaluation criteria.</p>
+<h2 id="key-features">Key Features</h2>
+<ul>
+<li><strong>Automated Method Selection:</strong> Leverages the provided table to intelligently recommend applicable methods based on your inputs.</li>
+<li><strong>Customizable:</strong> Offers flexibility to tailor the selection process by refining the table or implementing your own filters.</li>
+<li><strong>Comprehensive Coverage:</strong> Supports a wide range of explanation methods and metrics for diverse XAI use cases.</li>
+<li><strong>Easy Integration:</strong> Seamlessly integrates into your <code>pnpxai</code> workflows for streamlined explainer development.</li>
+</ul>
+<h2 id="supported-methods-and-metrics">Supported Methods and Metrics</h2>
+<p>The following table summarizes the methods and metrics currently supported by the Recommender module.</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Questions</th>
+<th>Tasks</th>
+<th>Architectures</th>
+<th>Metrics</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Grad-CAM</td>
+<td>Why</td>
+<td>Image</td>
+<td>Convolution</td>
+<td>Correctness, Continuity</td>
+</tr>
+<tr>
+<td>LIME</td>
+<td>Why</td>
+<td>Image, Tabular Data, Text</td>
+<td>Linear, Convolution, Recurrent, Transformer, Decision Trees</td>
+<td>Correctness, Continuity</td>
+</tr>
+<tr>
+<td>SHAP</td>
+<td>Why</td>
+<td>Image, Tabular Data, Text</td>
+<td>Linear, Convolution, Recurrent, Transformer</td>
+<td>Correctness, Continuity</td>
+</tr>
+<tr>
+<td>IG</td>
+<td>Why</td>
+<td>Image, Text</td>
+<td>Linear, Convolution, Recurrent, Transformer</td>
+<td>Correctness, Continuity</td>
+</tr>
+<tr>
+<td>LRP</td>
+<td>Why</td>
+<td>Image, Text</td>
+<td>Linear, Convolution, Recurrent, Transformer</td>
+<td>Correctness, Continuity</td>
+</tr>
+<tr>
+<td>PDP</td>
+<td>How</td>
+<td>Tabular Data</td>
+<td>Decision Trees</td>
+<td>None</td>
+</tr>
+<tr>
+<td>CEM</td>
+<td>Why not</td>
+<td>Image, Tabular Data, Text</td>
+<td>Linear, Convolution, Recurrent, Transformer</td>
+<td>Completeness</td>
+</tr>
+<tr>
+<td>TCAV</td>
+<td>Why</td>
+<td>Image</td>
+<td>Linear, Convolution, Recurrent, Transformer</td>
+<td>Correctness</td>
+</tr>
+<tr>
+<td>Anchors</td>
+<td>Why, How to still be this</td>
+<td>Tabular Data</td>
+<td>Linear, Convolution, Recurrent, Transformer, Decision Trees</td>
+<td>Completeness, Compactness</td>
+</tr>
+</tbody>
+</table>
+<h2 id="usage">Usage</h2>
+<ol>
+<li>
+<p><strong>Import:</strong> Begin by importing the <code>XaiRecommender</code> module in your Python code:</p>
+<p><code>python
+from pnpxai.recommender import XaiRecommender</code></p>
+</li>
+<li>
+<p><strong>Create an Instance:</strong> Construct a <code>XaiRecommender</code> object:</p>
+<p><code>python
+recommender = XaiRecommender()</code></p>
+</li>
+<li>
+<p><strong>Get Recommendations:</strong> Retrieve recommended methods and metrics by calling <code>XaiRecommender</code> object with your desired parameters:</p>
+<p><code>python
+recommender_output = recommender(question, task, model_architecture)
+print("Recommended methods: ", recommender_output.explainers)
+print("Recommended metrics: ", recommender_output.evaluation_metrics)</code></p>
+</li>
+</ol>
+<h2 id="customization">Customization</h2>
+<p>You can customize the recommendation process by modifying the provided table to reflect your specific requirements or domain knowledge.</p>
+<p>The table consists of four Python dictionaries:</p>
+<ul>
+<li><code>QUESTION_TO_EXPLAINERS</code>: Maps question types ("why", "how", etc.) to supported explanation methods.</li>
+<li><code>TASK_TO_EXPLAINERS</code>: Maps task types (e.g., "image", "tabular") to compatible methods.</li>
+<li><code>ARCHITECTURE_TO_EXPLAINERS</code>: Links neural network architectures (e.g., "cnn", "transformer") to suitable explainers.</li>
+<li><code>EXPLAINER_TO_METRICS</code>: Associates explanation methods with relevant evaluation metrics (e.g., "Sensitivity", "Complexity").</li>
+</ul>
+<p>By carefully revising these dictionaries, you can guide the Recommender to prioritize methods that align with your specific use case and evaluation criteria.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.caa56a14.min.js"></script>
+      
+    
+  </body>
+</html>
