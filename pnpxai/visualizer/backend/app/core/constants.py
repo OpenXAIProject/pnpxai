@@ -15,6 +15,7 @@ class APIItems(Enum):
     SOURCE = 'source'
     TARGET = 'target'
     OUTPUTS = 'outputs'
+    PROGRESS = 'progress'
 
     EXPLANATIONS = 'explanations'
     RANK = 'rank'
