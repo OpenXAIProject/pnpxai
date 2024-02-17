@@ -317,7 +317,8 @@ class ModelArchitecture:
                     return node
                 nodes.append(node)
             node = node.next
-
+        if len(nodes) == 0 and not get_all:
+            return None
         return nodes
 
     def _validate_new_node(self, new_node: NodeInfo):

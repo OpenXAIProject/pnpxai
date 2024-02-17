@@ -12,13 +12,6 @@ class ProjectService:
         if projects is not None:
             return projects.get(name)
         return None
-
-    @classmethod
-    def get_experiment_by_id(cls, prj_name: str, exp_name: str):
-        project = ProjectService.get_by_id(prj_name)
-        if project is None:
-            return None
-        return project.experiments.get(exp_name, None)
     
     @classmethod
     def get_experiments_with_names(cls, project):

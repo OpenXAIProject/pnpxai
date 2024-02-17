@@ -4,10 +4,20 @@ from dataclasses import dataclass
 from torch import nn
 import torch.nn.functional as F
 
+from pnpxai.core._types import Model
 from ._core import ModelArchitecture, NodeInfo
 
 @dataclass
 class ModelArchitectureSummary:
+    """
+    A dataclass summarizing a model architecture.
+
+    Attributes:
+        has_linear (bool): Whether a model including a linear layer(s).
+        has_conv (bool): Whether a model including a convolution layer(s).
+        has_rnn (bool): Whether a model including a RNN layer(s).
+        has_transformer (bool): Whether a model including a transformer layer(s).
+    """
     has_linear: bool
     has_conv: bool
     has_rnn: bool
@@ -34,7 +44,16 @@ class ModelArchitectureSummary:
             raise Exception("Cannot determine the representative of model architecture.")
 
 
-def detect_model_architecture(model) -> ModelArchitectureSummary:
+def detect_model_architecture(model: Model) -> ModelArchitectureSummary:
+    """
+    A function detecting architecture for a given model.
+
+    Args:
+        model (Model): The machine learning model to be detected
+
+    Returns:
+        ModelArchitectureSummary: A summary of model architecture
+    """
     ma = ModelArchitecture(model)
     return ModelArchitectureSummary(
         has_linear=_has_linear(ma),

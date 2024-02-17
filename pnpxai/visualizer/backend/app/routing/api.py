@@ -6,6 +6,7 @@ from pnpxai.visualizer.backend.app.http.controllers.project_controller import (
 from pnpxai.visualizer.backend.app.http.controllers.experiment_controller import (
     ExperimentController,
     ExperimentInputsController,
+    ExperimentStatusController
 )
 from pnpxai.visualizer.backend.app.http.controllers.model_controller import (
     ModelController
@@ -18,6 +19,7 @@ routes = {
     '/projects/': ProjectListController,
     '/projects/<project_id>/experiments/<experiment_id>/': ExperimentController,
     '/projects/<project_id>/experiments/<experiment_id>/inputs/': ExperimentInputsController,
+    '/projects/<project_id>/experiments/<experiment_id>/status/': ExperimentStatusController,
     '/projects/<project_id>/models/': ModelController
 }
 

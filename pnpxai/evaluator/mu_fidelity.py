@@ -11,14 +11,14 @@ from pnpxai.evaluator._evaluator import EvaluationMetric
 
 class MuFidelity(EvaluationMetric):
     """
-    Measures the fidelity of a model's explanations using perturbations.
+    Measures the fidelity of attributions using input perturbations.
 
     Attributes:
-    - n_perturbations (int): Number of perturbations to generate.
-    - noise_scale (int): Scale factor for Gaussian random noise.
-    - batch_size (int): Batch size for model evaluation.
-    - grid_size (int): Size of the grid for creating subsets.
-    - baseline (Union[float, torch.Tensor]): Baseline value for masked subsets.
+        n_perturbations (int): Number of perturbations to generate.
+        noise_scale (int): Scale factor for Gaussian random noise.
+        batch_size (int): Batch size for model evaluation.
+        grid_size (int): Size of the grid for creating subsets.
+        baseline (Union[float, torch.Tensor]): Baseline value for masked subsets.
     """
 
     def __init__(
@@ -29,16 +29,6 @@ class MuFidelity(EvaluationMetric):
             grid_size: int=9,
             baseline: Union[float, torch.Tensor]=0.0,
         ):
-        """
-        Initializes a MuFidelity object.
-
-        Args:
-        - n_perturbations (int): Number of perturbations to generate.
-        - noise_scale (int): Scale factor for Gaussian random noise.
-        - batch_size (int): Batch size for model evaluation.
-        - grid_size (int): Size of the grid for creating subsets.
-        - baseline (Union[float, torch.Tensor]): Baseline value for masked subsets.
-        """
         self.n_perturbations = n_perturbations
         self.noise_scale = noise_scale
         self.batch_size = batch_size
@@ -49,9 +39,6 @@ class MuFidelity(EvaluationMetric):
     def subset_size(self) -> int:
         """
         Computes the size of the subset based on the grid size and noise scale.
-
-        Returns:
-        - int: The size of the subset.
         """
         return int(self.grid_size ** 2 * self.noise_scale)
     
@@ -76,17 +63,15 @@ class MuFidelity(EvaluationMetric):
             **kwargs,
         ) -> torch.Tensor:
         """
-        Computes the MuFidelity metric for the model.
+        Computes the MuFidelity metric for attributions.
 
         Args:
-        - model (Model): The model to evaluate.
-        - explainer_w_args (ExplainerWArgs): The explainer with arguments.
-        - inputs (torch.Tensor): The input data.
-        - targets (Optional[torch.Tensor]): The target labels for the inputs (default: None).
-        - attributions (Optional[torch.Tensor]): The attributions of the inputs (default: None).
-
-        Returns:
-        - torch.Tensor: The MuFidelity evaluations.
+            model (Model): The model to evaluate.
+            explainer_w_args (ExplainerWArgs): The explainer with arguments.
+            inputs (torch.Tensor): The input data (N x C x H x W).
+            targets (torch.Tensor): The target labels for the inputs (N x 1).
+            attributions (Optional[torch.Tensor]): The attributions of the inputs.
+            **kwargs: Additional kwargs to compute metric in an experiment. Not required for single usage.
         """
         device = next(model.parameters()).device
         inputs = inputs.to(device)

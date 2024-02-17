@@ -41,9 +41,9 @@ class LRPZennit(Explainer):
         return self.model
 
     def __get_model_with_functional_nodes(self, ma: ModelArchitecture, functional_nodes: List[NodeInfo]):
-        warnings.warn(
-            f"\n[LRP] Warning: {len(functional_nodes)} add operations in function detected. Automatically changed to modules."
-        )
+        # warnings.warn(
+        #     f"\n[LRP] Warning: {len(functional_nodes)} add operations in function detected. Automatically changed to modules."
+        # )
 
         # replace
         for add_func_node in functional_nodes:

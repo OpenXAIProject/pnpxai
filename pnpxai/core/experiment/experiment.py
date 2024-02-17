@@ -9,7 +9,9 @@ from plotly import express as px
 from plotly.graph_objects import Figure
 
 from pnpxai.core.experiment.experiment_metrics_defaults import EVALUATION_METRIC_REVERSE_SORT, EVALUATION_METRIC_SORT_PRIORITY
-from pnpxai.utils import class_to_string
+from pnpxai.core.experiment.observable import ExperimentObservableEvent
+from pnpxai.utils import class_to_string, Observable
+from pnpxai.messages import get_message
 from pnpxai.core.experiment.manager import ExperimentManager
 from pnpxai.explainers import Explainer, ExplainerWArgs
 from pnpxai.evaluator import EvaluationMetric
@@ -20,12 +22,11 @@ def default_input_extractor(x):
     return x[0]
 
 
-
 def default_target_extractor(x):
     return x[1]
 
 
-class Experiment:
+class Experiment(Observable):
     """
     A class representing an experiment for model interpretability.
 
@@ -48,6 +49,7 @@ class Experiment:
         has_explanations (bool): True if the experiment has explanations, False otherwise.
     """
 
+
     def __init__(
         self,
         model: Model,
@@ -60,6 +62,7 @@ class Experiment:
         input_visualizer: Optional[Callable[[Any], Any]] = None,
         target_visualizer: Optional[Callable[[Any], Any]] = None,
     ):
+        super(Experiment, self).__init__()
         self.model = model
         self.manager = ExperimentManager(
             data=data,
@@ -127,15 +130,23 @@ class Experiment:
         explainers, explainer_ids = self.manager.get_explainers()
 
         for explainer, explainer_id in zip(explainers, explainer_ids):
+            explainer_name = class_to_string(explainer.explainer)
             data, data_ids = self.manager.get_data_to_process_for_explainer(
                 explainer_id)
             explanations = self._explain(data, explainer)
             self.manager.save_explanations(
                 explanations, data, data_ids, explainer_id
             )
+            message = get_message(
+                'experiment.event.explainer', explainer=explainer_name
+            )
+            print(f"[Experiment] {message}")
+            self.fire(ExperimentObservableEvent(
+                self.manager, message, explainer))
 
             metrics, metric_ids = self.manager.get_metrics()
             for metric, metric_id in zip(metrics, metric_ids):
+                metric_name = class_to_string(metric)
                 data, data_ids = self.manager.get_data_to_process_for_metric(
                     explainer_id, metric_id)
                 explanations, data_ids = self.manager.get_valid_explanations(
@@ -146,6 +157,12 @@ class Experiment:
                 self.manager.save_evaluations(
                     evaluations, data, data_ids, explainer_id, metric_id)
 
+                message = get_message(
+                    'experiment.event.explainer.metric', explainer=explainer_name, metric=metric_name)
+                print(f"[Experiment] {message}")
+                self.fire(ExperimentObservableEvent(
+                    self.manager, message, explainer, metric))
+
         data, data_ids = self.manager.get_data_to_predict()
         outputs = [self.model(self.input_extractor(datum)) for datum in data]
         self.manager.save_outputs(outputs, data, data_ids)
@@ -155,7 +172,7 @@ class Experiment:
     def _explain(self, data: DataSource, explainer: ExplainerWArgs):
         explanations = [None] * len(data)
         explainer_name = class_to_string(explainer.explainer)
-        print(f'[Experiment] Explaining with {explainer_name}')
+
         for i, datum in enumerate(data):
             try:
                 inputs = self.input_extractor(datum)
@@ -180,7 +197,7 @@ class Experiment:
         started_at = time.time()
         metric_name = class_to_string(metric)
         explainer_name = class_to_string(explainer.explainer)
-        print(f'[Experiment] Evaluating {metric_name} of {explainer_name}')
+
         evaluations = [None] * len(data)
         for i, (datum, explanation) in enumerate(zip(data, explanations)):
             if explanation is None:

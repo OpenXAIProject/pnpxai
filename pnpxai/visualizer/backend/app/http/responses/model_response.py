@@ -1,7 +1,6 @@
 from typing import Tuple, List, Dict
 
 from pnpxai.detector import ModelArchitecture
-from pnpxai.explainers.utils.operation_graph import OperationGraph, OperationNode
 from pnpxai.visualizer.backend.app.core.constants import APIItems
 from pnpxai.visualizer.backend.app.core.generics import Response
 
