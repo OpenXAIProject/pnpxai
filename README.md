@@ -1,6 +1,10 @@
-# pnpxai: Plug-and-Play Explainable AI
+# PnPXAI: Plug-and-Play Explainable AI
 
-pnpxai is a Python package that provides a modular and easy-to-use framework for explainable artificial intelligence (XAI). It allows users to apply various XAI methods to their own models and datasets, and visualize the results in an interactive and intuitive way.
+<div align='center'>
+    <img src="assets/pnpxai_logo_horizontal.png">
+</div>
+
+[PnPXAI](https://openxaiproject.github.io/pnpxai/) is a Python package that provides a modular and easy-to-use framework for explainable artificial intelligence (XAI). It allows users to apply various XAI methods to their own models and datasets, and visualize the results in an interactive and intuitive way.
 
 ## Features
 
@@ -88,7 +92,7 @@ from torcu.utils.data import DataLoader
 
 from pnpxai import Project
 from pnpxai.explainers import LRP
-from pnpxai.evaluator import LRP
+from pnpxai.evaluator import MuFidelity
 
 # Bring your model
 model = ...

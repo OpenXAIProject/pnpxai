@@ -33,7 +33,7 @@ class ExperimentController(Controller):
         experiment = ExperimentService.run(
             experiment, inputs, explainers, metrics)
 
-        return self.response(data=ExperimentRunsResponse.dump(experiment))
+        return self.response(data=ExperimentRunsResponse.dump(experiment), errors=self.format_errors(experiment.errors))
 
 
 class ExperimentInputsController(Controller):
@@ -44,7 +44,8 @@ class ExperimentInputsController(Controller):
         if experiment is None:
             abort(404)
 
-        figures = ExperimentService.get_task_formatted_inputs(experiment, experiment.get_all_inputs_flattened())
+        figures = ExperimentService.get_task_formatted_inputs(
+            experiment, experiment.get_all_inputs_flattened())
         return self.response(data=ExperimentInputsResponse.dump(figures, many=True))
 
 class ExperimentStatusController(Controller):

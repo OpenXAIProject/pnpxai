@@ -1,6 +1,7 @@
 from typing import Any, Callable, Optional, Sequence, Union, List
 import time
 import warnings
+import traceback
 
 from torch import Tensor
 import numpy as np
@@ -43,6 +44,7 @@ class Experiment(Observable):
     Attributes:
         all_explainers (Sequence[ExplainerWArgs]): All explainer objects used in the experiment.
         all_metrics (Sequence[EvaluationMetric]): All evaluation metrics used in the experiment.
+        errors (Sequence[Error]): 
         is_image_task (bool): True if the task is an image-related task, False otherwise.
         has_explanations (bool): True if the experiment has explanations, False otherwise.
     """
@@ -76,6 +78,14 @@ class Experiment(Observable):
         self.input_visualizer = input_visualizer
         self.target_visualizer = target_visualizer
         self.task = task
+        self.reset_errors()
+
+    def reset_errors(self):
+        self._errors: List[BaseException] = []
+
+    @property
+    def errors(self):
+        return self._errors
 
     @property
     def all_explainers(self) -> Sequence[ExplainerWArgs]:
@@ -114,6 +124,7 @@ class Experiment(Observable):
         Note: The input parameters allow for flexibility in specifying subsets of data, explainers, and metrics to process.
         If not provided, the method processes all available data, explainers, and metrics.
         """
+        self.reset_errors()
         self.manager.set_config(data_ids, explainer_ids, metrics_ids)
         explainers, explainer_ids = self.manager.get_explainers()
 
@@ -169,12 +180,15 @@ class Experiment(Observable):
                     inputs=inputs,
                     targets=targets,
                 )
-            except NotImplementedError:
+            except NotImplementedError as error:
                 warnings.warn(
                     f"\n[Experiment] {get_message('experiment.errors.explainer_unsupported', explainer=explainer_name)}")
+                raise error
             except Exception as e:
                 warnings.warn(
                     f"\n[Experiment] {get_message('experiment.errors.explanation', explainer=explainer_name, error=e)}")
+                self._errors.append(e)
+        
         return explanations
 
     def _evaluate(self, data: DataSource, explanations: DataSource, explainer: ExplainerWArgs, metric: EvaluationMetric):
@@ -203,9 +217,10 @@ class Experiment(Observable):
             except Exception as e:
                 warnings.warn(
                     f"\n[Experiment] {get_message('experiment.errors.evaluation', explainer=explainer_name, metric=metric_name, error=e)}")
-
-        elapsed_time = time.time() - started_at
+                self._errors.append(e)
+        elaped_time = time.time() - started_at
         print(f"[Experiment] {get_message('elapsed', task=metric_name, elapsed=elapsed_time)}")
+
         return evaluations
 
     def get_visualizations_flattened(self) -> Sequence[Sequence[Figure]]:
