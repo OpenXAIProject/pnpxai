@@ -2,7 +2,7 @@ from werkzeug.exceptions import HTTPException
 from flask import g, Flask
 from flask_cors import CORS
 from dataclasses import dataclass
-from pnpxai.visualizer.backend.app.core.generics import JSONEncoder
+from pnpxai.visualizer.backend.app.core.generics import JSONEncoder, Controller
 from pnpxai.visualizer.backend.app.domain.project.project_progress_logger import ProjectProgressLogger
 
 

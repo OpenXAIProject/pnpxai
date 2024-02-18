@@ -183,12 +183,13 @@ class Experiment(Observable):
                 )
             except NotImplementedError as error:
                 warnings.warn(
-                    f"\n[Experiment] Warning: {explainer_name} is not currently supported.")
+                    f"\n[Experiment] {get_message('experiment.errors.explainer_unsupported', explainer=explainer_name)}")
                 raise error
             except Exception as e:
                 warnings.warn(
-                    f"\n[Experiment] Warning: Explaining {explainer_name} produced an error: {e}.")
+                    f"\n[Experiment] {get_message('experiment.errors.explanation', explainer=explainer_name, error=e)}")
                 self._errors.append(e)
+        
         return explanations
 
     def _evaluate(self, data: DataSource, explanations: DataSource, explainer: ExplainerWArgs, metric: EvaluationMetric):
@@ -216,10 +217,11 @@ class Experiment(Observable):
                 )
             except Exception as e:
                 warnings.warn(
-                    f"\n[Experiment] Warning: Evaluating {metric_name} of {explainer_name} produced an error: {e}.")
+                    f"\n[Experiment] {get_message('experiment.errors.evaluation', explainer=explainer_name, metric=metric_name, error=e)}")
                 self._errors.append(e)
         elaped_time = time.time() - started_at
-        print(f'[Experiment] Computed {metric_name} in {elaped_time} sec')
+        print(f"[Experiment] {get_message('elapsed', task=metric_name, elapsed=elapsed_time)}")
+
         return evaluations
 
     def get_visualizations_flattened(self) -> Sequence[Sequence[Figure]]:
