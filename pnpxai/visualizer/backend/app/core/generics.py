@@ -4,7 +4,8 @@ from abc import abstractclassmethod
 from pnpxai.visualizer.backend.app.core.constants import APIItems
 import numpy as np
 import torch
-from torch import Tensor
+from typing import Sequence
+import traceback
 
 
 class Controller(Resource):
@@ -15,6 +16,14 @@ class Controller(Resource):
             APIItems.DATA.value: data,
             APIItems.ERRORS.value: errors,
         }, code
+
+    @classmethod
+    def format_errors(cls, errors: Sequence[BaseException]):
+        return [{
+            APIItems.NAME.value: str(type(error).__name__),
+            APIItems.MESSAGE.value: str(error),
+            APIItems.TRACE.value: str(traceback.format_tb(error.__traceback__))
+        } for error in errors]
 
 
 class Response:
