@@ -25,5 +25,8 @@ export const fetchInputsByExperimentId =
 export const fetchExperiment =
   (projectId: string, experimentId: string) => axios.get(`${API_BASE_URL}/projects/${projectId}/experiments/${experimentId}/`);
 
+export const fetchExperimentStatus =
+  (projectId: string, experimentId: string) => axios.get(`${API_BASE_URL}/projects/${projectId}/experiments/${experimentId}/status`);
+
 export const RunExperiment =
-  (projectId: string, experimentId: string, data: ExperimentReq) => axios.put(`${API_BASE_URL}/projects/${projectId}/experiments/${experimentId}/`, data);
+  async (projectId: string, experimentId: string, data: ExperimentReq) => axios.put(`${API_BASE_URL}/projects/${projectId}/experiments/${experimentId}/`, data);

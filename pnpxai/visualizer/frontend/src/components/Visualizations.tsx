@@ -2,12 +2,75 @@
 import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../app/store';
-import { Typography, Box, ImageList, ImageListItem, CircularProgress, Grid, Divider} from '@mui/material';
+import { Typography, Box, ImageList, ImageListItem, CircularProgress, Grid, Divider,
+  Alert, AlertTitle, Snackbar, Accordion, AccordionSummary, AccordionDetails, Stack
+} from '@mui/material';
+import LinearProgress, { LinearProgressProps } from '@mui/material/LinearProgress';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import Plot from 'react-plotly.js';
 import { ExperimentResult } from '../app/types';
-import { RunExperiment, fetchExperiment } from '../features/apiService';
+import { RunExperiment, fetchExperiment, fetchExperimentStatus } from '../features/apiService';
 import { preprocess, AddMockData } from './utils';
 
+interface ErrorProps {
+  name: string;
+  message: string;
+  trace?: string;
+}
+
+const ErrorSnackbar: React.FC<ErrorProps> = ({ name, message, trace }) => {
+  const [open, setOpen] = React.useState(true);
+
+  const handleClose = () => setOpen(false);
+
+  const addTraceTitle = () => {
+    if (trace) {
+      return (
+        <AlertTitle>
+          {name}: {message}
+        </AlertTitle>
+      );
+    } else {
+      return <AlertTitle>{name}</AlertTitle>;
+    }
+  };
+
+  const renderTrace = (trace: string) => {
+    return trace.slice(0, -2).split('\\n').map((line, index) => {
+      let toPrint = line;
+      if (index % 3 === 0) {
+        toPrint = line.replace("'", "").replace(",", "").replace(" '", "").replace("[", "");
+      }
+
+      return (
+        <pre key={index}>
+          {toPrint}
+        </pre>
+      );
+    });
+  };
+
+  return (
+    <Snackbar anchorOrigin={{ vertical : 'top', horizontal : 'right' }} open={open} onClose={handleClose}>
+      <Alert severity="error" onClose={handleClose}>
+        {addTraceTitle()}
+        {trace && (
+          <Box sx={{ mt : 3 }}>
+            <Accordion sx={{ backgroundColor : '#FF9999', boxShadow : 0}}>
+              <AccordionSummary >
+              <ArrowDropDownIcon />
+                Trace
+              </AccordionSummary>
+              <AccordionDetails>
+                {renderTrace(trace)}
+              </AccordionDetails>
+            </Accordion>
+          </Box>
+        )}
+      </Alert>
+    </Snackbar>
+  );
+};
 
 const Visualizations: React.FC<{ 
   experiment: string; inputs: number[]; explainers: number[]; metrics: number[]; loading: boolean; setLoading: any
@@ -28,18 +91,24 @@ const Visualizations: React.FC<{
     { "name": "RAP", "nickname": "RAP" },
   ];
   const projectId = useSelector((state: RootState) => state.projects.currentProject.id);
+  const colorScale = useSelector((state: RootState) => state.projects.colorMap);
   const [experimentResults, setExperimentResults] = React.useState<ExperimentResult[]>([]);
+  const [isError, setIsError] = React.useState<boolean>(false);
+  const [errorInfo, setErrorInfo] = React.useState<ErrorProps[]>([]);
+  const [progress, setProgress] = React.useState(0);
+  const [progressMsg, setProgressMsg] = React.useState("Loading...");
   
 
   useEffect(() => {
     fetchExperiment(projectId, experiment).then((response) => {
-      response = preprocess(response);
+      response = preprocess(response, {colorScale: colorScale});
       const experimentResults = response.data.data
       experimentResults.forEach((experimentResult: ExperimentResult) => {
         experimentResult.explanations.sort((a, b) => a.rank - b.rank);
       });
       setExperimentResults(JSON.parse(JSON.stringify(experimentResults)));
       setLoading(false);
+      setProgress(0);
     }).catch((err) => {
       console.log(err);
     })
@@ -56,24 +125,78 @@ const Visualizations: React.FC<{
       explainers: explainers,
       metrics: metrics
     }).then((response) => {
-      response = preprocess(response);
-      const experimentResults = response.data.data
-      experimentResults.forEach((experimentResult: ExperimentResult) => {
-        experimentResult.explanations.sort((a, b) => a.rank - b.rank);
-      });
-      setExperimentResults(JSON.parse(JSON.stringify(experimentResults)));
-      setLoading(false);
+      if (response.data.errors.length === 0) {
+        response = preprocess(response, {colorScale: colorScale});
+        const experimentResults = response.data.data
+        experimentResults.forEach((experimentResult: ExperimentResult) => {
+          experimentResult.explanations.sort((a, b) => a.rank - b.rank);
+        });
+        setExperimentResults(JSON.parse(JSON.stringify(experimentResults)));
+      } else {
+        setIsError(true);
+        setErrorInfo(response.data.errors);
+      }
     }).catch((err) => {
       console.log(err);
+    }).finally(() => {
+      setLoading(false);
+      setProgress(0);
     })
   }, [inputs, explainers])
 
+  useEffect(() => {
+    let interval: string | number | NodeJS.Timeout | null | undefined = null;
+  
+    if (loading) { // Start or continue the interval only if loading is true
+      interval = setInterval(async () => {
+        fetchExperimentStatus(projectId, experiment).then((response) => {
+          setProgress(response.data.data.progress);
+          setProgressMsg(response.data.data.message);
+          // Potentially update loading status here based on the response
+          // For example, if progress == 100, you might want to setLoading(false)
+        }).catch((err) => {
+          console.log(err);
+          // Consider setting loading to false here if the request fails
+        });
+      }, 1000);
+    } else {
+      // If loading is false, clear the interval if it exists
+      if (interval) {
+        clearInterval(interval);
+      }
+    }
+  
+    // Cleanup function to clear the interval when the component unmounts or before re-running the effect
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [loading]); // Dependency array includes `loading`, so the effect re-runs when `loading` changes
+
   if (loading) {
     return (
-      <Box sx={{ mt: 15, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-        <CircularProgress />
+      <Box sx={{ mt : 5 }}>
+        <Stack direction="column" spacing={2} alignItems="center">
+          <CircularProgress />
+          <Typography variant="h4">{progressMsg}</Typography>
+          <Stack sx={{ minWidth : `400px`}} direction="row" alignItems="center">
+            <LinearProgress sx={{ width: `100%`}} variant="determinate" value={progress*100} />
+            <Typography variant="h6" sx={{ ml: 2 }}>{(progress*100).toFixed(0)}%</Typography>
+          </Stack>
+        </Stack>
       </Box>
     )
+  }
+
+  if (isError) {
+    return (
+      <Box sx={{ mt: 15 }}>
+        {errorInfo.map((error, index) => (
+          <ErrorSnackbar key={index} name={error.name} message={error.message} trace={error.trace} />
+        ))}
+      </Box>
+    );
   }
   
 

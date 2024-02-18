@@ -1,47 +1,20 @@
-const colorScale = [
-  [
-      0,
-      "rgb(255,245,240)"
-  ],
-  [
-      0.125,
-      "rgb(254,224,210)"
-  ],
-  [
-      0.25,
-      "rgb(252,187,161)"
-  ],
-  [
-      0.375,
-      "rgb(252,146,114)"
-  ],
-  [
-      0.5,
-      "rgb(251,106,74)"
-  ],
-  [
-      0.625,
-      "rgb(239,59,44)"
-  ],
-  [
-      0.75,
-      "rgb(203,24,29)"
-  ],
-  [
-      0.875,
-      "rgb(165,15,21)"
-  ],
-  [
-      1,
-      "rgb(103,0,13)"
-  ]
-];
+// File: utils.tsx
+import ColorScales from '../assets/styles/colorScale.json';
 
-const modifyLayout = (layout: any) => {
+interface ColorScales {
+  [key: string]: { [key: string]: any[][] };
+}
+
+const colorScales: ColorScales = ColorScales;
+
+const modifyLayout = (layout: any, params: any) => {
+  // TODO : Get colorType from params (Backend)
+  let colorType = 'seq';
+  let colorKey = params.colorScale[colorType];
   const modifiedLayout = {
       ...layout,
       template: null,
-      coloraxis: {colorscale : colorScale, showscale: false},
+      coloraxis: {colorscale : colorScales[colorType][colorKey], showscale: false},
       xaxis: { visible: false },
       yaxis: { visible: false },
       width: 200,
@@ -59,16 +32,16 @@ const modifyData = (data: any) => {
     return [modifiedData];
 }
 
-export const preprocess = (response: any) => {
+export const preprocess = (response: any, params: any) => {
   response.data.data.forEach((result: any) => {
     result.input = JSON.parse(result.input);
-    result.input.layout = modifyLayout(result.input.layout);
+    result.input.layout = modifyLayout(result.input.layout, params);
 
     result.explanations.forEach((explanation: any) => {
       if (explanation.data !== null) {
         explanation.data = JSON.parse(explanation.data);
         explanation.data.data = modifyData(explanation.data.data);
-        explanation.data.layout = modifyLayout(explanation.data.layout);
+        explanation.data.layout = modifyLayout(explanation.data.layout, params);
       }
     });
   });

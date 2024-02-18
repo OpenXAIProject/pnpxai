@@ -1,15 +1,21 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../../app/store';
-import { setCurrentProject } from '../../features/projectSlice';
+import { setCurrentProject, setColorMap } from '../../features/projectSlice';
 import { Link } from 'react-router-dom';
 import { Box, AppBar, Toolbar, Button, Menu, MenuItem, Popover, IconButton, Tooltip, Typography, List, ListItem } from '@mui/material';
 import logo from '../../assets/images/SVG/XAI-Top-PnP.svg';
 import { useLocation } from 'react-router-dom';
 import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
+import SettingsIcon from '@mui/icons-material/Settings';
+import ColorScales from '../../assets/styles/colorScale.json';
 
 interface HelpText {
   [key: string]: string;
+}
+
+interface ColorScales {
+  [key: string]: { [key: string]: any };
 }
 
 const NavBar: React.FC = () => {
@@ -19,6 +25,8 @@ const NavBar: React.FC = () => {
     "Compactness" : "the size/amount of an explanation. It ensures that complex and redundant explanations that are difficult to understand are not presented.",
     // "Completeness" : " the extent to which a prediction model (AI model) is explained. Providing 'the whole truth' of the black box model represents high completeness, but a good explanation should balance conciseness and correctness.",
   }
+
+  const colorScales: ColorScales = ColorScales;
   const routes = [
     {
       path: "/model-info",
@@ -76,18 +84,38 @@ const NavBar: React.FC = () => {
   , [projectId]);
 
 
-  const [anchorEl, setAnchorEl] = useState(null);
+  const [helperAnchor, setHelperAnchor] = useState(null);
+  const [settingAnchor, setSettingAnchor] = useState(null);
+  const [selectedColorMap, setSelectedColorMap] = useState({
+    'seq' : colorScales.seq[0], 'diverge' : colorScales.diverge[0]
+  }); // Default colormap
 
-  const handleClick = (event: any) => {
-    setAnchorEl(event.currentTarget);
+
+  const handleHelperClick = (event: any) => {
+    setHelperAnchor(event.currentTarget);
   };
 
-  const handleClose = () => {
-    setAnchorEl(null);
+  const handleHelperClose = () => {
+    setHelperAnchor(null);
   };
 
-  const open = Boolean(anchorEl);
-  const id = open ? 'simple-popover' : undefined;
+  const handleSettingClick = (event: any) => {
+    setSettingAnchor(event.currentTarget);
+  }
+
+  const handleSettingClose = () => {
+    setSettingAnchor(null);
+  }
+
+  const handleColorMapChange = (colorMap: any) => {
+    setSelectedColorMap(colorMap);
+    dispatch(setColorMap(colorMap));
+    handleSettingClose(); // Close the popover after selection
+  };
+  const helperOpen = Boolean(helperAnchor);
+  const settingOpen = Boolean(settingAnchor);
+  const helperId = helperOpen ? 'helper-popover' : undefined;
+  const settingId = settingOpen ? 'setting-popover' : undefined;
 
 
   return (
@@ -138,39 +166,94 @@ const NavBar: React.FC = () => {
           })}
           
           <Box sx={{ flexGrow: 1 }} />
+
           {/* Right of the menu bar */}
-          <Tooltip title="Meaning of evaluation metric">
-            <IconButton aria-describedby={id} onClick={handleClick}>
-              <HelpRoundedIcon />
-            </IconButton>
-          </Tooltip>
-          <Popover
-            id={id}
-            open={open}
-            anchorEl={anchorEl}
-            onClose={handleClose}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'left',
-            }}
-            PaperProps={{
-              sx: {
-                maxWidth: 600, // Set the maximum width of the Popover
-                // Add any additional styles here
-              }
-            }}
-          >
-            <Typography sx={{ p: 2 }}> Meaning of Evaluation Metric </Typography>
-            <List sx={{ p: 1 }}>
-              {Object.keys(helptext).map((key, index) => (
-                  <ListItem key={index}>
-                  <Typography key={index} sx={{ p: 1 }}>
-                  <strong>{key}</strong> evaluates {helptext[key]}
-                  </Typography>
-                  </ListItem>
+          <Box sx={{ mr : 1}}>
+            <Tooltip title="Settings">
+              <IconButton aria-describedby={settingId} onClick={handleSettingClick}>
+                <SettingsIcon sx={{ color : 'white'}}/>
+              </IconButton>
+            </Tooltip>
+            <Popover
+              id={settingId}
+              open={settingOpen}
+              anchorEl={settingAnchor}
+              onClose={handleSettingClose}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left',
+              }}
+              PaperProps={{
+                sx: {
+                  maxWidth: 600, // Set the maximum width of the Popover
+                }
+              }}
+            >
+              <Typography sx={{ p: 2 }}> Sequential Color Maps </Typography>
+              {/* ColorMap buttons */}
+              <Box sx={{ p: 2 }}>
+                {Object.keys(colorScales.seq).map((colorMap: any) => (
+                  <Button
+                    key={colorMap}
+                    variant={selectedColorMap.seq === colorMap ? 'contained' : 'outlined'}
+                    onClick={() => handleColorMapChange({'seq' : colorMap, 'diverge' : selectedColorMap.diverge})}
+                    sx={{ margin: 0.5 }}
+                  >
+                    {colorMap}
+                  </Button>
                 ))}
-            </List>
-          </Popover>
+              </Box>
+              <Typography sx={{ p: 2 }}> Diverge Color Maps </Typography>
+              {/* ColorMap buttons */}
+              <Box sx={{ p: 2 }}>
+                {Object.keys(colorScales.diverge).map((colorMap:any) => (
+                  <Button
+                    key={colorMap}
+                    variant={selectedColorMap.diverge === colorMap ? 'contained' : 'outlined'}
+                    onClick={() => handleColorMapChange({'seq' : selectedColorMap.seq, 'diverge' : colorMap})}
+                    sx={{ margin: 0.5 }}
+                  >
+                    {colorMap}
+                  </Button>
+                ))}
+              </Box>
+            </Popover>
+          </Box>
+
+          <Box sx={{ mr : 1 }}>
+            <Tooltip title="Meaning of evaluation metric">
+              <IconButton aria-describedby={helperId} onClick={handleHelperClick}>
+                <HelpRoundedIcon sx={{ color : 'white'}}/>
+              </IconButton>
+            </Tooltip>
+            <Popover
+              id={helperId}
+              open={helperOpen}
+              anchorEl={helperAnchor}
+              onClose={handleHelperClose}
+              anchorOrigin={{
+                vertical: 'bottom',
+                horizontal: 'left',
+              }}
+              PaperProps={{
+                sx: {
+                  maxWidth: 600, // Set the maximum width of the Popover
+                  // Add any additional styles here
+                }
+              }}
+            >
+              <Typography sx={{ p: 2 }}> Meaning of Evaluation Metric </Typography>
+              <List sx={{ p: 1 }}>
+                {Object.keys(helptext).map((key, index) => (
+                    <ListItem key={index}>
+                    <Typography key={index} sx={{ p: 1 }}>
+                    <strong>{key}</strong> evaluates {helptext[key]}
+                    </Typography>
+                    </ListItem>
+                  ))}
+              </List>
+            </Popover>
+          </Box>
         </Toolbar>
       </AppBar>
     </Box>
