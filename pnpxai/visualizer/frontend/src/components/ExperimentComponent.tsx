@@ -1,14 +1,22 @@
 // src/components/ExperimentComponent.tsx
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../app/store';
 import { 
   Grid, Box, Typography, 
   Button, Chip, 
   Dialog, DialogActions, DialogContent, DialogTitle, 
   Alert, FormControlLabel,
-  Checkbox, Paper, Card, Tooltip, CardContent, tooltipClasses
+  Checkbox, Paper, Card, Tooltip, CardContent, CircularProgress
 } from '@mui/material';
 import Visualizations from './Visualizations';
 import { Experiment, Metric } from '../app/types';
+import { fetchInputsByExperimentId } from '../features/apiService';
+
+interface GalleryInput {
+  id: string;
+  source: string;
+}
 
 const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {experiment} ) => {
   // TODO: change this nickname to the real name
@@ -18,15 +26,11 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
     {"name": "Sensitivity", "nickname": "Continuity"},
   ]
   const domain_extension_plan = "The task will be extended to other domains(Tabular, Text, Time Series) in the future."
-  
   // Basic Data
-  const galleryInputs = experiment.inputs.map(input => {
-    return {id: input.id, source: input.imageObj.data[0].source}
-  });
-
-
+  const projectId = useSelector((state: RootState) => state.projects.currentProject.id);
+  
   // User Input
-  const [inputs, setInputs] = useState<number[]>([]);
+  const [inputs, setInputs] = useState<string[]>([]);
   const [selectedInputs, setSelectedInputs] = useState<number[]>([]);
   const [explainers, setExplainers] = useState<number[]>(experiment.explainers.map(explainer => explainer.id));
   const [selectedExplainers, setSelectedExplainers] = useState<number[]>([]);
@@ -41,11 +45,29 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
 
   // const inputs: InputData[] = JSON.parse(JSON.stringify(experiment.inputs));
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [tmpInputs, setTmpInputs] = useState<number[]>([]); // State to track selection in the modal
+  const [tmpInputs, setTmpInputs] = useState<string[]>([]); // State to track selection in the modal
 
   const [isExperimentRun, setIsExperimentRun] = useState(false); // New state to track if experiment is run
   const [loading, setLoading] = React.useState<boolean>(false);
   const [showDialog, setShowDialog] = React.useState(false);
+  const [galleryInputs, setGalleryInputs] = useState<GalleryInput[]>([]);
+
+  useEffect(() => {
+    if (isModalOpen) {
+      fetchInputsByExperimentId(projectId, experiment.id)
+      .then(response => {
+        setGalleryInputs(
+          response.data.data.map((input: string, index: number) => {
+            const parsedInput = JSON.parse(input);
+            return {
+              id: index.toString(),
+              source: parsedInput.data[0].source,
+            };
+          })
+        )
+      });
+    }
+  }, [isModalOpen]);
 
   
   useEffect(() => {
@@ -59,7 +81,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
   
   // Image Selection Handlers
   // Modal Handlers
-  const handleImageClick = (imageId: number) => {
+  const handleImageClick = (imageId: string) => {
     // Only 1 Input.
     setTmpInputs([imageId]);
 
@@ -80,7 +102,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
     setIsModalOpen(false);
   };
 
-  const handleChipCancel = (imageId: number) => {
+  const handleChipCancel = (imageId: string) => {
     setInputs(inputs.filter(input => input !== imageId));
   }
 
@@ -251,27 +273,34 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
       <Dialog open={isModalOpen} onClose={() => setIsModalOpen(false)} fullWidth maxWidth="md">
         <DialogTitle>Select Intances</DialogTitle>
         <DialogContent>
-          <Grid container spacing={2}>
-            {galleryInputs.map((input, index) => (
-              <Grid item xs={12} sm={6} md={4} key={index}>
-                <Paper 
-                  sx={{ 
-                    height: "300px", 
-                    display: 'flex', 
-                    flexDirection: 'column', // Set the flex direction to column
-                    justifyContent: 'center', // Aligns children vertically in the center
-                    alignItems: 'center', // Aligns children horizontally in the center
-                    cursor: 'pointer', 
-                    opacity: tmpInputs.includes(input.id) ? 0.5 : 1
-                  }}
-                  onClick={() => handleImageClick(input.id)}
-                >
-                    <img src={input.source} width={240} height={200} alt={String(input.id)} />
-                    <Typography variant="subtitle1" align="center">{input.id}</Typography>
-                </Paper>
-              </Grid>
-            ))}
-          </Grid>
+        {galleryInputs.length > 0 ? (
+        <Grid container spacing={2}>
+          {galleryInputs.map((input, index) => (
+            <Grid item xs={12} sm={6} md={4} key={index}>
+              <Paper 
+                sx={{ 
+                  height: "300px", 
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  cursor: 'pointer', 
+                  opacity: tmpInputs.includes(input.id) ? 0.5 : 1
+                }}
+                onClick={() => handleImageClick(input.id)}
+              >
+                <img src={input.source} width={240} height={200} alt={String(input.id)} />
+                <Typography variant="subtitle1" align="center">{input.id}</Typography>
+              </Paper>
+            </Grid>
+          ))}
+        </Grid>
+      ) : (
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <CircularProgress />
+        </Box>
+      )
+      }
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCancelSelection}>Cancel</Button>

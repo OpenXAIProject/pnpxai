@@ -6,7 +6,7 @@ interface Project {
   
 // Define a type for Experiment as well
 interface Experiment {
-  id?: string;
+  id: string;
   name: string;
   inputs: InputData[];  // Specify the correct type
   model: Model;
