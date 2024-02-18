@@ -3,7 +3,7 @@ from torch import Tensor
 from pnpxai.utils import class_to_string
 from pnpxai.visualizer.backend.app.core.generics import Response
 from pnpxai.visualizer.backend.app.core.constants import APIItems
-from pnpxai.visualizer.backend.app.domain.experiment import ExperimentService
+from pnpxai.visualizer.backend.app.domain.experiment.experiment_service import ExperimentService
 
 
 class ExperimentResponse(Response):
@@ -39,6 +39,13 @@ class ExperimentInputsResponse(Response):
     def to_dict(cls, figure):
         return figure.to_json()
 
+class ExperimentStatusResponse(Response):
+    @classmethod
+    def to_dict(cls, logger):
+        return {
+            APIItems.PROGRESS.value: logger.progress,
+            APIItems.MESSAGE.value: logger.message,
+        }
 
 class ExperimentRunsResponse(Response):
     @classmethod

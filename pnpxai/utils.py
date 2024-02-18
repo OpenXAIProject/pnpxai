@@ -40,3 +40,14 @@ class Singleton(type):
             cls._instances[cls] = super(
                 Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
+
+class Observable:
+    def __init__(self):
+        self._callbacks = []
+    
+    def subscribe(self, callback):
+        self._callbacks.append(callback)
+
+    def fire(self, event):
+        for callback in self._callbacks:
+            callback(event)

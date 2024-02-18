@@ -1,7 +1,7 @@
 from flask import abort
 
 from pnpxai.visualizer.backend.app.core.generics import Controller
-from pnpxai.visualizer.backend.app.domain.project import ProjectService
+from pnpxai.visualizer.backend.app.domain.project.project_service import ProjectService
 from pnpxai.visualizer.backend.app.http.responses.project_response import ProjectSchema
 
 

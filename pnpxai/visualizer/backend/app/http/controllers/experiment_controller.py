@@ -1,14 +1,13 @@
 from flask import abort, request
 
 from pnpxai.visualizer.backend.app.core.generics import Controller
-from pnpxai.visualizer.backend.app.domain.project import ProjectService
-from pnpxai.visualizer.backend.app.domain.experiment import ExperimentService
-from pnpxai.visualizer.backend.app.http.responses.experiment_response import ExperimentRunsResponse, ExperimentInputsResponse
+from pnpxai.visualizer.backend.app.domain.experiment.experiment_service import ExperimentService
+from pnpxai.visualizer.backend.app.http.responses.experiment_response import ExperimentRunsResponse, ExperimentInputsResponse, ExperimentStatusResponse
 
 
 class ExperimentController(Controller):
     def get(self, project_id: str, experiment_id: str):
-        experiment = ProjectService.get_experiment_by_id(
+        experiment = ExperimentService.get_experiment_by_id(
             project_id, experiment_id)
 
         if experiment is None:
@@ -20,7 +19,7 @@ class ExperimentController(Controller):
         return self.response(data=ExperimentRunsResponse.dump(experiment))
 
     def put(self, project_id: str, experiment_id: str):
-        experiment = ProjectService.get_experiment_by_id(
+        experiment = ExperimentService.get_experiment_by_id(
             project_id, experiment_id)
 
         if experiment is None:
@@ -39,7 +38,7 @@ class ExperimentController(Controller):
 
 class ExperimentInputsController(Controller):
     def get(self, project_id: str, experiment_id: str):
-        experiment = ProjectService.get_experiment_by_id(
+        experiment = ExperimentService.get_experiment_by_id(
             project_id, experiment_id)
 
         if experiment is None:
@@ -48,3 +47,13 @@ class ExperimentInputsController(Controller):
         figures = ExperimentService.get_task_formatted_inputs(
             experiment, experiment.get_all_inputs_flattened())
         return self.response(data=ExperimentInputsResponse.dump(figures, many=True))
+
+class ExperimentStatusController(Controller):
+    def get(self, project_id: str, experiment_id: str):
+        logger = ExperimentService.get_experiment_logger(project_id, experiment_id)
+        
+        if logger is None:
+            abort(404)
+
+        return self.response(data=ExperimentStatusResponse.dump(logger))
+        
