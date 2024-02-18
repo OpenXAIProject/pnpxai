@@ -27,7 +27,6 @@ const NavBar: React.FC = () => {
   }
 
   const colorScales: ColorScales = ColorScales;
-  console.log(colorScales);
   const routes = [
     {
       path: "/model-info",

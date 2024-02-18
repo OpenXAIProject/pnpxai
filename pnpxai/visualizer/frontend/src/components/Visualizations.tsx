@@ -3,12 +3,13 @@ import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../app/store';
 import { Typography, Box, ImageList, ImageListItem, CircularProgress, Grid, Divider,
-  Alert, AlertTitle, Snackbar, Accordion, AccordionSummary, AccordionDetails
+  Alert, AlertTitle, Snackbar, Accordion, AccordionSummary, AccordionDetails, Stack
 } from '@mui/material';
+import LinearProgress, { LinearProgressProps } from '@mui/material/LinearProgress';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import Plot from 'react-plotly.js';
 import { ExperimentResult } from '../app/types';
-import { RunExperiment, fetchExperiment } from '../features/apiService';
+import { RunExperiment, fetchExperiment, fetchExperimentStatus } from '../features/apiService';
 import { preprocess, AddMockData } from './utils';
 
 interface ErrorProps {
@@ -94,6 +95,8 @@ const Visualizations: React.FC<{
   const [experimentResults, setExperimentResults] = React.useState<ExperimentResult[]>([]);
   const [isError, setIsError] = React.useState<boolean>(false);
   const [errorInfo, setErrorInfo] = React.useState<ErrorProps[]>([]);
+  const [progress, setProgress] = React.useState(0);
+  const [progressMsg, setProgressMsg] = React.useState("Loading...");
   
 
   useEffect(() => {
@@ -105,6 +108,7 @@ const Visualizations: React.FC<{
       });
       setExperimentResults(JSON.parse(JSON.stringify(experimentResults)));
       setLoading(false);
+      setProgress(0);
     }).catch((err) => {
       console.log(err);
     })
@@ -136,13 +140,51 @@ const Visualizations: React.FC<{
       console.log(err);
     }).finally(() => {
       setLoading(false);
+      setProgress(0);
     })
   }, [inputs, explainers])
 
+  useEffect(() => {
+    let interval: string | number | NodeJS.Timeout | null | undefined = null;
+  
+    if (loading) { // Start or continue the interval only if loading is true
+      interval = setInterval(async () => {
+        fetchExperimentStatus(projectId, experiment).then((response) => {
+          setProgress(response.data.data.progress);
+          setProgressMsg(response.data.data.message);
+          // Potentially update loading status here based on the response
+          // For example, if progress == 100, you might want to setLoading(false)
+        }).catch((err) => {
+          console.log(err);
+          // Consider setting loading to false here if the request fails
+        });
+      }, 1000);
+    } else {
+      // If loading is false, clear the interval if it exists
+      if (interval) {
+        clearInterval(interval);
+      }
+    }
+  
+    // Cleanup function to clear the interval when the component unmounts or before re-running the effect
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [loading]); // Dependency array includes `loading`, so the effect re-runs when `loading` changes
+
   if (loading) {
     return (
-      <Box sx={{ mt: 15, display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-        <CircularProgress />
+      <Box sx={{ mt : 5 }}>
+        <Stack direction="column" spacing={2} alignItems="center">
+          <CircularProgress />
+          <Typography variant="h4">{progressMsg}</Typography>
+          <Stack sx={{ minWidth : `400px`}} direction="row" alignItems="center">
+            <LinearProgress sx={{ width: `100%`}} variant="determinate" value={progress*100} />
+            <Typography variant="h6" sx={{ ml: 2 }}>{(progress*100).toFixed(0)}%</Typography>
+          </Stack>
+        </Stack>
       </Box>
     )
   }
