@@ -29,7 +29,7 @@ To use `pnpxai`, you need to import the package and its modules in your Python s
 
 ```python
 import torch
-from torcu.utils.data import DataLoader
+from torch.utils.data import DataLoader
 
 from pnpxai import Project
 
@@ -55,7 +55,7 @@ Complete backbone of initialization code can be represented as follows:
 
 ```python
 import torch
-from torcu.utils.data import DataLoader
+from torch.utils.data import DataLoader
 
 from pnpxai import Project
 
@@ -88,7 +88,7 @@ project.get_server().serve()
 
 ```python
 import torch
-from torcu.utils.data import DataLoader
+from torch.utils.data import DataLoader
 
 from pnpxai import Project
 from pnpxai.explainers import LRP
