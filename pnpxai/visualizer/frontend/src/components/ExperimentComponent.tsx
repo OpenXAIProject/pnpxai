@@ -13,20 +13,10 @@ import Visualizations from './Visualizations';
 import { Experiment, Metric } from '../app/types';
 import { fetchInputsByExperimentId } from '../features/apiService';
 import { ErrorProps, ErrorSnackbar } from './ErrorSnackBar';
-
-interface GalleryInput {
-  id: string;
-  source: string;
-}
+import { InputData } from '../app/types';
+import { nickname, domain_extension_plan } from './util';
 
 const ExperimentComponent: React.FC<{experiment: Experiment, key: string}> = ( {experiment} ) => {
-  // TODO: change this nickname to the real name
-  const nickname = [
-    {"name": "Complexity", "nickname": "Compactness"},
-    {"name": "MuFidelity", "nickname": "Correctness"},
-    {"name": "Sensitivity", "nickname": "Continuity"},
-  ]
-  const domain_extension_plan = "The task will be extended to other domains(Tabular, Text, Time Series) in the future."
   // Basic Data
   const projectId = useSelector((state: RootState) => state.projects.currentProject.id);
   const defaultMetrics = experiment.metrics.filter(metric => metric.name === 'MuFidelity');
@@ -34,6 +24,9 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: string}> = ( {
     a.name.toLowerCase().localeCompare(b.name.toLowerCase())
   );
   
+
+  // I want to get selected inputs, explainers, and metrics from the redux store
+
   // User Input
   const [inputs, setInputs] = useState<string[]>([]);
   const [selectedInputs, setSelectedInputs] = useState<number[]>([]);
@@ -42,9 +35,6 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: string}> = ( {
   const [metrics, setMetrics] = useState<Metric[]>(defaultMetrics ? defaultMetrics : []) ;
   const [selectedMetrics, setSelectedMetrics] = useState<number[]>([]);
 
-
-
-  // const inputs: InputData[] = JSON.parse(JSON.stringify(experiment.inputs));
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tmpInputs, setTmpInputs] = useState<string[]>([]); // State to track selection in the modal
 
@@ -52,7 +42,7 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: string}> = ( {
   const [errorInfo, setErrorInfo] = useState<ErrorProps[]>([]);
   const [loading, setLoading] = React.useState<boolean>(false);
   const [showDialog, setShowDialog] = React.useState(false);
-  const [galleryInputs, setGalleryInputs] = useState<GalleryInput[]>([]);
+  const [galleryInputs, setGalleryInputs] = useState<InputData[]>([]);
 
   useEffect(() => {
     if (isModalOpen) {
@@ -152,23 +142,6 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: string}> = ( {
     setSelectedInputs(inputs.map(input => Number(input)));
     setSelectedExplainers(explainers.map(explainer => Number(explainer)));
     setSelectedMetrics(metrics.map(metric => metric.id));
-  };
-
-  const handleAutoExplain = () => {
-    // Select all explainer IDs
-    const allExplainerIds = experiment.explainers.map(explainer => explainer.id);
-    setExplainers(allExplainerIds);
-  
-    // Select all metrics
-    const allMetrics = experiment.metrics;
-    setMetrics(allMetrics);
-  
-    // Set selected states which are used in the Experiment run
-    setSelectedInputs(inputs.map(input => Number(input)));
-    setSelectedExplainers(allExplainerIds);
-    setSelectedMetrics(allMetrics.map(metric => metric.id));
-  
-    setLoading(true);
   };
 
   if (isError) {

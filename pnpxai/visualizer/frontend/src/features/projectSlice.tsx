@@ -1,48 +1,15 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { fetchProjects as fetchProjectsApi, fetchModelsByProjectId } from './apiService';
-import { Project, Model } from '../app/types';
-import { Metric } from '../app/types';
+import { Project, Model, Config, Status } from '../app/types';
+import { sortMetrics, metricSortOrder, explainerNickname } from '../components/util';
 
 const initialState = {
   data: [] as Project[], // Initialize as an empty array
   currentProject: {} as Project,
   loaded: false, // Add a flag to track if the data is loaded
   error: false,
-  colorMap: {'seq' : 'Reds', 'diverge' : 'bwr'}
+  config: {} as Config,
 };
-
-// TODO: change this nickname to the real name
-interface Nickname {
-  name: string;
-  nickname: string;
-}
-
-const nickname: Nickname[] = [
-  { "name": "MuFidelity", "nickname": "Correctness" },
-  { "name": "Sensitivity", "nickname": "Continuity" },
-  { "name": "Complexity", "nickname": "Compactness" },
-];
-
-const explainerNickname: Nickname[] = [
-  { "name": "GuidedGradCam", "nickname": "Guided Grad-CAM" },
-  { "name": "IntegratedGradients", "nickname": "Integrated Gradients" },
-  { "name": "KernelShap", "nickname": "kernelSHAP" },
-  { "name": "LRP", "nickname": "LRP" },
-  { "name": "Lime", "nickname": "LIME" },
-  { "name": "RAP", "nickname": "RAP" },
-];
-
-
-const metricSortOrder = new Map<string, number>(nickname.map((item, index) => [item.name, index]));
-
-function sortMetrics(metrics: Metric[], sortOrder: Map<string, number>): Metric[] {
-  return metrics.sort((a, b) => {
-    let orderA = sortOrder.get(a.name) ?? Number.MAX_VALUE;
-    let orderB = sortOrder.get(b.name) ?? Number.MAX_VALUE;
-    return orderA - orderB;
-  });
-}
-
 
 export const fetchProjects = createAsyncThunk(
   'projects/fetchProjects',
@@ -98,7 +65,7 @@ const projectSlice = createSlice({
       }
     },
     setColorMap(state, action: PayloadAction<any>) {
-      state.colorMap = action.payload;
+      state.config.colorMap = action.payload;
     },
   },
   extraReducers: (builder) => {

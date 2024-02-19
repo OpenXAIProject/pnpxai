@@ -2,39 +2,24 @@
 import React, { useEffect } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../app/store';
-import { Typography, Box, ImageList, ImageListItem, CircularProgress, Grid, Divider,
-  Alert, AlertTitle, Snackbar, Accordion, AccordionSummary, AccordionDetails, Stack
+import { 
+  Typography, Box, ImageList, ImageListItem, 
+  CircularProgress, Grid, Divider,Stack
 } from '@mui/material';
 import LinearProgress from '@mui/material/LinearProgress';
-import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import Plot from 'react-plotly.js';
 import { ExperimentResult } from '../app/types';
 import { RunExperiment, fetchExperiment, fetchExperimentStatus } from '../features/apiService';
-import { preprocess, AddMockData } from './utils';
+import { preprocess } from './utils';
 import { ErrorProps, ErrorSnackbar } from './ErrorSnackBar';
-
+import { nickname, explainerNickname } from './util';
 
 
 const Visualizations: React.FC<{ 
   experiment: string; inputs: number[]; explainers: number[]; metrics: number[]; loading: boolean; setLoading: any
 }> = ({ experiment, inputs, explainers, metrics, loading, setLoading }) => {
-  // TODO: change this nickname to the real name
-  const nickname = [
-    {"name": "Complexity", "nickname": "Compactness"},
-    {"name": "MuFidelity", "nickname": "Correctness"},
-    {"name": "Sensitivity", "nickname": "Continuity"},
-  ]
-
-  const explainerNickname = [
-    { "name": "GuidedGradCam", "nickname": "Guided Grad-CAM" },
-    { "name": "IntegratedGradients", "nickname": "Integrated Gradients" },
-    { "name": "KernelShap", "nickname": "kernelSHAP" },
-    { "name": "LRP", "nickname": "LRP" },
-    { "name": "Lime", "nickname": "LIME" },
-    { "name": "RAP", "nickname": "RAP" },
-  ];
   const projectId = useSelector((state: RootState) => state.projects.currentProject.id);
-  const colorScale = useSelector((state: RootState) => state.projects.colorMap);
+  const colorScale = useSelector((state: RootState) => state.projects.config.colorMap);
   const [experimentResults, setExperimentResults] = React.useState<ExperimentResult[]>([]);
   const [isError, setIsError] = React.useState<boolean>(false);
   const [errorInfo, setErrorInfo] = React.useState<ErrorProps[]>([]);
@@ -44,15 +29,24 @@ const Visualizations: React.FC<{
 
   useEffect(() => {
     fetchExperiment(projectId, experiment).then((response) => {
-      response = preprocess(response, {colorScale: colorScale});
-      const experimentResults = response.data.data
-      experimentResults.forEach((experimentResult: ExperimentResult) => {
-        experimentResult.explanations.sort((a, b) => a.rank - b.rank);
-      });
-      setExperimentResults(JSON.parse(JSON.stringify(experimentResults)));
-      setLoading(false);
+      if (response.data.errors.length === 0) {
+        response = preprocess(response, {colorScale: colorScale});
+        const experimentResults = response.data.data
+        experimentResults.forEach((experimentResult: ExperimentResult) => {
+          experimentResult.explanations.sort((a, b) => a.rank - b.rank);
+        });
+        setExperimentResults(JSON.parse(JSON.stringify(experimentResults)));
+      } else {
+        setIsError(true);
+        setErrorInfo(response.data.errors);
+      }
+      
     }).catch((err) => {
       console.log(err);
+      setIsError(true);
+      setErrorInfo(err.response.data.errors);
+    }).finally(() => {
+      setLoading(false);
     })
   }, [projectId])
 
@@ -90,7 +84,7 @@ const Visualizations: React.FC<{
   }, [inputs, explainers, colorScale])
 
   useEffect(() => {
-    let interval: string | number | NodeJS.Timeout | null | undefined = null;
+    let interval: NodeJS.Timeout | null = null;
   
     if (loading) {
       interval = setInterval(async () => {
@@ -103,10 +97,10 @@ const Visualizations: React.FC<{
         });
       }, 1000);
     } else {
-      // If loading is false, clear the interval if it exists
-      if (interval) {
-        clearInterval(interval);
-      }
+    // If loading is false, clear the interval if it exists
+    if (interval) {
+      clearInterval(interval);
+    }
     }
   
     // Cleanup function to clear the interval when the component unmounts or before re-running the effect

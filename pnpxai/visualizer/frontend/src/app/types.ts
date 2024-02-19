@@ -34,13 +34,8 @@ interface Model {
 
 // Define input data type
 interface InputData {
-  id: number;
-  imageObj: imageObj;
-}
-
-interface imageObj {
-  data: any;
-  layout: any;
+  id: string;
+  source: string;
 }
 
 interface ExperimentResult {
@@ -73,4 +68,38 @@ interface ExperimentResult {
   }[];
 }
 
-export type { Project, Experiment, Explainer, Metric, Model, InputData, imageObj, ExperimentResult}
+interface Nickname {
+  name: string;
+  nickname: string;
+}
+
+interface Config {
+  colorMap: ColorMap;
+}
+interface ColorMap {
+  seq : string;
+  diverge : string;
+}
+
+interface Status {
+  currentProject: string;
+  currentExp: string;
+}
+
+interface Cache {
+  // For each project and experiment, cache holds the data
+  [key: string]: {
+    [key: string]: ExCache;
+  };
+}
+interface ExCache {
+  inputs: InputData[];
+  explainers: Explainer[];
+  metrics: Metric[];
+}
+
+export type { 
+  Project, Experiment, Explainer, Metric, Model, 
+  InputData, ExperimentResult, Nickname,
+  Config, Status, Cache
+}
