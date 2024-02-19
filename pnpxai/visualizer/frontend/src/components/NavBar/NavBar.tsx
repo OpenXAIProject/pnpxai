@@ -87,9 +87,9 @@ const NavBar: React.FC = () => {
   const [helperAnchor, setHelperAnchor] = useState(null);
   const [settingAnchor, setSettingAnchor] = useState(null);
   const [selectedColorMap, setSelectedColorMap] = useState({
-    'seq' : colorScales.seq[0], 'diverge' : colorScales.diverge[0]
-  }); // Default colormap
-
+    'seq' : Object.keys(colorScales.seq)[0], 
+    'diverge' : Object.keys(colorScales.diverge)[0]
+  }); 
 
   const handleHelperClick = (event: any) => {
     setHelperAnchor(event.currentTarget);
