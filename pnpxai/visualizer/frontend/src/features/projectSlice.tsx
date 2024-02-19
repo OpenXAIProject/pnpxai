@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { fetchProjects as fetchProjectsApi, fetchModelsByProjectId, fetchInputsByExperimentId } from './apiService';
-import { Project, Experiment, Model, InputData, imageObj } from '../app/types';
+import { fetchProjects as fetchProjectsApi, fetchModelsByProjectId } from './apiService';
+import { Project, Model } from '../app/types';
 import { Metric } from '../app/types';
 
 const initialState = {
@@ -72,23 +72,6 @@ export const fetchProjects = createAsyncThunk(
             experiment.model = models[i];
             experiment.modelDetected = true;
 
-            try {
-              const inputsResponse = await fetchInputsByExperimentId(project.id, experiment.id);
-              experiment.inputs = inputsResponse.data.data.map((input: string, index: number) => {
-                const parsedInput = JSON.parse(input);
-              
-                return {
-                  id: `${index}`,
-                  imageObj: {
-                    data: parsedInput.data,
-                    layout: parsedInput.layout,
-                  } as imageObj,
-                };
-              });
-            } catch (inputsError) {
-              console.error('Error fetching inputs:', inputsError);
-              // Handle or ignore input errors
-            }
           }
         } catch (modelsError) {
           console.error('Error fetching models:', modelsError);
