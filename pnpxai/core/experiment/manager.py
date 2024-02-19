@@ -94,7 +94,7 @@ class ExperimentManager:
     def get_data(self, data_ids: Optional[Sequence[int]] = None) -> Tuple[DataSource, List[int]]:
         data_ids = data_ids if data_ids is not None else self._data_ids
         return self._get_data_by_ids(data_ids), data_ids
-    
+
     def get_all_data(self) -> DataSource:
         return self._get_data_by_ids()
 
@@ -182,8 +182,11 @@ class ExperimentManager:
             )
         elif isinstance(self._data, Dataset):
             data = Subset(self._data, data_ids)
-        elif not torch.is_tensor(self._data):
-            data = self._data[data_ids]
+        else:
+            try:
+                data = self._data[data_ids]
+            except:
+                data = [self._data[idx] for idx in data_ids]
 
         return data
 
