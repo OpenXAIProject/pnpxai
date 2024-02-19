@@ -36,7 +36,7 @@ const ExperimentPage: React.FC = () => {
       <Box sx={{ m: 1 }}>
         {isAnyModelDetected ? (
           projectData?.experiments.filter(experiment => experiment.modelDetected).map((experiment, index) => (
-            <ExperimentComponent key={index} experiment={experiment} />
+            <ExperimentComponent key={`${projectId}-${experiment.id}`} experiment={experiment} />
           ))
         ) : (
           <Box sx={{ m: 5, minHeight: "200px", maxWidth : "350px" }}>
