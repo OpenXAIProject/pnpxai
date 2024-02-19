@@ -41,4 +41,4 @@ class Server(metaclass=Singleton):
 
     def serve_ipynb(self, projects: Optional[List] = None, **kwargs):
         app = self.create_app(projects, **kwargs)
-        run_simple('0.0.0.0', 5001, app)
+        run_simple(kwargs.get('host', '0.0.0.0'), kwargs.get('port', 5001), app)
