@@ -219,7 +219,7 @@ class Experiment(Observable):
                 warnings.warn(
                     f"\n[Experiment] {get_message('experiment.errors.evaluation', explainer=explainer_name, metric=metric_name, error=e)}")
                 self._errors.append(e)
-        elaped_time = time.time() - started_at
+        elapsed_time = time.time() - started_at
         print(f"[Experiment] {get_message('elapsed', task=metric_name, elapsed=elapsed_time)}")
 
         return evaluations
