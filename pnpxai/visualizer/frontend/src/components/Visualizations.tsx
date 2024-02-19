@@ -5,7 +5,7 @@ import { RootState } from '../app/store';
 import { Typography, Box, ImageList, ImageListItem, CircularProgress, Grid, Divider,
   Alert, AlertTitle, Snackbar, Accordion, AccordionSummary, AccordionDetails, Stack
 } from '@mui/material';
-import LinearProgress, { LinearProgressProps } from '@mui/material/LinearProgress';
+import LinearProgress from '@mui/material/LinearProgress';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import Plot from 'react-plotly.js';
 import { ExperimentResult } from '../app/types';
@@ -61,7 +61,7 @@ const ErrorSnackbar: React.FC<ErrorProps> = ({ name, message, trace }) => {
               <ArrowDropDownIcon />
                 Trace
               </AccordionSummary>
-              <AccordionDetails>
+              <AccordionDetails sx={{ maxHeight: '500px', overflow: 'auto' }}>
                 {renderTrace(trace)}
               </AccordionDetails>
             </Accordion>
@@ -108,7 +108,6 @@ const Visualizations: React.FC<{
       });
       setExperimentResults(JSON.parse(JSON.stringify(experimentResults)));
       setLoading(false);
-      setProgress(0);
     }).catch((err) => {
       console.log(err);
     })
@@ -138,25 +137,26 @@ const Visualizations: React.FC<{
       }
     }).catch((err) => {
       console.log(err);
+      setIsError(true);
+      setErrorInfo(err.response.data.errors);
     }).finally(() => {
       setLoading(false);
       setProgress(0);
+      setProgressMsg("Loading...");
     })
   }, [inputs, explainers])
 
   useEffect(() => {
     let interval: string | number | NodeJS.Timeout | null | undefined = null;
   
-    if (loading) { // Start or continue the interval only if loading is true
+    if (loading) {
       interval = setInterval(async () => {
-        fetchExperimentStatus(projectId, experiment).then((response) => {
+        fetchExperimentStatus(projectId, experiment)
+        .then((response) => {
           setProgress(response.data.data.progress);
           setProgressMsg(response.data.data.message);
-          // Potentially update loading status here based on the response
-          // For example, if progress == 100, you might want to setLoading(false)
         }).catch((err) => {
           console.log(err);
-          // Consider setting loading to false here if the request fails
         });
       }, 1000);
     } else {
