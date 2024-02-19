@@ -147,10 +147,6 @@ const Visualizations: React.FC<{
   }, [inputs, explainers, colorScale])
 
   useEffect(() => {
-    console.log(colorScale);
-  }, [colorScale])
-
-  useEffect(() => {
     let interval: string | number | NodeJS.Timeout | null | undefined = null;
   
     if (loading) {
