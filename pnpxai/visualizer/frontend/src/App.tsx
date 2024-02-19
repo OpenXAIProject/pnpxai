@@ -7,7 +7,7 @@ import AppRoutes from './routes/AppRoutes';
 import CssBaseline from '@mui/material/CssBaseline';
 import Layout from './layouts/layout';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchProjects } from './features/projectSlice';
+import { fetchProjects } from './features/globalState';
 import { RootState } from './app/store'; // Import the RootState type
 import { useNavigate } from 'react-router-dom';
 
@@ -27,7 +27,7 @@ export default App;
 const AppWithRouter: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { error, loaded } = useSelector((state: RootState) => state.projects);
+  const { error, loaded } = useSelector((state: RootState) => state.global);
 
   useEffect(() => {
     if (!loaded && !error) {

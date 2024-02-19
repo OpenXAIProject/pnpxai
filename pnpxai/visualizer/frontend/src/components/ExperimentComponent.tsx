@@ -12,20 +12,19 @@ import {
 import Visualizations from './Visualizations';
 import { Experiment, Metric } from '../app/types';
 import { fetchInputsByExperimentId } from '../features/apiService';
-import { ErrorProps, ErrorSnackbar } from './ErrorSnackBar';
+import { ErrorProps, ErrorSnackbar } from './modal/ErrorSnackBar';
+import GalleryModal from './modal/GalleryModal';
 import { InputData } from '../app/types';
 import { nickname, domain_extension_plan } from './util';
 
 const ExperimentComponent: React.FC<{experiment: Experiment, key: string}> = ( {experiment} ) => {
   // Basic Data
-  const projectId = useSelector((state: RootState) => state.projects.currentProject.id);
+  const projectId = useSelector((state: RootState) => state.global.status.currentProject);
   const defaultMetrics = experiment.metrics.filter(metric => metric.name === 'MuFidelity');
   const sortedExplainers = [...experiment.explainers].sort((a, b) =>
     a.name.toLowerCase().localeCompare(b.name.toLowerCase())
   );
   
-
-  // I want to get selected inputs, explainers, and metrics from the redux store
 
   // User Input
   const [inputs, setInputs] = useState<string[]>([]);
@@ -36,7 +35,6 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: string}> = ( {
   const [selectedMetrics, setSelectedMetrics] = useState<number[]>([]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [tmpInputs, setTmpInputs] = useState<string[]>([]); // State to track selection in the modal
 
   const [isError, setIsError] = useState(false);
   const [errorInfo, setErrorInfo] = useState<ErrorProps[]>([]);
@@ -67,53 +65,9 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: string}> = ( {
   }, [isModalOpen]);
 
   
-  useEffect(() => {
-    // Synchronize modalSelection with selectedImages
-    if (isModalOpen) {
-      setTmpInputs(inputs);
-    }
-  }, [isModalOpen, inputs]);
-
-
-  
-  // Image Selection Handlers
-  // Modal Handlers
-  const handleImageClick = (imageId: string) => {
-    // Only 1 Input.
-    setTmpInputs([imageId]);
-
-    // Multiple Inputs.
-    // if (tmpInputs.includes(imageId)) {
-    //   setTmpInputs(prevSelection => prevSelection.filter(item => item !== imageId));
-    // } else {
-    //   setTmpInputs(prevSelection => [...prevSelection, imageId]);
-    // }
-  };
-
-  const handleConfirmSelection = () => {
-    setInputs(tmpInputs);
-    setIsModalOpen(false);
-  };
-
-  const handleCancelSelection = () => {
-    setIsModalOpen(false);
-  };
-
   const handleChipCancel = (imageId: string) => {
     setInputs(inputs.filter(input => input !== imageId));
   }
-
-
-  // Algorithm Selection Handlers
-  const addAlgorithm = (explainer: number) => {
-    if (!explainers.includes(explainer)) {
-      setExplainers([...explainers, explainer]);
-    }
-  };
-
-  const removeAlgorithm = (explainer: number) => {
-    setExplainers(explainers.filter(alg => alg !== explainer));
-  };
 
   const handleAlgorithmCheckboxChange = (explainerId: number, isChecked: boolean) => {
     if (isChecked) {
@@ -258,43 +212,12 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: string}> = ( {
       </Card>
       
       {/* Image Selection Dialog */}
-      <Dialog open={isModalOpen} onClose={() => setIsModalOpen(false)} fullWidth maxWidth="md">
-        <DialogTitle>Select Intances</DialogTitle>
-        <DialogContent>
-        {galleryInputs.length > 0 ? (
-        <Grid container spacing={2}>
-          {galleryInputs.map((input, index) => (
-            <Grid item xs={12} sm={6} md={4} key={index}>
-              <Paper 
-                sx={{ 
-                  height: "300px", 
-                  display: 'flex', 
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  cursor: 'pointer', 
-                  opacity: tmpInputs.includes(input.id) ? 0.5 : 1
-                }}
-                onClick={() => handleImageClick(input.id)}
-              >
-                <img src={input.source} width={240} height={200} alt={String(input.id)} />
-                <Typography variant="subtitle1" align="center">{input.id}</Typography>
-              </Paper>
-            </Grid>
-          ))}
-        </Grid>
-      ) : (
-        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <CircularProgress />
-        </Box>
-      )
-      }
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCancelSelection}>Cancel</Button>
-          <Button onClick={handleConfirmSelection}>OK</Button>
-        </DialogActions>
-      </Dialog>
+      <GalleryModal
+        isModalOpen={isModalOpen}
+        setIsModalOpen={setIsModalOpen}
+        galleryInputs={galleryInputs}
+        setInputs={setInputs}
+      />
       
       
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>

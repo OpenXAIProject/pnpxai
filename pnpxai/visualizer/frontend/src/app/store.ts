@@ -1,11 +1,11 @@
 // src/app/store.ts
 import { configureStore } from '@reduxjs/toolkit';
-import projectReducer from '../features/projectSlice'; // Import the projectReducer
+import globalReducer from '../features/globalState';
 
 
 export const store = configureStore({
   reducer: {
-    projects: projectReducer,
+    global: globalReducer,
   },
 });
 

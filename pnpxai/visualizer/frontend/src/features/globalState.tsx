@@ -1,14 +1,14 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { fetchProjects as fetchProjectsApi, fetchModelsByProjectId } from './apiService';
-import { Project, Model, Config, Status } from '../app/types';
+import { Project, Model, ExperimentCache, Status } from '../app/types';
 import { sortMetrics, metricSortOrder, explainerNickname } from '../components/util';
 
 const initialState = {
-  data: [] as Project[], // Initialize as an empty array
-  currentProject: {} as Project,
-  loaded: false, // Add a flag to track if the data is loaded
+  loaded: false,
   error: false,
-  config: {} as Config,
+  projects: [] as Project[],
+  status: {} as Status,
+  cache: {} as ExperimentCache[]
 };
 
 export const fetchProjects = createAsyncThunk(
@@ -59,14 +59,18 @@ const projectSlice = createSlice({
     // Define setCurrentProject reducer
     setCurrentProject(state, action: PayloadAction<string>) {
       const projectId = action.payload;
-      const foundProject = state.data.find(project => project.id === projectId);
+      const foundProject = state.projects.find(project => project.id === projectId);
       if (foundProject) {
-        state.currentProject = foundProject;
+        state.status.currentProject = foundProject.id;
       }
     },
-    setColorMap(state, action: PayloadAction<any>) {
-      state.config.colorMap = action.payload;
-    },
+    setColorMap(state, action: PayloadAction<{ projectId: string; expId: string; colorMap: any }>) {
+      const { projectId, expId, colorMap } = action.payload;
+      const foundCache = state.cache.find(cache => cache.projectId === projectId && cache.expId === expId);
+      if (foundCache) {
+        foundCache.config.colorMap = colorMap;
+      }
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -74,8 +78,8 @@ const projectSlice = createSlice({
       state.error = false; // Reset error state on new fetch
     })
     .addCase(fetchProjects.fulfilled, (state, action) => {
-      state.data = action.payload;
-      state.currentProject = action.payload[0] || {} as Project;
+      state.projects = action.payload;
+      state.status.currentProject = action.payload[0].id;
       state.loaded = true;
       state.error = false; // Reset error state on successful fetch
     })

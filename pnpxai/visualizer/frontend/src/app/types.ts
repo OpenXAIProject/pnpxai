@@ -73,6 +73,10 @@ interface Nickname {
   nickname: string;
 }
 
+interface HelpText {
+  [key: string]: string;
+}
+
 interface Config {
   colorMap: ColorMap;
 }
@@ -81,25 +85,26 @@ interface ColorMap {
   diverge : string;
 }
 
+interface ColorScales {
+  [key: string]: { [key: string]: any[][] };
+}
+
 interface Status {
   currentProject: string;
   currentExp: string;
 }
-
-interface Cache {
-  // For each project and experiment, cache holds the data
-  [key: string]: {
-    [key: string]: ExCache;
-  };
-}
-interface ExCache {
+interface ExperimentCache {
+  projectId: string;
+  expId: string;
   inputs: InputData[];
   explainers: Explainer[];
   metrics: Metric[];
+  experimentResults: ExperimentResult[];
+  config: Config;
 }
 
 export type { 
-  Project, Experiment, Explainer, Metric, Model, 
-  InputData, ExperimentResult, Nickname,
-  Config, Status, Cache
+  Project, Experiment, Explainer, Metric, Model, InputData, ExperimentResult, 
+  Nickname, ColorScales, HelpText,
+  Config, Status, ExperimentCache
 }

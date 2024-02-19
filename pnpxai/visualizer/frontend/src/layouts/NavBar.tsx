@@ -1,52 +1,52 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { RootState } from '../../app/store';
-import { setCurrentProject, setColorMap } from '../../features/projectSlice';
+import { RootState } from '../app/store';
+import { setCurrentProject, setColorMap } from '../features/globalState';
 import { Link } from 'react-router-dom';
 import { Box, AppBar, Toolbar, Button, Menu, MenuItem, Popover, IconButton, Tooltip, Typography, List, ListItem } from '@mui/material';
 import logo from '../../assets/images/SVG/XAI-Top-PnP.svg';
 import { useLocation } from 'react-router-dom';
 import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
 import SettingsIcon from '@mui/icons-material/Settings';
-import ColorScales from '../../assets/styles/colorScale.json';
-
-interface HelpText {
-  [key: string]: string;
-}
-
-interface ColorScales {
-  [key: string]: { [key: string]: any };
-}
+import ColorScalesData from '../assets/styles/colorScale.json';
+import { ColorScales } from '../app/types';
+import { helptext, routes } from '../components/util';
 
 const NavBar: React.FC = () => {
-  const helptext: HelpText = {
-    "Correctness" : "the truthfulness/reliability of explanations about a prediction model (AI model). That is, it indicates how truthful the explanation is compared to the operation of the black box model.",
-    "Continuity" : "how continuous (i.e., smooth) an explanation is. An explanation function with high continuity ensures that small changes in the input do not bring about significant changes in the explanation.",
-    "Compactness" : "the size/amount of an explanation. It ensures that complex and redundant explanations that are difficult to understand are not presented.",
-    // "Completeness" : " the extent to which a prediction model (AI model) is explained. Providing 'the whole truth' of the black box model represents high completeness, but a good explanation should balance conciseness and correctness.",
-  }
+  const projects = useSelector((state: RootState) => state.global.projects);
+  const projectId = useSelector((state: RootState) => state.global.status.currentProject);
+  const expId = useSelector((state: RootState) => state.global.status.currentExp);
+  const cache = useSelector((state: RootState) => state.global.cache.filter((item) => item.projectId === projectId && item.expId === expId)[0]);
+  const colorScales: ColorScales = ColorScalesData;
+  const colorMap = cache?.config.colorMap;
 
-  const colorScales: ColorScales = ColorScales;
-  const routes = [
-    {
-      path: "/model-info",
-      name: "Experiment Information"
-    },
-    {
-      path: "/model-explanation",
-      name: "Local Explanation"
-    }
-  ]
 
-  
-  const projectsData = useSelector((state: RootState) => state.projects.data);
-  const projectId = useSelector((state: RootState) => state.projects.currentProject.id);
-  const projects = projectsData?.map(project => project.id) || [];
+
   const [projectAnchorEl, setProjectAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedProject, setSelectedProject] = useState<string>("");
   const [selectedMenu, setSelectedMenu] = useState<number | null>(null);
-  const location = useLocation();
+  const [helperAnchor, setHelperAnchor] = useState(null);
+  const [settingAnchor, setSettingAnchor] = useState(null);
 
+  const helperOpen = Boolean(helperAnchor);
+  const settingOpen = Boolean(settingAnchor);
+  const helperId = helperOpen ? 'helper-popover' : undefined;
+  const settingId = settingOpen ? 'setting-popover' : undefined;
+
+
+
+  const location = useLocation();
+  useEffect(() => {
+    const currentPath = window.location.hash.split('#')[1];
+    const currentMenu = routes.findIndex(route => route.path === currentPath);
+    if (currentMenu !== -1) {
+      setSelectedMenu(currentMenu);
+    } else {
+      setSelectedMenu(0);
+    }
+  }
+  , [location]);
+  
+  
   const dispatch = useDispatch();
 
   const handleSelectMenu = (menuKey: number) => {
@@ -62,34 +62,9 @@ const NavBar: React.FC = () => {
   };
 
   const handleSelectProject = (projectId: string) => {
-    setSelectedProject(projectId);
     dispatch(setCurrentProject(projectId));
     handleProjectMenuClose();
   };
-
-  useEffect(() => {
-    const currentPath = window.location.hash.split('#')[1];
-    const currentMenu = routes.findIndex(route => route.path === currentPath);
-    if (currentMenu !== -1) {
-      setSelectedMenu(currentMenu);
-    } else {
-      setSelectedMenu(0);
-    }
-  }
-  , [location]);
-
-  useEffect(() => {
-    setSelectedProject(projectId);
-  }
-  , [projectId]);
-
-
-  const [helperAnchor, setHelperAnchor] = useState(null);
-  const [settingAnchor, setSettingAnchor] = useState(null);
-  const [selectedColorMap, setSelectedColorMap] = useState({
-    'seq' : Object.keys(colorScales.seq)[0], 
-    'diverge' : Object.keys(colorScales.diverge)[0]
-  }); 
 
   const handleHelperClick = (event: any) => {
     setHelperAnchor(event.currentTarget);
@@ -108,14 +83,10 @@ const NavBar: React.FC = () => {
   }
 
   const handleColorMapChange = (colorMap: any) => {
-    setSelectedColorMap(colorMap);
-    dispatch(setColorMap(colorMap));
+    dispatch(setColorMap({ projectId: projectId, expId: expId, colorMap: colorMap }));
     handleSettingClose(); // Close the popover after selection
   };
-  const helperOpen = Boolean(helperAnchor);
-  const settingOpen = Boolean(settingAnchor);
-  const helperId = helperOpen ? 'helper-popover' : undefined;
-  const settingId = settingOpen ? 'setting-popover' : undefined;
+  
 
 
   return (
@@ -127,7 +98,7 @@ const NavBar: React.FC = () => {
           </Link>
           <Box sx={{pr : 2, borderRight : 1}}>
             <Button style={{ color: 'inherit' }} onClick={handleProjectMenuButtonClick}>
-              Projects : {selectedProject}
+              Projects : {projectId}
             </Button>
             <Menu
               anchorEl={projectAnchorEl}
@@ -137,10 +108,10 @@ const NavBar: React.FC = () => {
               {projects.map((project, index) => (
                 <MenuItem 
                   key={index} 
-                  onClick={() => handleSelectProject(project)}
-                  style={{ fontWeight: project === selectedProject ? 'bold' : 'normal' }}
+                  onClick={() => handleSelectProject(project.id)}
+                  style={{ fontWeight: project.id === projectId ? 'bold' : 'normal' }}
                 >
-                  {project}
+                  {project.id}
                 </MenuItem>
               ))}
             </Menu>
@@ -192,28 +163,28 @@ const NavBar: React.FC = () => {
               <Typography sx={{ p: 2 }}> Sequential Color Maps </Typography>
               {/* ColorMap buttons */}
               <Box sx={{ p: 2 }}>
-                {Object.keys(colorScales.seq).map((colorMap: any) => (
+                {Object.keys(colorScales.seq).map((cmap: any) => (
                   <Button
-                    key={colorMap}
-                    variant={selectedColorMap.seq === colorMap ? 'contained' : 'outlined'}
-                    onClick={() => handleColorMapChange({'seq' : colorMap, 'diverge' : selectedColorMap.diverge})}
+                    key={cmap}
+                    variant={colorMap.seq === cmap ? 'contained' : 'outlined'}
+                    onClick={() => handleColorMapChange({'seq' : cmap, 'diverge' : colorMap.diverge})}
                     sx={{ margin: 0.5 }}
                   >
-                    {colorMap}
+                    {cmap}
                   </Button>
                 ))}
               </Box>
               <Typography sx={{ p: 2 }}> Diverge Color Maps </Typography>
               {/* ColorMap buttons */}
               <Box sx={{ p: 2 }}>
-                {Object.keys(colorScales.diverge).map((colorMap:any) => (
+                {Object.keys(colorScales.diverge).map((cmap:any) => (
                   <Button
-                    key={colorMap}
-                    variant={selectedColorMap.diverge === colorMap ? 'contained' : 'outlined'}
-                    onClick={() => handleColorMapChange({'seq' : selectedColorMap.seq, 'diverge' : colorMap})}
+                    key={cmap}
+                    variant={colorMap.diverge === cmap ? 'contained' : 'outlined'}
+                    onClick={() => handleColorMapChange({'seq' : colorMap.seq, 'diverge' : cmap})}
                     sx={{ margin: 0.5 }}
                   >
-                    {colorMap}
+                    {cmap}
                   </Button>
                 ))}
               </Box>

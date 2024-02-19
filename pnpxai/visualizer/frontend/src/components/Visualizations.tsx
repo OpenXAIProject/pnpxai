@@ -10,17 +10,20 @@ import LinearProgress from '@mui/material/LinearProgress';
 import Plot from 'react-plotly.js';
 import { ExperimentResult } from '../app/types';
 import { RunExperiment, fetchExperiment, fetchExperimentStatus } from '../features/apiService';
-import { preprocess } from './utils';
-import { ErrorProps, ErrorSnackbar } from './ErrorSnackBar';
+import { preprocess } from './util';
+import { ErrorProps, ErrorSnackbar } from './modal/ErrorSnackBar';
 import { nickname, explainerNickname } from './util';
 
 
 const Visualizations: React.FC<{ 
   experiment: string; inputs: number[]; explainers: number[]; metrics: number[]; loading: boolean; setLoading: any
 }> = ({ experiment, inputs, explainers, metrics, loading, setLoading }) => {
-  const projectId = useSelector((state: RootState) => state.projects.currentProject.id);
-  const colorScale = useSelector((state: RootState) => state.projects.config.colorMap);
+  const projectId = useSelector((state: RootState) => state.global.status.currentProject);
+  const colorScale = useSelector((state: RootState) => state.global.cache.filter((item) => item.projectId === projectId)[0]?.config.colorMap);
+  
   const [experimentResults, setExperimentResults] = React.useState<ExperimentResult[]>([]);
+
+
   const [isError, setIsError] = React.useState<boolean>(false);
   const [errorInfo, setErrorInfo] = React.useState<ErrorProps[]>([]);
   const [progress, setProgress] = React.useState(0);
