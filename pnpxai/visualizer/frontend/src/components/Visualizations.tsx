@@ -269,7 +269,7 @@ const Visualizations: React.FC<{
                       
                       {Object.entries(exp.evaluation).map(([key, value]) => {
                         return (
-                          <Typography key={key} variant="body2" sx={{ textAlign: 'center' }}> {nickname.find(n => n.name === key)?.nickname} ({value.toFixed(3)}) </Typography>
+                          <Typography key={key} variant="body2" sx={{ textAlign: 'center' }}> {nickname.find(n => n.name === key)?.nickname} ({value?.toFixed(3) ?? ''}) </Typography>
                       )})}
                     </Box>
                   </ImageListItem>
