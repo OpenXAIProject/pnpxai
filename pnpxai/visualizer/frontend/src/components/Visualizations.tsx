@@ -144,7 +144,11 @@ const Visualizations: React.FC<{
       setProgress(0);
       setProgressMsg("Loading...");
     })
-  }, [inputs, explainers])
+  }, [inputs, explainers, colorScale])
+
+  useEffect(() => {
+    console.log(colorScale);
+  }, [colorScale])
 
   useEffect(() => {
     let interval: string | number | NodeJS.Timeout | null | undefined = null;
