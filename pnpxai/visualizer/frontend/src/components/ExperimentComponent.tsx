@@ -12,13 +12,14 @@ import {
 import Visualizations from './Visualizations';
 import { Experiment, Metric } from '../app/types';
 import { fetchInputsByExperimentId } from '../features/apiService';
+import { ErrorProps, ErrorSnackbar } from './ErrorSnackBar';
 
 interface GalleryInput {
   id: string;
   source: string;
 }
 
-const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {experiment} ) => {
+const ExperimentComponent: React.FC<{experiment: Experiment, key: string}> = ( {experiment} ) => {
   // TODO: change this nickname to the real name
   const nickname = [
     {"name": "Complexity", "nickname": "Compactness"},
@@ -28,18 +29,18 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
   const domain_extension_plan = "The task will be extended to other domains(Tabular, Text, Time Series) in the future."
   // Basic Data
   const projectId = useSelector((state: RootState) => state.projects.currentProject.id);
+  const defaultMetrics = experiment.metrics.filter(metric => metric.name === 'MuFidelity');
+  const sortedExplainers = [...experiment.explainers].sort((a, b) =>
+    a.name.toLowerCase().localeCompare(b.name.toLowerCase())
+  );
   
   // User Input
   const [inputs, setInputs] = useState<string[]>([]);
   const [selectedInputs, setSelectedInputs] = useState<number[]>([]);
   const [explainers, setExplainers] = useState<number[]>(experiment.explainers.map(explainer => explainer.id));
   const [selectedExplainers, setSelectedExplainers] = useState<number[]>([]);
-  const defaultMetrics = experiment.metrics.filter(metric => metric.name === 'MuFidelity');
   const [metrics, setMetrics] = useState<Metric[]>(defaultMetrics ? defaultMetrics : []) ;
   const [selectedMetrics, setSelectedMetrics] = useState<number[]>([]);
-  const sortedExplainers = [...experiment.explainers].sort((a, b) =>
-    a.name.toLowerCase().localeCompare(b.name.toLowerCase())
-  );
 
 
 
@@ -47,7 +48,8 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [tmpInputs, setTmpInputs] = useState<string[]>([]); // State to track selection in the modal
 
-  const [isExperimentRun, setIsExperimentRun] = useState(false); // New state to track if experiment is run
+  const [isError, setIsError] = useState(false);
+  const [errorInfo, setErrorInfo] = useState<ErrorProps[]>([]);
   const [loading, setLoading] = React.useState<boolean>(false);
   const [showDialog, setShowDialog] = React.useState(false);
   const [galleryInputs, setGalleryInputs] = useState<GalleryInput[]>([]);
@@ -65,6 +67,11 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
             };
           })
         )
+      })
+      .catch(error => {
+        console.error(error);
+        setIsError(true);
+        setErrorInfo(error.response.data.errors);
       });
     }
   }, [isModalOpen]);
@@ -142,7 +149,6 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
     }
 
     setLoading(true);
-    setIsExperimentRun(true);
     setSelectedInputs(inputs.map(input => Number(input)));
     setSelectedExplainers(explainers.map(explainer => Number(explainer)));
     setSelectedMetrics(metrics.map(metric => metric.id));
@@ -163,8 +169,17 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: number}> = ( {
     setSelectedMetrics(allMetrics.map(metric => metric.id));
   
     setLoading(true);
-    setIsExperimentRun(true);
   };
+
+  if (isError) {
+    return (
+      <Box sx={{ mt: 15 }}>
+        {errorInfo.map((error, index) => (
+          <ErrorSnackbar key={index} name={error.name} message={error.message} trace={error.trace} />
+        ))}
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ m: 1 }}>
