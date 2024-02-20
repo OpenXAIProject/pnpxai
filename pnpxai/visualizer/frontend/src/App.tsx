@@ -30,10 +30,10 @@ const AppWithRouter: React.FC = () => {
   const { error, loaded } = useSelector((state: RootState) => state.global);
 
   useEffect(() => {
-    if (!loaded && !error) {
+    if (!loaded) {
       dispatch(fetchProjects() as any);
     }
-  }, [dispatch, loaded, error]);
+  }, [dispatch, loaded]);
 
   useEffect(() => {
     if (error) {
