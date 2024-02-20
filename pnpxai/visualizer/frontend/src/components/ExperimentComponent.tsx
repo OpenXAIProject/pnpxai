@@ -1,112 +1,90 @@
 // src/components/ExperimentComponent.tsx
-import React, { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import React, { useEffect, useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../app/store';
 import { 
   Grid, Box, Typography, 
   Button, Chip, 
-  Dialog, DialogActions, DialogContent, DialogTitle, 
+  Dialog, DialogContent, 
   Alert, FormControlLabel,
-  Checkbox, Paper, Card, Tooltip, CardContent, CircularProgress
+  Checkbox, Card, Tooltip, CardContent
 } from '@mui/material';
 import Visualizations from './Visualizations';
-import { Experiment, Metric } from '../app/types';
-import { fetchInputsByExperimentId } from '../features/apiService';
-import { ErrorProps, ErrorSnackbar } from './modal/ErrorSnackBar';
+import { Experiment, InputData, Explainer, Metric } from '../app/types';
 import GalleryModal from './modal/GalleryModal';
-import { InputData } from '../app/types';
 import { nickname, domain_extension_plan } from './util';
+import { 
+  setInputs,
+  setExplainers,
+  setMetrics,
+} from '../features/globalState';
 
 const ExperimentComponent: React.FC<{experiment: Experiment, key: string}> = ( {experiment} ) => {
+  // Set current experiment
+  const dispatch = useDispatch();
+  const expId = experiment.id;
+
   // Basic Data
+  const projects = useSelector((state: RootState) => state.global.projects);
   const projectId = useSelector((state: RootState) => state.global.status.currentProject);
-  const defaultMetrics = experiment.metrics.filter(metric => metric.name === 'MuFidelity');
-  const sortedExplainers = [...experiment.explainers].sort((a, b) =>
-    a.name.toLowerCase().localeCompare(b.name.toLowerCase())
-  );
+  const expCache = useSelector((state: RootState) => state.global.expCache.filter((item) => item.projectId === projectId && item.expId === expId)[0]);
+
+  const galleryInputs = expCache?.galleryInputs
+  const selectedInputs = expCache?.inputs;
+  const selectedExplainers = expCache?.explainers;
+  const selectedMetrics = expCache?.metrics;
+
+  const explainerOptions = [...(projects.find(project => project.id === projectId)
+    ?.experiments.find(exp => exp.id === expId)
+    ?.explainers || [])] // Cloning the array
+    .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+
+  const metricOptions = projects.find(project => project.id === projectId)
+    ?.experiments.find(exp => exp.id === expId)
+    ?.metrics;
+
+  const [visualizationConfig, setVisualizationConfig] = useState({
+    inputs: [] as InputData[],
+    explainers: [] as Explainer[],
+    metrics: [] as Metric[],
+  });
   
-
-  // User Input
-  const [inputs, setInputs] = useState<string[]>([]);
-  const [selectedInputs, setSelectedInputs] = useState<number[]>([]);
-  const [explainers, setExplainers] = useState<number[]>(experiment.explainers.map(explainer => explainer.id));
-  const [selectedExplainers, setSelectedExplainers] = useState<number[]>([]);
-  const [metrics, setMetrics] = useState<Metric[]>(defaultMetrics ? defaultMetrics : []) ;
-  const [selectedMetrics, setSelectedMetrics] = useState<number[]>([]);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  const [isError, setIsError] = useState(false);
-  const [errorInfo, setErrorInfo] = useState<ErrorProps[]>([]);
-  const [loading, setLoading] = React.useState<boolean>(false);
   const [showDialog, setShowDialog] = React.useState(false);
-  const [galleryInputs, setGalleryInputs] = useState<InputData[]>([]);
 
-  useEffect(() => {
-    if (isModalOpen) {
-      fetchInputsByExperimentId(projectId, experiment.id)
-      .then(response => {
-        setGalleryInputs(
-          response.data.data.map((input: string, index: number) => {
-            const parsedInput = JSON.parse(input);
-            return {
-              id: index.toString(),
-              source: parsedInput.data[0].source,
-            };
-          })
-        )
-      })
-      .catch(error => {
-        console.error(error);
-        setIsError(true);
-        setErrorInfo(error.response.data.errors);
-      });
-    }
-  }, [isModalOpen]);
-
-  
   const handleChipCancel = (imageId: string) => {
-    setInputs(inputs.filter(input => input !== imageId));
+    dispatch(setInputs({ projectId: projectId, expId: expId, inputs: selectedInputs.filter(input => input.id !== imageId) }));
   }
 
-  const handleAlgorithmCheckboxChange = (explainerId: number, isChecked: boolean) => {
+  const handleExplainerCheckBox = (item: Explainer, isChecked: boolean) => {
     if (isChecked) {
-      setExplainers([...explainers, explainerId]);
+      dispatch(setExplainers({ projectId: projectId, expId: expId, explainers: [...selectedExplainers, item] }));
     } else {
-      setExplainers(explainers.filter(id => id !== explainerId));
+      dispatch(setExplainers({ projectId: projectId, expId: expId, explainers: selectedExplainers.filter(explainer => explainer.id !== item.id) }));
     }
   };
 
-  const handleCheckboxChange = (item: Metric, isChecked: boolean) => {
+  const handleMetricCheckBox = (item: Metric, isChecked: boolean) => {
     if (isChecked) {
-      setMetrics(prevItems => [...prevItems, item]);
+      dispatch(setMetrics({ projectId: projectId, expId: expId, metrics: [...selectedMetrics, item] }));
     } else {
-      setMetrics(prevItems => prevItems.filter(i => i.id !== item.id));
+      dispatch(setMetrics({ projectId: projectId, expId: expId, metrics: selectedMetrics.filter(metric => metric.id !== item.id) }));
     }
   };
 
 
   const handleRunExperiment = () => {
-    if (inputs.length === 0 || explainers.length === 0) {
+    if (selectedInputs.length === 0 || selectedExplainers.length === 0) {
       setShowDialog(true);
       return;
     }
 
-    setLoading(true);
-    setSelectedInputs(inputs.map(input => Number(input)));
-    setSelectedExplainers(explainers.map(explainer => Number(explainer)));
-    setSelectedMetrics(metrics.map(metric => metric.id));
+    setVisualizationConfig({
+      inputs: selectedInputs,
+      explainers: selectedExplainers,
+      metrics: selectedMetrics,
+    });
   };
-
-  if (isError) {
-    return (
-      <Box sx={{ mt: 15 }}>
-        {errorInfo.map((error, index) => (
-          <ErrorSnackbar key={index} name={error.name} message={error.message} trace={error.trace} />
-        ))}
-      </Box>
-    );
-  }
 
   return (
     <Box sx={{ m: 1 }}>
@@ -147,8 +125,8 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: string}> = ( {
                 <Typography variant="h6"> Select Instance </Typography>
                 <Button variant="contained" color="primary" onClick={() => setIsModalOpen(true)} sx={{ mt: 2 }}> Show Instances</Button>
                 <Box sx={{ mt: 2 }}>
-                  {inputs.map((image, index) => (
-                    <Chip key={index} label={image} onDelete={() => handleChipCancel(image)} sx={{ mt: 1 }} />
+                  {selectedInputs.map((input, index) => (
+                    <Chip key={index} label={input.id} onDelete={() => handleChipCancel(input.id)} sx={{ mt: 1 }} />
                   ))}
                 </Box>
               </Box>
@@ -156,16 +134,16 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: string}> = ( {
               {/* Explainer Box */}
               <Box sx={{ ml: 1, mr : 1, borderBottom: 1, borderColor: 'divider', p: 1}}>
                 <Typography variant="h6">Select Explainers</Typography>
-                {sortedExplainers.map((explainerObj, index) => (
+                {explainerOptions && explainerOptions.map(explainer => (
                   <FormControlLabel
-                    key={explainerObj.id}
+                    key={explainer.id}
                     control={
                       <Checkbox
-                        checked={explainers.includes(explainerObj.id)}
-                        onChange={(e) => handleAlgorithmCheckboxChange(explainerObj.id, e.target.checked)}
+                        checked={selectedExplainers.some(item => item.name === explainer.name)}
+                        onChange={(e) => handleExplainerCheckBox(explainer, e.target.checked)}
                       />
                     }
-                    label={explainerObj.name}
+                    label={explainer.name}
                     sx={{ fontSize: '0.75rem' }} // Smaller font size for labels
                   />
                 ))}
@@ -174,16 +152,16 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: string}> = ( {
               {/* Metrics Box */}
               <Box sx={{ ml: 1, mr : 1, borderBottom: 1, borderColor: 'divider', p: 1 }}>
                 <Typography variant="h6"> Select Evaluation Metrics </Typography>
-                {experiment.metrics.map(item => (
+                {metricOptions && metricOptions.map(metric => (
                   <FormControlLabel
-                    key={item.id}
+                    key={metric.id}
                     control={
                       <Checkbox
-                        checked={metrics.some(i => i.id === item.id)}
-                        onChange={(e) => handleCheckboxChange(item, e.target.checked)}
+                        checked={selectedMetrics.some(item => item.name === metric.name)}
+                        onChange={(e) => handleMetricCheckBox(metric, e.target.checked)}
                       />
                     }
-                    label={nickname.find(n => n.name === item.name)?.nickname}
+                    label={nickname.find(n => n.name === metric.name)?.nickname}
                   />
                 ))}
               </Box>
@@ -199,12 +177,10 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: string}> = ( {
             {/* Experiment Visualization */}
             <Box sx={{ mt: 2, pl: 2 }}>
               <Visualizations
-                experiment={experiment.name}
-                inputs={selectedInputs}
-                explainers={selectedExplainers}
-                metrics={selectedMetrics}
-                loading={loading}
-                setLoading={setLoading}
+                experiment={experiment}
+                inputs={visualizationConfig.inputs}
+                explainers={visualizationConfig.explainers}
+                metrics={visualizationConfig.metrics}
               />
             </Box>
           </Grid>
@@ -213,10 +189,10 @@ const ExperimentComponent: React.FC<{experiment: Experiment, key: string}> = ( {
       
       {/* Image Selection Dialog */}
       <GalleryModal
+        experiment={experiment}
         isModalOpen={isModalOpen}
         setIsModalOpen={setIsModalOpen}
         galleryInputs={galleryInputs}
-        setInputs={setInputs}
       />
       
       

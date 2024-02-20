@@ -1,4 +1,4 @@
-import { Metric, Nickname, ColorScales, HelpText } from '../app/types';
+import { Metric, Nickname, ColorScales, HelpText, ExperimentResult } from '../app/types';
 import ColorScalesData from '../assets/styles/colorScale.json';
 
 const colorScales: ColorScales = ColorScalesData;
@@ -90,4 +90,17 @@ export const preprocess = (response: any, params: any) => {
   });
 
   return response;
+}
+
+
+export const changeColorMap = (experimentResults: ExperimentResult[], params: any) => {
+  experimentResults.forEach((result: ExperimentResult) => {
+    result.explanations.forEach((explanation: any) => {
+      if (explanation.data !== null) {
+        explanation.data.layout = modifyLayout(explanation.data.layout, params);
+      }
+    });
+  });
+
+  return experimentResults;
 }

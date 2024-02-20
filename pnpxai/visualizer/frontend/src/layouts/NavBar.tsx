@@ -4,7 +4,7 @@ import { RootState } from '../app/store';
 import { setCurrentProject, setColorMap } from '../features/globalState';
 import { Link } from 'react-router-dom';
 import { Box, AppBar, Toolbar, Button, Menu, MenuItem, Popover, IconButton, Tooltip, Typography, List, ListItem } from '@mui/material';
-import logo from '../../assets/images/SVG/XAI-Top-PnP.svg';
+import logo from '../assets/images/SVG/XAI-Top-PnP.svg';
 import { useLocation } from 'react-router-dom';
 import HelpRoundedIcon from '@mui/icons-material/HelpRounded';
 import SettingsIcon from '@mui/icons-material/Settings';
@@ -13,14 +13,12 @@ import { ColorScales } from '../app/types';
 import { helptext, routes } from '../components/util';
 
 const NavBar: React.FC = () => {
+  const  {loaded, error} = useSelector((state: RootState) => state.global);
   const projects = useSelector((state: RootState) => state.global.projects);
   const projectId = useSelector((state: RootState) => state.global.status.currentProject);
-  const expId = useSelector((state: RootState) => state.global.status.currentExp);
-  const cache = useSelector((state: RootState) => state.global.cache.filter((item) => item.projectId === projectId && item.expId === expId)[0]);
+  const projectCache = useSelector((state: RootState) => state.global.projectCache.filter((item) => item.projectId === projectId)[0]);
   const colorScales: ColorScales = ColorScalesData;
-  const colorMap = cache?.config.colorMap;
-
-
+  const colorMap = projectCache?.config.colorMap;
 
   const [projectAnchorEl, setProjectAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedMenu, setSelectedMenu] = useState<number | null>(null);
@@ -83,152 +81,153 @@ const NavBar: React.FC = () => {
   }
 
   const handleColorMapChange = (colorMap: any) => {
-    dispatch(setColorMap({ projectId: projectId, expId: expId, colorMap: colorMap }));
+    dispatch(setColorMap({ projectId: projectId, colorMap: colorMap }));
     handleSettingClose(); // Close the popover after selection
   };
   
 
-
-  return (
-    <Box sx={{ flexGrow: 1 }}>
-      <AppBar position="static" sx={{ bgcolor: 'primary.main' }}>
-        <Toolbar>
-          <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
-            <img src={logo} alt="Logo" style={{ marginRight: 30, height: '40px' }} />
-          </Link>
-          <Box sx={{pr : 2, borderRight : 1}}>
-            <Button style={{ color: 'inherit' }} onClick={handleProjectMenuButtonClick}>
-              Projects : {projectId}
-            </Button>
-            <Menu
-              anchorEl={projectAnchorEl}
-              open={Boolean(projectAnchorEl)}
-              onClose={handleProjectMenuClose}
-            >
-              {projects.map((project, index) => (
-                <MenuItem 
-                  key={index} 
-                  onClick={() => handleSelectProject(project.id)}
-                  style={{ fontWeight: project.id === projectId ? 'bold' : 'normal' }}
+  if (loaded && !error && projects.length > 0) {
+    return (
+      <Box sx={{ flexGrow: 1 }}>
+        <AppBar position="static" sx={{ bgcolor: 'primary.main' }}>
+          <Toolbar>
+            <Link to="/" style={{ textDecoration: 'none', color: 'inherit' }}>
+              <img src={logo} alt="Logo" style={{ marginRight: 30, height: '40px' }} />
+            </Link>
+            <Box sx={{pr : 2, borderRight : 1}}>
+              <Button style={{ color: 'inherit' }} onClick={handleProjectMenuButtonClick}>
+                Projects : {projectId}
+              </Button>
+              <Menu
+                anchorEl={projectAnchorEl}
+                open={Boolean(projectAnchorEl)}
+                onClose={handleProjectMenuClose}
+              >
+                {projects.map((project, index) => (
+                  <MenuItem 
+                    key={index} 
+                    onClick={() => handleSelectProject(project.id)}
+                    style={{ fontWeight: project.id === projectId ? 'bold' : 'normal' }}
+                  >
+                    {project.id}
+                  </MenuItem>
+                ))}
+              </Menu>
+            </Box>
+            
+            {/* Left of the menu bar */}
+            {routes.map((route, index) => {
+              return (
+                <Button 
+                  key={index}
+                  component={Link} 
+                  to={route.path} 
+                  onClick={() => handleSelectMenu(index)} 
+                  style={{ 
+                    marginLeft: 20, 
+                    color: 'inherit', 
+                    fontWeight: selectedMenu === index ? 'bold' : 'normal'
+                  }}
                 >
-                  {project.id}
-                </MenuItem>
-              ))}
-            </Menu>
-          </Box>
-          
-          {/* Left of the menu bar */}
-          {routes.map((route, index) => {
-            return (
-              <Button 
-                key={index}
-                component={Link} 
-                to={route.path} 
-                onClick={() => handleSelectMenu(index)} 
-                style={{ 
-                  marginLeft: 20, 
-                  color: 'inherit', 
-                  fontWeight: selectedMenu === index ? 'bold' : 'normal'
+                  {route.name}
+                </Button>
+              )
+            })}
+            
+            <Box sx={{ flexGrow: 1 }} />
+  
+            {/* Right of the menu bar */}
+            <Box sx={{ mr : 1}}>
+              <Tooltip title="Settings">
+                <IconButton aria-describedby={settingId} onClick={handleSettingClick}>
+                  <SettingsIcon sx={{ color : 'white'}}/>
+                </IconButton>
+              </Tooltip>
+              <Popover
+                id={settingId}
+                open={settingOpen}
+                anchorEl={settingAnchor}
+                onClose={handleSettingClose}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'left',
+                }}
+                PaperProps={{
+                  sx: {
+                    maxWidth: 600, // Set the maximum width of the Popover
+                  }
                 }}
               >
-                {route.name}
-              </Button>
-            )
-          })}
-          
-          <Box sx={{ flexGrow: 1 }} />
-
-          {/* Right of the menu bar */}
-          <Box sx={{ mr : 1}}>
-            <Tooltip title="Settings">
-              <IconButton aria-describedby={settingId} onClick={handleSettingClick}>
-                <SettingsIcon sx={{ color : 'white'}}/>
-              </IconButton>
-            </Tooltip>
-            <Popover
-              id={settingId}
-              open={settingOpen}
-              anchorEl={settingAnchor}
-              onClose={handleSettingClose}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'left',
-              }}
-              PaperProps={{
-                sx: {
-                  maxWidth: 600, // Set the maximum width of the Popover
-                }
-              }}
-            >
-              <Typography sx={{ p: 2 }}> Sequential Color Maps </Typography>
-              {/* ColorMap buttons */}
-              <Box sx={{ p: 2 }}>
-                {Object.keys(colorScales.seq).map((cmap: any) => (
-                  <Button
-                    key={cmap}
-                    variant={colorMap.seq === cmap ? 'contained' : 'outlined'}
-                    onClick={() => handleColorMapChange({'seq' : cmap, 'diverge' : colorMap.diverge})}
-                    sx={{ margin: 0.5 }}
-                  >
-                    {cmap}
-                  </Button>
-                ))}
-              </Box>
-              <Typography sx={{ p: 2 }}> Diverge Color Maps </Typography>
-              {/* ColorMap buttons */}
-              <Box sx={{ p: 2 }}>
-                {Object.keys(colorScales.diverge).map((cmap:any) => (
-                  <Button
-                    key={cmap}
-                    variant={colorMap.diverge === cmap ? 'contained' : 'outlined'}
-                    onClick={() => handleColorMapChange({'seq' : colorMap.seq, 'diverge' : cmap})}
-                    sx={{ margin: 0.5 }}
-                  >
-                    {cmap}
-                  </Button>
-                ))}
-              </Box>
-            </Popover>
-          </Box>
-
-          <Box sx={{ mr : 1 }}>
-            <Tooltip title="Meaning of evaluation metric">
-              <IconButton aria-describedby={helperId} onClick={handleHelperClick}>
-                <HelpRoundedIcon sx={{ color : 'white'}}/>
-              </IconButton>
-            </Tooltip>
-            <Popover
-              id={helperId}
-              open={helperOpen}
-              anchorEl={helperAnchor}
-              onClose={handleHelperClose}
-              anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'left',
-              }}
-              PaperProps={{
-                sx: {
-                  maxWidth: 600, // Set the maximum width of the Popover
-                  // Add any additional styles here
-                }
-              }}
-            >
-              <Typography sx={{ p: 2 }}> Meaning of Evaluation Metric </Typography>
-              <List sx={{ p: 1 }}>
-                {Object.keys(helptext).map((key, index) => (
-                    <ListItem key={index}>
-                    <Typography key={index} sx={{ p: 1 }}>
-                    <strong>{key}</strong> evaluates {helptext[key]}
-                    </Typography>
-                    </ListItem>
+                <Typography sx={{ p: 2 }}> Sequential Color Maps </Typography>
+                {/* ColorMap buttons */}
+                <Box sx={{ p: 2 }}>
+                  {Object.keys(colorScales.seq).map((cmap: any) => (
+                    <Button
+                      key={cmap}
+                      variant={colorMap?.seq === cmap ? 'contained' : 'outlined'}
+                      onClick={() => handleColorMapChange({'seq' : cmap, 'diverge' : colorMap.diverge})}
+                      sx={{ margin: 0.5 }}
+                    >
+                      {cmap}
+                    </Button>
                   ))}
-              </List>
-            </Popover>
-          </Box>
-        </Toolbar>
-      </AppBar>
-    </Box>
-  );
+                </Box>
+                <Typography sx={{ p: 2 }}> Diverge Color Maps </Typography>
+                {/* ColorMap buttons */}
+                <Box sx={{ p: 2 }}>
+                  {Object.keys(colorScales.diverge).map((cmap:any) => (
+                    <Button
+                      key={cmap}
+                      variant={colorMap?.diverge === cmap ? 'contained' : 'outlined'}
+                      onClick={() => handleColorMapChange({'seq' : colorMap.seq, 'diverge' : cmap})}
+                      sx={{ margin: 0.5 }}
+                    >
+                      {cmap}
+                    </Button>
+                  ))}
+                </Box>
+              </Popover>
+            </Box>
+  
+            <Box sx={{ mr : 1 }}>
+              <Tooltip title="Meaning of evaluation metric">
+                <IconButton aria-describedby={helperId} onClick={handleHelperClick}>
+                  <HelpRoundedIcon sx={{ color : 'white'}}/>
+                </IconButton>
+              </Tooltip>
+              <Popover
+                id={helperId}
+                open={helperOpen}
+                anchorEl={helperAnchor}
+                onClose={handleHelperClose}
+                anchorOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'left',
+                }}
+                PaperProps={{
+                  sx: {
+                    maxWidth: 600, // Set the maximum width of the Popover
+                    // Add any additional styles here
+                  }
+                }}
+              >
+                <Typography sx={{ p: 2 }}> Meaning of Evaluation Metric </Typography>
+                <List sx={{ p: 1 }}>
+                  {Object.keys(helptext).map((key, index) => (
+                      <ListItem key={index}>
+                      <Typography key={index} sx={{ p: 1 }}>
+                      <strong>{key}</strong> evaluates {helptext[key]}
+                      </Typography>
+                      </ListItem>
+                    ))}
+                </List>
+              </Popover>
+            </Box>
+          </Toolbar>
+        </AppBar>
+      </Box>
+    );
+  }
 };
 
 export default NavBar;

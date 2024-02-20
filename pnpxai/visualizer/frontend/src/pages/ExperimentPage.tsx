@@ -5,13 +5,13 @@ import { RootState } from '../app/store';
 import ExperimentComponent from '../components/ExperimentComponent';
 
 const ExperimentPage: React.FC = () => {
-  const loaded = useSelector((state: RootState) => state.projects.loaded);
-  const projectsData = useSelector((state: RootState) => state.projects.data);
-  const projectId = useSelector((state: RootState) => state.projects.currentProject.id);
-  const projectData = projectsData?.find(project => project.id === projectId);
+  const  {loaded, error} = useSelector((state: RootState) => state.global);
+  const projects = useSelector((state: RootState) => state.global.projects);
+  const projectId = useSelector((state: RootState) => state.global.status.currentProject);
+  const projectData = projects?.find(project => project.id === projectId);
   const isAnyModelDetected = projectData?.experiments.some(experiment => experiment.id);
 
-  if (!loaded || !projectsData) {
+  if (!loaded || projects === undefined) {
     return (
       <Box sx={{ p: 2, maxWidth: 1400  }}>
         <Box sx={{ m: 5, minHeight: "50px" }}>

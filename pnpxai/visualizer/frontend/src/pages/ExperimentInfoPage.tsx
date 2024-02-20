@@ -6,10 +6,10 @@ import { Typography, Box, Card, CardContent, Button, Alert, CircularProgress } f
 import { Link } from 'react-router-dom';
 
 const ModelInfoPage: React.FC = () => {
-  const loaded = useSelector((state: RootState) => state.projects.loaded);
-  const projectsData = useSelector((state: RootState) => state.projects.data);
-  const projectId = useSelector((state: RootState) => state.projects.currentProject.id);
-  const projectData = projectsData?.find(project => project.id === projectId);
+  const  {loaded, error} = useSelector((state: RootState) => state.global);
+  const projects = useSelector((state: RootState) => state.global.projects);
+  const projectId = useSelector((state: RootState) => state.global.status.currentProject);
+  const projectData = projects?.find(project => project.id === projectId);
 
   const intro = `${projectData?.experiments.length} models are detected for this project`
 
@@ -18,7 +18,7 @@ const ModelInfoPage: React.FC = () => {
     return !experiment.id;
   });
 
-  if (!loaded || !projectsData) {
+  if (!loaded || projects === undefined) {
     return (
       <Box sx={{ p: 2, maxWidth: 1400  }}>
         <Box sx={{ m: 5, minHeight: "50px" }}>

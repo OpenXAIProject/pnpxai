@@ -1,6 +1,6 @@
 // src/components/Visualizations.tsx
 import React, { useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '../app/store';
 import { 
   Typography, Box, ImageList, ImageListItem, 
@@ -8,90 +8,93 @@ import {
 } from '@mui/material';
 import LinearProgress from '@mui/material/LinearProgress';
 import Plot from 'react-plotly.js';
-import { ExperimentResult } from '../app/types';
-import { RunExperiment, fetchExperiment, fetchExperimentStatus } from '../features/apiService';
-import { preprocess } from './util';
+import { InputData, Explainer, Metric, Experiment, ExperimentResult } from '../app/types';
+import { RunExperiment, fetchExperimentStatus } from '../features/apiService';
 import { ErrorProps, ErrorSnackbar } from './modal/ErrorSnackBar';
-import { nickname, explainerNickname } from './util';
+import { preprocess, changeColorMap, nickname, explainerNickname } from './util';
+import { 
+  setExperimentResults,
+} from '../features/globalState';
 
+interface VisualizationsProps {
+  experiment: Experiment;
+  inputs: InputData[];
+  explainers: Explainer[];
+  metrics: Metric[];
+}
 
-const Visualizations: React.FC<{ 
-  experiment: string; inputs: number[]; explainers: number[]; metrics: number[]; loading: boolean; setLoading: any
-}> = ({ experiment, inputs, explainers, metrics, loading, setLoading }) => {
+const Visualizations: React.FC<VisualizationsProps> = ({ experiment, inputs, explainers, metrics }) => {
+  const dispatch = useDispatch();
   const projectId = useSelector((state: RootState) => state.global.status.currentProject);
-  const colorScale = useSelector((state: RootState) => state.global.cache.filter((item) => item.projectId === projectId)[0]?.config.colorMap);
+  const expId = experiment.id;
+  const projectCache = useSelector((state: RootState) => state.global.projectCache.filter((item) => item.projectId === projectId)[0]);
+  const expCache = useSelector((state: RootState) => state.global.expCache.filter((item) => item.projectId === projectId && item.expId === expId)[0]);
   
-  const [experimentResults, setExperimentResults] = React.useState<ExperimentResult[]>([]);
+  const colorScale = projectCache?.config.colorMap;
+  const experimentResults = expCache ? JSON.parse(JSON.stringify(expCache.experimentResults)) as ExperimentResult[]: [] as ExperimentResult[];
 
+
+  const [loading, setLoading] = React.useState<boolean>(false);
+  const [progress, setProgress] = React.useState(0);
+  const [progressMsg, setProgressMsg] = React.useState("Loading...");
 
   const [isError, setIsError] = React.useState<boolean>(false);
   const [errorInfo, setErrorInfo] = React.useState<ErrorProps[]>([]);
-  const [progress, setProgress] = React.useState(0);
-  const [progressMsg, setProgressMsg] = React.useState("Loading...");
   
 
   useEffect(() => {
-    fetchExperiment(projectId, experiment).then((response) => {
-      if (response.data.errors.length === 0) {
-        response = preprocess(response, {colorScale: colorScale});
-        const experimentResults = response.data.data
-        experimentResults.forEach((experimentResult: ExperimentResult) => {
-          experimentResult.explanations.sort((a, b) => a.rank - b.rank);
-        });
-        setExperimentResults(JSON.parse(JSON.stringify(experimentResults)));
-      } else {
-        setIsError(true);
-        setErrorInfo(response.data.errors);
-      }
+    if (inputs.length > 0 && explainers.length > 0) {
+      setLoading(true);
       
-    }).catch((err) => {
-      console.log(err);
-      setIsError(true);
-      setErrorInfo(err.response.data.errors);
-    }).finally(() => {
-      setLoading(false);
-    })
-  }, [projectId])
-
+      RunExperiment(projectId, expId, {
+        inputs: inputs.map(input => Number(input.id)),
+        explainers: explainers.map(explainer => explainer.id),
+        metrics: metrics.map(metric => metric.id)
+      }).then((response) => {
+        if (response.data.errors.length === 0) {
+          response = preprocess(response, {colorScale: colorScale});
+          const experimentData = response.data.data
+          experimentData.forEach((experimentResult: ExperimentResult) => {
+            experimentResult.explanations.sort((a, b) => a.rank - b.rank);
+          });
+          dispatch(setExperimentResults(
+            {projectId: projectId, expId: expId, 
+              experimentResults : JSON.parse(JSON.stringify(experimentData))}
+          ));
   
-  
-  useEffect(() => {
-    if (!(inputs.length > 0 && explainers.length > 0))
-      return
-
-    RunExperiment(projectId, experiment, {
-      inputs: inputs,
-      explainers: explainers,
-      metrics: metrics
-    }).then((response) => {
-      if (response.data.errors.length === 0) {
-        response = preprocess(response, {colorScale: colorScale});
-        const experimentResults = response.data.data
-        experimentResults.forEach((experimentResult: ExperimentResult) => {
-          experimentResult.explanations.sort((a, b) => a.rank - b.rank);
-        });
-        setExperimentResults(JSON.parse(JSON.stringify(experimentResults)));
-      } else {
+        } else {
+          setIsError(true);
+          setErrorInfo(response.data.errors);
+        }
+      }).catch((err) => {
+        console.log(err);
         setIsError(true);
-        setErrorInfo(response.data.errors);
-      }
-    }).catch((err) => {
-      console.log(err);
-      setIsError(true);
-      setErrorInfo(err.response.data.errors);
-    }).finally(() => {
-      setLoading(false);
-      setProgress(0);
-      setProgressMsg("Loading...");
-    })
-  }, [inputs, explainers, colorScale])
+        setErrorInfo(err.response.data.errors);
+      }).finally(() => {
+        setLoading(false);
+        setProgress(0);
+        setProgressMsg("Loading...");
+      })
+    }
+  }, [inputs, explainers, metrics])
+
+  useEffect(() => {
+    if (experimentResults) {
+      const newResult = changeColorMap(experimentResults, {colorScale: colorScale});
+      dispatch(setExperimentResults(
+        {projectId: projectId, expId: expId, 
+          experimentResults : JSON.parse(JSON.stringify(newResult))}
+      ));
+    }
+  }
+  , [colorScale])
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
   
     if (loading) {
       interval = setInterval(async () => {
-        fetchExperimentStatus(projectId, experiment)
+        fetchExperimentStatus(projectId, expId)
         .then((response) => {
           setProgress(response.data.data.progress);
           setProgressMsg(response.data.data.message);

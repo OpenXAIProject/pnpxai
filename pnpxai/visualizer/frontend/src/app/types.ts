@@ -77,8 +77,10 @@ interface HelpText {
   [key: string]: string;
 }
 
-interface Config {
+interface ProjectConfig {
   colorMap: ColorMap;
+}
+interface ExpConfig {
 }
 interface ColorMap {
   seq : string;
@@ -91,20 +93,25 @@ interface ColorScales {
 
 interface Status {
   currentProject: string;
-  currentExp: string;
+}
+
+interface ProjectCache {
+  projectId: string;
+  config : ProjectConfig;
 }
 interface ExperimentCache {
   projectId: string;
   expId: string;
+  galleryInputs: InputData[];
   inputs: InputData[];
   explainers: Explainer[];
   metrics: Metric[];
   experimentResults: ExperimentResult[];
-  config: Config;
+  config: ExpConfig;
 }
 
 export type { 
   Project, Experiment, Explainer, Metric, Model, InputData, ExperimentResult, 
   Nickname, ColorScales, HelpText,
-  Config, Status, ExperimentCache
+  Status, ProjectCache, ExperimentCache
 }
