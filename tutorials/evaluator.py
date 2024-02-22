@@ -3,10 +3,8 @@ from torch.utils.data import DataLoader
 
 from pnpxai.utils import set_seed
 from pnpxai.explainers import LRP, ExplainerWArgs
-from pnpxai.evaluator import XaiEvaluator
-from pnpxai.evaluator.mu_fidelity import MuFidelity
-from pnpxai.evaluator.sensitivity import Sensitivity
-from pnpxai.evaluator.complexity import Complexity
+from pnpxai.evaluator import MuFidelity, Sensitivity, Complexity
+from pnpxai import Experiment
 
 from helpers import get_imagenet_dataset, get_torchvision_model
 
@@ -27,12 +25,21 @@ inputs, targets = inputs.to(device), targets.to(device)
 
 attrs = explainer.attribute(inputs, targets)
 
-# test metrics
-mufd = MuFidelity()(model, explainer, inputs, targets, attrs)
-sens = Sensitivity()(model, explainer, inputs, targets, attrs)
-cmpx = Complexity()(model, explainer, inputs, targets, attrs)
+metrics = [
+    MuFidelity(n_perturbations=10), Sensitivity(n_iter=10), Complexity()
+]
 
-# test evaluator
-metrics = [MuFidelity(n_perturbations=10), Sensitivity(n_iter=10), Complexity()]
-evaluator = XaiEvaluator(metrics=metrics)
-evaluations = evaluator(inputs, targets, explainer, attrs)
+experiment = Experiment(
+    model=model,
+    data=loader,
+    explainers=[explainer],
+    metrics=metrics,
+    input_extractor=lambda x: x[0].to(device)
+)
+
+experiment.run()
+evaluations = experiment.get_evaluations_flattened()[0]
+for metric, metric_evals in zip(metrics, evaluations):
+    print(f"Metric {metric} evaluations:")
+    print(metric_evals)
+    print()
