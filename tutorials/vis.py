@@ -1,40 +1,39 @@
 import torch
 from torch.utils.data import DataLoader
-from pnpxai import Project
-from pnpxai.evaluator import XaiEvaluator
-from pnpxai.evaluator.mu_fidelity import MuFidelity
-from pnpxai.evaluator.sensitivity import Sensitivity
-from pnpxai.evaluator.complexity import Complexity
+
 from pnpxai.utils import set_seed
-from helpers import get_imagenet_dataset, get_torchvision_model, denormalize_image
+from pnpxai.explainers import LRP, ExplainerWArgs
+from pnpxai.evaluator import MuFidelity, Sensitivity, Complexity
+from pnpxai import Experiment
 
-set_seed(0)
+from helpers import get_imagenet_dataset, get_torchvision_model
 
+set_seed(seed=0)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 model, transform = get_torchvision_model("resnet18")
 model = model.to(device)
-dataset = get_imagenet_dataset(transform=transform, subset_size=16)
-loader = DataLoader(dataset, batch_size=8)
-
-def input_extractor(x): return x[0].to(device)
-def target_extractor(x): return x[1].to(device)
-
-# vis test
-proj = Project("vis test")
-expr = proj.create_auto_experiment(
-    model=model,
-    data=loader,
-    input_extractor=input_extractor,
-    target_extractor=target_extractor,
-    input_visualizer=denormalize_image,
+explainer = ExplainerWArgs(
+    explainer=LRP(model=model),
+    kwargs={"epsilon": 1e-6, "n_classes": 1000},
 )
 
-# force evaluator
-expr.evaluator = XaiEvaluator(metrics=[
-    MuFidelity(n_perturbations=1),
-    Sensitivity(n_iter=1),
-    Complexity(),
-])
+dataset = get_imagenet_dataset(transform=transform, subset_size=8)
+loader = DataLoader(dataset, batch_size=8)
+inputs, targets = next(iter(loader))
+inputs, targets = inputs.to(device), targets.to(device)
 
-expr.run()
-vis = expr.get_visualizations_flattened()
+attrs = explainer.attribute(inputs, targets)
+
+experiment = Experiment(
+    model=model,
+    data=loader,
+    explainers=[explainer],
+    input_extractor=lambda x: x[0].to(device)
+)
+
+experiment.run()
+visualizations = experiment.get_visualizations_flattened()[0]
+for vis in visualizations:
+    if vis is not None:
+        vis.show()
