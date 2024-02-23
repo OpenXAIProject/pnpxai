@@ -122,6 +122,7 @@ Launching the dashboard will display an interactive interface as follows:
 
 ## Tutorials
 - [Auto-explanation](tutorials/auto_explanation.py)
+- [Visualization](tutorials/vis.py)
 - [Evaluator](tutorials/evaluator.py)
 - [ImageNet Example All Explainers](tutorials/imagenet_example_all_explainers.md)
 - [ImageNet Example All Metrics](tutorials/imagenet_example_all_metrics.md)
