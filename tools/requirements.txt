@@ -6,7 +6,7 @@ plotly>5.15
 kaleido>0.2
 scikit-image
 zennit
-Flask>=2.2.5
+Flask==2.3.3
 Flask-Cors==4.0.0
 flask-restx==1.2.0
 pytest>7.0.0
