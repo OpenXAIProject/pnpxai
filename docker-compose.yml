@@ -1,0 +1,13 @@
+version: '3.0'
+
+services:
+  pnpxai:
+    container_name: pnpxai
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: 'python3 tutorials/auto_explanation.py'
+    ports:
+      - "5001:5001"
+    volumes:
+      - .:/app

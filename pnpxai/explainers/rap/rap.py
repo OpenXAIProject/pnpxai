@@ -1,11 +1,11 @@
-from typing import Dict
+from typing import Dict, Type
 
 import torch
 from torch import nn, Tensor
 from pnpxai.explainers.rap import rules
 from pnpxai.explainers.utils.operation_graph import OperationGraph, OperationNode
 
-SUPPORTED_MODULES: Dict[type[nn.Module], type[rules.RelProp]] = {
+SUPPORTED_MODULES: Dict[Type[nn.Module], Type[rules.RelProp]] = {
     nn.Sequential: rules.Sequential,
     nn.ReLU: rules.ReLU,
     nn.Dropout: rules.Dropout,
@@ -17,11 +17,11 @@ SUPPORTED_MODULES: Dict[type[nn.Module], type[rules.RelProp]] = {
     nn.Conv2d: rules.Conv2d,
     nn.Flatten: rules.Flatten,
 }
-SUPPORTED_FUNCTIONS: Dict[callable, type[rules.RelProp]] = {
+SUPPORTED_FUNCTIONS: Dict[callable, Type[rules.RelProp]] = {
     torch.add: rules.Add,
     torch.flatten: rules.Flatten,
 }
-SUPPORTED_BUILTINS: Dict[str, type[rules.RelProp]] = {
+SUPPORTED_BUILTINS: Dict[str, Type[rules.RelProp]] = {
     'add': rules.Add,
     'flatten': rules.Flatten,
 }
