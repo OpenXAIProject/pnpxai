@@ -1,0 +1,10 @@
+task: "image"
+explainers:
+  - Lime
+  - KernelShap
+  - IntegratedGradients
+  - LRP
+metrics:
+  - MuFidelity
+  - Complexity
+  - Sensitive

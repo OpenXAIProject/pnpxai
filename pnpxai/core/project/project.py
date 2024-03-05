@@ -1,7 +1,9 @@
+from io import TextIOWrapper
 from typing import Optional, Dict, Callable, Sequence, Union
 
 from pnpxai.core._types import DataSource, Model, Task, Question
 from pnpxai.core.experiment import Experiment, AutoExperiment
+from pnpxai.core.project.config import ProjectConfig
 from pnpxai.explainers._explainer import Explainer, ExplainerWArgs
 from pnpxai.evaluator import EvaluationMetric
 from pnpxai.visualizer.server import Server
@@ -15,13 +17,16 @@ class Project():
 
     Args:
         name (str): The name of the project.
+        config (str, dict, TextIOWrapper): Global project experiment, which is applied to all experiments by default
 
     Attributes:
         name (str): The name of the project.
         experiments (Dict[str, Experiment]): A dictionary containing experiment names as keys and corresponding Experiment objects.
     """
-    def __init__(self, name: str):
+
+    def __init__(self, name: str, config: Optional[Union[dict, str, TextIOWrapper]] = None):
         self.name = name
+        self.config = ProjectConfig(config)
         self.experiments: Dict[str, Experiment] = {}
 
         self._next_expr_id = 0
@@ -76,7 +81,7 @@ class Project():
         name: Optional[str] = None,
         explainers: Optional[Sequence[Union[ExplainerWArgs, Explainer]]] = None,
         metrics: Optional[Sequence[EvaluationMetric]] = None,
-        task: Task = "image",
+        task: Optional[Task] = None,
         input_extractor: Optional[Callable] = None,
         target_extractor: Optional[Callable] = None,
         input_visualizer: Optional[Callable] = None,
@@ -90,6 +95,16 @@ class Project():
         """
         if name is None:
             name = self._generate_next_experiment_id()
+
+        if task is None:
+            task = self.config.get_task() or 'image'
+
+        if explainers is None:
+            explainers = self.config.get_init_explainers(model)
+
+        config_metrics = self.config.get_init_metrics()
+        if metrics is None and len(config_metrics) > 0:
+            metrics = config_metrics
 
         experiment = Experiment(
             model=model,
@@ -109,7 +124,7 @@ class Project():
         """
         Destructor method to unregister the project from the associated server when the object is deleted.
         """
-        self.__server.unregister(self)
+        Server().unregister(self)
 
     def get_server(self):
         """

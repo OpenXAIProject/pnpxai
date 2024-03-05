@@ -1,7 +1,10 @@
 import random
+from io import TextIOWrapper
+from contextlib import contextmanager
+from typing import Sequence, Callable, Any, Union
+
 import numpy as np
 import torch
-from typing import Sequence, Callable, Any
 
 
 def set_seed(seed):
@@ -41,13 +44,25 @@ class Singleton(type):
                 Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
 
+
 class Observable:
     def __init__(self):
         self._callbacks = []
-    
+
     def subscribe(self, callback):
         self._callbacks.append(callback)
 
     def fire(self, event):
         for callback in self._callbacks:
             callback(event)
+
+@contextmanager
+def open_file_or_name(file: Union[TextIOWrapper, str], *args, **kwargs):
+    file_wrapper = file
+    if isinstance(file, str):
+        file_wrapper = open(file, *args, **kwargs)
+
+    yield file_wrapper
+
+    if isinstance(file, str):
+        file_wrapper.close()
