@@ -5,7 +5,6 @@ import yaml
 from pnpxai.messages import get_message
 from pnpxai.utils import open_file_or_name
 from pnpxai.core._types import ConfigKeys, Task, Model
-from pnpxai.core.experiment.utils import init_metrics
 from pnpxai.core.experiment.experiment_explainer_defaults import EXPLAINER_AUTO_KWARGS
 from pnpxai.core.experiment.experiment_metrics_defaults import EVALUATION_METRIC_AUTO_KWARGS
 from pnpxai.explainers import AVAILABLE_EXPLAINERS, ExplainerWArgs, Explainer
