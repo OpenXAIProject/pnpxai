@@ -24,9 +24,10 @@ class Project():
         experiments (Dict[str, Experiment]): A dictionary containing experiment names as keys and corresponding Experiment objects.
     """
 
-    def __init__(self, name: str, config: Optional[Union[dict, str, TextIOWrapper]] = None):
+    def __init__(self, name: str, config: Optional[Union[ProjectConfig, dict, str, TextIOWrapper]] = None):
         self.name = name
-        self.config = ProjectConfig(config)
+        self.config = config if isinstance(config, ProjectConfig) \
+            else ProjectConfig.from_predefined(config)
         self.experiments: Dict[str, Experiment] = {}
 
         self._next_expr_id = 0
