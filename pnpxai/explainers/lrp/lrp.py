@@ -1,9 +1,9 @@
-from typing import Any, Optional, Callable
+from typing import Optional
 from captum._utils.typing import TargetType
 
 from pnpxai.core._types import Model, DataSource, Task, Tensor
 from pnpxai.explainers._explainer import Explainer
-from .lrp_zennit import LRPZennit, Attributor, Composite
+from .lrp_zennit import LRPZennit
 
 
 class LRP(Explainer):

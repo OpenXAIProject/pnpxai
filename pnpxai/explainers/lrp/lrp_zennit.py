@@ -1,13 +1,12 @@
 import warnings
 from _operator import add
-from typing import List, Optional
+from typing import List
 
 import torch
 from torch import nn
 from captum._utils.typing import TargetType
 
-from zennit.core import Composite
-from zennit.attribution import Attributor, Gradient
+from zennit.attribution import Gradient
 from zennit.canonizers import SequentialMergeBatchNorm
 from zennit.composites import LayerMapComposite, layer_map_base
 from zennit.rules import Epsilon
