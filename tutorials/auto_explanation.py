@@ -25,7 +25,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # -----------------------------------------------------------------------------#
 
 # Initialize Project 1
-project = Project('Test Project 1')
+project = Project('Test Project 1', config='config.example.yml')
 
 
 # -----------------------------------------------------------------------------#
@@ -101,7 +101,8 @@ def target_visualizer(x): return dataset.dataset.idx_to_label(x.item())
 
 
 # Create an experiment to explain the defined model and dataset
-experiment_vit = project.create_auto_experiment(
+# Use predefined config, since it is not AutoExperiment
+experiment_vit = project.create_experiment(
     model,
     loader,
     name='ViT Experiment',
@@ -165,4 +166,4 @@ experiment_project2 = project2.create_auto_experiment(
 # -----------------------------------------------------------------------------#
 
 # Launch the interactive web-based dashboard by running one of the projects defined above
-project.get_server().serve(host='0.0.0.0', port=5001)
+project.get_server().serve(host='0.0.0.0', port=5000)

@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from torch.utils.data import Dataset, DataLoader
 from torch import Tensor, nn
 from typing import Union, Sequence, Dict, Any, Literal
+from enum import Enum
 
 TensorSequence = Union[Dataset, Sequence[Tensor]]
 TensorOrTensorSequence = Union[TensorSequence, Tensor]
@@ -21,3 +22,9 @@ class Args:
     def __post_init__(self):
         self.args = self.args or []
         self.kwargs = self.kwargs or {}
+
+
+class ConfigKeys(Enum):
+    EXPLAINERS = 'explainers'
+    METRICS = 'metrics'
+    TASK = 'task'
