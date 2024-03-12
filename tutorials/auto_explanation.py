@@ -24,8 +24,10 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # --------------------------------- project 1 ---------------------------------#
 # -----------------------------------------------------------------------------#
 
+cur_dir  = os.path.dirname(os.path.abspath(__file__))
+
 # Initialize Project 1
-project = Project('Test Project 1', config='config.example.yml')
+project = Project('Test Project 1', config=os.path.join(cur_dir, 'config.example.yml'))
 
 
 # -----------------------------------------------------------------------------#
@@ -37,8 +39,7 @@ model, transform = get_torchvision_model("resnet18")
 model = model.to(device)
 
 # Prepare the dataset and dataloader for experiment 1-1
-data_root_dir = os.path.join(os.path.dirname(
-    os.path.abspath(__file__)), 'data/ImageNet')
+data_root_dir = os.path.join(cur_dir, 'data/ImageNet')
 dataset = get_imagenet_dataset(
     transform, subset_size=25, root_dir=data_root_dir)
 loader = DataLoader(dataset, batch_size=10)
