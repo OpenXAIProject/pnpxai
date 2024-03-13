@@ -1,5 +1,5 @@
 #----------------------------
-# ./explainers/rap/rules.py
+# .rules.py
 #----------------------------
 
 from zennit.rules import BasicHook, NoMod, ClampMod, zero_bias, ParamMod
@@ -79,32 +79,86 @@ class RelativeAttributingPropagation(BasicHook):
             input_modifiers=[
                 lambda input: input.clamp(min=0), # px
                 lambda input: input.clamp(min=0), # px
-                lambda input: input.clamp(min=0), # px
-                lambda input: input.clamp(min=0), # px
-                lambda input: input.clamp(max=0), # nx
-                lambda input: input.clamp(max=0), # nx
                 lambda input: input.clamp(max=0), # nx
                 lambda input: input.clamp(max=0), # nx
             ],
             param_modifiers=[
                 ClampMod(min=0, zero_params=zero_bias(zero_params)), # pw
-                ClampMod(min=0, zero_params=zero_bias(zero_params)), # pw
-                ClampMod(max=0, zero_params=zero_bias(zero_params)), # nw
                 ClampMod(max=0, zero_params=zero_bias(zero_params)), # nw
                 ClampMod(min=0, zero_params=zero_bias(zero_params)), # pw
-                ClampMod(min=0, zero_params=zero_bias(zero_params)), # pw
-                ClampMod(max=0, zero_params=zero_bias(zero_params)), # nw
                 ClampMod(max=0, zero_params=zero_bias(zero_params)), # nw
             ],
-            output_modifiers=[lambda output: output.abs()] * 8,
-            gradient_mapper=(lambda out_grad, outputs: _rap_gradient_mapper(out_grad, outputs)),
-            reducer=(lambda inputs, gradients: _rap_reducer(inputs, gradients)),
+            output_modifiers=[lambda output: output.abs()] * 4,
+            gradient_mapper=(lambda out_grad, output: out_grad / stabilizer_fn( output)),
+            reducer=(lambda inputs, gradients: sum(input*gradient for input, gradient in zip(inputs, gradients))),
         )
+
+    def backward(self, module, grad_input, grad_output):
+        original_input = self.stored_tensors['input'][0].clone()
+        sumdim = list(range(1, original_input.dim()))
+        inputs = []
+        outputs = []
+        for in_mod, param_mod, out_mod in zip(self.input_modifiers, self.param_modifiers, self.output_modifiers):
+            input = in_mod(original_input).requires_grad_()
+            with ParamMod.ensure(param_mod)(module) as modified, torch.autograd.enable_grad():
+                output = modified.forward(input)
+                output = out_mod(output)
+                output *= grad_output[0].ne(0)
+            inputs.append(input)
+            outputs.append(output)
+        input_groups = inputs[:2], inputs[2:] # [[px, px], [nx, nx]]
+        output_groups = outputs[:2], outputs[2:] # [[pp, pn], [np, nn]]
+
+        out_grad_pos, out_grad_neg = grad_output[0].clamp(min=0), grad_output[0].clamp(max=0)
+        _out_grads = [out_grad_pos, out_grad_neg, out_grad_pos, out_grad_neg]
+        relevance = None
+        for i, (inputs, outputs) in enumerate(zip(input_groups, output_groups)):
+            gradient_groups = []
+            _inputs = inputs + inputs
+            output_pos, output_neg = outputs # [px, px, px, px]
+            _outputs = [output_pos, output_pos, output_neg, output_neg] # [pp, pp, pn, pn]
+            neg_scale = output_neg / (output_pos + output_neg + .25)
+            _scales = [1, 1, neg_scale, neg_scale]
+            _grad_outputs = [
+                self.gradient_mapper(out_grad*scale, output)
+                for out_grad, scale, output in zip(_out_grads, _scales, _outputs)
+            ]
+            gradient_groups.append(torch.autograd.grad(
+                _outputs,
+                _inputs,
+                grad_outputs=_grad_outputs,
+                create_graph=grad_output[0].requires_grad,
+            ))
+            _relevance = sum([self.reducer(inputs, gradients) for gradients in gradient_groups])
+            shift_numerator = _relevance.sum(dim=sumdim, keepdim=True) - grad_output[0].sum(dim=sumdim, keepdim=True)
+            is_nonzero_relevance = _relevance.ne(0)
+            shift_denominator = is_nonzero_relevance.sum(dim=sumdim, keepdim=True) * is_nonzero_relevance
+            shift = shift_numerator / (shift_denominator + .25)
+            _relevance -= shift
+            if relevance is None:
+                relevance = _relevance
+            else:
+                relevance += _relevance
+        # import pdb; pdb.set_trace()
+
+
+        # grad_outputs = self.gradient_mapper(grad_output[0], outputs)
+        # gradients = torch.autograd.grad(
+        #     outputs,
+        #     inputs,
+        #     grad_outputs=grad_outputs,
+        #     create_graph=grad_output[0].requires_grad,
+        #     retain_graph=True,
+        # )
+        # relevance = self.reducer(inputs, gradients)
+        print(relevance.sum())
+        return tuple(relevance if original.shape == relevance.shape else None for original in grad_input)
+
 
 
 def _rap_gradient_mapper(out_grad, outputs):
-    # inputs: p, p, p, p, n, n, n, n
-    # outputs: pp, pp, pn, pn, np, np, nn, nn
+    # inputs: p, p, n, n
+    # outputs: pp, pn, np, nn
     # grad_outputs: rpos/pp, rneg/pp, neg_scale*rpos/pn, neg_scale*rneg/pn,
     #               rpos/np, rneg/np, neg_scale*rpos/nn, neg_scale*rneg/nn
     grad_outputs = []
@@ -155,7 +209,7 @@ class ZBeta(BasicHook):
 
 
 #----------------------------
-# ./explainers/rap/rap_zennit.py
+# ./rap_zennit.py
 #----------------------------
 
 from _operator import add
@@ -176,7 +230,6 @@ from pnpxai.core._types import Model, DataSource
 from pnpxai.detector import ModelArchitecture
 from pnpxai.detector._core import NodeInfo
 from pnpxai.explainers._explainer import Explainer
-# from .rules import RelativeAttributingPropagationRule
 from pnpxai.explainers.lrp.utils import list_args_for_stack
 
 class RAPZennit(Explainer):
@@ -253,40 +306,3 @@ class RAPZennit(Explainer):
         with Gradient(model=model, composite=composite) as attributor:
             _, relevance = attributor(inputs, torch.eye(n_classes)[targets].to(self.device))
         return relevance
-
-
-#----------------------------
-# ./tutorials/rap_zennit.py
-#----------------------------
-
-import plotly.express as px
-from torch.utils.data import DataLoader
-from helpers import get_imagenet_dataset, get_torchvision_model
-
-resnet, transform = get_torchvision_model("resnet18")
-dataset = get_imagenet_dataset(transform=transform, indices=range(8))
-loader = DataLoader(dataset, batch_size=8)
-inputs, labels = next(iter(loader))
-
-explainer = RAPZennit(resnet)
-attrs = explainer.attribute(inputs, labels)
-
-# postprocess for attributions
-def postprocess_attr(attr, sign=None, scale=None):
-    if sign == 'absolute':
-        attr = torch.abs(attr)
-    elif sign == 'positive':
-        attr = torch.nn.functional.relu(attr)
-    elif sign == 'negative':
-        attr = -torch.nn.functional.relu(-attr)
-
-    postprocessed = attr.permute((1, 2, 0)).sum(dim=-1)
-    attr_max = torch.max(postprocessed)
-    attr_min = torch.min(postprocessed)
-    postprocessed = (postprocessed - attr_min) / (attr_max - attr_min)
-    if scale == "sqrt":
-        postprocessed = postprocessed.sqrt()
-    return postprocessed.cpu().detach().numpy()
-
-fig = px.imshow(postprocess_attr(-attrs[0]), color_continuous_scale="Viridis")
-fig.show()
