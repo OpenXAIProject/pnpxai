@@ -5,24 +5,122 @@
 from zennit.rules import BasicHook, NoMod, ClampMod, zero_bias, ParamMod
 from zennit.core import Stabilizer, expand
 
+
+def absolute_influence_normalize(func):
+    def wrapper(*args, **kwargs):
+        relevance_raw = func(*args, **kwargs)[0]
+        relsum = relevance_raw.sum(dim=-1, keepdim=True)
+        absolute_influence = relevance_raw.abs() / relevance_raw.abs().sum(dim=-1, keepdim=True)
+        relevance_normalized = relsum * absolute_influence
+        print("ain", relevance_normalized.sum(dim=-1))
+        return tuple([relevance_normalized])
+    return wrapper
+
+
 class AbsoluteInfluenceNormalization(BasicHook):
     def __init__(self, stabilizer=1e-6, zero_params=None):
-        stabilizer_fn = Stabilizer.ensure(stabilizer)
         super().__init__(
             input_modifiers=[
                 lambda input: input.clamp(min=0), # px
-                lambda input: input.clamp(max=0), # nx
                 lambda input: input.clamp(min=0), # px
+                lambda input: input.clamp(max=0), # nx
                 lambda input: input.clamp(max=0), # nx
             ],
             param_modifiers=[
-                ClampMod(max=0, zero_params=zero_bias(zero_params)), # nw
                 ClampMod(min=0, zero_params=zero_bias(zero_params)), # pw
+                ClampMod(max=0, zero_params=zero_bias(zero_params)), # nw
                 ClampMod(min=0, zero_params=zero_bias(zero_params)), # pw
                 ClampMod(max=0, zero_params=zero_bias(zero_params)), # nw
             ],
-            output_modifiers=[lambda output: output] * 6,
-            gradient_mapper=(lambda out_grad, outputs: [out_grad/stabilizer_fn(output) for output in outputs]),
+            output_modifiers=[lambda output: output] * 4, # [pp, pn, np, nn]
+        )
+
+    def backward(self, module, grad_input, grad_output):
+        original_input = self.stored_tensors['input'][0].clone()
+        inputs = []
+        outputs = []
+        for in_mod, param_mod, out_mod in zip(self.input_modifiers, self.param_modifiers, self.output_modifiers):
+            input = in_mod(original_input).requires_grad_()
+            with ParamMod.ensure(param_mod)(module) as modified, torch.autograd.enable_grad():
+                output = modified.forward(input)
+                output = out_mod(output)
+            inputs.append(input)
+            outputs.append(output)
+
+        # z
+        dim = tuple(range(1, original_input.dim()))
+        relevance_ss_all = []
+        for input, output in zip(inputs, outputs):
+            gradients = torch.autograd.grad(
+                (output,),
+                (input,),
+                grad_outputs=grad_output[0],
+                create_graph=grad_output[0].requires_grad,
+                retain_graph=True,
+            )[0]
+            relevance_ss = input * gradients
+            relevance_ss_all.append(relevance_ss)
+        relevance = sum(relevance_ss_all)
+
+        # bias
+        pos = ((outputs[0] + outputs[3]) * grad_output[0]).sum(dim=dim, keepdim=True)
+        neg = ((outputs[1] + outputs[2]) * grad_output[0]).sum(dim=dim, keepdim=True)
+
+        bp = module.bias * grad_output[0] * safe_divide(pos, pos+neg)
+        bp_gradients = torch.autograd.grad(
+            (outputs[0],),
+            (inputs[0],),
+            grad_outputs=safe_divide(bp, outputs[0]),
+            create_graph=grad_output[0].requires_grad,
+        )[0]
+        bp_relevance = inputs[0] * bp_gradients
+        relevance += bp_relevance
+
+        bn = module.bias * grad_output[0] * safe_divide(neg, pos+neg)
+        bn_gradients = torch.autograd.grad(
+            (outputs[1],),
+            (inputs[1],),
+            grad_outputs=safe_divide(bn, outputs[1]),
+            create_graph=grad_output[0].requires_grad,
+        )[0]
+        bn_relevance = inputs[0] * bn_gradients
+        relevance += bn_relevance
+
+        # redistribute
+        relevance_sum = relevance.sum(dim=-1, keepdim=True)
+        absolute_influence = relevance.abs() / relevance.abs().sum(dim=-1, keepdim=True)
+        relevance_normalized = relevance_sum * absolute_influence
+        print("relevance_out", grad_output[0].sum(dim=dim))
+        print("ain", relevance.sum(dim=dim))
+        return tuple(relevance_normalized if original.shape == relevance_normalized.shape else None for original in grad_input)
+        
+    # @absolute_influence_normalize    
+    # def backward(self, module, grad_input, grad_output):
+    #     return super().backward(module, grad_input, grad_output)
+
+
+
+
+def safe_divide(a, b):
+    return a / (b + b.eq(0).type(b.type()) * 1e-9) * b.ne(0).type(b.type())
+
+class RelativeAttributingPropagation(BasicHook):
+    def __init__(self, stabilizer=1e-6, zero_params=None):
+        super().__init__(
+            input_modifiers=[
+                lambda input: input.clamp(min=0), # px
+                lambda input: input.clamp(min=0), # px
+                lambda input: input.clamp(max=0), # nx
+                lambda input: input.clamp(max=0), # nx
+            ],
+            param_modifiers=[
+                ClampMod(min=0, zero_params=zero_bias(zero_params)), # pw
+                ClampMod(max=0, zero_params=zero_bias(zero_params)), # nw
+                ClampMod(min=0, zero_params=zero_bias(zero_params)), # pw
+                ClampMod(max=0, zero_params=zero_bias(zero_params)), # nw
+            ],
+            output_modifiers=[lambda output: output.abs()] * 4, # [pp, pn, np, nn]
+            gradient_mapper=(lambda out_grad, output: safe_divide(out_grad, output)),
             reducer=(lambda inputs, gradients: sum([inp*grad for inp, grad in zip(inputs, gradients)])),
         )
 
@@ -37,150 +135,42 @@ class AbsoluteInfluenceNormalization(BasicHook):
                 output = out_mod(output)
             inputs.append(input)
             outputs.append(output)
-        grad_outputs = self.gradient_mapper(grad_output[0], outputs)
-        gradients = torch.autograd.grad(
-            outputs,
-            inputs,
-            grad_outputs=grad_outputs,
-            create_graph=grad_output[0].requires_grad,
-            retain_graph=True,
-        )
-        relevance = self.reducer(inputs, gradients)
-
-        # bias
-        sum_neg = (sum(outputs[:2]) * grad_output[0]).sum(dim=-1, keepdim=True)
-        sum_pos = (sum(outputs[2:]) * grad_output[0]).sum(dim=-1, keepdim=True)
-        bias_neg = grad_output[0] * module.bias * sum_neg / (sum_neg + sum_pos + 1e-6)
-        bias_pos = grad_output[0] * module.bias * sum_pos / (sum_neg + sum_pos + 1e-6)
-        bias_grad_outputs = [bias_neg/outputs[2], bias_pos/outputs[0]]
-        bias_gradients = torch.autograd.grad(
-            [outputs[2], outputs[0]],
-            [inputs[2], inputs[0]],
-            grad_outputs=bias_grad_outputs,
-            create_graph=grad_output[0].requires_grad,
-        )
-        relevance += self.reducer([inputs[2], inputs[0]], bias_gradients)
-
-        # redistribute
-        rel_pos = relevance.clamp(min=0)
-        rel_neg = relevance.clamp(max=0)
-        rel_tot = (rel_pos - rel_neg).sum(dim=-1, keepdim=True)
-
-        rel_pos_redist = rel_pos / (rel_tot + 1e-6) * (rel_pos + rel_neg).sum(dim=-1, keepdim=True)
-        rel_neg_redist = rel_neg / (rel_tot + 1e-6) * (rel_pos + rel_neg).sum(dim=-1, keepdim=True)
-        relevance = rel_pos_redist + rel_neg_redist
-        return tuple(relevance if original.shape == relevance.shape else None for original in grad_input)
-
-
-class RelativeAttributingPropagation(BasicHook):
-    def __init__(self, stabilizer=1e-6, zero_params=None):
-        stabilizer_fn = Stabilizer.ensure(stabilizer)
-        super().__init__(
-            input_modifiers=[
-                lambda input: input.clamp(min=0), # px
-                lambda input: input.clamp(min=0), # px
-                lambda input: input.clamp(max=0), # nx
-                lambda input: input.clamp(max=0), # nx
-            ],
-            param_modifiers=[
-                ClampMod(min=0, zero_params=zero_bias(zero_params)), # pw
-                ClampMod(max=0, zero_params=zero_bias(zero_params)), # nw
-                ClampMod(min=0, zero_params=zero_bias(zero_params)), # pw
-                ClampMod(max=0, zero_params=zero_bias(zero_params)), # nw
-            ],
-            output_modifiers=[lambda output: output.abs()] * 4,
-            gradient_mapper=(lambda out_grad, output: out_grad / stabilizer_fn( output)),
-            reducer=(lambda inputs, gradients: sum(input*gradient for input, gradient in zip(inputs, gradients))),
-        )
-
-    def backward(self, module, grad_input, grad_output):
-        original_input = self.stored_tensors['input'][0].clone()
-        sumdim = list(range(1, original_input.dim()))
-        inputs = []
-        outputs = []
-        for in_mod, param_mod, out_mod in zip(self.input_modifiers, self.param_modifiers, self.output_modifiers):
-            input = in_mod(original_input).requires_grad_()
-            with ParamMod.ensure(param_mod)(module) as modified, torch.autograd.enable_grad():
-                output = modified.forward(input)
-                output = out_mod(output)
-                output *= grad_output[0].ne(0)
-            inputs.append(input)
-            outputs.append(output)
-        input_groups = inputs[:2], inputs[2:] # [[px, px], [nx, nx]]
-        output_groups = outputs[:2], outputs[2:] # [[pp, pn], [np, nn]]
-
-        out_grad_pos, out_grad_neg = grad_output[0].clamp(min=0), grad_output[0].clamp(max=0)
-        _out_grads = [out_grad_pos, out_grad_neg, out_grad_pos, out_grad_neg]
-        relevance = None
-        for i, (inputs, outputs) in enumerate(zip(input_groups, output_groups)):
-            gradient_groups = []
-            _inputs = inputs + inputs
-            output_pos, output_neg = outputs # [px, px, px, px]
-            _outputs = [output_pos, output_pos, output_neg, output_neg] # [pp, pp, pn, pn]
-            neg_scale = output_neg / (output_pos + output_neg + .25)
-            _scales = [1, 1, neg_scale, neg_scale]
-            _grad_outputs = [
-                self.gradient_mapper(out_grad*scale, output)
-                for out_grad, scale, output in zip(_out_grads, _scales, _outputs)
-            ]
-            gradient_groups.append(torch.autograd.grad(
-                _outputs,
-                _inputs,
-                grad_outputs=_grad_outputs,
+        
+        dim = tuple(range(1, original_input.dim()))
+        relevance_s_all = []
+        for i, (input, output) in enumerate(zip(inputs, outputs)):
+            relevance_ss_stack = []
+            output *= grad_output[0].ne(0)
+            scale = 1 if i % 2 == 0 else (
+                safe_divide(output, outputs[i-1]+output)
+            )
+            gradients_pos = torch.autograd.grad(
+                (output,),
+                (input,),
+                grad_outputs=self.gradient_mapper(grad_output[0].clamp(min=0)*scale, output),
                 create_graph=grad_output[0].requires_grad,
-            ))
-            _relevance = sum([self.reducer(inputs, gradients) for gradients in gradient_groups])
-            shift_numerator = _relevance.sum(dim=sumdim, keepdim=True) - grad_output[0].sum(dim=sumdim, keepdim=True)
-            is_nonzero_relevance = _relevance.ne(0)
-            shift_denominator = is_nonzero_relevance.sum(dim=sumdim, keepdim=True) * is_nonzero_relevance
-            shift = shift_numerator / (shift_denominator + .25)
-            _relevance -= shift
-            if relevance is None:
-                relevance = _relevance
-            else:
-                relevance += _relevance
-        # import pdb; pdb.set_trace()
-
-
-        # grad_outputs = self.gradient_mapper(grad_output[0], outputs)
-        # gradients = torch.autograd.grad(
-        #     outputs,
-        #     inputs,
-        #     grad_outputs=grad_outputs,
-        #     create_graph=grad_output[0].requires_grad,
-        #     retain_graph=True,
-        # )
-        # relevance = self.reducer(inputs, gradients)
-        print(relevance.sum())
+                retain_graph=True,
+            )[0]
+            gradients_neg = torch.autograd.grad(
+                (output,),
+                (input,),
+                grad_outputs=self.gradient_mapper(grad_output[0].clamp(max=0)*scale, output),
+                create_graph=grad_output[0].requires_grad,
+            )[0]
+            relevance_ss = self.reducer([input, input], [gradients_pos, gradients_neg])
+            relevance_ss_stack.append(relevance_ss)
+            if i % 2 == 1:
+                relevance_s = sum(relevance_ss_stack)
+                is_nonzero = relevance_s.ne(0)
+                shift_numer = relevance_s.sum(dim=dim, keepdim=True) - grad_output[0].sum(dim=dim, keepdim=True)
+                shift_denom = is_nonzero.sum(dim=dim, keepdim=True) * is_nonzero
+                shift = safe_divide(shift_numer, shift_denom)
+                relevance_s -= shift
+                relevance_s_all.append(relevance_s)
+                relevance_ss_stack = [] # clear
+        relevance = sum(relevance_s_all)
+        print("rap", relevance.sum(dim=dim))
         return tuple(relevance if original.shape == relevance.shape else None for original in grad_input)
-
-
-
-def _rap_gradient_mapper(out_grad, outputs):
-    # inputs: p, p, n, n
-    # outputs: pp, pn, np, nn
-    # grad_outputs: rpos/pp, rneg/pp, neg_scale*rpos/pn, neg_scale*rneg/pn,
-    #               rpos/np, rneg/np, neg_scale*rpos/nn, neg_scale*rneg/nn
-    grad_outputs = []
-    rel_pos = out_grad.clamp(min=0)
-    rel_neg = out_grad.clamp(max=0)
-    outputs = [output * out_grad.ne(0) for output in outputs]
-    for i, output in enumerate(outputs):
-        numerator = rel_pos if i % 2 == 0 else rel_neg
-        if i % 4 > 1:
-            numerator *= output / (outputs[i-2]+output+1e-6)
-        grad_outputs.append(numerator/(output+1e-6))
-    return grad_outputs
-
-
-def _rap_reducer(inputs, gradients):
-    # input x gradients
-    relevance = sum(input*gradient for input, gradient in zip(inputs, gradients))
-
-    # shift
-    shift = relevance.sum(dim=-1, keepdim=True) / (relevance.ne(0).sum(axis=-1, keepdim=True) + 1e-6)
-    relevance -= shift
-    return relevance
 
 
 class ZBeta(BasicHook):
@@ -194,8 +184,8 @@ class ZBeta(BasicHook):
         super().__init__(
             input_modifiers=[
                 lambda input: input,
-                lambda input: expand(input.min(dim=-1).values, input.shape, cut_batch_dim=True).to(input),
-                lambda input: expand(input.max(dim=-1).values, input.shape, cut_batch_dim=True).to(input),
+                lambda input: expand(input.amin(dim=tuple(range(1,input.dim()))), input.shape, cut_batch_dim=True).to(input),
+                lambda input: expand(input.amax(dim=tuple(range(1,input.dim()))), input.shape, cut_batch_dim=True).to(input),
             ],
             param_modifiers=[
                 NoMod(**mod_kwargs),

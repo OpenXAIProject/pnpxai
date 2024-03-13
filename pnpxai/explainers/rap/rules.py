@@ -340,6 +340,7 @@ class Linear(RelProp):
         else:
             Rp = backward(R_p, px, nx, pw, nw)
 
+        print(Rp.sum(dim=-1))
         return Rp
 
 
@@ -439,4 +440,5 @@ class Conv2d(RelProp):
             Rp = final_backward(R_p, pw, nw, self.X)
         else:
             Rp = backward(R_p, px, nx, pw, nw)
+        print(Rp.sum(dim=[1,2,3]))
         return Rp
