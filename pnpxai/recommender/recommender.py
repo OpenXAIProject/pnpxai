@@ -17,7 +17,7 @@ QUESTION_TO_EXPLAINERS = {
 }
 
 TASK_TO_EXPLAINERS = {
-    "image": {GuidedGradCam, Lime, KernelShap, IntegratedGradients, LRP}, #, RAP},
+    "image": {GuidedGradCam, Lime, KernelShap, IntegratedGradients, LRP, RAP},
     "tabular": {Lime, KernelShap, PDP, CEM, Anchors},
     "text": {IntegratedGradients, FullGrad, LRP, RAP, CEM},
 }

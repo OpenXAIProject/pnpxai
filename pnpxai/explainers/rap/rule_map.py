@@ -1,0 +1,32 @@
+import _operator
+from typing import Dict, Type
+import torch
+from torch import nn
+from torch.nn import functional as F
+from pnpxai.explainers.rap import rules
+
+SUPPORTED_OPS: Dict[str, Dict[str, Type[rules.RelProp]]] = {
+    'call_module': {
+        nn.ReLU: rules.ReLU,
+        nn.Dropout: rules.Dropout,
+        nn.MaxPool2d: rules.MaxPool2d,
+        nn.AdaptiveAvgPool2d: rules.AdaptiveAvgPool2d,
+        nn.AvgPool2d: rules.AvgPool2d,
+        nn.BatchNorm2d: rules.BatchNorm2d,
+        nn.Linear: rules.Linear,
+        nn.Conv2d: rules.Conv2d,
+        nn.Flatten: rules.Flatten,
+    },
+    'call_function': {
+        _operator.add: rules.Add,
+        torch.add: rules.Add,
+        torch.flatten: rules.Flatten,
+        torch.relu: rules.ReLU,
+        torch.cat: rules.Cat,
+        F.relu: rules.ReLU,
+    },
+    'call_method': {
+        'add': rules.Add,
+        'relu': rules.ReLU,
+    }
+}

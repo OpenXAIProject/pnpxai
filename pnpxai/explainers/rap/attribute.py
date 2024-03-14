@@ -61,7 +61,7 @@ class RAP(Explainer):
         - DataSource: RAP attributions.
         """
         datum = inputs.to(self.device)
-        outputs = self.model(datum)
+        outputs = self.method.run(datum)
         preds = self.compute_pred(outputs)
         relprop = self.method.relprop(preds, *args, **kwargs)
         return relprop
