@@ -222,7 +222,7 @@ class ExperimentManager:
 
     @property
     def is_batched(self):
-        return isinstance(self._data, DataLoader) and self._data.batch_size > 1
+        return isinstance(self._data, DataLoader) and self._data.batch_size is not None
 
     @property
     def _all_data_len(self):

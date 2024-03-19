@@ -5,7 +5,7 @@ from typing import Sequence, Union, Optional
 import torch.nn.functional as F
 
 
-__all__ = ['Clone', 'Cat', 'ReLU', 'Dropout', 'BatchNorm2d', 'Linear', 'MaxPool2d',
+__all__ = ['Cat', 'ReLU', 'Dropout', 'BatchNorm2d', 'Linear', 'MaxPool2d',
            'AdaptiveAvgPool2d', 'AvgPool2d', 'Conv2d', 'Sequential', 'safe_divide']
 
 _TensorOrTensors = Union[torch.Tensor, Sequence[torch.Tensor]]
@@ -118,7 +118,7 @@ class BatchNorm2d(RelProp):
 
 
 class Linear(RelProp):
-    def shift_rel(R, R_val):
+    def shift_rel(self, R, R_val):
         R_nonzero = torch.ne(R, 0).type(R.type())
         shift = safe_divide(R_val, torch.sum(
             R_nonzero, dim=-1, keepdim=True)) * torch.ne(R, 0).type(R.type())
@@ -293,7 +293,8 @@ class Conv2d(RelProp):
         Sp = safe_divide(R_p, Za)
 
         Rp = X * self.gradprop2(inputs, outputs, Sp, self.module.weight) - L * \
-            self.gradprop2(inputs, outputs, Sp, pw) - H * self.gradprop2(inputs, outputs, Sp, nw)
+            self.gradprop2(inputs, outputs, Sp, pw) - H * \
+            self.gradprop2(inputs, outputs, Sp, nw)
         return Rp
 
     def relprop(self, R_p, inputs: Optional[_TensorOrTensors] = None, outputs: Optional[_TensorOrTensors] = None):

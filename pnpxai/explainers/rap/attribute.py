@@ -60,10 +60,9 @@ class RAP(Explainer):
         Returns:
         - DataSource: RAP attributions.
         """
-        datum = inputs.to(self.device)
-        outputs = self.method.run(datum)
+        outputs = self.method.run(inputs)
         preds = self.compute_pred(outputs)
-        relprop = self.method.relprop(preds, *args, **kwargs)
+        relprop = self.method.relprop(preds)
         return relprop
 
     def format_outputs_for_visualization(
@@ -74,9 +73,13 @@ class RAP(Explainer):
         task: Task,
         kwargs: Optional[Dict[str, Any]] = None,
     ):
-        explanations = explanations.transpose(-1, -3)\
+        explanations = explanations.detach().cpu()\
+            .transpose(-1, -3)\
             .transpose(-2, -3)
-        return postprocess_attr(
-            attr=explanations,
-            sign="positive"
-        )
+
+        explanations = explanations.sum(-1)
+        max_val = explanations.abs()\
+            .amax(list(range(1, explanations.ndim)), keepdim=True)
+
+        explanations = explanations / max_val
+        return explanations.numpy()
