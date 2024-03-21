@@ -72,7 +72,10 @@ class AvgPool2d(RelPropSimple):
 
 
 class Add(RelPropSimple):
-    pass
+    def relprop(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors):
+        inputs = [F.relu(input) for input in inputs]
+        outputs = torch.add(*inputs)
+        return super().relprop(rel, inputs, outputs)
 
 
 class Flatten(RelProp):
