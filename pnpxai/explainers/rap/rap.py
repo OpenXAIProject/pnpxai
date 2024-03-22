@@ -1,104 +1,153 @@
-from typing import Dict, Type
+from collections import OrderedDict, defaultdict
+from typing import Dict, Sequence, Callable, Optional
 
 import torch
-from torch import nn, Tensor
+from torch import nn, Tensor, fx
 from pnpxai.explainers.rap import rules
-from pnpxai.explainers.utils.operation_graph import OperationGraph, OperationNode
-
-SUPPORTED_MODULES: Dict[Type[nn.Module], Type[rules.RelProp]] = {
-    nn.Sequential: rules.Sequential,
-    nn.ReLU: rules.ReLU,
-    nn.Dropout: rules.Dropout,
-    nn.MaxPool2d: rules.MaxPool2d,
-    nn.AdaptiveAvgPool2d: rules.AdaptiveAvgPool2d,
-    nn.AvgPool2d: rules.AvgPool2d,
-    nn.BatchNorm2d: rules.BatchNorm2d,
-    nn.Linear: rules.Linear,
-    nn.Conv2d: rules.Conv2d,
-    nn.Flatten: rules.Flatten,
-}
-SUPPORTED_FUNCTIONS: Dict[callable, Type[rules.RelProp]] = {
-    torch.add: rules.Add,
-    torch.flatten: rules.Flatten,
-}
-SUPPORTED_BUILTINS: Dict[str, Type[rules.RelProp]] = {
-    'add': rules.Add,
-    'flatten': rules.Flatten,
-}
+from pnpxai.explainers.rap.rule_map import SUPPORTED_OPS
 
 
 class RelativeAttributePropagation():
     def __init__(self, model: nn.Module):
-        self.model = model
-        self.graph = OperationGraph(model)
+        self._trace = fx.symbolic_trace(model)
+        self._trace.eval()
+        self._results: Dict[str, fx.Node] = {}
+        self._inputs: Dict[str, fx.Node] = defaultdict(tuple)
+        self._relprops: Dict[str, Dict[str, Tensor]] = defaultdict(dict)
 
-        self._assign_rules_and_hooks(self.graph.root)
+    def _load_args(self, args):
+        return fx.graph.map_arg(args, lambda node: self._results[node.name])
 
-    def _assign_rules_and_hooks(self, node: OperationNode):
-        if node.is_module:
-            layer = node.operator
-            if type(layer) in SUPPORTED_MODULES and not (hasattr(layer, 'rule')):
-                rule = SUPPORTED_MODULES[type(layer)]
-                layer.rule: rules.RelProp = rule(layer)
-                layer.register_forward_hook(layer.rule.forward_hook)
+    def _fetch_attr(self, target: str):
+        target_atoms = target.split('.')
+        attr_itr = self._trace
+        for i, atom in enumerate(target_atoms):
+            if not hasattr(attr_itr, atom):
+                raise RuntimeError(
+                    f"Node referenced non-existent target {'.'.join(target_atoms[:i])}")
+            attr_itr = getattr(attr_itr, atom)
+        return attr_itr
 
-        for next_node in node.next_nodes:
-            if not next_node.is_output:
-                self._assign_rules_and_hooks(next_node)
+    def _step_node(self, node: fx.Node, args_iter: Tensor):
+        result = None
+        if node.op == 'placeholder':
+            result = next(args_iter)
+        elif node.op == 'get_attr':
+            result = self._fetch_attr(node.target)
+        elif node.op == 'call_function':
+            result = node.target(
+                *self._load_args(node.args),
+                **self._load_args(node.kwargs)
+            )
+        elif node.op == 'call_method':
+            self_obj, *args = self._load_args(node.args)
+            kwargs = self._load_args(node.kwargs)
+            result = getattr(self_obj, node.target)(*args, **kwargs)
+        elif node.op == 'call_module':
+            result = self._fetch_attr(node.target)(
+                *self._load_args(node.args),
+                **self._load_args(node.kwargs)
+            )
+        elif node.op == 'output':
+            result = self._load_args(node.args)[0]
+        return result
 
-    def get_node_rule(self, node: OperationNode) -> rules.RelProp:
-        operator = node.operator
+    def run(self, *args):
+        """
+        Method to preserve all intermediary states
+        """
+        args_iter = iter(args)
+        graph = self._trace.graph
+
+        for node in graph.nodes:
+            node: fx.Node
+            result = self._step_node(node, args_iter)
+            self._results[node.name] = result
+
+        return self._results['output']
+
+    def _get_init_relprop_stack(self, rel: Sequence[Tensor]) -> OrderedDict[fx.Node, None]:
+        tail = self._trace.graph._root
+        while tail.op != 'output':
+            tail = tail.next
+
+        stack = OrderedDict({node: None for node in tail.all_input_nodes})
+        for node in stack:
+            self._relprops[node.name][tail.name] = rel
+        return stack
+
+    def _get_node_rule(self, node: fx.Node) -> Optional[rules.RelProp]:
         rule = None
-        if node.is_placeholder:
+        if node.op == 'placeholder':
             rule = rules.RelProp()
-        elif node.is_module and type(operator) in SUPPORTED_MODULES:
-            rule = operator.rule
-        elif node.is_function:
-            if type(operator) in SUPPORTED_FUNCTIONS:
-                rule = SUPPORTED_FUNCTIONS[type(operator)](operator)
-            else:
-                built_in_name = str(operator)[1:-1].split(' ')
-                if len(built_in_name) >= 3 and built_in_name[2] in SUPPORTED_BUILTINS:
-                    rule = SUPPORTED_BUILTINS[built_in_name[2]]()
-
-        if rule is None:
-            raise NotImplementedError(f'Unsupported node: {node}')
+        elif node.op == 'get_attr' or node.op == 'call_module':
+            target = self._fetch_attr(node.target)
+            rule = SUPPORTED_OPS[node.op][type(target)](target)
+        elif node.op == 'call_function' or node.op == 'call_method':
+            rule = SUPPORTED_OPS[node.op][node.target]()
 
         return rule
 
-    def relprop(self, r: Tensor) -> Tensor:
-        stack = {node: [r] for node in self.graph.tail.prev_nodes}
+    def _node_relprop(self, node: fx.Node):
+        args = self._load_args(node.all_input_nodes)
+        if not torch.is_tensor(args) and len(args) == 1:
+            args = args[0]
 
-        while len(stack) > 0:
-            node, rs = stack.popitem()
+        outputs = self._results[node.name]
 
-            if len(rs) < len(node.users):
-                preserved_node, preserved_rs = node, rs
-                node, rs = stack.popitem()
-                stack[preserved_node] = preserved_rs
+        rel = [
+            self._relprops[node.name][user.name]
+            for user in node.users.keys()
+        ]
 
-            args_list = [
-                prev_node.operator.rule.Y
-                for prev_node in node.prev_nodes
-                if prev_node.is_module
-            ]
-            args = args_list[0] if len(args_list) == 1 else args_list
-            cur_r = sum(rs)
+        if len(node.users) > 1:
+            rel = sum(rel)
+        elif len(rel) == 1:
+            rel = rel[0]
 
-            rule = self.get_node_rule(node)
-            r = rule.relprop(cur_r, args)
+        rule = None
+        if node.op == 'placeholder':
+            rule = rules.RelProp()
+        elif node.op == 'get_attr' or node.op == 'call_module':
+            target = self._fetch_attr(node.target)
+            rule = SUPPORTED_OPS[node.op][type(target)](target)
+        elif node.op == 'call_function' or node.op == 'call_method':
+            rule = SUPPORTED_OPS[node.op][node.target]()
 
-            if len(node.prev_nodes) == 0:
+        if rule is None:
+            raise NotImplementedError(
+                f"RelProp rule for node {node.name} is not implemented"
+            )
+
+        rel = rule.relprop(rel, args, outputs)
+
+        return rel
+
+    def _node_has_all_users_relprops(self, node: fx.Node) -> bool:
+        return all([
+            self._relprops.get(node.name, {}).get(user.name, None) is not None
+            for user in node.users.keys()
+        ])
+
+    def relprop(self, r: Sequence[Tensor]) -> Tensor:
+        queue = self._get_init_relprop_stack(r)
+
+        while len(queue) > 0:
+            node = queue.popitem(last=False)[0]
+            if len(node.users) == 0:
                 continue
 
-            if torch.is_tensor(r):
-                r = [r]
+            if not self._node_has_all_users_relprops(node):
+                queue[node] = None
+                continue
 
-            if len(r) != len(node.prev_nodes):
-                print(node, len(r), len(node.prev_nodes))
-                assert len(r) == len(node.prev_nodes)
+            r = self._node_relprop(node)
 
-            for prev_node, prev_r in zip(node.prev_nodes, r):
-                stack.setdefault(prev_node, []).append(prev_r)
+            for i, arg in enumerate(node.all_input_nodes):
+                self._relprops[arg.name][node.name] = r if torch.is_tensor(
+                    r) else r[i]
+                queue[arg] = None
+
+            del self._relprops[node.name]
 
         return r

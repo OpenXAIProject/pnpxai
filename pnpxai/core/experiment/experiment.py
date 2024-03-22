@@ -260,7 +260,7 @@ class Experiment(Observable):
                 if not self.manager.is_batched:
                     formatted = [formatted]
                 formatted_visualizations = [
-                    px.imshow(explanation, color_continuous_scale="Reds") for explanation in formatted
+                    px.imshow(explanation, color_continuous_scale="RdBu_r", color_continuous_midpoint=0.0) for explanation in formatted
                 ]
                 if not self.manager.is_batched:
                     formatted_visualizations = formatted_visualizations[0]
