@@ -2,7 +2,7 @@
 # .rules.py
 #----------------------------
 
-from zennit.rules import BasicHook, NoMod, ClampMod, zero_bias, ParamMod
+from zennit.rules import BasicHook, NoMod, ClampMod, zero_bias, ParamMod, Norm
 from zennit.core import Stabilizer, expand
 
 
@@ -90,7 +90,6 @@ class AbsoluteInfluenceNormalization(BasicHook):
         relevance_sum = relevance.sum(dim=-1, keepdim=True)
         absolute_influence = relevance.abs() / relevance.abs().sum(dim=-1, keepdim=True)
         relevance_normalized = relevance_sum * absolute_influence
-        print("relevance_out", grad_output[0].sum(dim=dim))
         print("ain", relevance.sum(dim=dim))
         return tuple(relevance_normalized if original.shape == relevance_normalized.shape else None for original in grad_input)
         
@@ -104,7 +103,7 @@ class AbsoluteInfluenceNormalization(BasicHook):
 def safe_divide(a, b):
     return a / (b + b.eq(0).type(b.type()) * 1e-9) * b.ne(0).type(b.type())
 
-class RelativeAttributingPropagation(BasicHook):
+class RAPLinear(BasicHook):
     def __init__(self, stabilizer=1e-6, zero_params=None):
         super().__init__(
             input_modifiers=[
@@ -171,6 +170,74 @@ class RelativeAttributingPropagation(BasicHook):
         relevance = sum(relevance_s_all)
         print("rap", relevance.sum(dim=dim))
         return tuple(relevance if original.shape == relevance.shape else None for original in grad_input)
+
+
+class RAPSum(BasicHook):
+    def __init__(self, stabilizer=1e-6):
+        stabilizer_fn = Stabilizer.ensure(stabilizer)
+        super().__init__(
+            input_modifiers=[lambda input: input.clamp(min=0)],
+            param_modifiers=[NoMod(param_keys=[])],
+            output_modifiers=[lambda output: output],
+            gradient_mapper=(lambda out_grad, outputs: out_grad / stabilizer_fn(outputs[0])),
+            reducer=(lambda inputs, gradients: inputs[0] * gradients[0]),
+        )
+    
+    def backward(self, module, grad_input, grad_output):
+        return super().backward(module, grad_input, grad_output)
+
+
+class RAPBatchNorm2d(BasicHook):
+    def __init__(self, stabilizer=1e-6, zero_params=None):
+        stabilizer_fn = Stabilizer.ensure(stabilizer)
+        super.__init__(
+            input_modifiers=[
+                lambda input: input,
+                torch.zeros_like, # bias
+            ],
+            param_modifiers=[
+                NoMod(zero_params=zero_bias(zero_params=zero_params)),
+                NoMod(zero_params=zero_params),
+            ],
+            output_modifers=[
+                lambda output: output,
+                lambda output: output,
+            ],
+            # gradient_mapper=(lambda out_grad, outputs: out_grad/stabilizer_fn(outputs[]))
+        )
+
+    def backward(self, module, grad_input, grad_output):
+        '''Backward hook to compute LRP based on the class attributes.'''
+        original_input = self.stored_tensors['input'][0].clone()
+        inputs = []
+        outputs = []
+        for in_mod, param_mod, out_mod in zip(self.input_modifiers, self.param_modifiers, self.output_modifiers):
+            input = in_mod(original_input).requires_grad_()
+            with ParamMod.ensure(param_mod)(module) as modified, torch.autograd.enable_grad():
+                output = modified.forward(input)
+                output = out_mod(output)
+            inputs.append(input)
+            outputs.append(output)
+        # if module.__class__.__name__ == "Sum":
+        #     import pdb; pdb.set_trace()
+        gradients_pos = torch.autograd.grad(
+            outputs,
+            inputs,
+            grad_outputs=self.gradient_mapper(grad_output[0].clamp(min=0), outputs),
+            create_graph=grad_output[0].requires_grad,
+            retain_graph=True,
+        )
+        gradients_neg = torch.autograd.grad(
+            outputs,
+            inputs,
+            grad_outputs=self.gradient_mapper(grad_output[0].clamp(max=0), outputs),
+            create_graph=grad_output[0].requires_grad
+        )[0]
+        # import pdb; pdb.set_trace()
+        relevance = self.reducer(inputs, [gradients_pos[0]*gradients_neg])
+        print(module.__class__.__name__, inputs[0].shape, relevance.shape)
+        return tuple(relevance if original.shape == relevance.shape else None for original in grad_input)
+
 
 
 class ZBeta(BasicHook):
@@ -261,11 +328,11 @@ class RAPZennit(Explainer):
     
     def _find_first_prop_layer_name(self):
         ma = ModelArchitecture(self.model)
-        return ma.list_nodes()[-2].name
+        return ma.list_nodes()[-2].target
     
     def _find_last_prop_layer_name(self):
         ma = ModelArchitecture(self.model)
-        return ma.list_nodes()[1].name
+        return ma.list_nodes()[1].target
 
     def attribute(
         self,
@@ -285,12 +352,15 @@ class RAPZennit(Explainer):
             n_classes = self.model(inputs).shape[-1]
         
         layer_map = [
-            (Linear, RelativeAttributingPropagation()),
-        ] + layer_map_base()
+            (Linear, RAPLinear()),
+            (Sum, RAPSum(stabilizer=1e-6)),
+            (nn.BatchNorm2d, RAPBatchNorm2d(stabilizer=1e-6)),
+        ] + layer_map_base(stabilizer=.25) + []
         name_map = [
             ((self._find_first_prop_layer_name(),), AbsoluteInfluenceNormalization()),
             ((self._find_last_prop_layer_name(),), ZBeta()),
         ]
+        # import pdb; pdb.set_trace()
         canonizers = [SequentialMergeBatchNorm()]
         composite = NameLayerMapComposite(name_map=name_map, layer_map=layer_map, canonizers=canonizers)
         with Gradient(model=model, composite=composite) as attributor:
