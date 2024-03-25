@@ -17,5 +17,5 @@ from pnpxai.explainers.tcav import TCAV
 from typing import List, Type
 
 AVAILABLE_EXPLAINERS: List[Type[Explainer]] = [
-    Lime, KernelShap, GuidedGradCam, GradCam, IntegratedGradients, LRP, # RAP,
+    Lime, KernelShap, GuidedGradCam, GradCam, IntegratedGradients, LRP, RAP,
 ]

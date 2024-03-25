@@ -1,8 +1,8 @@
 from typing import Any, Callable, Optional, Sequence, Union, List
 import time
 import warnings
-import traceback
 
+import torch
 from torch import Tensor
 import numpy as np
 from plotly import express as px
@@ -10,7 +10,7 @@ from plotly.graph_objects import Figure
 
 from pnpxai.core.experiment.experiment_metrics_defaults import EVALUATION_METRIC_REVERSE_SORT, EVALUATION_METRIC_SORT_PRIORITY
 from pnpxai.core.experiment.observable import ExperimentObservableEvent
-from pnpxai.utils import class_to_string, Observable
+from pnpxai.utils import class_to_string, Observable, to_device
 from pnpxai.messages import get_message
 from pnpxai.core.experiment.manager import ExperimentManager
 from pnpxai.explainers import Explainer, ExplainerWArgs
@@ -49,7 +49,6 @@ class Experiment(Observable):
         has_explanations (bool): True if the experiment has explanations, False otherwise.
     """
 
-
     def __init__(
         self,
         model: Model,
@@ -61,13 +60,17 @@ class Experiment(Observable):
         target_extractor: Optional[Callable[[Any], Any]] = None,
         input_visualizer: Optional[Callable[[Any], Any]] = None,
         target_visualizer: Optional[Callable[[Any], Any]] = None,
+        cache_device: Optional[Union[torch.device, str]] = None,
     ):
         super(Experiment, self).__init__()
         self.model = model
+        self.model_device = next(self.model.parameters()).device
+
         self.manager = ExperimentManager(
             data=data,
             explainers=explainers,
-            metrics=metrics or []
+            metrics=metrics or [],
+            cache_device=cache_device,
         )
 
         self.input_extractor = input_extractor \
@@ -101,6 +104,9 @@ class Experiment(Observable):
 
     def get_current_metrics(self) -> List[EvaluationMetric]:
         return self.manager.get_metrics()[0]
+
+    def to_device(self, x):
+        return to_device(x, self.model_device)
 
     def run(
         self,
@@ -164,10 +170,17 @@ class Experiment(Observable):
                     self.manager, message, explainer, metric))
 
         data, data_ids = self.manager.get_data_to_predict()
-        outputs = [self.model(self.input_extractor(datum)) for datum in data]
+        outputs = self._predict(data)
         self.manager.save_outputs(outputs, data, data_ids)
 
         return self
+
+    def _predict(self, data: DataSource):
+        outputs = [
+            self.model(self.to_device(self.input_extractor(datum)))
+            for datum in data
+        ]
+        return outputs
 
     def _explain(self, data: DataSource, explainer: ExplainerWArgs):
         explanations = [None] * len(data)
@@ -175,6 +188,7 @@ class Experiment(Observable):
 
         for i, datum in enumerate(data):
             try:
+                datum = self.to_device(datum)
                 inputs = self.input_extractor(datum)
                 targets = self.target_extractor(datum)
                 explanations[i] = explainer.attribute(
@@ -189,7 +203,7 @@ class Experiment(Observable):
                 warnings.warn(
                     f"\n[Experiment] {get_message('experiment.errors.explanation', explainer=explainer_name, error=e)}")
                 self._errors.append(e)
-        
+
         return explanations
 
     def _evaluate(self, data: DataSource, explanations: DataSource, explainer: ExplainerWArgs, metric: EvaluationMetric):
@@ -203,7 +217,8 @@ class Experiment(Observable):
         for i, (datum, explanation) in enumerate(zip(data, explanations)):
             if explanation is None:
                 continue
-
+            datum = self.to_device(datum)
+            explanation = self.to_device(explanation)
             inputs = self.input_extractor(datum)
             targets = self.target_extractor(datum)
             try:
@@ -220,7 +235,8 @@ class Experiment(Observable):
                     f"\n[Experiment] {get_message('experiment.errors.evaluation', explainer=explainer_name, metric=metric_name, error=e)}")
                 self._errors.append(e)
         elapsed_time = time.time() - started_at
-        print(f"[Experiment] {get_message('elapsed', task=metric_name, elapsed=elapsed_time)}")
+        print(
+            f"[Experiment] {get_message('elapsed', task=metric_name, elapsed=elapsed_time)}")
 
         return evaluations
 
@@ -260,7 +276,7 @@ class Experiment(Observable):
                 if not self.manager.is_batched:
                     formatted = [formatted]
                 formatted_visualizations = [
-                    px.imshow(explanation, color_continuous_scale="Reds") for explanation in formatted
+                    px.imshow(explanation, color_continuous_scale="RdBu_r", color_continuous_midpoint=0.0) for explanation in formatted
                 ]
                 if not self.manager.is_batched:
                     formatted_visualizations = formatted_visualizations[0]
