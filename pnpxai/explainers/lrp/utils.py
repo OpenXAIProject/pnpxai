@@ -1,3 +1,7 @@
+from torch.fx import Tracer
+from torch.nn.modules import Module
+from torch import nn
+
 # a function letting the model work on zennit, listing all args up
 def list_args_for_stack(*args):
     assert all(arg.shape[1:] == args[0].shape[1:] for arg in args), "Cannot convert"
@@ -14,3 +18,14 @@ def list_args_for_stack(*args):
             arg = arg.repeat(max_d, *[1 for _ in range(dim-1)])
         ls.append(arg)
     return ls
+
+class LRPTracer(Tracer):
+    # stop recursion when meeting timm's Attention
+    def is_leaf_module(self, m: Module, module_qualified_name: str) -> bool:
+        return (
+            (
+                m.__module__.startswith("torch.nn")
+                or m.__module__.startswith("torch.ao.nn")
+                or (m.__module__ == "timm.models.vision_transformer" and m.__class__.__name__ == "Attention")
+            ) and not isinstance(m, nn.Sequential)
+        )

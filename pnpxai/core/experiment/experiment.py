@@ -191,6 +191,7 @@ class Experiment(Observable):
                 datum = self.to_device(datum)
                 inputs = self.input_extractor(datum)
                 targets = self.target_extractor(datum)
+                print(inputs.shape, targets.shape)
                 explanations[i] = explainer.attribute(
                     inputs=inputs,
                     targets=targets,
