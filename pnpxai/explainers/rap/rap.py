@@ -1,10 +1,12 @@
 from collections import OrderedDict, defaultdict
 from typing import Dict, Sequence, Callable, Optional
 
+import warnings
 import torch
 from torch import nn, Tensor, fx
 from pnpxai.explainers.rap import rules
 from pnpxai.explainers.rap.rule_map import SUPPORTED_OPS
+from pnpxai.messages import get_message
 
 
 class RelativeAttributePropagation():
@@ -63,7 +65,6 @@ class RelativeAttributePropagation():
             node: fx.Node
             result = self._step_node(node, args_iter)
             self._results[node.name] = result
-
         return self._results['output']
 
     def _get_init_relprop_stack(self, rel: Sequence[Tensor]) -> OrderedDict[fx.Node, None]:
@@ -119,7 +120,9 @@ class RelativeAttributePropagation():
                 f"RelProp rule for node {node.name} is not implemented"
             )
 
-        rel = rule.relprop(rel, args, outputs)
+        # TODO: Suggest better solution for arguments without gradient function
+        if all([arg.requires_grad for arg in self._load_args(node.all_input_nodes)]):
+            rel = rule.relprop(rel, args, outputs, node.args, node.kwargs)
 
         return rel
 
@@ -141,7 +144,12 @@ class RelativeAttributePropagation():
                 queue[node] = None
                 continue
 
-            r = self._node_relprop(node)
+            try:
+                r = self._node_relprop(node)
+            except Exception as e:
+                warnings.warn(get_message(
+                    'explainer.rap.errors.node', node=node.name))
+                raise e
 
             for i, arg in enumerate(node.all_input_nodes):
                 self._relprops[arg.name][node.name] = r if torch.is_tensor(
