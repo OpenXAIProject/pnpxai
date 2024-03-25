@@ -1,5 +1,6 @@
-from typing import Any, Optional
-from typing import Any
+from typing import Any, Optional, Union
+import torch
+from pnpxai.utils import to_device
 
 
 class ExperimentCache:
@@ -7,8 +8,16 @@ class ExperimentCache:
     __EVALUATION_KEY = "evaluation"
     __DATA_KEY = "data"
 
-    def __init__(self):
+    def __init__(self, cache_device: Optional[Union[torch.device, str]] = None):
+        cpu_device = torch.device("cpu")
+        if isinstance(cache_device, str):
+            cache_device = torch.device(cache_device)
+        self._device = cache_device if cache_device is not None else cpu_device
+
         self._global_cache = {}
+
+    def to_device(self, x):
+        return to_device(x, self._device)
 
     def get_output(self, data_id: int) -> Optional[Any]:
         key = self._get_key(data_id)
@@ -24,15 +33,15 @@ class ExperimentCache:
 
     def set_output(self, data_id: int, output: Any):
         key = self._get_key(data_id)
-        self._global_cache[key] = output
+        self._global_cache[key] = self.to_device(output)
 
     def set_explanation(self, data_id: int, explainer_id: int, explanation: Any):
         key = self._get_key(data_id, explainer_id)
-        self._global_cache[key] = explanation
+        self._global_cache[key] = self.to_device(explanation)
 
     def set_evaluation(self, data_id: int, explainer_id: int, metric_id: int, evaluation: Any):
         key = self._get_key(data_id, explainer_id, metric_id)
-        self._global_cache[key] = evaluation
+        self._global_cache[key] = self.to_device(evaluation)
 
     def _get_key(self, data_id: int, explainer_id: Optional[int] = None, metric_id: Optional[int] = None):
         key = f"{self.__DATA_KEY}_{data_id}"

@@ -15,7 +15,8 @@ class ExperimentManager:
         self,
         data: DataSource,
         explainers: Sequence[Union[ExplainerWArgs, Explainer]],
-        metrics: Sequence[EvaluationMetric]
+        metrics: Sequence[EvaluationMetric],
+        cache_device: Optional[Union[torch.device, str]] = None,
     ):
         self._data = data
         self._metrics = metrics
@@ -23,7 +24,7 @@ class ExperimentManager:
             if explainers is not None \
             else explainers
 
-        self._cache = ExperimentCache()
+        self._cache = ExperimentCache(cache_device)
         self.set_config()
 
     def preprocess_explainers(self, explainers: Sequence[Union[ExplainerWArgs, Explainer]]) -> List[ExplainerWArgs]:
