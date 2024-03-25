@@ -31,12 +31,12 @@ class ProjectConfig:
         task: Optional[Task] = None,
         explainers: Optional[Sequence[Union[
             ExplainerWArgs, Explainer, Type[Explainer], str
-        ]]] = [],
-        metrics: Optional[Sequence[Union[Type[EvaluationMetric], str]]] = [],
+        ]]] = None,
+        metrics: Optional[Sequence[Union[Type[EvaluationMetric], str]]] = None,
     ):
         self._task = task
-        self._explainers = explainers
-        self._metrics = metrics
+        self._explainers = [] if explainers is None else explainers
+        self._metrics = [] if metrics is None else metrics
 
     @classmethod
     def _parse_config(cls, config: Optional[Union[dict, str, TextIOWrapper]] = None):

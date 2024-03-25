@@ -56,6 +56,7 @@ class Observable:
         for callback in self._callbacks:
             callback(event)
 
+
 @contextmanager
 def open_file_or_name(file: Union[TextIOWrapper, str], *args, **kwargs):
     file_wrapper = file
@@ -66,3 +67,13 @@ def open_file_or_name(file: Union[TextIOWrapper, str], *args, **kwargs):
 
     if isinstance(file, str):
         file_wrapper.close()
+
+
+def to_device(data, device: torch.device):
+    if torch.is_tensor(data):
+        return data.to(device)
+    if isinstance(data, (list, tuple, set)):
+        return type(data)((to_device(datum, device) for datum in data))
+    if isinstance(data, dict):
+        return {key: to_device(value, device) for key, value in data.items()}
+    return data
