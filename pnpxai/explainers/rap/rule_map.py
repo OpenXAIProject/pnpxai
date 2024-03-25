@@ -21,7 +21,7 @@ SUPPORTED_OPS: Dict[str, Dict[str, Type[rules.RelProp]]] = {
     'call_function': {
         _operator.add: rules.Add,
         _operator.sub: rules.Sub,
-        _operator.mul: rules.RelPropSimple,
+        _operator.mul: rules.Mul,
         _operator.getitem: rules.GetItem,
         torch.add: rules.Add,
         torch.flatten: rules.Flatten,

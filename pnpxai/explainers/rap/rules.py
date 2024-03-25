@@ -78,13 +78,27 @@ class AvgPool2d(RelPropSimple):
 
 class Add(RelPropSimple):
     def relprop(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None):
+        if torch.is_tensor(inputs):
+            return rel
         inputs = [F.relu(input) for input in inputs]
         outputs = torch.add(*inputs)
-        return super().relprop(rel, inputs, outputs)
+        return super().relprop(rel, inputs, outputs, args, kwargs)
+
+
+class Mul(RelPropSimple):
+    def relprop(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None):
+        if torch.is_tensor(inputs):
+            return rel
+
+        return super().relprop(rel, inputs, outputs, args, kwargs)
 
 
 class Sub(RelPropSimple):
-    pass
+    def relprop(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None):
+        if torch.is_tensor(inputs):
+            return rel
+
+        return super().relprop(rel, inputs, outputs, args, kwargs)
 
 
 class Flatten(RelProp):
@@ -93,7 +107,7 @@ class Flatten(RelProp):
 
 
 class Cat(RelPropSimple):
-    def backward(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors):
+    def backward(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None):
         Sp = safe_divide(rel, outputs)
         Cp = self.gradprop(outputs, inputs, Sp)
         rel = [x * cp for x, cp in zip(inputs, Cp)]
@@ -322,9 +336,10 @@ class Conv2d(RelProp):
 
 class GetItem(RelProp):
     def relprop(self, rel: Tensor, inputs: Tensor, outputs: Tensor, args=None, kwargs=None):
-        rel_fill = torch.zeros_like(inputs)
-        rel_fill[args] = rel
-        return rel
+        rel_fill = torch.zeros_like(args[0])
+        rel_fill[args[1]] = rel
+        return rel_fill
+
 
 class Unsqueeze(RelProp):
     def relprop(self, rel: Tensor, inputs: Tensor, outputs: Tensor, args=None, kwargs=None) -> _TensorOrTensors:
@@ -332,6 +347,6 @@ class Unsqueeze(RelProp):
             del kwargs['input']
         else:
             args = args[1:]
-        
+
         rel = torch.squeeze(rel, *args, **kwargs)
         return rel
