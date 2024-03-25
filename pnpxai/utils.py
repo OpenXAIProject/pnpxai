@@ -77,3 +77,11 @@ def to_device(data, device: torch.device):
     if isinstance(data, dict):
         return {key: to_device(value, device) for key, value in data.items()}
     return data
+
+
+def flatten(data):
+    if isinstance(data, dict):
+        data = list(data.values())
+    if isinstance(data, (tuple, list)):
+        return sum([flatten(elem) for elem in data], [])
+    return [data]

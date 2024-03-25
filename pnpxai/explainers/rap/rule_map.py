@@ -12,6 +12,7 @@ SUPPORTED_OPS: Dict[str, Dict[str, Type[rules.RelProp]]] = {
         nn.MaxPool2d: rules.MaxPool2d,
         nn.AdaptiveAvgPool2d: rules.AdaptiveAvgPool2d,
         nn.AvgPool2d: rules.AvgPool2d,
+        nn.AvgPool1d: rules.AvgPool1d,
         nn.BatchNorm2d: rules.BatchNorm2d,
         nn.Linear: rules.Linear,
         nn.Conv2d: rules.Conv2d,
@@ -19,14 +20,24 @@ SUPPORTED_OPS: Dict[str, Dict[str, Type[rules.RelProp]]] = {
     },
     'call_function': {
         _operator.add: rules.Add,
+        _operator.sub: rules.Sub,
+        _operator.mul: rules.Mul,
+        _operator.getitem: rules.GetItem,
         torch.add: rules.Add,
         torch.flatten: rules.Flatten,
         torch.relu: rules.ReLU,
         torch.cat: rules.Cat,
+        torch.transpose: rules.Flatten,
+        torch.sub: rules.Sub,
+        torch.unsqueeze: rules.Unsqueeze,
+        F.avg_pool2d: rules.AvgPool2d,
+        F.max_pool2d: rules.MaxPool2d,
         F.relu: rules.ReLU,
     },
     'call_method': {
         'add': rules.Add,
+        'sub': rules.Sub,
         'relu': rules.ReLU,
+        'transpose': rules.Flatten,
     }
 }

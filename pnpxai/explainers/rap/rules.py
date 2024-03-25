@@ -1,3 +1,4 @@
+import _operator
 import torch
 import torch.nn as nn
 from torch import nn, Tensor
@@ -23,7 +24,7 @@ class RelProp:
         C = torch.autograd.grad(Z, X, S, retain_graph=True)
         return C
 
-    def relprop(self, rel: _TensorOrTensors, inputs: Optional[_TensorOrTensors], outputs: Optional[_TensorOrTensors]) -> _TensorOrTensors:
+    def relprop(self, rel: _TensorOrTensors, inputs: Optional[_TensorOrTensors], outputs: Optional[_TensorOrTensors], args=None, kwargs=None) -> _TensorOrTensors:
         return rel
 
 
@@ -41,7 +42,7 @@ class RelPropSimple(RelProp):
 
         return rel
 
-    def relprop(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors):
+    def relprop(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None):
         if torch.is_tensor(rel):
             rel = [rel]
         rel = [self.backward(datum, inputs, outputs) for datum in rel]
@@ -67,24 +68,46 @@ class AdaptiveAvgPool2d(RelPropSimple):
     pass
 
 
+class AvgPool1d(RelPropSimple):
+    pass
+
+
 class AvgPool2d(RelPropSimple):
     pass
 
 
 class Add(RelPropSimple):
-    def relprop(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors):
+    def relprop(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None):
+        if torch.is_tensor(inputs):
+            return rel
         inputs = [F.relu(input) for input in inputs]
         outputs = torch.add(*inputs)
-        return super().relprop(rel, inputs, outputs)
+        return super().relprop(rel, inputs, outputs, args, kwargs)
+
+
+class Mul(RelPropSimple):
+    def relprop(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None):
+        if torch.is_tensor(inputs):
+            return rel
+
+        return super().relprop(rel, inputs, outputs, args, kwargs)
+
+
+class Sub(RelPropSimple):
+    def relprop(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None):
+        if torch.is_tensor(inputs):
+            return rel
+
+        return super().relprop(rel, inputs, outputs, args, kwargs)
 
 
 class Flatten(RelProp):
-    def relprop(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors):
+    def relprop(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None):
         return rel.reshape(inputs.shape)
 
 
-class Cat(RelProp):
-    def backward(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors):
+class Cat(RelPropSimple):
+    def backward(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None):
         Sp = safe_divide(rel, outputs)
         Cp = self.gradprop(outputs, inputs, Sp)
         rel = [x * cp for x, cp in zip(inputs, Cp)]
@@ -205,16 +228,14 @@ class Linear(RelProp):
             (Rp + Rn).sum(dim=-1, keepdim=True)
         return Rp_tmp3 + Rn_tmp3
 
-    def relprop(self, R_p, inputs: Optional[_TensorOrTensors] = None, outputs: Optional[_TensorOrTensors] = None):
+    def relprop(self, R_p, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None):
         pw = torch.clamp(self.module.weight, min=0)
         nw = torch.clamp(self.module.weight, max=0)
         X = inputs
         px = torch.clamp(X, min=0)
         nx = torch.clamp(X, max=0)
-        if torch.is_tensor(R_p) == True and R_p.max() == 1:  # first propagation
-            pd = R_p
-
-            Rp_tmp = self.first_prop(pd, px, nx, pw, nw)
+        if torch.is_tensor(R_p) and R_p.max() == 1:  # first propagation
+            Rp_tmp = self.first_prop(R_p, px, nx, pw, nw)
             A = self.redistribute(Rp_tmp)
 
             return A
@@ -300,7 +321,7 @@ class Conv2d(RelProp):
             self.gradprop2(inputs, outputs, Sp, nw)
         return Rp
 
-    def relprop(self, R_p, inputs: Optional[_TensorOrTensors] = None, outputs: Optional[_TensorOrTensors] = None):
+    def relprop(self, R_p, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None):
         pw = torch.clamp(self.module.weight, min=0)
         nw = torch.clamp(self.module.weight, max=0)
         px = torch.clamp(inputs, min=0)
@@ -311,3 +332,21 @@ class Conv2d(RelProp):
         else:
             Rp = self.backward(R_p, px, nx, pw, nw)
         return Rp
+
+
+class GetItem(RelProp):
+    def relprop(self, rel: Tensor, inputs: Tensor, outputs: Tensor, args=None, kwargs=None):
+        rel_fill = torch.zeros_like(args[0])
+        rel_fill[args[1]] = rel
+        return rel_fill
+
+
+class Unsqueeze(RelProp):
+    def relprop(self, rel: Tensor, inputs: Tensor, outputs: Tensor, args=None, kwargs=None) -> _TensorOrTensors:
+        if 'input' in kwargs:
+            del kwargs['input']
+        else:
+            args = args[1:]
+
+        rel = torch.squeeze(rel, *args, **kwargs)
+        return rel
