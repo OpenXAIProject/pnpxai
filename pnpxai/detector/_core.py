@@ -3,7 +3,7 @@ from dataclasses import dataclass, asdict
 from typing import Literal, List, Optional, Callable, Union
 
 import torch
-from torch.fx import Node, symbolic_trace
+from torch.fx import Node, symbolic_trace, Tracer, GraphModule
 
 SUPPORTED_FUNCTION_MODULES = {
     "torch": torch,
@@ -247,21 +247,24 @@ class ModelArchitecture:
 
     Attributes:
     - model: The model for which the architecture is defined.
-    - traced_model: The traced version of the model.
-    - _replacing: A flag indicating whether a node replacement is in progress.
+    - tracer: A tracer to trace the model. By default, the  model is traced by `torch.fx.symbolic_trace`.
     """
 
-    def __init__(self, model):
-        """
-        Initializes a ModelArchitecture object.
-
-        Args:
-        - model: The model for which the architecture is defined.
-        """
+    def __init__(self, model, tracer: Tracer|None=None):
         self.model = model
-        self.traced_model = symbolic_trace(model)
+        self.tracer = tracer
 
+        self._traced_model = self._trace(model)
         self._replacing = False
+    
+    def _trace(self, model):
+        if self.tracer is None:
+            return symbolic_trace(model)
+        graph = self.tracer.trace(model)
+        name = (
+            model.__class__.__name__ if isinstance(model, torch.nn.Module) else model.__name__
+        )
+        return GraphModule(self.tracer.root, graph, name)
 
     def list_nodes(self) -> List[NodeInfo]:
         """
@@ -270,7 +273,7 @@ class ModelArchitecture:
         Returns:
         - List[NodeInfo]: A list of NodeInfo objects representing the nodes in the model.
         """
-        return [NodeInfo.from_node(n) for n in self.traced_model.graph.nodes]
+        return [NodeInfo.from_node(n) for n in self._traced_model.graph.nodes]
 
     def get_node(self, name: str) -> NodeInfo:
         """
@@ -282,7 +285,7 @@ class ModelArchitecture:
         Returns:
         - NodeInfo: The NodeInfo object corresponding to the specified node name.
         """
-        for n in self.traced_model.graph.nodes:
+        for n in self._traced_model.graph.nodes:
             if n.name == name:
                 return NodeInfo.from_node(n)
         return  # [TODO] Error for no result?
@@ -306,7 +309,7 @@ class ModelArchitecture:
         """
         if root is None:
             # Take the first node
-            root = NodeInfo.from_node(next(iter(self.traced_model.graph.nodes)))
+            root = NodeInfo.from_node(next(iter(self._traced_model.graph.nodes)))
 
         node = root
         nodes = []
@@ -328,8 +331,8 @@ class ModelArchitecture:
         return True
 
     def _ensure_graph(self) -> None:
-        self.traced_model.graph.lint()
-        self.traced_model.recompile()
+        self._traced_model.graph.lint()
+        self._traced_model.recompile()
 
     def replace_node(self, node: NodeInfo, new_node: NodeInfo) -> NodeInfo:
         """
@@ -348,7 +351,7 @@ class ModelArchitecture:
             if new_node._mode == "from_module":
                 new_node.name = f"{REPLACE_PREFIX}{node.name}"
             inserted = self.insert_node(new_node, base_node=node)
-            self.traced_model.graph.erase_node(node._node)
+            self._traced_model.graph.erase_node(node._node)
             self._ensure_graph()
         finally:
             self._replacing = False
@@ -367,7 +370,7 @@ class ModelArchitecture:
         - NodeInfo: The inserted node.
         """
         self._validate_new_node(new_node)
-        inserting = self.traced_model.graph.inserting_before if before else self.traced_model.graph.inserting_after
+        inserting = self._traced_model.graph.inserting_before if before else self._traced_model.graph.inserting_after
         if self._replacing:
             _inserted_args = base_node._node.args
             _inserted_kwargs = base_node._node.kwargs
@@ -386,15 +389,15 @@ class ModelArchitecture:
         # insert
         with inserting(base_node._node):
             if new_node._mode == "from_module":
-                self.traced_model.add_submodule(
+                self._traced_model.add_submodule(
                     new_node.name, new_node.operator)
-                _inserted = self.traced_model.graph.call_module(
+                _inserted = self._traced_model.graph.call_module(
                     new_node.name,
                     _inserted_args,
                     _inserted_kwargs,
                 )
             elif new_node._mode == "from_function":
-                _inserted = self.traced_model.graph.call_function(
+                _inserted = self._traced_model.graph.call_function(
                     new_node.operator,
                     _inserted_args,
                     _inserted_kwargs,

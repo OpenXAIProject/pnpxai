@@ -6,8 +6,7 @@ from torch import Tensor
 from torch.overrides import handle_torch_function, has_torch_function
 import torch.nn.functional as F
 
-from zennit.core import Hook, Stabilizer, RemovableHandleList, RemovableHandle
-
+from zennit.core import Hook, Stabilizer, RemovableHandleList, RemovableHandle    
 
 class HookWithKwargs(Hook):
     '''Base class for hooks to be used to compute layer-wise attributions.'''
@@ -39,10 +38,21 @@ class AttentionHeadRule(HookWithKwargs):
         self.stabilizer = stabilizer
 
     def backward(self, module, grad_input, grad_output):
-        query, key, value = (
-            inp.clone().requires_grad_()
-            for inp in self.stored_tensors["input"]
-        )
+        _module = None
+
+        # use the canonized module if timm Attention
+        if hasattr(module, "canonizer_attention"):
+            _module = module
+            module = module.canonizer_attention
+            query, key, value = (
+                self.stored_tensors["input"][0].clone().requires_grad_()
+                for _ in range(3)
+            )
+        else:
+            query, key, value = (
+                inp.clone().requires_grad_()
+                for inp in self.stored_tensors["input"]
+            )
         key_padding_mask, need_weights, attn_mask, average_attn_weights, is_causal = self._parse_kwargs(self.stored_kwargs)
 
         with torch.autograd.enable_grad():
@@ -132,15 +142,15 @@ class AttentionHeadRule(HookWithKwargs):
 
         if module.batch_first and is_batched:
             query, key, relevance_value = (x.transpose(1, 0) for x in (query, key, relevance_value))
+
+        # return a single relevance if timm Attention
+        if _module is not None:
+            return tuple(relevance_value if original.shape == relevance_value.shape else None for original in grad_input)
         return (
             torch.zeros_like(query),
             torch.zeros_like(key),
             relevance_value,
         )
-        # return tuple(relevance if original.shape == relevance.shape else None for original in grad_input)
-        # GH
-        # print(module.__class__, grad_output[0].sum(), relevance.sum())
-        # return tuple(relevance if original.shape == relevance.shape else None for original in grad_input)
 
     def _parse_kwargs(self, kwargs):
         key_padding_mask = kwargs.get('key_padding_mask')
@@ -278,14 +288,15 @@ class AttentionHeadRule(HookWithKwargs):
         # (tgt_len, bsz, num_heads, head_dim)
         in_proj_output = in_proj_output.view(num_heads, bsz, tgt_len, head_dim).permute(2, 1, 0, 3)
 
-        # (bsz * num_heads, src_len, head_dim)
-        b_v = torch.tile(b_v, (src_len, bsz, 1)).view(src_len, bsz * num_heads, head_dim).transpose(0, 1)
+        if module.in_proj_bias is not None:
+            # (bsz * num_heads, src_len, head_dim)
+            b_v = torch.tile(b_v, (src_len, bsz, 1)).view(src_len, bsz * num_heads, head_dim).transpose(0, 1)
 
-        # (tgt_len, bsz, num_heads, head_dim)
-        scaled_b_v = torch.bmm(attn_output_weights, b_v).view(bsz, num_heads, tgt_len, head_dim).permute(2, 0, 1, 3)
+            # (tgt_len, bsz, num_heads, head_dim)
+            scaled_b_v = torch.bmm(attn_output_weights, b_v).view(bsz, num_heads, tgt_len, head_dim).permute(2, 0, 1, 3)
 
-        # (tgt_len, bsz, num_heads, head_dim)
-        in_proj_output += scaled_b_v
+            # (tgt_len, bsz, num_heads, head_dim)
+            in_proj_output += scaled_b_v
 
         # (tgt_len * bsz, embed_dim)
         in_proj_output = in_proj_output.contiguous().view(tgt_len * bsz, embed_dim)
