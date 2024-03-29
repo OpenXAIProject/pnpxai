@@ -1,5 +1,6 @@
 from typing import Any, Optional, Dict
 
+import torch
 from torch import Tensor, nn
 
 from pnpxai.core._types import Model, DataSource, Task
@@ -78,8 +79,14 @@ class RAP(Explainer):
             .transpose(-2, -3)
 
         explanations = explanations.sum(-1)
-        max_val = explanations.abs()\
-            .amax(list(range(1, explanations.ndim)), keepdim=True)
+        agg_dims = list(range(1, explanations.ndim))
+        pos_max = explanations.relu().amax(agg_dims, keepdim=True)
+        neg_max = (-explanations).relu().amax(agg_dims, keepdim=True)
 
-        explanations = explanations / max_val
+        explanations = torch.where(
+            explanations > 0,
+            explanations / pos_max,
+            explanations / neg_max
+        )
+
         return explanations.numpy()

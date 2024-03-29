@@ -80,9 +80,18 @@ class Add(RelPropSimple):
     def relprop(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None):
         if torch.is_tensor(inputs):
             return rel
-        inputs = [F.relu(input) for input in inputs]
-        outputs = torch.add(*inputs)
-        return super().relprop(rel, inputs, outputs, args, kwargs)
+        pos_inputs = [torch.clamp(x, min=0) for x in inputs]
+        pos_outputs = torch.add(*pos_inputs)
+        pos_rel = super().relprop(rel, pos_inputs, pos_outputs, args, kwargs)
+
+        neg_inputs = [torch.clamp(x, max=0) for x in inputs]
+        neg_outputs = torch.add(*neg_inputs)
+        neg_rel = super().relprop(rel, neg_inputs, neg_outputs, args, kwargs)
+
+        if torch.is_tensor(pos_rel):
+            return pos_rel + neg_rel
+
+        return [p + n for p, n in zip(pos_rel, neg_rel)]
 
 
 class Mul(RelPropSimple):
@@ -332,6 +341,10 @@ class Conv2d(RelProp):
         else:
             Rp = self.backward(R_p, px, nx, pw, nw)
         return Rp
+
+
+class Repeat(RelPropSimple):
+    pass
 
 
 class GetItem(RelProp):

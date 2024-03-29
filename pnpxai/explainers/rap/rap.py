@@ -88,25 +88,15 @@ class RelativeAttributePropagation():
 
         return rule
 
-    def _all_args_have_grads(self, node: fx.Node) -> bool:
-        return all([
-            arg.requires_grad
-            for arg in self._load_args(node.all_input_nodes)
-        ])
-
     def _node_relprop(self, node: fx.Node):
-        args, kwargs = node.args, node.kwargs
-        if self._all_args_have_grads(node):
-            inputs = self._load_args(node.all_input_nodes)
-            outputs = self._results[node.name]
-        else:
-            outputs, (args, kwargs) = self._step_node(
-                node, lambda arg: arg.clone().requires_grad_()
-            )
-            inputs = [
-                arg for arg in flatten([args, kwargs])
-                if torch.is_tensor(arg)
-            ]
+        args, kwargs = self._load_args(node.args), self._load_args(node.kwargs)
+        outputs, (args, kwargs) = self._step_node(
+            node, lambda arg: arg.clone().requires_grad_()
+        )
+        inputs = [
+            arg for arg in flatten([args, kwargs])
+            if torch.is_tensor(arg)
+        ]
 
         if not torch.is_tensor(inputs) and len(inputs) == 1:
             inputs = inputs[0]

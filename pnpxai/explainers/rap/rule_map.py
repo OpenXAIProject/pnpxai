@@ -39,5 +39,6 @@ SUPPORTED_OPS: Dict[str, Dict[str, Type[rules.RelProp]]] = {
         'sub': rules.Sub,
         'relu': rules.ReLU,
         'transpose': rules.Flatten,
+        'repeat': rules.Repeat
     }
 }
