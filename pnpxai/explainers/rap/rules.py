@@ -56,6 +56,10 @@ class ReLU(RelProp):
     pass
 
 
+class GeLU(RelProp):
+    pass
+
+
 class Dropout(RelProp):
     pass
 
@@ -150,6 +154,10 @@ class BatchNorm2d(RelProp):
             Rp = Rp + Bp
 
         return Rp
+
+
+class LayerNorm(RelProp):
+    pass
 
 
 class Linear(RelProp):
@@ -347,10 +355,16 @@ class Repeat(RelPropSimple):
     pass
 
 
-class GetItem(RelProp):
+class GetItem(RelPropSimple):
     def relprop(self, rel: Tensor, inputs: Tensor, outputs: Tensor, args=None, kwargs=None):
-        rel_fill = torch.zeros_like(args[0])
+        # If module's output is a tuple, propagate rel as is
+        inputs = args[0]
+        if not torch.is_tensor(inputs):
+            return rel
+
+        rel_fill = torch.zeros_like(inputs)
         rel_fill[args[1]] = rel
+
         return rel_fill
 
 
@@ -363,3 +377,11 @@ class Unsqueeze(RelProp):
 
         rel = torch.squeeze(rel, *args, **kwargs)
         return rel
+
+class MultiHeadAttention(RelPropSimple):
+    def backward(self, rel: Tensor, inputs: Tensor, outputs: Tensor) -> Tensor:
+        Q, K, V = inputs
+        Z = outputs
+        S = safe_divide(rel, Z)
+        C = Q * self.gradprop(Z, Q, S)[0] + K * self.gradprop(Z, K, S)[0] + V * self.gradprop(Z, V, S)[0]
+        return C

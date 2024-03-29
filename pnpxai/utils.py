@@ -69,14 +69,18 @@ def open_file_or_name(file: Union[TextIOWrapper, str], *args, **kwargs):
         file_wrapper.close()
 
 
-def to_device(data, device: torch.device):
+def map_recursive(data, func: Callable):
     if torch.is_tensor(data):
-        return data.to(device)
+        return func(data)
     if isinstance(data, (list, tuple, set)):
-        return type(data)((to_device(datum, device) for datum in data))
+        return type(data)((map_recursive(datum, func) for datum in data))
     if isinstance(data, dict):
-        return {key: to_device(value, device) for key, value in data.items()}
+        return {key: map_recursive(value, func) for key, value in data.items()}
     return data
+
+
+def to_device(data, device: torch.device):
+    return map_recursive(data, lambda x: x.to(device))
 
 
 def flatten(data):

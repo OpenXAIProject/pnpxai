@@ -7,7 +7,7 @@ from torch import nn, Tensor, fx
 from pnpxai.explainers.rap import rules
 from pnpxai.explainers.rap.rule_map import SUPPORTED_OPS
 from pnpxai.messages import get_message
-from pnpxai.utils import flatten
+from pnpxai.utils import flatten, map_recursive
 
 
 class RelativeAttributePropagation():
@@ -17,6 +17,8 @@ class RelativeAttributePropagation():
         self._results: Dict[str, fx.Node] = {}
         self._inputs: Dict[str, fx.Node] = defaultdict(tuple)
         self._relprops: Dict[str, Dict[str, Tensor]] = defaultdict(dict)
+        # Solves bottleneck, when module has multiple outputs, some of which are unused
+        self.__unused_nodes: Dict[str, None] = {}
 
     def _load_args(self, args, modifier: Optional[Callable] = None):
         modifier = modifier if modifier is not None else (lambda x: x)
@@ -49,6 +51,13 @@ class RelativeAttributePropagation():
             result = args[0]
         return result, (args, kwargs)
 
+    def _is_unused(self, node: fx.Node) -> bool:
+        return node.op != 'output' and (
+            (node.name in self.__unused_nodes)
+            or len(node.users) == 0
+            or all([user.name in self.__unused_nodes for user in node.users.keys()])
+        )
+
     def run(self, *args):
         """
         Method to preserve all intermediary states
@@ -62,6 +71,10 @@ class RelativeAttributePropagation():
                 result = next(args_iter)
             else:
                 result, _ = self._step_node(node)
+
+            if self._is_unused(node):
+                self.__unused_nodes[node.name] = None
+
             self._results[node.name] = result
 
         return self._results['output']
@@ -89,10 +102,13 @@ class RelativeAttributePropagation():
         return rule
 
     def _node_relprop(self, node: fx.Node):
+        def enable_grad(x): return x.clone().requires_grad_()
+        
         args, kwargs = self._load_args(node.args), self._load_args(node.kwargs)
         outputs, (args, kwargs) = self._step_node(
-            node, lambda arg: arg.clone().requires_grad_()
+            node, lambda result: map_recursive(result, enable_grad)
         )
+
         inputs = [
             arg for arg in flatten([args, kwargs])
             if torch.is_tensor(arg)
@@ -103,7 +119,7 @@ class RelativeAttributePropagation():
 
         rel = [
             self._relprops[node.name][user.name]
-            for user in node.users.keys()
+            for user in node.users.keys() if not self._is_unused(user)
         ]
 
         if len(node.users) > 1:
@@ -124,7 +140,8 @@ class RelativeAttributePropagation():
             raise NotImplementedError(
                 f"RelProp rule for node {node.name} is not implemented"
             )
-
+        print(node, rel.shape if torch.is_tensor(
+            rel) else [r.shape for r in rel])
         rel = rule.relprop(rel, inputs, outputs, args, kwargs)
 
         return rel
@@ -132,7 +149,7 @@ class RelativeAttributePropagation():
     def _node_has_all_users_relprops(self, node: fx.Node) -> bool:
         return all([
             self._relprops.get(node.name, {}).get(user.name, None) is not None
-            for user in node.users.keys()
+            for user in node.users.keys() if not self._is_unused(user)
         ])
 
     def relprop(self, r: Sequence[Tensor]) -> Tensor:
