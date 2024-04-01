@@ -26,6 +26,9 @@ class RelativeAttributePropagation():
             if all([user.name in unused for user in arg.users]):
                 unused = unused.union(self._backprop_unused(arg, unused))
         return unused
+    
+    def _check_unused_by_result(self, node: fx.Node, result) -> bool:
+        return node.op != 'output' and (len(node.users) == 0 or not any([torch.is_tensor(res) for res in flatten(result)]))
 
     def _load_args(self, args, modifier: Optional[Callable] = None):
         modifier = modifier if modifier is not None else (lambda x: x)
@@ -57,13 +60,13 @@ class RelativeAttributePropagation():
         elif node.op == 'output':
             result = args[0]
 
-        if node.op != 'output' and (len(node.users) == 0 or not any([torch.is_tensor(res) for res in flatten(result)])):
+        if self._check_unused_by_result(node, result):
             self._unused_nodes = self._unused_nodes.union(
                 self._backprop_unused(node, self._unused_nodes))
             
         return result, (args, kwargs)
 
-    def _is_unused(self, node: fx.Node) -> bool:
+    def _marked_unused(self, node: fx.Node) -> bool:
         return node.op != 'output' and (node.name in self._unused_nodes)
 
     def run(self, *args):
@@ -131,7 +134,7 @@ class RelativeAttributePropagation():
 
         rel = [
             self._relprops[node.name][user.name]
-            for user in node.users.keys() if not self._is_unused(user)
+            for user in node.users.keys() if not self._marked_unused(user)
         ]
         
         if len(node.users) > 1:
@@ -159,7 +162,7 @@ class RelativeAttributePropagation():
     def _node_has_all_users_relprops(self, node: fx.Node) -> bool:
         return all([
             self._relprops.get(node.name, {}).get(user.name, None) is not None
-            for user in node.users.keys() if not self._is_unused(user)
+            for user in node.users.keys() if not self._marked_unused(user)
         ])
 
     def relprop(self, r: Sequence[Tensor]) -> Tensor:
@@ -167,7 +170,7 @@ class RelativeAttributePropagation():
 
         while len(queue) > 0:
             node = queue.popitem(last=False)[0]
-            if self._is_unused(node):
+            if self._marked_unused(node):
                 continue
 
             if not self._node_has_all_users_relprops(node):
