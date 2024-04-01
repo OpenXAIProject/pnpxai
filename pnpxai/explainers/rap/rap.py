@@ -1,5 +1,5 @@
 from collections import OrderedDict, defaultdict
-from typing import Dict, Sequence, Callable, Optional, Tuple
+from typing import Dict, Sequence, Callable, Optional, Tuple, Set
 
 import warnings
 import torch
@@ -18,7 +18,14 @@ class RelativeAttributePropagation():
         self._inputs: Dict[str, fx.Node] = defaultdict(tuple)
         self._relprops: Dict[str, Dict[str, Tensor]] = defaultdict(dict)
         # Solves bottleneck, when module has multiple outputs, some of which are unused
-        self.__unused_nodes: Dict[str, None] = {}
+        self._unused_nodes = set()
+
+    def _backprop_unused(self, node: fx.Node, unused: Set[str]) -> Set[str]:
+        unused.add(node.name)
+        for arg in node.all_input_nodes:
+            if all([user.name in unused for user in arg.users]):
+                unused = unused.union(self._backprop_unused(arg, unused))
+        return unused
 
     def _load_args(self, args, modifier: Optional[Callable] = None):
         modifier = modifier if modifier is not None else (lambda x: x)
@@ -49,14 +56,15 @@ class RelativeAttributePropagation():
             result = self._fetch_attr(node.target)(*args, **kwargs)
         elif node.op == 'output':
             result = args[0]
+
+        if node.op != 'output' and (len(node.users) == 0 or not any([torch.is_tensor(res) for res in flatten(result)])):
+            self._unused_nodes = self._unused_nodes.union(
+                self._backprop_unused(node, self._unused_nodes))
+            
         return result, (args, kwargs)
 
     def _is_unused(self, node: fx.Node) -> bool:
-        return node.op != 'output' and (
-            (node.name in self.__unused_nodes)
-            or len(node.users) == 0
-            or all([user.name in self.__unused_nodes for user in node.users.keys()])
-        )
+        return node.op != 'output' and (node.name in self._unused_nodes)
 
     def run(self, *args):
         """
@@ -71,9 +79,6 @@ class RelativeAttributePropagation():
                 result = next(args_iter)
             else:
                 result, _ = self._step_node(node)
-
-            if self._is_unused(node):
-                self.__unused_nodes[node.name] = None
 
             self._results[node.name] = result
 
@@ -101,18 +106,25 @@ class RelativeAttributePropagation():
 
         return rule
 
+    def _all_have_grad(self, args) -> bool:
+        return all([
+            arg.requires_grad and arg.grad_fn
+            for arg in flatten(args) if torch.is_tensor(arg)
+        ])
+
     def _node_relprop(self, node: fx.Node):
         def enable_grad(x): return x.clone().requires_grad_()
-        
-        args, kwargs = self._load_args(node.args), self._load_args(node.kwargs)
-        outputs, (args, kwargs) = self._step_node(
-            node, lambda result: map_recursive(result, enable_grad)
-        )
 
-        inputs = [
-            arg for arg in flatten([args, kwargs])
-            if torch.is_tensor(arg)
-        ]
+        args, kwargs = self._load_args(node.args), self._load_args(node.kwargs)
+        inputs = self._load_args(node.all_input_nodes)
+        outputs = self._results[node.name]
+        if not self._all_have_grad(inputs):
+            outputs, (args, kwargs) = self._step_node(
+                node, lambda result: map_recursive(result, enable_grad)
+            )
+            inputs = [args, kwargs]
+
+        inputs = [arg for arg in flatten(inputs) if torch.is_tensor(arg)]
 
         if not torch.is_tensor(inputs) and len(inputs) == 1:
             inputs = inputs[0]
@@ -121,16 +133,16 @@ class RelativeAttributePropagation():
             self._relprops[node.name][user.name]
             for user in node.users.keys() if not self._is_unused(user)
         ]
-
+        
         if len(node.users) > 1:
             rel = sum(rel)
         elif len(rel) == 1:
             rel = rel[0]
 
         rule = None
-        if node.op == 'placeholder':
+        if node.op == 'placeholder' or node.op == 'get_attr':
             rule = rules.RelProp()
-        elif node.op == 'get_attr' or node.op == 'call_module':
+        elif node.op == 'call_module':
             target = self._fetch_attr(node.target)
             rule = SUPPORTED_OPS[node.op][type(target)](target)
         elif node.op == 'call_function' or node.op == 'call_method':
@@ -140,8 +152,6 @@ class RelativeAttributePropagation():
             raise NotImplementedError(
                 f"RelProp rule for node {node.name} is not implemented"
             )
-        print(node, rel.shape if torch.is_tensor(
-            rel) else [r.shape for r in rel])
         rel = rule.relprop(rel, inputs, outputs, args, kwargs)
 
         return rel
@@ -157,7 +167,7 @@ class RelativeAttributePropagation():
 
         while len(queue) > 0:
             node = queue.popitem(last=False)[0]
-            if len(node.users) == 0:
+            if self._is_unused(node):
                 continue
 
             if not self._node_has_all_users_relprops(node):

@@ -22,9 +22,11 @@ SUPPORTED_OPS: Dict[str, Dict[str, Type[rules.RelProp]]] = {
         nn.Flatten: rules.Flatten,
     },
     'call_function': {
+        getattr: rules.GetAttr,
         _operator.add: rules.Add,
         _operator.sub: rules.Sub,
         _operator.mul: rules.Mul,
+        _operator.floordiv: rules.FloorDiv,
         _operator.getitem: rules.GetItem,
         torch.add: rules.Add,
         torch.flatten: rules.Flatten,
@@ -43,6 +45,9 @@ SUPPORTED_OPS: Dict[str, Dict[str, Type[rules.RelProp]]] = {
         'sub': rules.Sub,
         'relu': rules.ReLU,
         'transpose': rules.Flatten,
-        'repeat': rules.Repeat
+        'repeat': rules.Repeat,
+        'expand': rules.Expand,
+        'permute': rules.Permute,
+        'reshape': rules.Reshape,
     }
 }

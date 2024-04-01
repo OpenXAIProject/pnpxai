@@ -98,20 +98,24 @@ class Add(RelPropSimple):
         return [p + n for p, n in zip(pos_rel, neg_rel)]
 
 
+class Sub(Add):
+    pass
+
+
 class Mul(RelPropSimple):
     def relprop(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None):
         if torch.is_tensor(inputs):
+            inputs = [inputs]
+
+        inputs = [val for val in inputs if torch.is_tensor(val)]
+        if len(inputs) <= 1:
             return rel
 
         return super().relprop(rel, inputs, outputs, args, kwargs)
 
 
-class Sub(RelPropSimple):
-    def relprop(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None):
-        if torch.is_tensor(inputs):
-            return rel
-
-        return super().relprop(rel, inputs, outputs, args, kwargs)
+class FloorDiv(Mul):
+    pass
 
 
 class Flatten(RelProp):
@@ -378,10 +382,25 @@ class Unsqueeze(RelProp):
         rel = torch.squeeze(rel, *args, **kwargs)
         return rel
 
+
+class Expand(RelPropSimple):
+    pass
+
+
+class Permute(RelPropSimple):
+    pass
+
+
+class Reshape(RelProp):
+    def relprop(self, rel: Tensor, inputs: Tensor, outputs: Tensor, args=None, kwargs=None) -> _TensorOrTensors:
+        return rel.reshape(inputs.shape)
+
+
+class GetAttr(RelProp):
+    pass
+
+
 class MultiHeadAttention(RelPropSimple):
-    def backward(self, rel: Tensor, inputs: Tensor, outputs: Tensor) -> Tensor:
-        Q, K, V = inputs
-        Z = outputs
-        S = safe_divide(rel, Z)
-        C = Q * self.gradprop(Z, Q, S)[0] + K * self.gradprop(Z, K, S)[0] + V * self.gradprop(Z, V, S)[0]
-        return C
+    def relprop(self, rel: Tensor, inputs: Tensor, outputs: Tensor, args=None, kwargs=None) -> _TensorOrTensors:
+        rel = super().relprop(rel, inputs, outputs[0], args, kwargs)
+        return rel
