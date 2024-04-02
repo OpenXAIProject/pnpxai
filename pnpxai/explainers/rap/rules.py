@@ -1,4 +1,3 @@
-import _operator
 import torch
 import torch.nn as nn
 from torch import nn, Tensor
@@ -81,20 +80,21 @@ class AvgPool2d(RelPropSimple):
 
 
 class Add(RelPropSimple):
+    def _partial_relprop(self, rel: Tensor, inputs: _TensorOrTensors, is_pos: bool, args=None, kwargs=None):
+        clamp_kwargs = {'min': 0} if is_pos else {'max': 0}
+        inputs = [torch.clamp(x, **clamp_kwargs) for x in inputs]
+        pos_outputs = torch.add(*inputs)
+        return super().relprop(rel, inputs, pos_outputs, args, kwargs)
+
     def relprop(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None):
         if torch.is_tensor(inputs):
             return rel
-        pos_inputs = [torch.clamp(x, min=0) for x in inputs]
-        pos_outputs = torch.add(*pos_inputs)
-        pos_rel = super().relprop(rel, pos_inputs, pos_outputs, args, kwargs)
 
-        neg_inputs = [torch.clamp(x, max=0) for x in inputs]
-        neg_outputs = torch.add(*neg_inputs)
-        neg_rel = super().relprop(rel, neg_inputs, neg_outputs, args, kwargs)
+        pos_rel = self._partial_relprop(rel, inputs, True, args, kwargs)
+        neg_rel = self._partial_relprop(rel, inputs, False, args, kwargs)
 
         if torch.is_tensor(pos_rel):
             return pos_rel + neg_rel
-
         return [p + n for p, n in zip(pos_rel, neg_rel)]
 
 
@@ -133,31 +133,7 @@ class Cat(RelPropSimple):
 
 
 class BatchNorm2d(RelProp):
-    def f(self, R, w1, x1):
-        Z1 = x1 * w1
-        S1 = safe_divide(R, Z1) * w1
-        C1 = x1 * S1
-        return C1
-
-    def backward(self, rel: Tensor, inputs: _TensorOrTensors, outputs: _TensorOrTensors):
-        X = inputs
-        weight = self.module.weight.unsqueeze(0).unsqueeze(2).unsqueeze(3) / (
-            (self.module.running_var.unsqueeze(0).unsqueeze(2).unsqueeze(3).pow(2)
-             + self.module.eps).pow(0.5))
-
-        if torch.is_tensor(self.module.bias):
-            bias = self.module.bias.unsqueeze(-1).unsqueeze(-1)
-            bias_p = safe_divide(bias * rel.ne(0).type(self.module.bias.type()),
-                                 rel.ne(0).type(self.module.bias.type()).sum(dim=[2, 3], keepdim=True))
-            rel = rel - bias_p
-
-        Rp = self.f(rel, weight, X)
-
-        if torch.is_tensor(self.module.bias):
-            Bp = self.f(bias_p, weight, X)
-            Rp = Rp + Bp
-
-        return Rp
+    pass
 
 
 class LayerNorm(RelProp):
@@ -267,6 +243,9 @@ class Linear(RelProp):
 
 
 class Conv2d(RelProp):
+    def _get_conv_output(self, x: Tensor, w: Tensor):
+        return torch.conv2d(x, w, stride=self.module.stride, padding=self.module.padding)
+
     def gradprop2(self, inputs, outputs, DY, weight):
         Z = outputs
 
@@ -282,77 +261,66 @@ class Conv2d(RelProp):
         K = R - shift
         return K
 
-    def pos_prop(self, R, Za1, Za2, x1):
-        R_pos = torch.clamp(R, min=0)
-        R_neg = torch.clamp(R, max=0)
-        S1 = safe_divide(
-            (R_pos * safe_divide((Za1 + Za2), Za1 + Za2)), Za1)
-        C1 = x1 * self.gradprop(Za1, x1, S1)[0]
-        S1n = safe_divide(
-            (R_neg * safe_divide((Za1 + Za2), Za1 + Za2)), Za2)
-        C1n = x1 * self.gradprop(Za2, x1, S1n)[0]
-        S2 = safe_divide((R_pos * safe_divide((Za2), Za1 + Za2)), Za2)
-        C2 = x1 * self.gradprop(Za2, x1, S2)[0]
-        S2n = safe_divide((R_neg * safe_divide((Za2), Za1 + Za2)), Za2)
-        C2n = x1 * self.gradprop(Za2, x1, S2n)[0]
+    def pos_prop(self, rel: Tensor, Za1: Tensor, Za2: Tensor, inputs: Tensor):
+        rel_pos = torch.clamp(rel, min=0)
+        rel_neg = torch.clamp(rel, max=0)
+        S1 = safe_divide(rel_pos, Za1)
+        C1 = inputs * self.gradprop(Za1, inputs, S1)[0]
+        S1n = safe_divide(rel_neg, Za2)
+        C1n = inputs * self.gradprop(Za2, inputs, S1n)[0]
+        S2 = safe_divide((rel_pos * safe_divide((Za2), Za1 + Za2)), Za2)
+        C2 = inputs * self.gradprop(Za2, inputs, S2)[0]
+        S2n = safe_divide((rel_neg * safe_divide((Za2), Za1 + Za2)), Za2)
+        C2n = inputs * self.gradprop(Za2, inputs, S2n)[0]
         Cp = C1 + C2
         Cn = C2n + C1n
-        C = (Cp + Cn)
-        C = self.shift_rel(
-            C, C.sum(dim=[1, 2, 3], keepdim=True) - R.sum(dim=[1, 2, 3], keepdim=True))
-        return C
+        new_rel = (Cp + Cn)
+        agg_dims = list(range(1, inputs.ndim))
+        rel_diff = new_rel.sum(dim=agg_dims, keepdim=True) - \
+            rel.sum(dim=agg_dims, keepdim=True)
+        new_rel = self.shift_rel(new_rel, rel_diff)
+        return new_rel
 
-    def f(self, R, w1, w2, x1, x2):
-        R_nonzero = R.ne(0).type(R.type())
-        Za1 = F.conv2d(x1, w1, bias=None, stride=self.module.stride,
-                       padding=self.module.padding) * R_nonzero
-        Za2 = - F.conv2d(x1, w2, bias=None, stride=self.module.stride,
-                         padding=self.module.padding) * R_nonzero
+    def backward(self, rel: Tensor, pos_x: Tensor, neg_x: Tensor, pos_w: Tensor, neg_w: Tensor):
+        rel_nonzero = rel.ne(0).type(rel.type())
 
-        Zb1 = - F.conv2d(x2, w1, bias=None, stride=self.module.stride,
-                         padding=self.module.padding) * R_nonzero
-        Zb2 = F.conv2d(x2, w2, bias=None, stride=self.module.stride,
-                       padding=self.module.padding) * R_nonzero
+        pos_pos_out = self._get_conv_output(pos_x, pos_w) * rel_nonzero
+        pos_neg_out = -self._get_conv_output(pos_x, neg_w) * rel_nonzero
+        neg_pos_out = -self._get_conv_output(neg_x, pos_w) * rel_nonzero
+        neg_neg_out = self._get_conv_output(neg_x, neg_w) * rel_nonzero
 
-        C1 = self.pos_prop(R, Za1, Za2, x1)
-        C2 = self.pos_prop(R, Zb1, Zb2, x2)
+        C1 = self.pos_prop(rel, pos_pos_out, pos_neg_out, pos_x)
+        C2 = self.pos_prop(rel, neg_pos_out, neg_neg_out, neg_x)
         return C1 + C2
 
-    def backward(self, R_p, px, nx, pw, nw):
-        Rp = self.f(R_p, pw, nw, px, nx)
-        return Rp
+    def final_backward(self, rel: Tensor, inputs: Tensor, outputs: Tensor, pos_w: Tensor, neg_w: Tensor):
+        agg_dims = tuple(range(1, inputs.ndim))
+        template = torch.zeros_like(inputs)
+        low = template + torch.amin(inputs, dim=agg_dims, keepdim=True)
+        high = template + torch.amax(inputs, dim=agg_dims, keepdim=True)
 
-    def final_backward(self, inputs, outputs, R_p, pw, nw, X1):
-        X = X1
-        L = X * 0 + \
-            torch.min(torch.min(torch.min(X, dim=1, keepdim=True)[0], dim=2, keepdim=True)[0], dim=3,
-                      keepdim=True)[0]
-        H = X * 0 + \
-            torch.max(torch.max(torch.max(X, dim=1, keepdim=True)[0], dim=2, keepdim=True)[0], dim=3,
-                      keepdim=True)[0]
-        Za = torch.conv2d(X, self.module.weight, bias=None, stride=self.module.stride, padding=self.module.padding) - \
-            torch.conv2d(L, pw, bias=None, stride=self.module.stride, padding=self.module.padding) - \
-            torch.conv2d(H, nw, bias=None, stride=self.module.stride,
-                         padding=self.module.padding)
+        norm_out = self._get_conv_output(inputs, self.module.weight) \
+            - self._get_conv_output(low, pos_w) \
+            - self._get_conv_output(high, neg_w)
 
-        Sp = safe_divide(R_p, Za)
+        scale = safe_divide(rel, norm_out)
 
-        Rp = X * self.gradprop2(inputs, outputs, Sp, self.module.weight) - L * \
-            self.gradprop2(inputs, outputs, Sp, pw) - H * \
-            self.gradprop2(inputs, outputs, Sp, nw)
-        return Rp
+        rel = inputs * self.gradprop2(inputs, outputs, scale, self.module.weight) \
+            - low * self.gradprop2(inputs, outputs, scale, pos_w) \
+            - high * self.gradprop2(inputs, outputs, scale, neg_w)
 
-    def relprop(self, R_p, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None):
-        pw = torch.clamp(self.module.weight, min=0)
-        nw = torch.clamp(self.module.weight, max=0)
-        px = torch.clamp(inputs, min=0)
-        nx = torch.clamp(inputs, max=0)
+        return rel
+
+    def relprop(self, rel, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None):
+        pos_w = torch.clamp(self.module.weight, min=0)
+        neg_w = torch.clamp(self.module.weight, max=0)
+        pos_x = torch.clamp(inputs, min=0)
+        neg_x = torch.clamp(inputs, max=0)
 
         if inputs.shape[1] == 3:
-            Rp = self.final_backward(inputs, outputs, R_p, pw, nw, inputs)
-        else:
-            Rp = self.backward(R_p, px, nx, pw, nw)
-        return Rp
+            return self.final_backward(rel, inputs, outputs, pos_w, neg_w)
+
+        return self.backward(rel, pos_x, neg_x, pos_w, neg_w)
 
 
 class Repeat(RelPropSimple):
@@ -388,7 +356,16 @@ class Expand(RelPropSimple):
 
 
 class Permute(RelPropSimple):
-    pass
+    def relprop(self, rel: Tensor, inputs: Tensor, outputs: Tensor, args=None, kwargs=None) -> _TensorOrTensors:
+        dims = kwargs.get('dims', None)
+        if dims is None:
+            dims = args[1] if isinstance(args[1], (tuple, list)) else args[1:]
+
+        dims = torch.LongTensor(dims)
+        inv = torch.empty_like(dims)
+        inv[dims] = torch.arange(len(dims), device=dims.device)
+
+        return rel.permute(inv.tolist())
 
 
 class Reshape(RelProp):
@@ -401,6 +378,10 @@ class GetAttr(RelProp):
 
 
 class MultiHeadAttention(RelPropSimple):
+    def forward(self):
+        pass
+
     def relprop(self, rel: Tensor, inputs: Tensor, outputs: Tensor, args=None, kwargs=None) -> _TensorOrTensors:
         rel = super().relprop(rel, inputs, outputs[0], args, kwargs)
+
         return rel
