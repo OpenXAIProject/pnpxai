@@ -33,6 +33,7 @@ class LayerNorm(RelProp):
 
 
 class Linear(RelPropSeparate):
+    @property
     def agg_dims(self):
         return -1
 
