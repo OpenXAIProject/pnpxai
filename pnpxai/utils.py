@@ -89,3 +89,19 @@ def flatten(data):
     if isinstance(data, (tuple, list)):
         return sum([flatten(elem) for elem in data], [])
     return [data]
+
+
+class Struct():
+    def __init__(self, data: dict):
+        self._wrap(data)
+
+    def _wrap(self, data):
+        if isinstance(data, dict):
+            for key, value in data.items():
+                setattr(self, key, Struct(value))
+        elif isinstance(data, (list, tuple)):
+            setattr(self, key, type(data)([
+                self._wrap(value) for value in data
+            ]))
+
+        return data

@@ -2,12 +2,25 @@ from pnpxai.explainers.rap.rules.base import RelProp, RelPropSimple, _TensorOrTe
 from torch import Tensor
 import torch
 
+
 class ReLU(RelProp):
     pass
 
 
 class GeLU(RelProp):
     pass
+
+
+class SoftMax(RelProp):
+    def relprop(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None):
+        dim = kwargs.get('dim', None)
+        if dim is None:
+            # if args[0] is tensor, then dim = args[1]
+            dim = args[int(torch.is_tensor(args[0]))]
+
+        rel = (rel - (outputs * rel.sum(dim, keepdim=True))) * inputs
+        return rel
+
 
 class Add(RelPropSimple):
     def _partial_relprop(self, rel: Tensor, inputs: _TensorOrTensors, is_pos: bool, args=None, kwargs=None):
@@ -46,6 +59,17 @@ class Mul(RelPropSimple):
 
 class FloorDiv(Mul):
     pass
+
+
+class MatMul(RelProp):
+    def relprop(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None) -> _TensorOrTensors:
+        in_a, in_b = inputs
+        rel_norm = safe_divide(rel, outputs)
+
+        rel_a = (rel_norm @ in_b.transpose(-1, -2)) * in_a
+        rel_b = (in_a.transpose(-1, -2) @ rel_norm) * in_b
+
+        return rel_a, rel_b
 
 
 class Flatten(RelProp):
@@ -111,6 +135,13 @@ class Reshape(RelProp):
     def relprop(self, rel: Tensor, inputs: Tensor, outputs: Tensor, args=None, kwargs=None) -> _TensorOrTensors:
         return rel.reshape(inputs.shape)
 
+
+class Transpose(RelProp):
+    def relprop(self, rel: Tensor, inputs: Tensor, outputs: Tensor, args=None, kwargs=None) -> Tensor:
+        dim1 = kwargs.get('dim1', args[1] if len(args) > 2 else None)
+        dim2 = kwargs.get('dim2', args[2] if len(args) > 3 else None)
+
+        return rel.transpose(dim1, dim2)
 
 class GetAttr(RelProp):
     pass

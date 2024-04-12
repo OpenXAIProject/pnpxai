@@ -63,17 +63,17 @@ class RelPropSeparate(RelProp, ABC):
     def forward(self, weights: Tensor, inputs: Tensor) -> Tensor:
         pass
 
-    def pos_prop(self, rel: Tensor, Za1: Tensor, Za2: Tensor, inputs: Tensor):
+    def pos_prop(self, rel: Tensor, pos_out: Tensor, neg_out: Tensor, inputs: Tensor):
         rel_pos = torch.clamp(rel, min=0)
         rel_neg = torch.clamp(rel, max=0)
-        S1 = safe_divide(rel_pos, Za1)
-        C1 = inputs * self.gradprop(Za1, inputs, S1)[0]
-        S1n = safe_divide(rel_neg, Za2)
-        C1n = inputs * self.gradprop(Za2, inputs, S1n)[0]
-        S2 = safe_divide((rel_pos * safe_divide(Za2, Za1 + Za2)), Za2)
-        C2 = inputs * self.gradprop(Za2, inputs, S2)[0]
-        S2n = safe_divide((rel_neg * safe_divide(Za2, Za1 + Za2)), Za2)
-        C2n = inputs * self.gradprop(Za2, inputs, S2n)[0]
+        S1 = safe_divide(rel_pos, pos_out)
+        C1 = inputs * self.gradprop(pos_out, inputs, S1)[0]
+        S1n = safe_divide(rel_neg, neg_out)
+        C1n = inputs * self.gradprop(neg_out, inputs, S1n)[0]
+        S2 = safe_divide((rel_pos * safe_divide(neg_out, pos_out + neg_out)), neg_out)
+        C2 = inputs * self.gradprop(neg_out, inputs, S2)[0]
+        S2n = safe_divide((rel_neg * safe_divide(neg_out, pos_out + neg_out)), neg_out)
+        C2n = inputs * self.gradprop(neg_out, inputs, S2n)[0]
         rel_pos = C1 + C2
         rel_neg = C2n + C1n
         new_rel = (rel_pos + rel_neg)

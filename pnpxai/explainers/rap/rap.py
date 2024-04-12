@@ -26,7 +26,7 @@ class RelativeAttributePropagation():
             if all([user.name in unused for user in arg.users]):
                 unused = unused.union(self._backprop_unused(arg, unused))
         return unused
-    
+
     def _check_unused_by_result(self, node: fx.Node, result) -> bool:
         return node.op != 'output' and (len(node.users) == 0 or not any([torch.is_tensor(res) for res in flatten(result)]))
 
@@ -63,7 +63,7 @@ class RelativeAttributePropagation():
         if self._check_unused_by_result(node, result):
             self._unused_nodes = self._unused_nodes.union(
                 self._backprop_unused(node, self._unused_nodes))
-            
+
         return result, (args, kwargs)
 
     def _marked_unused(self, node: fx.Node) -> bool:
@@ -136,7 +136,7 @@ class RelativeAttributePropagation():
             self._relprops[node.name][user.name]
             for user in node.users.keys() if not self._marked_unused(user)
         ]
-        
+
         if len(node.users) > 1:
             rel = sum(rel)
         elif len(rel) == 1:
@@ -167,7 +167,7 @@ class RelativeAttributePropagation():
 
     def relprop(self, r: Sequence[Tensor]) -> Tensor:
         queue = self._get_init_relprop_stack(r)
-
+        outputs = []
         while len(queue) > 0:
             node = queue.popitem(last=False)[0]
             if self._marked_unused(node):
@@ -189,5 +189,12 @@ class RelativeAttributePropagation():
                     r) else r[i]
                 queue[arg] = None
 
+            if node.op == 'placeholder':
+                outputs.append(r)
+
             del self._relprops[node.name]
-        return r
+
+        if len(outputs) == 1:
+            return outputs[0]
+        
+        return outputs
