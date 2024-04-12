@@ -1,13 +1,12 @@
-import warnings
 from _operator import add
-from typing import List, Optional
+from importlib import util
+from typing import List
 
 import torch
 from torch import nn
 from captum._utils.typing import TargetType
 
-from zennit.core import Composite
-from zennit.attribution import Attributor, Gradient
+from zennit.attribution import Gradient
 from zennit.canonizers import SequentialMergeBatchNorm
 from zennit.composites import LayerMapComposite, layer_map_base
 from zennit.rules import Epsilon
@@ -19,7 +18,7 @@ from pnpxai.detector import ModelArchitecture
 from pnpxai.detector._core import NodeInfo
 from pnpxai.explainers._explainer import Explainer
 from .rules import AttentionHeadRule, LayerNormRule
-from .utils import list_args_for_stack
+from .utils import list_args_for_stack, LRPTracer
 
 class LRPZennit(Explainer):
     def __init__(self, model: Model):
@@ -27,7 +26,7 @@ class LRPZennit(Explainer):
 
     def _replace_add_func_with_mod(self):
         # get model architecture to manipulate
-        ma = ModelArchitecture(self.model)
+        ma = ModelArchitecture(model=self.model, tracer=LRPTracer())
 
         # find add functions from model and replace them to modules
         add_func_nodes = ma.find_node(
@@ -35,6 +34,7 @@ class LRPZennit(Explainer):
                 isinstance(arg, NodeInfo) for arg in n.args),
             get_all=True
         )
+
         if add_func_nodes:
             traced_model = self.__get_model_with_functional_nodes(ma, add_func_nodes)
             return traced_model
@@ -61,7 +61,7 @@ class LRPZennit(Explainer):
                 stack_node,
                 before=True,
             )
-        return ma.traced_model
+        return ma._traced_model
 
     def attribute(
         self,
@@ -80,12 +80,20 @@ class LRPZennit(Explainer):
         if n_classes is None:
             n_classes = self.model(inputs).shape[-1]
         
-        layer_map = [
+        additional_layer_map = [
             (Linear, Epsilon(epsilon=epsilon)),
             (nn.MultiheadAttention, AttentionHeadRule(stabilizer=epsilon)),
             (nn.LayerNorm, LayerNormRule(stabilizer=epsilon)),
-        ] + layer_map_base()
+        ]
         canonizers = [SequentialMergeBatchNorm()]
+        if util.find_spec("timm"):
+            from .timm import (
+                VisionTransformerAttention,
+                VisionTransformerAttentionCanonizer,
+            )
+            additional_layer_map.append((VisionTransformerAttention, AttentionHeadRule(stabilizer=epsilon)))
+            canonizers.append(VisionTransformerAttentionCanonizer())
+        layer_map = additional_layer_map + layer_map_base()
         composite = LayerMapComposite(layer_map=layer_map, canonizers=canonizers)
 
         with Gradient(model=model, composite=composite) as attributor:
