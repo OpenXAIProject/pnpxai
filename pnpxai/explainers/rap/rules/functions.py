@@ -138,10 +138,16 @@ class Reshape(RelProp):
 
 class Transpose(RelProp):
     def relprop(self, rel: Tensor, inputs: Tensor, outputs: Tensor, args=None, kwargs=None) -> Tensor:
-        dim1 = kwargs.get('dim1', args[1] if len(args) > 2 else None)
-        dim2 = kwargs.get('dim2', args[2] if len(args) > 3 else None)
+        dim1 = kwargs.get('dim1', args[1] if len(args) > 1 else None)
+        dim2 = kwargs.get('dim2', args[2] if len(args) > 2 else None)
 
         return rel.transpose(dim1, dim2)
+
+
+class View(RelProp):
+    def relprop(self, rel: Tensor, inputs: Tensor, outputs: Tensor, args=None, kwargs=None) -> Tensor:
+        return rel.contiguous().view_as(inputs)
+
 
 class GetAttr(RelProp):
     pass

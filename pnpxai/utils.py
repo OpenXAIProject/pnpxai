@@ -1,10 +1,11 @@
 import random
 from io import TextIOWrapper
 from contextlib import contextmanager
-from typing import Sequence, Callable, Any, Union
+from typing import Sequence, Callable, Any, Union, Optional
 
 import numpy as np
 import torch
+from torch import Tensor, nn
 
 
 def set_seed(seed):
@@ -91,17 +92,10 @@ def flatten(data):
     return [data]
 
 
-class Struct():
-    def __init__(self, data: dict):
-        self._wrap(data)
+def linear_from_params(weight: Tensor, bias: Optional[Tensor] = None) -> nn.Linear:
+    layer = nn.Linear(weight.shape[1], weight.shape[0], bias=bias is not None)
+    with torch.no_grad():
+        layer.weight.data = weight
+        layer.bias.data = bias
 
-    def _wrap(self, data):
-        if isinstance(data, dict):
-            for key, value in data.items():
-                setattr(self, key, Struct(value))
-        elif isinstance(data, (list, tuple)):
-            setattr(self, key, type(data)([
-                self._wrap(value) for value in data
-            ]))
-
-        return data
+    return layer

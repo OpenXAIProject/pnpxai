@@ -183,7 +183,7 @@ class RelativeAttributePropagation():
                 warnings.warn(get_message(
                     'explainer.rap.errors.node', node=node.name))
                 raise e
-
+            
             for i, arg in enumerate(node.all_input_nodes):
                 self._relprops[arg.name][node.name] = r if torch.is_tensor(
                     r) else r[i]
