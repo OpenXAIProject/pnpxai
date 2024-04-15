@@ -39,10 +39,21 @@ class AttentionHeadRule(HookWithKwargs):
         self.stabilizer = stabilizer
 
     def backward(self, module, grad_input, grad_output):
-        query, key, value = (
-            inp.clone().requires_grad_()
-            for inp in self.stored_tensors["input"]
-        )
+        _module = None
+
+        # use the canonized module if timm Attention
+        if hasattr(module, "canonizer_attention"):
+            _module = module
+            module = module.canonizer_attention
+            query, key, value = (
+                self.stored_tensors["input"][0].clone().requires_grad_()
+                for _ in range(3)
+            )
+        else:
+            query, key, value = (
+                inp.clone().requires_grad_()
+                for inp in self.stored_tensors["input"]
+            )
         key_padding_mask, need_weights, attn_mask, average_attn_weights, is_causal = self._parse_kwargs(self.stored_kwargs)
 
         with torch.autograd.enable_grad():
@@ -82,17 +93,11 @@ class AttentionHeadRule(HookWithKwargs):
 
             # Forward
             attn_output_weights = self._attention_weights_forward(module, query, key, module.bias_k, key_padding_mask, attn_mask)
-            # print(f'\n[zennit] attn_output_weights\n{attn_output_weights}')
-            # print(f'\n[zennit] attn_output_weights.shape: {attn_output_weights.shape}')
 
             in_proj_intermediate = self._in_proj_intermediate_forward(module, value, attn_output_weights)
             in_proj_output = self._in_proj_output_forward(module, in_proj_intermediate, attn_output_weights)
-            # print(f'\n[zennit] in_proj_output\n{in_proj_output}')
-            # print(f'\n[zennit] in_proj_output.shape: {in_proj_output.shape}')
 
             attn_output = self._out_projection_forward(module, in_proj_output, query.shape[0], query.shape[1])
-            # print(f'\n[zennit] attn_output\n{attn_output}')
-            # print(f'\n[zennit] attn_output.shape: {attn_output.shape}')
 
         stabilizer_fn = Stabilizer.ensure(self.stabilizer)
 
@@ -105,7 +110,6 @@ class AttentionHeadRule(HookWithKwargs):
             create_graph=grad_output[0].requires_grad,
         )
         relevance_in_proj_output = in_proj_output * gradients[0]
-        # print(f'relevance_in_proj_output: , {grad_output[0].sum()}, {relevance_in_proj_output.sum()}')
 
         # Relevance: in_proj_intermediate
         grad_outputs = relevance_in_proj_output[0] / stabilizer_fn(in_proj_output)
@@ -115,7 +119,6 @@ class AttentionHeadRule(HookWithKwargs):
             grad_outputs=grad_outputs,
         )
         relevance_in_proj_intermediate = in_proj_intermediate * gradients[0]
-        # print(f'relevance_in_proj_intermediate: , {relevance_in_proj_output.sum()}, {relevance_in_proj_intermediate.sum()}')
 
         # Relevance: value
         grad_outputs = relevance_in_proj_intermediate[0] / stabilizer_fn(in_proj_intermediate)
@@ -125,22 +128,18 @@ class AttentionHeadRule(HookWithKwargs):
             grad_outputs=grad_outputs,
         )
         relevance_value = value * gradients[0]
-        # print(f'relevance_value: , {relevance_in_proj_intermediate.sum()}, {relevance_value.sum()}')
-
-        # print(f'\nattn_output\n{attn_output}\n')
-        # print(f'{module.__class__}: , {grad_output[0].sum()}, {relevance_value.sum()}')
 
         if module.batch_first and is_batched:
             query, key, relevance_value = (x.transpose(1, 0) for x in (query, key, relevance_value))
+
+        # return a single relevance if timm Attention
+        if _module is not None:
+            return tuple(relevance_value if original.shape == relevance_value.shape else None for original in grad_input)
         return (
             torch.zeros_like(query),
             torch.zeros_like(key),
             relevance_value,
         )
-        # return tuple(relevance if original.shape == relevance.shape else None for original in grad_input)
-        # GH
-        # print(module.__class__, grad_output[0].sum(), relevance.sum())
-        # return tuple(relevance if original.shape == relevance.shape else None for original in grad_input)
 
     def _parse_kwargs(self, kwargs):
         key_padding_mask = kwargs.get('key_padding_mask')
@@ -278,14 +277,15 @@ class AttentionHeadRule(HookWithKwargs):
         # (tgt_len, bsz, num_heads, head_dim)
         in_proj_output = in_proj_output.view(num_heads, bsz, tgt_len, head_dim).permute(2, 1, 0, 3)
 
-        # (bsz * num_heads, src_len, head_dim)
-        b_v = torch.tile(b_v, (src_len, bsz, 1)).view(src_len, bsz * num_heads, head_dim).transpose(0, 1)
+        if module.in_proj_bias is not None:
+            # (bsz * num_heads, src_len, head_dim)
+            b_v = torch.tile(b_v, (src_len, bsz, 1)).view(src_len, bsz * num_heads, head_dim).transpose(0, 1)
 
-        # (tgt_len, bsz, num_heads, head_dim)
-        scaled_b_v = torch.bmm(attn_output_weights, b_v).view(bsz, num_heads, tgt_len, head_dim).permute(2, 0, 1, 3)
+            # (tgt_len, bsz, num_heads, head_dim)
+            scaled_b_v = torch.bmm(attn_output_weights, b_v).view(bsz, num_heads, tgt_len, head_dim).permute(2, 0, 1, 3)
 
-        # (tgt_len, bsz, num_heads, head_dim)
-        in_proj_output += scaled_b_v
+            # (tgt_len, bsz, num_heads, head_dim)
+            in_proj_output += scaled_b_v
 
         # (tgt_len * bsz, embed_dim)
         in_proj_output = in_proj_output.contiguous().view(tgt_len * bsz, embed_dim)
@@ -311,33 +311,66 @@ class LayerNormRule(Hook):
     def backward(self, module, grad_input, grad_output):
         input = self.stored_tensors["input"][0].clone().requires_grad_()
         with torch.autograd.enable_grad():
-            output = self._relevance_conserving_forward(module, input)
+            # Preprocess
+            dims = tuple(range(-len(module.normalized_shape), -2, -1))
+            
+            # Normalization: centering
+            mean = input.mean(dims, keepdims=True)
+            centered = input - mean
+
+            # Normalization: rescaling
+            # correction should be 1 as it is calculated via the unbiased estimator.
+            var = input.var(dims, keepdims=True, correction=1).detach()
+            rescaled = centered / (var + module.eps).sqrt()
+
+            # Elementwise affine transformation
+            transformed = torch.mul(rescaled, module.weight) + module.bias
+
         stabilizer_fn = Stabilizer.ensure(self.stabilizer)
-        grad_outputs = grad_output[0] / stabilizer_fn(output)
+
+        ''' # Separate relevance propagation including affine transformation
+        # Relevance: rescaled
+        grad_outputs = grad_output[0] / stabilizer_fn(transformed)
         gradients = torch.autograd.grad(
-            (output,),
-            (input,),
+            transformed,
+            rescaled,
             grad_outputs=grad_outputs,
-            create_graph=grad_output[0].requires_grad
+            create_graph=grad_output[0].requires_grad,
         )
-        relevance = input * gradients[0]
-        # print(module.__class__, grad_output[0].sum(), relevance.sum())
-        return tuple(relevance if original.shape == relevance.shape else None for original in grad_input)
+        relevance_rescaled = rescaled * gradients[0]
 
-    def copy(self):
-        copy = LayerNormRule.__new__(type(self))
-        LayerNormRule.__init__(
-            copy,
-            self.stabilizer
+        # Relevance: input
+        # pdb.set_trace()
+        grad_outputs = relevance_rescaled[0] / stabilizer_fn(rescaled)
+        gradients = torch.autograd.grad(
+            rescaled,
+            input,
+            grad_outputs=grad_outputs,
         )
-        return copy
-    
-    @staticmethod
-    def _relevance_conserving_forward(module, input):
-        dims = list(range(1, input.dim()))
-        mean = input.mean((-2, -1))[(None,)*len(dims)].permute(*torch.arange(input.ndim-1, -1, -1))
-        std = (input.var((-2, -1)) + module.eps).sqrt()[(None,)*len(dims)].permute(*torch.arange(input.ndim-1, -1, -1))
-        normed = (input - mean) / std.detach()
-        return normed #* module.weight + module.bias
+        relevance_input = input * gradients[0]
+        '''
 
+        # ''' # End-to-end relevance propagation including affine transformation
+        # Relevance: end-to-end
+        grad_outputs = grad_output[0] / stabilizer_fn(transformed)
+        gradients = torch.autograd.grad(
+            transformed,
+            input,
+            grad_outputs=grad_outputs,
+            create_graph=grad_output[0].requires_grad,
+        )
+        relevance_input = input * gradients[0]
+        # '''
 
+        ''' # Relevance: end-to-end without affine transformation
+        grad_outputs = grad_output[0] / stabilizer_fn(rescaled)
+        gradients = torch.autograd.grad(
+            rescaled,
+            input,
+            grad_outputs=grad_outputs,
+            create_graph=grad_output[0].requires_grad,
+        )
+        relevance_input = input * gradients[0]
+        '''
+
+        return tuple(relevance_input if original.shape == relevance_input.shape else None for original in grad_input)
