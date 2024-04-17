@@ -92,17 +92,11 @@ class AttentionHeadRule(HookWithKwargs):
 
             # Forward
             attn_output_weights = self._attention_weights_forward(module, query, key, module.bias_k, key_padding_mask, attn_mask)
-            # print(f'\n[zennit] attn_output_weights\n{attn_output_weights}')
-            # print(f'\n[zennit] attn_output_weights.shape: {attn_output_weights.shape}')
 
             in_proj_intermediate = self._in_proj_intermediate_forward(module, value, attn_output_weights)
             in_proj_output = self._in_proj_output_forward(module, in_proj_intermediate, attn_output_weights)
-            # print(f'\n[zennit] in_proj_output\n{in_proj_output}')
-            # print(f'\n[zennit] in_proj_output.shape: {in_proj_output.shape}')
 
             attn_output = self._out_projection_forward(module, in_proj_output, query.shape[0], query.shape[1])
-            # print(f'\n[zennit] attn_output\n{attn_output}')
-            # print(f'\n[zennit] attn_output.shape: {attn_output.shape}')
 
         stabilizer_fn = Stabilizer.ensure(self.stabilizer)
 
@@ -115,7 +109,6 @@ class AttentionHeadRule(HookWithKwargs):
             create_graph=grad_output[0].requires_grad,
         )
         relevance_in_proj_output = in_proj_output * gradients[0]
-        # print(f'relevance_in_proj_output: , {grad_output[0].sum()}, {relevance_in_proj_output.sum()}')
 
         # Relevance: in_proj_intermediate
         grad_outputs = relevance_in_proj_output[0] / stabilizer_fn(in_proj_output)
@@ -125,7 +118,6 @@ class AttentionHeadRule(HookWithKwargs):
             grad_outputs=grad_outputs,
         )
         relevance_in_proj_intermediate = in_proj_intermediate * gradients[0]
-        # print(f'relevance_in_proj_intermediate: , {relevance_in_proj_output.sum()}, {relevance_in_proj_intermediate.sum()}')
 
         # Relevance: value
         grad_outputs = relevance_in_proj_intermediate[0] / stabilizer_fn(in_proj_intermediate)
@@ -135,10 +127,6 @@ class AttentionHeadRule(HookWithKwargs):
             grad_outputs=grad_outputs,
         )
         relevance_value = value * gradients[0]
-        # print(f'relevance_value: , {relevance_in_proj_intermediate.sum()}, {relevance_value.sum()}')
-
-        # print(f'\nattn_output\n{attn_output}\n')
-        # print(f'{module.__class__}: , {grad_output[0].sum()}, {relevance_value.sum()}')
 
         if module.batch_first and is_batched:
             query, key, relevance_value = (x.transpose(1, 0) for x in (query, key, relevance_value))
@@ -322,33 +310,66 @@ class LayerNormRule(Hook):
     def backward(self, module, grad_input, grad_output):
         input = self.stored_tensors["input"][0].clone().requires_grad_()
         with torch.autograd.enable_grad():
-            output = self._relevance_conserving_forward(module, input)
+            # Preprocess
+            dims = tuple(range(-len(module.normalized_shape), -2, -1))
+            
+            # Normalization: centering
+            mean = input.mean(dims, keepdims=True)
+            centered = input - mean
+
+            # Normalization: rescaling
+            # correction should be 1 as it is calculated via the unbiased estimator.
+            var = input.var(dims, keepdims=True, correction=1).detach()
+            rescaled = centered / (var + module.eps).sqrt()
+
+            # Elementwise affine transformation
+            transformed = torch.mul(rescaled, module.weight) + module.bias
+
         stabilizer_fn = Stabilizer.ensure(self.stabilizer)
-        grad_outputs = grad_output[0] / stabilizer_fn(output)
+
+        ''' # Separate relevance propagation including affine transformation
+        # Relevance: rescaled
+        grad_outputs = grad_output[0] / stabilizer_fn(transformed)
         gradients = torch.autograd.grad(
-            (output,),
-            (input,),
+            transformed,
+            rescaled,
             grad_outputs=grad_outputs,
-            create_graph=grad_output[0].requires_grad
+            create_graph=grad_output[0].requires_grad,
         )
-        relevance = input * gradients[0]
-        # print(module.__class__, grad_output[0].sum(), relevance.sum())
-        return tuple(relevance if original.shape == relevance.shape else None for original in grad_input)
+        relevance_rescaled = rescaled * gradients[0]
 
-    def copy(self):
-        copy = LayerNormRule.__new__(type(self))
-        LayerNormRule.__init__(
-            copy,
-            self.stabilizer
+        # Relevance: input
+        # pdb.set_trace()
+        grad_outputs = relevance_rescaled[0] / stabilizer_fn(rescaled)
+        gradients = torch.autograd.grad(
+            rescaled,
+            input,
+            grad_outputs=grad_outputs,
         )
-        return copy
-    
-    @staticmethod
-    def _relevance_conserving_forward(module, input):
-        dims = list(range(1, input.dim()))
-        mean = input.mean((-2, -1))[(None,)*len(dims)].permute(*torch.arange(input.ndim-1, -1, -1))
-        std = (input.var((-2, -1)) + module.eps).sqrt()[(None,)*len(dims)].permute(*torch.arange(input.ndim-1, -1, -1))
-        normed = (input - mean) / std.detach()
-        return normed #* module.weight + module.bias
+        relevance_input = input * gradients[0]
+        '''
 
+        # ''' # End-to-end relevance propagation including affine transformation
+        # Relevance: end-to-end
+        grad_outputs = grad_output[0] / stabilizer_fn(transformed)
+        gradients = torch.autograd.grad(
+            transformed,
+            input,
+            grad_outputs=grad_outputs,
+            create_graph=grad_output[0].requires_grad,
+        )
+        relevance_input = input * gradients[0]
+        # '''
 
+        ''' # Relevance: end-to-end without affine transformation
+        grad_outputs = grad_output[0] / stabilizer_fn(rescaled)
+        gradients = torch.autograd.grad(
+            rescaled,
+            input,
+            grad_outputs=grad_outputs,
+            create_graph=grad_output[0].requires_grad,
+        )
+        relevance_input = input * gradients[0]
+        '''
+
+        return tuple(relevance_input if original.shape == relevance_input.shape else None for original in grad_input)
