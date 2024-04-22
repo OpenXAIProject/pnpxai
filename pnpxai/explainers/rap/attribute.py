@@ -28,9 +28,8 @@ class RAP(Explainer):
         """
         super().__init__(model)
         self.method = RelativeAttributePropagation(model)
-        self.device = next(self.model.parameters()).device
 
-    def compute_pred(self, output):
+    def compute_pred(self, output: Tensor) -> Tensor:
         """
         Computes the predicted class probabilities.
 
@@ -45,7 +44,7 @@ class RAP(Explainer):
         pred = pred.squeeze(-1)
 
         pred_one_hot = nn.functional.one_hot(pred, output.shape[-1]) * 1.0
-        pred_one_hot = pred_one_hot.to(self.device)
+        pred_one_hot = pred_one_hot.to(output.device)
         return pred_one_hot
 
     def attribute(self, inputs: DataSource, targets: DataSource, *args: Any, **kwargs: Any) -> DataSource:
