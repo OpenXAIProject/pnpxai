@@ -250,7 +250,7 @@ class ModelArchitecture:
     - tracer: A tracer to trace the model. By default, the  model is traced by `torch.fx.symbolic_trace`.
     """
 
-    def __init__(self, model, tracer: Tracer|None=None):
+    def __init__(self, model, tracer:Optional[Tracer]=None):
         self.model = model
         self.tracer = tracer
 
