@@ -50,8 +50,8 @@ class Lime(Explainer):
             return_input_shape (bool): Whether to return input shape (default: True).
             show_progress (bool): Whether to show progress (default: False).
         """        
-        # if feature_mask is None:
-        #     feature_mask = get_default_feature_mask(inputs, self.device)
+        if feature_mask is None:
+            feature_mask = get_default_feature_mask(inputs, self.device)
 
         return self.source.attribute(
             inputs=inputs,

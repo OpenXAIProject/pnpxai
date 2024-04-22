@@ -53,9 +53,9 @@ class KernelShap(Explainer):
             return_input_shape (bool): Whether to return input shape (default: True).
             show_progress (bool): Whether to show progress (default: False).
         """
-        # if feature_mask is None:
-        #     feature_mask = get_default_feature_mask(inputs, self.device)
-        # assert len(feature_mask.unique()) > 1, "The number of feature_mask must be more than one"
+        if feature_mask is None:
+            feature_mask = get_default_feature_mask(inputs, self.device)
+        assert len(feature_mask.unique()) > 1, "The number of feature_mask must be more than one"
         attributions = self.source.attribute(
             inputs=inputs,
             baselines=baselines,
