@@ -19,7 +19,6 @@ class RelativeAttributePropagation():
         self._relprops: Dict[str, Dict[str, Tensor]] = defaultdict(dict)
         # Solves bottleneck, when module has multiple outputs, some of which are unused
         self._unused_nodes = set()
-        # print(self._trace)
 
     def _backprop_unused(self, node: fx.Node, unused: Set[str]) -> Set[str]:
         unused.add(node.name)
@@ -65,8 +64,7 @@ class RelativeAttributePropagation():
             result = self._fetch_attr(node.target)(*args, **kwargs)
         elif node.op == 'output':
             result = args[0]
-        print(node, node.op, node.target,
-              self._check_unused_by_result(node, result))
+        
         if self._check_unused_by_result(node, result):
             self._unused_nodes = self._unused_nodes.union(
                 self._backprop_unused(node, self._unused_nodes))
@@ -91,7 +89,6 @@ class RelativeAttributePropagation():
                 result, _ = self._step_node(node)
 
             self._results[node.name] = result
-            # print(node, result.shape if torch.is_tensor(result) else '', node.users)
 
         return self._results['output']
 
@@ -145,7 +142,7 @@ class RelativeAttributePropagation():
             self._relprops[node.name][user.name]
             for user in node.users.keys() if not self._marked_unused(user)
         ]
-        # print(node)
+
         if len(node.users) > 1:
             rel = sum(rel)
         elif len(rel) == 1:
@@ -165,7 +162,6 @@ class RelativeAttributePropagation():
                 f"RelProp rule for node {node.name} is not implemented"
             )
 
-        # print(node, rel.shape)
         rel = rule.relprop(rel, inputs, outputs, args, kwargs)
 
         return rel
@@ -179,11 +175,10 @@ class RelativeAttributePropagation():
     def relprop(self, r: Sequence[Tensor]) -> Tensor:
         queue = self._get_init_relprop_stack(r)
         outputs = []
-        # print('*'*100)
-        print(self._unused_nodes)
+        
         while len(queue) > 0:
             node = queue.popitem(last=False)[0]
-            # print(node, {u: u in self._unused_nodes for u in node.users.keys()})
+            
             if self._marked_unused(node):
                 continue
 
