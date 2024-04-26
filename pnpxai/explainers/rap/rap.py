@@ -19,6 +19,7 @@ class RelativeAttributePropagation():
         self._relprops: Dict[str, Dict[str, Tensor]] = defaultdict(dict)
         # Solves bottleneck, when module has multiple outputs, some of which are unused
         self._unused_nodes = set()
+        # print(self._trace)
 
     def _backprop_unused(self, node: fx.Node, unused: Set[str]) -> Set[str]:
         unused.add(node.name)
@@ -28,7 +29,12 @@ class RelativeAttributePropagation():
         return unused
 
     def _check_unused_by_result(self, node: fx.Node, result) -> bool:
-        return node.op != 'output' and (len(node.users) == 0 or not any([torch.is_tensor(res) for res in flatten(result)]))
+        return node.op != 'output' and (
+            len(node.users) == 0
+            or all([arg.name in self._unused_nodes for arg in node.all_input_nodes])
+            or not any([torch.is_tensor(res) for res in flatten(result)])
+            or (node.op == 'call_method' and node.target == 'detach')
+        )
 
     def _load_args(self, args, modifier: Optional[Callable] = None):
         modifier = modifier if modifier is not None else (lambda x: x)
@@ -59,7 +65,8 @@ class RelativeAttributePropagation():
             result = self._fetch_attr(node.target)(*args, **kwargs)
         elif node.op == 'output':
             result = args[0]
-
+        print(node, node.op, node.target,
+              self._check_unused_by_result(node, result))
         if self._check_unused_by_result(node, result):
             self._unused_nodes = self._unused_nodes.union(
                 self._backprop_unused(node, self._unused_nodes))
@@ -84,6 +91,7 @@ class RelativeAttributePropagation():
                 result, _ = self._step_node(node)
 
             self._results[node.name] = result
+            # print(node, result.shape if torch.is_tensor(result) else '', node.users)
 
         return self._results['output']
 
@@ -116,7 +124,8 @@ class RelativeAttributePropagation():
         ])
 
     def _node_relprop(self, node: fx.Node):
-        def enable_grad(x): return x.clone().requires_grad_()
+        def enable_grad(x: Tensor): return x.clone(
+        ).requires_grad_() if x.is_leaf else x
 
         args, kwargs = self._load_args(node.args), self._load_args(node.kwargs)
         inputs = self._load_args(node.all_input_nodes)
@@ -136,7 +145,7 @@ class RelativeAttributePropagation():
             self._relprops[node.name][user.name]
             for user in node.users.keys() if not self._marked_unused(user)
         ]
-
+        # print(node)
         if len(node.users) > 1:
             rel = sum(rel)
         elif len(rel) == 1:
@@ -155,6 +164,8 @@ class RelativeAttributePropagation():
             raise NotImplementedError(
                 f"RelProp rule for node {node.name} is not implemented"
             )
+
+        # print(node, rel.shape)
         rel = rule.relprop(rel, inputs, outputs, args, kwargs)
 
         return rel
@@ -168,8 +179,11 @@ class RelativeAttributePropagation():
     def relprop(self, r: Sequence[Tensor]) -> Tensor:
         queue = self._get_init_relprop_stack(r)
         outputs = []
+        # print('*'*100)
+        print(self._unused_nodes)
         while len(queue) > 0:
             node = queue.popitem(last=False)[0]
+            # print(node, {u: u in self._unused_nodes for u in node.users.keys()})
             if self._marked_unused(node):
                 continue
 
@@ -183,7 +197,7 @@ class RelativeAttributePropagation():
                 warnings.warn(get_message(
                     'explainer.rap.errors.node', node=node.name))
                 raise e
-            
+
             for i, arg in enumerate(node.all_input_nodes):
                 self._relprops[arg.name][node.name] = r if torch.is_tensor(
                     r) else r[i]
@@ -196,5 +210,5 @@ class RelativeAttributePropagation():
 
         if len(outputs) == 1:
             return outputs[0]
-        
+
         return outputs

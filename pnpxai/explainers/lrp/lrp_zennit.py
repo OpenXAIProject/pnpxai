@@ -71,14 +71,14 @@ class LRPZennit(Explainer):
         n_classes: int = None,
     ) -> List[torch.Tensor]:
         model = self._replace_add_func_with_mod()
-        if isinstance(targets, int):
-            targets = [targets] * len(inputs)
-        elif torch.is_tensor(targets):
-            targets = targets.tolist()
-        else:
-            raise Exception(f"[LRP] Unsupported target type: {type(targets)}")
-        if n_classes is None:
-            n_classes = self.model(inputs).shape[-1]
+        # if isinstance(targets, int):
+        #     targets = [targets] * len(inputs)
+        # elif torch.is_tensor(targets):
+        #     targets = targets.tolist()
+        # else:
+        #     raise Exception(f"[LRP] Unsupported target type: {type(targets)}")
+        # if n_classes is None:
+        #     n_classes = self.model(inputs).shape[-1]
         
         additional_layer_map = [
             (Linear, Epsilon(epsilon=epsilon)),
@@ -97,5 +97,6 @@ class LRPZennit(Explainer):
         composite = LayerMapComposite(layer_map=layer_map, canonizers=canonizers)
 
         with Gradient(model=model, composite=composite) as attributor:
-            _, relevance = attributor(inputs, torch.eye(n_classes)[targets].to(self.device))
+            # _, relevance = attributor(inputs, torch.eye(n_classes)[targets].to(self.device))
+            _, relevance = attributor(inputs, targets.to(self.device))
         return relevance

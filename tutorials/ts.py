@@ -18,9 +18,9 @@ from tsai.all import (
     InceptionTime,
     Learner,
     accuracy,
-    InceptionTime
+    PatchTST
 )
-from pnpxai.explainers import TSMule
+from pnpxai.explainers import TSMule, RAP
 
 seed = 2024
 torch.manual_seed(seed)
@@ -42,8 +42,11 @@ def get_data(dsid: str):
 dsid = 'ECGFiveDays'
 dls = get_data(dsid)
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 # model = FCN(dls.vars, dls.c)
-model = InceptionTime(dls.vars, dls.c)
+# model = InceptionTime(dls.vars, dls.c)
+model = PatchTST(dls.vars, None, dls.len, dls.c, classification=True).to(device)
 learn = Learner(dls, model, metrics=accuracy)
 try:
     learn.load('stage0')
@@ -109,16 +112,7 @@ y = torch.Tensor(y)
 data_idx = 0
 
 
-class TransModel(nn.Module):
-    def __init__(self, model):
-        super().__init__()
-        self.model = model
-
-    def forward(self, x: Tensor) -> Tensor:
-        return self.model(x.transpose(-1, -2))
-
-
-for explainer_type in [TSMule]:
+for explainer_type in [RAP]:
     # for explainer_type in [RAP, LRP, IntegratedGradients, Lime, KernelShap]:
     torch.cuda.empty_cache()
     explainer = explainer_type(learn.model)

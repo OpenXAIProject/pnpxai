@@ -61,6 +61,10 @@ class FloorDiv(Mul):
     pass
 
 
+class Div(Mul):
+    pass
+
+
 class MatMul(RelProp):
     def relprop(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None) -> _TensorOrTensors:
         in_a, in_b = inputs
@@ -114,6 +118,10 @@ class Unsqueeze(RelProp):
         return rel
 
 
+class Squeeze(RelPropSimple):
+    pass
+
+
 class Expand(RelPropSimple):
     pass
 
@@ -150,4 +158,16 @@ class View(RelProp):
 
 
 class GetAttr(RelProp):
+    pass
+
+
+class Contiguous(RelProp):
+    pass
+
+
+class Unfold(RelPropSimple):
+    pass
+
+
+class ReplicationPad1d(RelPropSimple):
     pass

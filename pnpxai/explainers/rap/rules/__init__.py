@@ -1,12 +1,12 @@
 from pnpxai.explainers.rap.rules.base import RelProp
 
 from pnpxai.explainers.rap.rules.functions import (
-    ReLU, GeLU,
-    Add, Sub, Mul, FloorDiv,
+    ReLU, GeLU, SoftMax,
+    Add, Sub, Mul, Div, FloorDiv, MatMul,
     Flatten, Cat, Repeat,
-    Unsqueeze, Expand,
+    Squeeze, Unsqueeze, Expand,
     GetItem, GetAttr,
-    Permute, Reshape, Transpose
+    Permute, Reshape, Transpose, View, Contiguous, Unfold, ReplicationPad1d,
 )
 
 from pnpxai.explainers.rap.rules.modules import (

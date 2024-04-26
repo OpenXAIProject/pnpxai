@@ -11,7 +11,10 @@ class Explainer:
         model: Model,
     ):
         self.model = model
-        self.device = next(self.model.parameters()).device
+
+    @property
+    def device(self):
+        return next(self.model.parameters()).device
 
     @abstractmethod
     def attribute(self, inputs: DataSource, targets: DataSource, **kwargs) -> DataSource:
