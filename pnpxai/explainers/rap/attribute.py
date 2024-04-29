@@ -47,7 +47,7 @@ class RAP(Explainer):
         pred_one_hot = pred_one_hot.to(output.device)
         return pred_one_hot
 
-    def attribute(self, inputs: DataSource, targets: DataSource, *args: Any, **kwargs: Any) -> DataSource:
+    def attribute(self, inputs: DataSource, targets: DataSource, opposite: bool = False, *args: Any, **kwargs: Any) -> DataSource:
         """
         Computes RAP attributions for the given inputs.
 
@@ -62,6 +62,8 @@ class RAP(Explainer):
         """
         outputs = self.method.run(inputs)
         preds = self.compute_pred(outputs)
+        if opposite:
+            preds = 1 - preds
         relprop = self.method.relprop(preds)
         return relprop
 

@@ -22,6 +22,7 @@ class IntegratedGradients(Explainer):
     Attributes:
         source (IntegratedGradientsZennit): The Integrated Gradients source for explanations.
     """
+
     def __init__(self, model: Model):
         super().__init__(model=model)
         self.source = IntegratedGradientsZennit(self.model)
@@ -31,6 +32,7 @@ class IntegratedGradients(Explainer):
         inputs: DataSource,
         targets: TargetType = None,
         n_classes: Optional[int] = None,
+        opposite: Optional[bool] = False
     ) -> Tensor:
         """
         Computes Integrated Gradients attributions for the given inputs.
@@ -46,10 +48,12 @@ class IntegratedGradients(Explainer):
             targets = [targets] * len(inputs)
         else:
             targets = targets.cpu()
-        _, gradients = self.source(
-            inputs,
-            torch.eye(n_classes)[targets].to(self.device),
-        )
+
+        pred_class = torch.eye(n_classes)[targets].to(self.device)
+        if opposite:
+            pred_class = 1 - pred_class
+
+        _, gradients = self.source(inputs, pred_class)
         return inputs * gradients
 
     def format_outputs_for_visualization(
