@@ -74,3 +74,41 @@ class Sensitivity(EvaluationMetric):
             sens = max([torch.linalg.norm(diff)/attr_norm for diff in attr_diff])
             evaluations.append(sens)
         return torch.stack(evaluations).detach()
+    
+
+    def eval_ts(
+            self,
+            model: Model,
+            inputs: torch.Tensor,
+            targets: torch.Tensor,
+            explainer_w_args: ExplainerWArgs,
+            attributions: Optional[torch.Tensor]=None,
+            **kwargs,
+        ) -> torch.Tensor:
+        device = next(model.parameters()).device
+        inputs = inputs.to(device)
+        targets = targets.to(device)
+        if attributions is None:
+            attributions = explainer_w_args.attribute(inputs, targets)
+
+        evaluations = []
+        for input, target, attr in zip(inputs, targets, attributions):
+            # Add random uniform noise which ranges [-epsilon, epsilon]
+            perturbed = torch.stack([input]*self.n_iter)
+            noise = (
+                torch.rand_like(perturbed).to(device) * self.epsilon * 2 \
+                - self.epsilon
+            )
+            perturbed += noise
+            perturbed_target = torch.stack([target]*self.n_iter)
+            # Get perturbed explanation results
+            perturbed_attr = explainer_w_args.attribute(
+                inputs=perturbed,
+                targets=perturbed_target
+            )
+            # Get maximum of the difference between the perturbed explanation and the original explanation
+            attr_norm = torch.linalg.norm(attr)
+            attr_diff = attr - perturbed_attr
+            sens = max([torch.linalg.norm(diff)/attr_norm for diff in attr_diff])
+            evaluations.append(sens)
+        return torch.stack(evaluations).detach()

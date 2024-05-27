@@ -99,3 +99,16 @@ def linear_from_params(weight: Tensor, bias: Optional[Tensor] = None) -> nn.Line
         layer.bias.data = bias
 
     return layer
+
+
+def reset_model(model: nn.Module):
+    @torch.no_grad()
+    def weight_reset(m: nn.Module):
+        # - check if the current module has reset_parameters & if it's callabed called it on m
+        reset_parameters = getattr(m, "reset_parameters", None)
+        if callable(reset_parameters):
+            m.reset_parameters()
+
+    # Applies fn recursively to every submodule see: https://pytorch.org/docs/stable/generated/torch.nn.Module.html
+    model.apply(fn=weight_reset)
+    return model

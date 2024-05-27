@@ -21,6 +21,7 @@ from tsai.all import (
     PatchTST
 )
 from pnpxai.explainers import TSMule, RAP
+from pnpxai.evaluator import Complexity, MuFidelity, Sensitivity
 
 seed = 2024
 torch.manual_seed(seed)
@@ -28,25 +29,27 @@ np.random.seed(seed)
 random.seed(seed)
 
 
-def get_data(dsid: str):
-    x_train, y_train, x_test, y_test = get_UCR_data(dsid, return_split=True)
-    x, y, splits = combine_split_data([x_train, x_test], [y_train, y_test])
+def get_data(dsid: str, batch_size=32):
+    x_train, y_train, x_valid, y_valid = get_UCR_data(dsid, return_split=True, force_download=True)
+    x, y, splits = combine_split_data([x_train, x_valid], [y_train, y_valid])
     tfms = [None, [Categorize()]]
     dsets = TSDatasets(x, y, tfms=tfms, splits=splits, inplace=True)
     dls = TSDataLoaders.from_dsets(
-        dsets.train, dsets.valid, bs=[64, 128], batch_tfms=[TSStandardize()], num_workers=0
+        dsets.train, dsets.valid, bs=[batch_size, batch_size*2],
+        batch_tfms=[TSStandardize()], num_workers=0,
+        shuffle_train=False, drop_last=False
     )
     return dls
 
 
-dsid = 'ECGFiveDays'
+dsid = 'ECG200'
 dls = get_data(dsid)
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # model = FCN(dls.vars, dls.c)
-# model = InceptionTime(dls.vars, dls.c)
-model = PatchTST(dls.vars, None, dls.len, dls.c, classification=True).to(device)
+model = InceptionTime(dls.vars, dls.c).to(device)
+# model = PatchTST(dls.vars, None, dls.len, dls.c, classification=True).to(device)
 learn = Learner(dls, model, metrics=accuracy)
 try:
     learn.load('stage0')
@@ -111,14 +114,31 @@ y = torch.Tensor(y)
 
 data_idx = 0
 
+metric_types = [MuFidelity, Complexity, Sensitivity]
+results = {}
 
-for explainer_type in [RAP]:
-    # for explainer_type in [RAP, LRP, IntegratedGradients, Lime, KernelShap]:
-    torch.cuda.empty_cache()
-    explainer = explainer_type(learn.model)
-    params = {"inputs": x, "targets": y}
-    attrs = explainer.attribute(**params)
-    attrs = normalize(attrs)
-    attrs = clear_outliers(attrs)
-    visualize(
-        x, attrs, os.path.join(cur_dir, f'results/{explainer_type.__name__}.png'), data_idx)
+for metric_type in metric_types:
+    metric = metric_type()
+    for explainer_type in [RAP]:
+        # for explainer_type in [RAP, LRP, IntegratedGradients, Lime, KernelShap]:
+        torch.cuda.empty_cache()
+        explainer = explainer_type(learn.model)
+        params = {"inputs": x, "targets": y}
+        attrs = explainer.attribute(**params)
+        metric_val = metric(
+            model=learn.model,
+            inputs=x,
+            targets=y,
+            attributions=attrs
+        )
+
+        if explainer_type.__name__ not in results:
+            results[explainer_type.__name__] = {}
+        results[explainer_type.__name__][metric_type.__name__] = metric_val
+
+        # attrs = normalize(attrs)
+        # attrs = clear_outliers(attrs)
+        # visualize(
+        #     x, attrs, os.path.join(cur_dir, f'results/{explainer_type.__name__}.png'), data_idx)
+
+print(results)

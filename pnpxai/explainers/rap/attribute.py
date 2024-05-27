@@ -62,6 +62,7 @@ class RAP(Explainer):
         """
         outputs = self.method.run(inputs)
         preds = self.compute_pred(outputs)
+        # preds = outputs
         if opposite:
             preds = 1 - preds
         relprop = self.method.relprop(preds)

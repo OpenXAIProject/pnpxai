@@ -45,3 +45,11 @@ class Complexity(EvaluationMetric):
             prob_mass = hist / hist.sum()
             evaluations.append(entropy(prob_mass))
         return torch.tensor(evaluations)
+    
+    def eval_ts(
+            self,
+            attributions: torch.Tensor,
+            **kwargs,
+        ) -> torch.Tensor:
+        return self.__call__(attributions=attributions, **kwargs)
+        

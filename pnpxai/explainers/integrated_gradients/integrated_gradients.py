@@ -50,6 +50,7 @@ class IntegratedGradients(Explainer):
             targets = targets.cpu()
 
         pred_class = torch.eye(n_classes)[targets].to(self.device)
+        # pred_class = targets
         if opposite:
             pred_class = 1 - pred_class
 
