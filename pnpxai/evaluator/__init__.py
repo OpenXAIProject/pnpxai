@@ -5,5 +5,6 @@ from pnpxai.evaluator.complexity import Complexity
 from pnpxai.evaluator.mu_fidelity import MuFidelity
 from pnpxai.evaluator.sensitivity import Sensitivity
 from pnpxai.evaluator.ror import ROR
+from pnpxai.evaluator.ror_tsf import RORTSF
 
-AVAILABLE_METRICS: List[Type[EvaluationMetric]] = [Complexity, MuFidelity, Sensitivity, ROR]
+AVAILABLE_METRICS: List[Type[EvaluationMetric]] = [Complexity, MuFidelity, Sensitivity, ROR, RORTSF]

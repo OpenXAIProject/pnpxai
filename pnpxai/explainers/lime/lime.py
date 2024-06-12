@@ -5,6 +5,7 @@ from captum._utils.typing import BaselineType, TargetType
 
 from torch import Tensor
 
+from captum._utils.models.linear_model import SkLearnLinearRegression, SkLearnRidge, SGDRidge, SGDLinearRegression
 from pnpxai.explainers.utils.feature_mask import get_default_feature_mask
 from pnpxai.core._types import Model, DataSource, Task
 from pnpxai.explainers._explainer import Explainer
@@ -20,9 +21,19 @@ class Lime(Explainer):
     Attributes:
         source (LimeCaptum): The LIME source for explanations.
     """
-    def __init__(self, model: Model):
+
+    def __init__(self, model: Model, classification: bool = True):
         super().__init__(model=model)
-        self.source = LimeCaptum(model)
+        interpretable_model = None
+        if not classification:
+            interpretable_model = SGDLinearRegression()
+            interpretable_model = interpretable_model.to(self.device)
+            
+        self.source = LimeCaptum(
+            model,
+            interpretable_model=interpretable_model,
+            classification=classification
+        )
 
     def attribute(
         self,
@@ -49,7 +60,7 @@ class Lime(Explainer):
             perturbations_per_eval (int): Number of perturbations per evaluation (default: 1).
             return_input_shape (bool): Whether to return input shape (default: True).
             show_progress (bool): Whether to show progress (default: False).
-        """        
+        """
         # if feature_mask is None:
         #     feature_mask = get_default_feature_mask(inputs, self.device)
 

@@ -23,9 +23,10 @@ class IntegratedGradients(Explainer):
         source (IntegratedGradientsZennit): The Integrated Gradients source for explanations.
     """
 
-    def __init__(self, model: Model):
+    def __init__(self, model: Model, classification: bool = True):
         super().__init__(model=model)
         self.source = IntegratedGradientsZennit(self.model)
+        self.classification = classification
 
     def attribute(
         self,
@@ -49,12 +50,14 @@ class IntegratedGradients(Explainer):
         else:
             targets = targets.cpu()
 
-        pred_class = torch.eye(n_classes)[targets].to(self.device)
-        # pred_class = targets
-        if opposite:
-            pred_class = 1 - pred_class
+        if self.classification:
+            targets = torch.eye(n_classes)[targets]
 
-        _, gradients = self.source(inputs, pred_class)
+        targets = targets.to(self.device)
+        if opposite:
+            targets = 1 - targets
+
+        _, gradients = self.source(inputs, targets)
         return inputs * gradients
 
     def format_outputs_for_visualization(

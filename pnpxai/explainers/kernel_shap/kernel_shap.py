@@ -23,9 +23,9 @@ class KernelShap(Explainer):
         source (KernelShapCaptum): The KernelSHAP source for explanations.
     """
 
-    def __init__(self, model: Model):
+    def __init__(self, model: Model, classification: bool = True):
         super().__init__(model)
-        self.source = KernelShapCaptum(model)
+        self.source = KernelShapCaptum(model, classification=classification)
 
     def attribute(
         self,

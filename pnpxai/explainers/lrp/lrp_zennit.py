@@ -20,9 +20,11 @@ from pnpxai.explainers._explainer import Explainer
 from .rules import AttentionHeadRule, LayerNormRule
 from .utils import list_args_for_stack, LRPTracer
 
+
 class LRPZennit(Explainer):
-    def __init__(self, model: Model):
+    def __init__(self, model: Model, classification: bool = True):
         super(LRPZennit, self).__init__(model)
+        self.classification = classification
 
     def _replace_add_func_with_mod(self):
         # get model architecture to manipulate
@@ -36,7 +38,8 @@ class LRPZennit(Explainer):
         )
 
         if add_func_nodes:
-            traced_model = self.__get_model_with_functional_nodes(ma, add_func_nodes)
+            traced_model = self.__get_model_with_functional_nodes(
+                ma, add_func_nodes)
             return traced_model
         return self.model
 
@@ -71,17 +74,20 @@ class LRPZennit(Explainer):
         n_classes: int = None,
     ) -> List[torch.Tensor]:
         model = self._replace_add_func_with_mod()
-        ########################################
-        if isinstance(targets, int):
-            targets = [targets] * len(inputs)
-        elif torch.is_tensor(targets):
-            targets = targets.tolist()
-        else:
-            raise Exception(f"[LRP] Unsupported target type: {type(targets)}")
-        ########################################
+
+        if self.classification:
+            if isinstance(targets, int):
+                targets = [targets] * len(inputs)
+            elif torch.is_tensor(targets):
+                targets = targets.tolist()
+            else:
+                raise Exception(
+                    f"[LRP] Unsupported target type: {type(targets)}")
+            targets = torch.eye(n_classes)[targets]
+
         if n_classes is None:
             n_classes = self.model(inputs).shape[-1]
-        
+
         additional_layer_map = [
             (Linear, Epsilon(epsilon=epsilon)),
             (nn.MultiheadAttention, AttentionHeadRule(stabilizer=epsilon)),
@@ -93,12 +99,13 @@ class LRPZennit(Explainer):
                 VisionTransformerAttention,
                 VisionTransformerAttentionCanonizer,
             )
-            additional_layer_map.append((VisionTransformerAttention, AttentionHeadRule(stabilizer=epsilon)))
+            additional_layer_map.append(
+                (VisionTransformerAttention, AttentionHeadRule(stabilizer=epsilon)))
             canonizers.append(VisionTransformerAttentionCanonizer())
         layer_map = additional_layer_map + layer_map_base()
-        composite = LayerMapComposite(layer_map=layer_map, canonizers=canonizers)
+        composite = LayerMapComposite(
+            layer_map=layer_map, canonizers=canonizers)
 
         with Gradient(model=model, composite=composite) as attributor:
-            _, relevance = attributor(inputs, torch.eye(n_classes)[targets].to(self.device))
-            # _, relevance = attributor(inputs, targets.to(self.device))
+            _, relevance = attributor(inputs, targets)
         return relevance

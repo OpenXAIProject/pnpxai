@@ -89,6 +89,8 @@ class ROR(EvaluationMetric):
 
             mask = (torch.rand_like(spec_x) < self.masked_ratio)
             x = torch.where(mask, spec_x, base_x)
+            x = x + torch.arange(0, dim_ch)[None, :, None]
+            x = x + torch.rand_like(x) / 10
 
             return x, y, mask
             

@@ -19,7 +19,7 @@ class RAP(Explainer):
     - device (torch.device): The device on which the model parameters reside.
     """
 
-    def __init__(self, model: Model):
+    def __init__(self, model: Model, classification: bool = True):
         """
         Initializes an RAP object.
 
@@ -28,6 +28,7 @@ class RAP(Explainer):
         """
         super().__init__(model)
         self.method = RelativeAttributePropagation(model)
+        self.classification = classification
 
     def compute_pred(self, output: Tensor) -> Tensor:
         """
@@ -61,11 +62,11 @@ class RAP(Explainer):
         - DataSource: RAP attributions.
         """
         outputs = self.method.run(inputs)
-        preds = self.compute_pred(outputs)
-        # preds = outputs
+        if self.classification:
+            outputs = self.compute_pred(outputs)
         if opposite:
-            preds = 1 - preds
-        relprop = self.method.relprop(preds)
+            outputs = 1 - outputs
+        relprop = self.method.relprop(outputs)
         return relprop
 
     def format_outputs_for_visualization(

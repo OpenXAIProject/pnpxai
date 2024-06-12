@@ -17,9 +17,9 @@ class LRP(Explainer):
         source (LRPZennit): The LRP source for explanations.
     """
 
-    def __init__(self, model: Model):
+    def __init__(self, model: Model, classification: bool = True):
         super(LRP, self).__init__(model)
-        self.source = LRPZennit(model)
+        self.source = LRPZennit(model, classification)
 
     def attribute(
         self,
