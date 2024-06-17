@@ -12,6 +12,8 @@ DataSource = Union[DataLoader, TensorOrTensorSequence]
 Model = nn.Module  # TODO: List other model types in Union[Type1, Type2, ...]
 Task = Literal["image", "tabular"]
 Question = Literal["why", "how"]
+Modality = Literal['image', 'text']
+ExplanationType = Literal['attribution']
 
 
 @dataclass

@@ -1,0 +1,25 @@
+from torch.nn import MultiheadAttention
+from torch.nn.modules import Module
+from zennit.attribution import Attributor
+from zennit.composites import LayerMapComposite, layer_map_base
+
+from .rules import SavingAttention
+from .module_converters import default_attention_converters
+from ..utils import _format_to_tuple
+
+
+class SavingAttentionAttributor(Attributor):
+    def __init__(self, model: Module):
+        layer_map = [(MultiheadAttention, SavingAttention())]
+        composite = LayerMapComposite(layer_map=layer_map, canonizers=default_attention_converters)
+        super().__init__(model, composite, None)    
+
+    
+    def forward(self, input, attr_output_fn):
+        input = _format_to_tuple(input)
+        _ = self.model(*input)
+        attn_output_weights_all = [
+            hook_ref.stored_tensors[hook_ref.saved_name]
+            for hook_ref in self.composite.hook_refs
+        ]
+        return tuple(attn_output_weights_all)

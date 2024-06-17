@@ -2,7 +2,7 @@ from typing import Optional
 import torch
 
 from pnpxai.core._types import Model
-from pnpxai.explainers import ExplainerWArgs
+from pnpxai.explainers_backup import ExplainerWArgs
 from pnpxai.evaluator._evaluator import EvaluationMetric
 
 

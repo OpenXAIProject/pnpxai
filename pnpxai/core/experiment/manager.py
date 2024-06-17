@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader, Subset, Dataset
 
 from pnpxai.core.experiment.cache import ExperimentCache
 from pnpxai.core._types import DataSource
-from pnpxai.explainers._explainer import Explainer, ExplainerWArgs
+from pnpxai.explainers_backup._explainer import Explainer, ExplainerWArgs
 from pnpxai.evaluator import EvaluationMetric
 
 

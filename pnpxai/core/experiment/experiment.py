@@ -13,7 +13,7 @@ from pnpxai.core.experiment.observable import ExperimentObservableEvent
 from pnpxai.utils import class_to_string, Observable, to_device
 from pnpxai.messages import get_message
 from pnpxai.core.experiment.manager import ExperimentManager
-from pnpxai.explainers import Explainer, ExplainerWArgs
+from pnpxai.explainers_backup import Explainer, ExplainerWArgs
 from pnpxai.evaluator import EvaluationMetric
 from pnpxai.core._types import DataSource, Model, Task
 
