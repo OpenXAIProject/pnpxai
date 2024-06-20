@@ -1,433 +1,313 @@
-from typing import Any, Callable, Optional, Sequence, Union, List
-import time
+from typing import Any, Optional, Callable, Dict, Sequence
+
+import csv
+import uuid
+import os
+import json
 import warnings
+from tqdm import tqdm
 
 import torch
-from torch import Tensor
 import numpy as np
-from plotly import express as px
-from plotly.graph_objects import Figure
+import pandas as pd
+from torch.nn.modules import Module
 
-from pnpxai.core.experiment.experiment_metrics_defaults import EVALUATION_METRIC_REVERSE_SORT, EVALUATION_METRIC_SORT_PRIORITY
-from pnpxai.core.experiment.observable import ExperimentObservableEvent
-from pnpxai.utils import class_to_string, Observable, to_device
-from pnpxai.messages import get_message
-from pnpxai.core.experiment.manager import ExperimentManager
-from pnpxai.explainers_backup import Explainer, ExplainerWArgs
-from pnpxai.evaluator import EvaluationMetric
-from pnpxai.core._types import DataSource, Model, Task
+from pnpxai.core.recommender import XaiRecommender
+from pnpxai.explainers.base import Explainer
+from pnpxai.metrics.base import Metric
+from .utils import camel_to_snake, _format_to_tuple
+from .file_utils import mkdir, find, exists
+from .._types import Modality, Task, Model, DataSource
 
 
-def default_input_extractor(x):
-    return x[0]
+ROOT_DIR = "./pnpxai-runs"
+INPUT_DIR = "inputs"
+ATTRIBUTION_DIR = "attrs"
+EXPLAINER_CONFS_FILENAME = "explainers.json"
+METRIC_CONFS_FILENAME = "metrics.json"
+ANNOTATION_FILENAME = "annotations.csv"
+ANNOTATION_FIELD_BASE = [
+    "input_idx",
+    "input_path",
+    "label",
+    "pred",
+    "prob_score",
+    "explainer_nm",
+    "attr_path",
+]
+EVALUATION_FIELDS = ["metric_nm", "value"]
 
 
-def default_target_extractor(x):
-    return x[1]
+class ExperimentRecords:
+    def __init__(self, experiment_name):
+        self.experiment_name = experiment_name
+
+        self.explainer_confs = self._load_explainer_confs()
+        self.metric_confs = self._load_metric_confs()
+        self.annotations = self._load_annotations()
+    
+    @property
+    def experiment_dir(self):
+        return os.path.join(ROOT_DIR, self.experiment_name)
+    
+    @property
+    def input_dir(self):
+        dir = os.path.join(self.experiment_dir, INPUT_DIR)
+        if os.path.exists(dir):
+            return dir
+        return None
+    
+    @property
+    def attr_dir(self):
+        return os.path.join(self.experiment_dir, ATTRIBUTION_DIR)
+    
+    @property
+    def explainer_confs_path(self):
+        return os.path.join(self.experiment_dir, EXPLAINER_CONFS_FILENAME)
+
+    @property
+    def metric_confs_path(self):
+        path = os.path.join(self.experiment_dir, METRIC_CONFS_FILENAME)
+        if os.path.exists(path):
+            return path
+        return None
+
+    @property
+    def record_path(self):
+        return os.path.join(self.experiment_dir, ANNOTATION_FILENAME)
+    
+    def _load_explainer_confs(self):
+        with open(self.explainer_confs_path, "r") as f:
+            explainer_confs = json.load(f)
+        return explainer_confs
+
+    def _load_metric_confs(self):
+        if self.metric_confs_path is not None:
+            with open(self.metric_confs_path, "r") as f:
+                metric_confs = json.load(f)
+            return metric_confs
+        return None
+
+    def _load_annotations(self):
+        with open(self.record_path, "r") as f:
+            dataiter = csv.DictReader(f)
+            annotations = [r for r in dataiter]
+        return annotations
+
+    def __len__(self):
+        return len(self.annotations)
+
+    def __getitem__(self, idx):
+        annon = self.annotations[idx]
+
+        # format or load values
+        record = {}
+        for k, _v in annon.items():
+            if k.endswith("_path"):
+                k = f"{k.split('_')[0]}s"
+                try:
+                    v = tuple(torch.tensor(ary) for ary in np.load(_v).values())
+                except:
+                    import pdb; pdb.set_trace()
+                if len(v) == 1:
+                    v = v[0]
+            elif _v.replace(".","").isnumeric():
+                v = eval(_v)
+            else:
+                v = _v
+            record[k] = v
+        return record
+
+    
 
 
-class Experiment(Observable):
-    """
-    A class representing an experiment for model interpretability.
+def run_experiment(
+    name: str,
+    modality: Modality,
+    task: Task,
+    model: Model,
+    dataloader: DataSource,
+    input_extractor: Optional[Callable]=lambda data: data[0],
+    label_extractor: Optional[Callable]=lambda data: data[-1],
+    
+    target_fn: Optional[Callable]=lambda outputs: outputs.argmax(1),
+    prob_fn: Optional[Callable]=lambda outputs: outputs.softmax(1).max(1).values,
+    explainers: Optional[Dict[str, Explainer]]=None,
+    metrics: Optional[Dict[str, Metric]]=None,
+    recommend: bool=False,
+    save_inputs: bool=True,
+    target_labels: bool=False, # If True, target_fn is ignored
+) -> ExperimentRecords:
+    if recommend:
+        recommender = XaiRecommender()
+        recommended = recommender.recommend(modality=modality, model=model)
+        if explainers is None:
+            explainers = {
+                camel_to_snake(explainer_type.__name__): explainer_type(model)
+                for explainer_type in recommended.explainers
+            }
+        if metrics is None:
+            metrics = {
+                camel_to_snake(metric_type.__name__): metric_type(model)
+                for metric_type in recommended.metrics
+            }
+    assert explainers is not None, (
+        "Must have explainers. If you want to run experiment with explainers "
+        "recommended by XaiRecommender, please set recommend=True."
+    )
+    record_fields = ANNOTATION_FIELD_BASE
+    if metrics is None:
+        warnings.warn(
+            "Evaluation results will not provided because metrics are "
+            "not given. If you want to run experiment with metrics "
+            "recommended by XaiRecommender, please set recommend=True."
+        )
+    else:
+        record_fields += EVALUATION_FIELDS
 
-    Args:
-        model (Model): The machine learning model to be interpreted.
-        data (DataSource): The data used for the experiment.
-        explainers (Sequence[Union[ExplainerWArgs, Explainer]]): Explainer objects or their arguments for interpreting the model.
-        metrics (Optional[Sequence[EvaluationMetric]]): Evaluation metrics used to assess model interpretability.
-        task (Task): The type of task the model is designed for (default: "image").
-        input_extractor (Optional[Callable[[Any], Any]]): Function to extract inputs from data (default: None).
-        target_extractor (Optional[Callable[[Any], Any]]): Function to extract targets from data (default: None).
-        input_visualizer (Optional[Callable[[Any], Any]]): Function to visualize input data (default: None).
-        target_visualizer (Optional[Callable[[Any], Any]]): Function to visualize target data (default: None).
+    # create dirs and files
+    expr_dir, input_dir, attr_dir, record_filepath = _create_experiment_dir(
+        name, save_inputs=save_inputs,
+    )
 
-    Attributes:
-        all_explainers (Sequence[ExplainerWArgs]): All explainer objects used in the experiment.
-        all_metrics (Sequence[EvaluationMetric]): All evaluation metrics used in the experiment.
-        errors (Sequence[Error]): 
-        is_image_task (bool): True if the task is an image-related task, False otherwise.
-        has_explanations (bool): True if the experiment has explanations, False otherwise.
-    """
+    # create record file
+    with open(record_filepath, "w") as f:
+        writer = csv.writer(f)
+        writer.writerow(record_fields)
 
-    def __init__(
-        self,
-        model: Model,
-        data: DataSource,
-        explainers: Sequence[Union[ExplainerWArgs, Explainer]],
-        metrics: Optional[Sequence[EvaluationMetric]] = None,
-        task: Task = "image",
-        input_extractor: Optional[Callable[[Any], Any]] = None,
-        target_extractor: Optional[Callable[[Any], Any]] = None,
-        input_visualizer: Optional[Callable[[Any], Any]] = None,
-        target_visualizer: Optional[Callable[[Any], Any]] = None,
-        cache_device: Optional[Union[torch.device, str]] = None,
-    ):
-        super(Experiment, self).__init__()
-        self.model = model
-        self.model_device = next(self.model.parameters()).device
+    # create explainer conf file
+    with open(os.path.join(expr_dir, EXPLAINER_CONFS_FILENAME), "w") as f:
+        explainer_confs = _extract_confs(explainers)
+        json.dump(explainer_confs, f, indent=4)
 
-        self.manager = ExperimentManager(
-            data=data,
-            explainers=explainers,
-            metrics=metrics or [],
-            cache_device=cache_device,
+    # create metric conf file
+    if metrics is not None:
+        metric_confs = _extract_confs(metrics)
+        with open(os.path.join(expr_dir, METRIC_CONFS_FILENAME), "w") as f:
+            json.dump(metric_confs, f, indent=4)
+
+    max_digit = len(str(len(dataloader.dataset)))
+    for batch_count, data in enumerate(tqdm(dataloader, total=len(dataloader))):
+        inputs = _format_to_tuple(input_extractor(data))
+        input_idxs = range(
+            batch_count*dataloader.batch_size,
+            (batch_count+1)*dataloader.batch_size
         )
 
-        self.input_extractor = input_extractor \
-            if input_extractor is not None \
-            else default_input_extractor
-        self.target_extractor = target_extractor \
-            if target_extractor is not None \
-            else default_target_extractor
-        self.input_visualizer = input_visualizer
-        self.target_visualizer = target_visualizer
-        self.task = task
-        self.reset_errors()
+        # save inputs
+        input_paths = []
+        for input_idx, *input in zip(input_idxs, *inputs):
+            if save_inputs:
+                input_path = os.path.join(
+                    input_dir,
+                    f"input{str(input_idx).zfill(max_digit)}.npz"
+                )
+                np.savez(input_path, *(inp.cpu().detach().numpy() for inp in input))
+                input_paths.append(input_path)
+            else:
+                input_paths.append(None)
 
-    def reset_errors(self):
-        self._errors: List[BaseException] = []
-
-    @property
-    def errors(self):
-        return self._errors
-
-    @property
-    def all_explainers(self) -> Sequence[ExplainerWArgs]:
-        return self.manager.all_explainers
-
-    @property
-    def all_metrics(self) -> Sequence[EvaluationMetric]:
-        return self.manager.all_metrics
-
-    def get_current_explainers(self) -> List[ExplainerWArgs]:
-        return self.manager.get_explainers()[0]
-
-    def get_current_metrics(self) -> List[EvaluationMetric]:
-        return self.manager.get_metrics()[0]
-
-    def to_device(self, x):
-        return to_device(x, self.model_device)
-
-    def run(
-        self,
-        data_ids: Optional[Sequence[int]] = None,
-        explainer_ids: Optional[Sequence[int]] = None,
-        metrics_ids: Optional[Sequence[int]] = None,
-    ) -> 'Experiment':
-        """
-        Run the experiment by processing data, generating explanations, evaluating with metrics, caching and retrieving the data.
-
-        Args:
-            data_ids (Optional[Sequence[int]]): A sequence of data IDs to specify the subset of data to process.
-            explainer_ids (Optional[Sequence[int]]): A sequence of explainer IDs to specify the subset of explainers to use.
-            metrics_ids (Optional[Sequence[int]]): A sequence of metric IDs to specify the subset of metrics to evaluate.
-
-        Returns:
-            The Experiment instance with updated results and state.
-
-        This method orchestrates the experiment by configuring the manager, obtaining explainer and metric instances,
-        processing data, generating explanations, and evaluating metrics. It then saves the results in the manager.
-
-        Note: The input parameters allow for flexibility in specifying subsets of data, explainers, and metrics to process.
-        If not provided, the method processes all available data, explainers, and metrics.
-        """
-        self.reset_errors()
-        self.manager.set_config(data_ids, explainer_ids, metrics_ids)
-        explainers, explainer_ids = self.manager.get_explainers()
-
-        for explainer, explainer_id in zip(explainers, explainer_ids):
-            explainer_name = class_to_string(explainer.explainer)
-            data, data_ids = self.manager.get_data_to_process_for_explainer(
-                explainer_id)
-            explanations = self._explain(data, explainer)
-            self.manager.save_explanations(
-                explanations, data, data_ids, explainer_id
-            )
-            message = get_message(
-                'experiment.event.explainer', explainer=explainer_name
-            )
-            print(f"[Experiment] {message}")
-            self.fire(ExperimentObservableEvent(
-                self.manager, message, explainer))
-
-            metrics, metric_ids = self.manager.get_metrics()
-            for metric, metric_id in zip(metrics, metric_ids):
-                metric_name = class_to_string(metric)
-                data, data_ids = self.manager.get_data_to_process_for_metric(
-                    explainer_id, metric_id)
-                explanations, data_ids = self.manager.get_valid_explanations(
-                    explainer_id, data_ids)
-                data, _ = self.manager.get_data(data_ids)
-                evaluations = self._evaluate(
-                    data, explanations, explainer, metric)
-                self.manager.save_evaluations(
-                    evaluations, data, data_ids, explainer_id, metric_id)
-
-                message = get_message(
-                    'experiment.event.explainer.metric', explainer=explainer_name, metric=metric_name)
-                print(f"[Experiment] {message}")
-                self.fire(ExperimentObservableEvent(
-                    self.manager, message, explainer, metric))
-
-        data, data_ids = self.manager.get_data_to_predict()
-        outputs = self._predict(data)
-        self.manager.save_outputs(outputs, data, data_ids)
-
-        return self
-
-    def _predict(self, data: DataSource):
-        outputs = [
-            self.model(self.to_device(self.input_extractor(datum)))
-            for datum in data
+        labels = label_extractor(data)
+        outputs = model(*inputs)
+        probs = prob_fn(outputs)
+        targets = labels if target_labels else target_fn(outputs)
+        base_record_values = [
+            input_idxs,
+            input_paths,
+            labels,
+            targets,
+            probs,
         ]
-        return outputs
+        for explainer_nm, explainer in explainers.items():
+            # explain
+            attrs = _format_to_tuple(explainer.attribute(inputs, targets))
 
-    def _explain(self, data: DataSource, explainer: ExplainerWArgs):
-        explanations = [None] * len(data)
-        explainer_name = class_to_string(explainer.explainer)
-
-        for i, datum in enumerate(data):
-            try:
-                datum = self.to_device(datum)
-                inputs = self.input_extractor(datum)
-                targets = self.target_extractor(datum)
-                explanations[i] = explainer.attribute(
-                    inputs=inputs,
-                    targets=targets,
+            # save explanations
+            attr_paths = []
+            for input_idx, *attr in zip(input_idxs, *attrs):
+                attr_path = os.path.join(
+                    attr_dir,
+                    f"{explainer_nm}_input{str(input_idx).zfill(max_digit)}.npz"
                 )
-            except NotImplementedError as error:
-                warnings.warn(
-                    f"\n[Experiment] {get_message('experiment.errors.explainer_unsupported', explainer=explainer_name)}")
-                raise error
-            except Exception as e:
-                warnings.warn(
-                    f"\n[Experiment] {get_message('experiment.errors.explanation', explainer=explainer_name, error=e)}")
-                self._errors.append(e)
+                np.savez(attr_path, *(a.cpu().detach().numpy() for a in attr))
+                attr_paths.append(attr_path)
 
-        return explanations
+            # add saved path to record
+            explainer_record_values = base_record_values.copy()
+            explainer_record_values.append(attr_paths)
 
-    def _evaluate(self, data: DataSource, explanations: DataSource, explainer: ExplainerWArgs, metric: EvaluationMetric):
-        if explanations is None:
-            return None
-        started_at = time.time()
-        metric_name = class_to_string(metric)
-        explainer_name = class_to_string(explainer.explainer)
-
-        evaluations = [None] * len(data)
-        for i, (datum, explanation) in enumerate(zip(data, explanations)):
-            if explanation is None:
-                continue
-            datum = self.to_device(datum)
-            explanation = self.to_device(explanation)
-            inputs = self.input_extractor(datum)
-            targets = self.target_extractor(datum)
-            try:
-                # [GH] input args as kwargs to compute metric in an experiment
-                evaluations[i] = metric(
-                    model=self.model,
-                    explainer_w_args=explainer,
-                    inputs=inputs,
-                    targets=targets,
-                    attributions=explanation,
-                )
-            except Exception as e:
-                warnings.warn(
-                    f"\n[Experiment] {get_message('experiment.errors.evaluation', explainer=explainer_name, metric=metric_name, error=e)}")
-                self._errors.append(e)
-        elapsed_time = time.time() - started_at
-        print(
-            f"[Experiment] {get_message('elapsed', task=metric_name, elapsed=elapsed_time)}")
-
-        return evaluations
-
-    def get_visualizations_flattened(self) -> Sequence[Sequence[Figure]]:
-        """
-        Generate flattened visualizations for each data point based on explanations.
-
-        Returns:
-            List of visualizations for each data point across explainers.
-
-        This method retrieves valid explanations for each explainer, formats them for visualization,
-        and generates visualizations using Plotly Express. The results are flattened based on the data points
-        and returned as a list of lists of figures.
-        """
-        explainers, explainer_ids = self.manager.get_explainers()
-        # Get all data ids
-        experiment_data_ids = self.manager.get_data_ids()
-        visualizations = []
-
-        for explainer, explainer_id in zip(explainers, explainer_ids):
-            # Get all valid explanations and data ids for this explainer
-            explanations, data_ids = self.manager.get_valid_explanations(
-                explainer_id)
-            data = self.manager.get_data(data_ids)[0]
-            explainer_visualizations = []
-            # Visualize each valid explanataion
-            for datum, explanation in zip(data, explanations):
-                inputs = self.input_extractor(datum)
-                targets = self.target_extractor(datum)
-                formatted = explainer.format_outputs_for_visualization(
-                    inputs=inputs,
-                    targets=targets,
-                    explanations=explanation,
-                    task=self.task
-                )
-
-                if not self.manager.is_batched:
-                    formatted = [formatted]
-                formatted_visualizations = [
-                    px.imshow(explanation, color_continuous_scale="RdBu_r", color_continuous_midpoint=0.0) for explanation in formatted
-                ]
-                if not self.manager.is_batched:
-                    formatted_visualizations = formatted_visualizations[0]
-                explainer_visualizations.append(formatted_visualizations)
-
-            flat_explainer_visualizations = self.manager.flatten_if_batched(
-                explainer_visualizations, data)
-            # Set visualizaions of all data ids as None
-            explainer_visualizations = {
-                idx: None for idx in experiment_data_ids}
-            # Fill all valid visualizations
-            for visualization, data_id in zip(flat_explainer_visualizations, data_ids):
-                explainer_visualizations[data_id] = visualization
-            visualizations.append(list(explainer_visualizations.values()))
-
-        return visualizations
-
-    def get_inputs_flattened(self) -> Sequence[Tensor]:
-        """
-        Retrieve and flatten last run input data.
-
-        Returns:
-            Flattened input data.
-
-        This method retrieves input data using the input extractor and flattens it for further processing.
-        """
-        data, _ = self.manager.get_data()
-        data = [self.input_extractor(datum) for datum in data]
-        return self.manager.flatten_if_batched(data, data)
-
-    def get_all_inputs_flattened(self) -> Sequence[Tensor]:
-        """
-        Retrieve and flatten all input data.
-
-        Returns:
-            Flattened input data from all available data.
-
-        This method retrieves input data from all available data points using the input extractor and flattens it.
-        """
-        data = self.manager.get_all_data()
-        data = [self.input_extractor(datum) for datum in data]
-        return self.manager.flatten_if_batched(data, data)
-
-    def get_targets_flattened(self) -> Sequence[Tensor]:
-        """
-        Retrieve and flatten target data.
-
-        Returns:
-            Flattened target data.
-
-        This method retrieves target data using the target extractor and flattens it for further processing.
-        """
-        data, _ = self.manager.get_data()
-        targets = [self.target_extractor(datum)for datum in data]
-        return self.manager.flatten_if_batched(targets, data)
-
-    def get_outputs_flattened(self) -> Sequence[Tensor]:
-        """
-        Retrieve and flatten model outputs.
-
-        Returns:
-            Flattened model outputs.
-
-        This method retrieves flattened model outputs using the manager's get_flat_outputs method.
-        """
-        return self.manager.get_flat_outputs()
-
-    def get_explanations_flattened(self) -> Sequence[Sequence[Tensor]]:
-        """
-        Retrieve and flatten explanations from all explainers.
-
-        Returns:
-            Flattened explanations from all explainers.
-
-        This method retrieves flattened explanations for each explainer using the manager's get_flat_explanations method.
-        """
-        _, explainer_ids = self.manager.get_explainers()
-        return [
-            self.manager.get_flat_explanations(explainer_id)
-            for explainer_id in explainer_ids
-        ]
-
-    def get_evaluations_flattened(self) -> Sequence[Sequence[Sequence[Tensor]]]:
-        """
-        Retrieve and flatten evaluations for all explainers and metrics.
-
-        Returns:
-            Flattened evaluations for all explainers and metrics.
-
-        This method retrieves flattened evaluations for each explainer and metric using the manager's
-        get_flat_evaluations method.
-        """
-        _, explainer_ids = self.manager.get_explainers()
-        _, metric_ids = self.manager.get_metrics()
-
-        formatted = [[
-            self.manager.get_flat_evaluations(explainer_id, metric_id)
-            for metric_id in metric_ids
-        ] for explainer_id in explainer_ids]
-
-        return formatted
-
-    def get_explainers_ranks(self) -> Optional[Sequence[Sequence[int]]]:
-        """
-        Calculate and return rankings for explainers based on evaluations.
-
-        Returns:
-            Rankings of explainers. Returns None if rankings cannot be calculated.
-
-        This method calculates rankings for explainers based on evaluations and metric scores. It considers
-        metric priorities and sorting preferences to produce rankings.
-        """
-        evaluations = [[[
-            data_evaluation.detach().cpu() if data_evaluation is not None else None
-            for data_evaluation in metric_data
-        ]for metric_data in explainer_data
-        ]for explainer_data in self.get_evaluations_flattened()]
-        # (explainers, metrics, data)
-        evaluations = np.array(evaluations, dtype=float)
-        evaluations = np.nan_to_num(evaluations, nan=-np.inf)
-        if evaluations.ndim != 3:
-            return None
-
-        evaluations = evaluations.argsort(axis=-3).argsort(axis=-3) + 1
-        n_explainers = evaluations.shape[0]
-        metric_name_to_idx = {}
-
-        for idx, metric in enumerate(self.get_current_metrics()):
-            metric_name = class_to_string(metric)
-            evaluations[:, idx, :] = evaluations[:, idx, :]
-            if EVALUATION_METRIC_REVERSE_SORT.get(metric_name, False):
-                evaluations[:, idx, :] = \
-                    n_explainers - evaluations[:, idx, :] + 1
-
-            metric_name_to_idx[metric_name] = idx
-        # (explainers, data)
-        scores: np.ndarray = evaluations.sum(axis=-2)
-
-        for metric_name in EVALUATION_METRIC_SORT_PRIORITY:
-            if metric_name not in metric_name_to_idx:
+            # write records
+            if metrics is None:
+                rows = [[
+                     # input_idx, input_path, label, target
+                    r[0], r[1], r[2].item(), r[3].item(),
+                     # prob, explainer_nm, attr_path
+                    r[4].item(), explainer_nm, r[5],
+                ] for r in zip(*explainer_record_values)]
+                with open(record_filepath, "a") as f:
+                    writer = csv.writer(f)
+                    writer.writerows(rows)
                 continue
 
-            idx = metric_name_to_idx[metric_name]
-            scores = scores * n_explainers + evaluations[:, idx, :]
+            for metric_nm, metric in metrics.items():
+                # evaluate
+                evs = metric.evaluate(inputs, targets, attrs, explainer.attribute)
 
-        return scores.argsort(axis=-2).argsort(axis=-2).tolist()
+                # add evaluations to record
+                metric_record_values = explainer_record_values.copy()
+                metric_record_values.append(evs)
 
-    @property
-    def is_image_task(self):
-        return self.task == 'image'
+                # write records
+                rows = [[
+                    r[0], r[1].item(), r[2].item(), r[3].item(),
+                    explainer_nm, r[4], metric_nm, r[5].item(),
+                ] for r in zip(*metric_record_values)]
+                with open(record_filepath, "a") as f:
+                    writer = csv.writer(f)
+                    writer.writerows(rows)
+    return ExperimentRecords(experiment_name=name)
 
-    @property
-    def has_explanations(self):
-        return self.manager.has_explanations
+
+def _create_experiment_dir(name, save_inputs=True):
+    if name is None:
+        name = str(uuid.uuid4())
+    if not exists(ROOT_DIR):
+        mkdir(ROOT_DIR)
+    if not find(ROOT_DIR, name):
+        mkdir(ROOT_DIR, name) # expr dir
+        if save_inputs:
+            mkdir(os.path.join(ROOT_DIR, name), INPUT_DIR) # input dir
+        mkdir(os.path.join(ROOT_DIR, name), ATTRIBUTION_DIR) # expl dir
+    expr_dir = os.path.join(ROOT_DIR, name)
+    input_dir = os.path.join(expr_dir, INPUT_DIR) if save_inputs else None
+    attr_dir = os.path.join(expr_dir, ATTRIBUTION_DIR)
+    record_filepath = os.path.join(expr_dir, ANNOTATION_FILENAME)
+    return expr_dir, input_dir, attr_dir, record_filepath
+
+
+def _format_conf_value(v: Any):
+    if isinstance(v, Module):
+        return f"{v.__module__}.{v.__class__.__name__}"
+    elif isinstance(v, str|bool|float|int):
+        return v
+    elif isinstance(v, Sequence):
+        return [_format_conf_value(elem) for elem in v]
+    elif isinstance(v, Callable):
+        return f"{v.__module__}.{v.__name__}"
+    else:
+        return str(v)
+
+
+def _extract_confs(explainers_or_metrics) -> Dict[str, Dict[str, Any]]:
+    return {
+        obj_nm: {
+            "type": f"{obj.__module__}.{obj.__class__.__name__}",
+            "kwargs": {
+                k: _format_conf_value(v) for k, v in obj.__dict__.items()
+                if (
+                    k not in ["model", "device"]
+                    and not k.startswith("_")
+                )
+            },
+        } for obj_nm, obj in explainers_or_metrics.items()
+    }

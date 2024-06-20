@@ -5,9 +5,9 @@ from torch import nn
 from captum.attr._utils.input_layer_wrapper import ModelInputWrapper
 from skimage.segmentation import felzenszwalb
 
-from pnpxai.detector import symbolic_trace
-from pnpxai.detector.utils import get_target_module_of, find_nearest_user_of
-from pnpxai.detector.types import Convolution, Pool
+from pnpxai.core.detector import symbolic_trace
+from pnpxai.core.detector.utils import get_target_module_of, find_nearest_user_of
+from pnpxai.core.detector.types import Convolution, Pool
 
 
 def find_cam_target_layer(model: nn.Module) -> nn.Module:

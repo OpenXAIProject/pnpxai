@@ -5,14 +5,14 @@ from typing import Tuple, Callable, Optional, Union, Type
 from torch import Tensor
 from torch.nn.modules import Module
 
-# from pnpxai_bench.core._types import ExplanationType
+from pnpxai.core._types import ExplanationType
 
 # Ensure compatibility with Python 2/3
 ABC = abc.ABC if sys.version_info >= (3, 4) else abc.ABCMeta(str('ABC'), (), {})
 
 
 class Explainer(ABC):
-    EXPLANATION_TYPE = "attribution"
+    EXPLANATION_TYPE: ExplanationType = "attribution"
 
     def __init__(
             self,
