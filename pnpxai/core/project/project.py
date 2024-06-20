@@ -4,7 +4,7 @@ from typing import Optional, Dict, Callable, Sequence, Union
 from pnpxai.core._types import DataSource, Model, Task, Question
 from pnpxai.core.experiment import Experiment, AutoExperiment
 from pnpxai.core.project.config import ProjectConfig
-from pnpxai.explainers._explainer import Explainer, ExplainerWArgs
+from pnpxai.explainers_backup._explainer import Explainer, ExplainerWArgs
 from pnpxai.evaluator import EvaluationMetric
 from pnpxai.visualizer.server import Server
 

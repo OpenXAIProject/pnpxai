@@ -1,7 +1,7 @@
 from typing import Type, Sequence
 
 from pnpxai.evaluator._evaluator import EvaluationMetric
-from pnpxai.explainers import Explainer, ExplainerWArgs
+from pnpxai.explainers_backup import Explainer, ExplainerWArgs
 from pnpxai.core._types import Model
 
 from pnpxai.core.experiment.experiment_explainer_defaults import EXPLAINER_AUTO_KWARGS

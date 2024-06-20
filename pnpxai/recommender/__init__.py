@@ -1,1 +1,1 @@
-from pnpxai.recommender.recommender import XaiRecommender
+from .recommender import XaiRecommender

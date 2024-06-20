@@ -1,8 +1,9 @@
+from abc import abstractmethod
 from .BERT_explainability.modules.BERT.ExplanationGenerator import Generator
 from .BERT_explainability.modules.BERT.BertForSequenceClassification import BertForSequenceClassification
 from transformers import AutoTokenizer
 
-from pnpxai.explainers import Explainer
+from pnpxai.explainers.base import Explainer
 from pnpxai.core._types import Model, DataSource, Task, Tensor
 
 import torch

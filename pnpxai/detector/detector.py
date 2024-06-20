@@ -1,50 +1,55 @@
-from typing import Callable
-from dataclasses import dataclass
-
-from torch import nn
-import torch.nn.functional as F
-
+from typing import Set, Tuple, Optional
+from torch import fx, nn
 from pnpxai.core._types import Model
-from ._core import ModelArchitecture, NodeInfo
+from .utils import get_target_module_of
+from .types import (
+    ModuleType,
+    Linear,
+    Convolution,
+    RNN,
+    LSTM,
+    Attention,
+    Embedding,
+)
 
-@dataclass
-class ModelArchitectureSummary:
-    """
-    A dataclass summarizing a model architecture.
-
-    Attributes:
-        has_linear (bool): Whether a model including a linear layer(s).
-        has_conv (bool): Whether a model including a convolution layer(s).
-        has_rnn (bool): Whether a model including a RNN layer(s).
-        has_transformer (bool): Whether a model including a transformer layer(s).
-    """
-    has_linear: bool
-    has_conv: bool
-    has_rnn: bool
-    has_transformer: bool
-
-    @property
-    def representative(self):
-        if (
-            self.has_linear
-            and not self.has_conv
-            and not self.has_rnn
-            and not self.has_transformer
-        ):
-            return "linear"
-        elif (
-            self.has_conv
-            and not self.has_rnn
-            and not self.has_transformer
-        ):
-            return "cnn"
-        elif self.has_transformer:
-            return "transformer"
-        else:
-            raise Exception("Cannot determine the representative of model architecture.")
+DEFAULT_MODULE_TYPES_TO_DETECT = (
+    Linear,
+    Convolution,
+    RNN,
+    LSTM,
+    Attention,
+    Embedding,
+)
 
 
-def detect_model_architecture(model: Model) -> ModelArchitectureSummary:
+class Tracer(fx.Tracer):
+    # stop recursion when meeting timm's Attention
+    def is_leaf_module(self, m: nn.Module, module_qualified_name: str) -> bool:
+        return (
+            (
+                m.__module__.startswith("torch.nn")
+                or m.__module__.startswith("torch.ao.nn")
+                or (
+                    m.__module__ == "timm.models.vision_transformer"
+                    and m.__class__.__name__ == "Attention"
+                )
+            ) and not isinstance(m, nn.Sequential)
+        )
+
+
+def symbolic_trace(model: nn.Module) -> fx.GraphModule:
+    tracer = Tracer()
+    graph = tracer.trace(model)
+    name = (
+        model.__class__.__name__ if isinstance(model, nn.Module) else model.__name__
+    )
+    return fx.GraphModule(tracer.root, graph, name)
+
+
+def detect_model_architecture(
+        model: Model,
+        targets: Optional[Tuple[ModuleType]]=None,
+    ) -> Set[ModuleType]:
     """
     A function detecting architecture for a given model.
 
@@ -54,61 +59,38 @@ def detect_model_architecture(model: Model) -> ModelArchitectureSummary:
     Returns:
         ModelArchitectureSummary: A summary of model architecture
     """
-    ma = ModelArchitecture(model)
-    return ModelArchitectureSummary(
-        has_linear=_has_linear(ma),
-        has_conv=_has_conv(ma),
-        has_rnn=_has_rnn(ma),
-        has_transformer=_has_transformer(ma),
-    )
+    targets = targets or DEFAULT_MODULE_TYPES_TO_DETECT
+    detected = set()
+    traced_model = symbolic_trace(model)
+    for node in traced_model.graph.nodes:
+        m = get_target_module_of(node)
+        if m is None:
+            continue
+        tp = next((target for target in targets if isinstance(m, target)), None)
+        if tp is None:
+            continue
+        detected.add(tp)
+    return detected
 
 
-def _is_module_of(node: NodeInfo, module: nn.Module):
-    return node.opcode == "call_module" and isinstance(node.operator, module)
+def detect_model_architecture(
+        model: Model,
+        targets: Optional[Tuple[ModuleType]]=None,
+    ) -> Set[ModuleType]:
+    """
+    A function detecting architecture for a given model.
 
+    Args:
+        model (Model): The machine learning model to be detected
 
-def _is_function_of(node: NodeInfo, func: Callable):
-    return node.opcode == "call_function" and node.operator is func
-
-
-def _has_linear(ma: ModelArchitecture):
-    linear_node = ma.find_node(
-        lambda node: (
-            _is_module_of(node, nn.Linear)
-            or _is_function_of(node, F.linear)
-        )
-    )
-    return linear_node is not None
-
-
-def _has_conv(ma: ModelArchitecture):
-    conv_node = ma.find_node(
-        lambda node: (
-            _is_module_of(node, nn.Conv1d)
-            or _is_module_of(node, nn.Conv2d)
-            or _is_function_of(node, F.conv1d)
-            or _is_function_of(node, F.conv2d)
-        )
-    )
-    return conv_node is not None
-
-
-def _has_rnn(ma: ModelArchitecture):
-    rnn_node = ma.find_node(
-        lambda node: (
-            _is_module_of(node, nn.RNN)
-        )
-    )
-    return rnn_node is not None
-
-
-def _has_transformer(ma: ModelArchitecture):
-    transformer_node = ma.find_node(
-        lambda node: (
-            _is_module_of(node, nn.Transformer)
-            or _is_module_of(node, nn.MultiheadAttention)
-            or _is_function_of(node, F.scaled_dot_product_attention)
-        )
-    )
-    return transformer_node is not None
-
+    Returns:
+        ModelArchitectureSummary: A summary of model architecture
+    """
+    targets = targets or DEFAULT_MODULE_TYPES_TO_DETECT
+    detected = set()
+    for nm, module in model.named_modules():
+        module_type = next((target for target in targets if isinstance(module, target)), None)
+        if module_type is None:
+            continue
+        detected.add(module_type)
+    return detected
