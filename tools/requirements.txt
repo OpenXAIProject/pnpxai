@@ -8,6 +8,8 @@ scikit-image
 zennit
 pytest>7.0.0
 pyyaml>=5.2
+timm==1.0.7
+imgkit==1.2.3
 
 # for text explainers
 transformers>=4.0.0
