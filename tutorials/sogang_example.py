@@ -1,12 +1,3 @@
-from captum.attr import visualization
-
-from pnpxai.explainers.transformer_attention.BERT_explainability.modules.BERT.BertForSequenceClassification import \
-    BertForSequenceClassification
-from transformers import AutoTokenizer
-
-from pnpxai.explainers.transformer_attention.transformer_attention import TransformerAttention
-
-
 #-----------------------------------------------------------------------------#
 #----------------------------------- model -----------------------------------#
 #-----------------------------------------------------------------------------#
@@ -35,7 +26,7 @@ model = KlueBert()
 #-------------------------------- recommender --------------------------------#
 #-----------------------------------------------------------------------------#
 
-from pnpxai.recommender.recommender import XaiRecommender
+from pnpxai import XaiRecommender
 
 recommender = XaiRecommender()
 recommended = recommender.recommend(modality='text', model=model)
@@ -72,6 +63,51 @@ layer_to_attribute = model.klue_bert.embeddings.word_embeddings
 
 
 # setup explainers
+
+# vanila gradient
+from pnpxai.explainers import Gradient
+
+grad = Gradient(
+    model=model,
+    layer=layer_to_attribute,
+    forward_arg_extractor=forward_arg_extractor,
+    additional_forward_arg_extractor=additional_forward_arg_extractor,
+)
+
+
+# grad x input
+from pnpxai.explainers import GradientXInput
+
+gradinp = GradientXInput(
+    model=model,
+    layer=layer_to_attribute,
+    forward_arg_extractor=forward_arg_extractor,
+    additional_forward_arg_extractor=additional_forward_arg_extractor,
+)
+
+
+# smooth grad
+from pnpxai.explainers import SmoothGrad
+
+sg = SmoothGrad(
+    model=model,
+    layer=layer_to_attribute,
+    forward_arg_extractor=forward_arg_extractor,
+    additional_forward_arg_extractor=additional_forward_arg_extractor,
+)
+
+
+# var grad
+from pnpxai.explainers import VarGrad
+
+vg = VarGrad(
+    model=model,
+    layer=layer_to_attribute,
+    forward_arg_extractor=forward_arg_extractor,
+    additional_forward_arg_extractor=additional_forward_arg_extractor,
+)
+
+
 # integrated gradients
 from pnpxai.explainers import IntegratedGradients
 
@@ -94,6 +130,17 @@ lrp = LRPUniformEpsilon(
     epsilon=.25,
 )
 
+
+# attention rollout
+from pnpxai.explainers import AttentionRollout
+
+ar = AttentionRollout(
+    model=model,
+    forward_arg_extractor=forward_arg_extractor,
+    additional_forward_arg_extractor=additional_forward_arg_extractor,
+)
+
+
 # transformer attribution
 from pnpxai.explainers import TransformerAttribution
 
@@ -105,13 +152,17 @@ ta = TransformerAttribution(
 )
 
 
+
+explainers = [grad, gradinp, sg, vg, ig, lrp, ar, ta]
+
+
 # explain
 records = []
-explainers = {'ig': ig, 'lrp': lrp, 'ta': ta}
-for explainer_nm, explainer in explainers.items():
+for explainer in explainers:
     attrs = explainer.attribute(inputs=inputs, targets=targets)
+    print(explainer.__class__.__name__, attrs.shape)
     records.append({
-        'explainer_nm': explainer_nm,
+        'explainer_nm': explainer.__class__.__name__,
         'inputs': inputs,
         'attrs': attrs,
     })
@@ -124,13 +175,7 @@ for explainer_nm, explainer in explainers.items():
 import imgkit # [GH] please ensure wkhtmltopdf and xvfb are installed in your os: sudo apt-get install wkhtmltopdf xvfb
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-
-def postprocess_attr(attr, channel_dim=-1, method='sumpos'):
-    if method == 'sumpos':
-        attr = attr.sum(channel_dim).clamp(min=0)
-    else:
-        raise Exception(f"postprocess method '{method}' not supported")
-    return (attr - attr.min()) / (attr.max() - attr.min())
+from pnpxai.explainers.postprocess import relevance_pooling
 
 
 span = lambda string, bg_color: f'''
@@ -164,8 +209,10 @@ def plot_attr(
 
 
 for record in records:
+    print(record['explainer_nm'])
     inp = record['inputs'][0][0]
     attr = record['attrs'][0]
-    attr_pp = postprocess_attr(attr)
-    html = plot_attr(inp, attr_pp)
+    attr = relevance_pooling(attr, channel_dim=-1, method='sumpos')
+    attr = (attr - attr.min()) / (attr.max() - attr.min())
+    html = plot_attr(inp, attr)
     imgkit.from_string(html, f"./sogang_example_{record['explainer_nm']}.jpg", options={"xvfb":""})

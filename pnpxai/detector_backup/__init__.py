@@ -1,2 +1,0 @@
-from pnpxai.detector_backup._core import ModelArchitecture
-from pnpxai.detector_backup.detector import detect_model_architecture

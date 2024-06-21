@@ -4,7 +4,7 @@ import torch
 import torch.nn.functional as F
 from torch.nn import MultiheadAttention
 from zennit.core import Stabilizer
-from zennit.rules import ClampMod, zero_bias, ParamMod, NoMod
+from zennit.rules import ClampMod, zero_bias, ParamMod
 from zennit.core import RemovableHandleList, RemovableHandle, Hook
 
 from ..attentions import partial_forwards
@@ -47,55 +47,6 @@ class AttentionRuleBase(HookWithKwargs):
     @abstractmethod
     def backward(self, module: MultiheadAttention, grad_input, grad_output):
         raise NotImplementedError
-
-
-class AttentionHeadPropagation(AttentionRuleBase):
-    def __init__(
-        self,
-        input_modifiers=[lambda input: input],
-        param_modifiers=[NoMod(zero_params=None)],
-        output_modifiers=[lambda output: output],
-        gradient_mapper=None,
-        reducer=None,
-        stabilizer=1e-6
-    ):
-        super().__init__(stabilizer)
-        self.input_modifiers = input_modifiers
-        self.param_modifiers = param_modifiers
-        self.output_modifiers = output_modifiers
-        self.gradient_mapper = gradient_mapper
-        self.reducer = reducer
-
-    def backward(self, module, grad_input, grad_output):
-        query, key, value = (
-            inp.clone().requires_grad_()
-            for inp in self.stored_tensors["input"]
-        )
-        inputs = {}
-
-        with torch.autograd.enable_grad():
-            # preprocess
-            (
-                query, key, value,
-                key_padding_mask, attn_mask, is_batched
-            ) = partial_forwards.preprocess_inputs(
-                module,
-                query,
-                key,
-                value,
-                **self.stored_kwargs
-            )
-            tgt_len, bsz, _ = query.size()
-            src_len, _, _ = key.size()
-
-            #
-            for in_mod, param_mod, out_mod in zip(self.input_modifiers, self.param_modifiers, self.output_modifiers):
-                input = in_mod(original_input).requires_grad_()
-                with ParamMod.ensure(param_mod)(module) as modified, torch.autograd.enable_grad():
-                    output = modified.forward(input)
-                    output = out_mod(output)
-                inputs.append(input)
-                outputs.append(output)
 
 
 

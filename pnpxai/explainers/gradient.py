@@ -32,7 +32,7 @@ class Gradient(ZennitExplainer):
         layers = [
             wrapped_model.input_maps[layer] if isinstance(layer, str)
             else layer for layer in self.layer
-        ] if isinstance(self.layer, Sequence) else self.layer
+        ] if isinstance(self.layer, Sequence) else [self.layer]
         if len(layers) == 1:
             layers = layers[0]
         return LayerGradientAttributor(

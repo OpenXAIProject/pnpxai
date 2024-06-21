@@ -1,11 +1,10 @@
 import random
 from io import TextIOWrapper
 from contextlib import contextmanager
-from typing import Sequence, Callable, Any, Union, Optional
+from typing import Sequence, Callable, Any, Union
 
 import numpy as np
 import torch
-from torch import Tensor, nn
 
 
 def set_seed(seed):
@@ -57,7 +56,6 @@ class Observable:
         for callback in self._callbacks:
             callback(event)
 
-
 @contextmanager
 def open_file_or_name(file: Union[TextIOWrapper, str], *args, **kwargs):
     file_wrapper = file
@@ -68,34 +66,3 @@ def open_file_or_name(file: Union[TextIOWrapper, str], *args, **kwargs):
 
     if isinstance(file, str):
         file_wrapper.close()
-
-
-def map_recursive(data, func: Callable):
-    if torch.is_tensor(data):
-        return func(data)
-    if isinstance(data, (list, tuple, set)):
-        return type(data)((map_recursive(datum, func) for datum in data))
-    if isinstance(data, dict):
-        return {key: map_recursive(value, func) for key, value in data.items()}
-    return data
-
-
-def to_device(data, device: torch.device):
-    return map_recursive(data, lambda x: x.to(device))
-
-
-def flatten(data):
-    if isinstance(data, dict):
-        data = list(data.values())
-    if isinstance(data, (tuple, list)):
-        return sum([flatten(elem) for elem in data], [])
-    return [data]
-
-
-def linear_from_params(weight: Tensor, bias: Optional[Tensor] = None) -> nn.Linear:
-    layer = nn.Linear(weight.shape[1], weight.shape[0], bias=bias is not None)
-    with torch.no_grad():
-        layer.weight.data = weight
-        layer.bias.data = bias
-
-    return layer

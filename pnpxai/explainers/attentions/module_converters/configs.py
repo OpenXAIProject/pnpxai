@@ -12,7 +12,7 @@ def transform_attn_mask_of_transformers(in_args, in_kwargs, kept, out_module):
     # required: (tgt_len, src_len) or (bsz*num_heads, tgt_len, src_len)
     attn_mask = in_kwargs.get("attention_mask") or in_args[1]
     if attn_mask is None:
-        return None
+        return
     bsz, num_heads, tgt_len, src_len = attn_mask.shape
     if bsz == 1 and num_heads == 1 and tgt_len == 1: # self attention
         attn_mask = attn_mask.repeat(1, 1, src_len, 1)

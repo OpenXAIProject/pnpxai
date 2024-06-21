@@ -176,9 +176,6 @@ class LayerSmoothGradient(LayerGradient):
             target_ind=targets,
             additional_forward_args=additional_forward_args,
         )
-        if len(grads) == 1:
-            return grads[0]
-        grads = tuple(g[0] for g in grads)
         return grads
 
     def forward(

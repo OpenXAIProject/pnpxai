@@ -7,8 +7,7 @@ MESSAGES: Dict[str, str] = {
     'experiment.errors.explanation': 'Warning: Explaining {explainer} produced an error: {error}.',
     'experiment.errors.explainer_unsupported': 'Warning: {explainer} is not currently supported.',
     'elapsed': 'Computed {task} in {elapsed} sec',
-    'project.config.unsupported': 'Error: Config of type {config_type} is not supported',
-    'explainer.rap.errors.node': '{node} caused an error.',
+    'project.config.unsupported': 'Error: Config of type {config_type} is not supported'
 }
 
 
