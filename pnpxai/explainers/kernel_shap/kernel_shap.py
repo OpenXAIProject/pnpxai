@@ -2,14 +2,19 @@ from typing import Any, List, Tuple
 
 from torch import Tensor
 
+import numpy as np
 from captum.attr import KernelShap as KernelShapCaptum
 from captum._utils.typing import BaselineType, TargetType
+from shap import KernelExplainer
+from shap.utils._legacy import DenseData, kmeans
+from xgboost import XGBClassifier, XGBRegressor
+from sklearn.base import ClassifierMixin, RegressorMixin
 
 from pnpxai.core._types import Model, DataSource, Task
 from pnpxai.explainers._explainer import Explainer
 from pnpxai.explainers.utils.feature_mask import get_default_feature_mask
 
-from typing import Union, Optional, Dict
+from typing import Union, Optional, Dict, Callable
 
 
 class KernelShap(Explainer):
@@ -87,3 +92,61 @@ class KernelShap(Explainer):
             task=task,
             kwargs=kwargs
         )
+
+
+class TabKernelShap(Explainer):
+
+    kmeans = kmeans
+    
+    def __init__(self, model: Callable, bg_data: DenseData, mode: str = "classification"):
+        super().__init__(model)
+        if isinstance(model, XGBClassifier) or isinstance(model, ClassifierMixin):
+            def wrapper(model):
+                def callable(inputs):
+                    return model.predict_proba(inputs)
+                return callable
+            
+        elif isinstance(model, XGBRegressor) or isinstance(model, RegressorMixin):
+            def wrapper(model):
+                def callable(inputs):
+                    return model.predict(inputs)
+                return callable
+        model = wrapper(model)
+
+        if not isinstance(model, Callable):
+            raise ValueError("The model must be callable")
+
+        self.source = KernelExplainer(model, bg_data)
+        self.mode = mode
+
+    def attribute(
+        self,
+        inputs: DataSource,
+        targets: TargetType = None,
+        n_samples: int = 25,
+        show_progress: bool = False
+    ) -> List[np.ndarray]:
+        
+        if self.mode == "classification":
+            if len(inputs) != len(targets):
+                raise ValueError("The number of inputs and targets must be the same")
+        
+        attributions = self.source.shap_values(
+            X=inputs,
+            nsamples=n_samples,
+            show=show_progress
+        )
+        if self.mode == "classification":
+            attributions = attributions[np.arange(attributions.shape[0]),:,targets]
+        
+        return attributions
+
+    def format_outputs_for_visualization(
+        self,
+        inputs: DataSource,
+        targets: DataSource,
+        explanations: DataSource,
+        task: Task,
+        kwargs: Optional[Dict[str, Any]] = None,
+    ):
+        return None

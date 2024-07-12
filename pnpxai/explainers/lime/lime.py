@@ -1,13 +1,18 @@
-from typing import Any, Union, Tuple, Optional, Dict
+from typing import Any, Union, Tuple, Optional, Dict, List, Callable
 
 from captum.attr import Lime as LimeCaptum
 from captum._utils.typing import BaselineType, TargetType
 
 from torch import Tensor
+import numpy as np
 
 from pnpxai.explainers.utils.feature_mask import get_default_feature_mask
 from pnpxai.core._types import Model, DataSource, Task
 from pnpxai.explainers._explainer import Explainer
+
+from lime.lime_tabular import LimeTabularExplainer
+from sklearn.base import ClassifierMixin, RegressorMixin
+from xgboost import XGBClassifier, XGBRegressor
 
 
 class Lime(Explainer):
@@ -82,3 +87,60 @@ class Lime(Explainer):
             task=task,
             kwargs=kwargs
         )
+
+
+
+class TabLime(Explainer):
+    def __init__(self, model: Model, bg_data: np.ndarray, categorical_features: List[int] = None, mode: str = 'classification'):
+        super().__init__(model=model)
+        self.source = None
+        self.bg_data = bg_data
+        self.categorical_features = categorical_features
+        self.mode = mode
+        if isinstance(model, ClassifierMixin) or isinstance(model, XGBClassifier):
+            self.predict_fn = model.predict_proba
+        elif isinstance(model, RegressorMixin) or isinstance(model, XGBRegressor):
+            self.predict_fn = model.predict
+        elif isinstance(model, Callable):
+            self.predict_fn = model
+        else:
+            raise ValueError("The model must be callable")
+
+    def attribute(
+        self,
+        inputs: DataSource,
+        targets: TargetType = None,
+        n_samples: int = 25,
+        show_progress: bool = False
+    ) -> List[np.ndarray]:
+        
+        self.source = LimeTabularExplainer(
+            self.bg_data,
+            categorical_features=self.categorical_features, 
+            verbose=False, 
+            mode=self.mode
+        )
+        
+        attributions = []
+        for _input in inputs:
+            res = self.source.explain_instance(
+                data_row=_input, 
+                predict_fn=self.predict_fn,
+                num_samples=n_samples,
+                num_features=len(_input),
+            )
+            sorted_data = sorted(res.as_map()[1], key=lambda x: x[0])
+            values = np.array([x[1] for x in sorted_data])
+            attributions.append(values)
+
+        return attributions
+
+    def format_outputs_for_visualization(
+        self,
+        inputs: DataSource,
+        targets: DataSource,
+        explanations: DataSource,
+        task: Task,
+        kwargs: Optional[Dict[str, Any]] = None,
+    ):
+        return None

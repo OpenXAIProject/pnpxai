@@ -1,1 +1,1 @@
-from pnpxai.explainers.kernel_shap.kernel_shap import KernelShap
+from pnpxai.explainers.kernel_shap.kernel_shap import KernelShap, TabKernelShap
