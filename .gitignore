@@ -1,4 +1,6 @@
 # Byte-compiled / optimized / DLL files
+tutorials/finance/data/
+tutorials/finance/models/
 pnpxai/frontend/node_modules/
 pnpxai/frontend/src/assets/data/
 *.DS_Store*
