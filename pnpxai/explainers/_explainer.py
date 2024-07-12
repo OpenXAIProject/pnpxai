@@ -11,7 +11,8 @@ class Explainer:
         model: Model,
     ):
         self.model = model
-        self.device = next(self.model.parameters()).device
+        if isinstance(model, Model):
+            self.device = next(self.model.parameters()).device
 
     @abstractmethod
     def attribute(self, inputs: DataSource, targets: DataSource, **kwargs) -> DataSource:
