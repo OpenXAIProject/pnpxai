@@ -1,12 +1,4 @@
-import pickle
-
-import torch
 import numpy as np
-import pandas as pd
-import quantus as qt
-import qt_wrapper as qtw
-import seaborn as sns
-import matplotlib.pyplot as plt
 
 from pnpxai.explainers import TabKernelShap, TabLime
 from shap.utils._legacy import kmeans
@@ -16,7 +8,6 @@ import sklearn
 
 seed = 42
 np.random.seed(seed)
-torch.manual_seed(seed)
 # Load train and test data
 data = load_breast_cancer()
 X, y = data.data, data.target
