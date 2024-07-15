@@ -1,6 +1,6 @@
 from typing import Tuple, List, Dict
 
-from pnpxai.detector import ModelArchitecture
+from pnpxai.core.detector import extract_graph_data, symbolic_trace
 from pnpxai.visualizer.backend.app.core.constants import APIItems
 from pnpxai.visualizer.backend.app.core.generics import Response
 
@@ -8,17 +8,21 @@ from pnpxai.visualizer.backend.app.core.generics import Response
 class ModelSchema(Response):
     @classmethod
     def generate_nodes_edges_list(cls, model) -> Tuple[List[Dict[str, str]], List[Dict[str, str]]]:
-        data = ModelArchitecture(model).to_dict()
+        try:
+            graph_module = symbolic_trace(model)
+        except Exception as e:
+            raise Exception(f'symboilc_trace fails with {e}.')
+        graph_data = extract_graph_data(graph_module)
         nodes = {node["name"]: {
             APIItems.ID.value: node["name"],
-            APIItems.OPCODE.value: node["opcode"],
-            APIItems.OPERATOR.value: str(node["operator"]) if node["operator"] else "",
-        } for node in data["nodes"]}
+            APIItems.OPCODE.value: node["op"],
+            APIItems.OPERATOR.value: node['target'],
+        } for node in graph_data["nodes"]}
         edges = {f"{edge['source']}{edge['target']}": {
             APIItems.ID.value: f"{edge['source']}{edge['target']}",
             APIItems.SOURCE.value: edge["source"],
             APIItems.TARGET.value: edge["target"],
-        } for edge in data["edges"]}
+        } for edge in graph_data["edges"]}
         
         node_list = list(nodes.values())
         edge_list = list(edges.values())

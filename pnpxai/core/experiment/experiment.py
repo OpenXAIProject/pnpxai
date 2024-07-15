@@ -10,20 +10,25 @@ from plotly.graph_objects import Figure
 
 from pnpxai.core.experiment.experiment_metrics_defaults import EVALUATION_METRIC_REVERSE_SORT, EVALUATION_METRIC_SORT_PRIORITY
 from pnpxai.core.experiment.observable import ExperimentObservableEvent
-from pnpxai.utils import class_to_string, Observable, to_device
+from pnpxai.utils import class_to_string, Observable, to_device, format_into_tuple
 from pnpxai.messages import get_message
 from pnpxai.core.experiment.manager import ExperimentManager
-from pnpxai.explainers import Explainer, ExplainerWArgs
-from pnpxai.evaluator import EvaluationMetric
-from pnpxai.core._types import DataSource, Model, Task
+from pnpxai.explainers.base import Explainer
+from pnpxai.metrics.base import Metric
+from pnpxai.core._types import DataSource, Model, ModalityOrListOfModalities
+from pnpxai.explainers.utils.postprocess import postprocess_attr
 
 
 def default_input_extractor(x):
     return x[0]
 
 
-def default_target_extractor(x):
-    return x[1]
+def default_label_extractor(x):
+    return x[-1]
+
+
+def default_target_extractor(y):
+    return y.argmax(-1)
 
 
 class Experiment(Observable):
@@ -33,19 +38,19 @@ class Experiment(Observable):
     Args:
         model (Model): The machine learning model to be interpreted.
         data (DataSource): The data used for the experiment.
-        explainers (Sequence[Union[ExplainerWArgs, Explainer]]): Explainer objects or their arguments for interpreting the model.
-        metrics (Optional[Sequence[EvaluationMetric]]): Evaluation metrics used to assess model interpretability.
-        task (Task): The type of task the model is designed for (default: "image").
+        explainers (Sequence[Explainer]): Explainer objects or their arguments for interpreting the model.
+        metrics (Optional[Sequence[Metric]]): Evaluation metrics used to assess model interpretability.
+        modality (ModalityOrListOfModalities): The type of modality the model is designed for (default: "image").
         input_extractor (Optional[Callable[[Any], Any]]): Function to extract inputs from data (default: None).
         target_extractor (Optional[Callable[[Any], Any]]): Function to extract targets from data (default: None).
         input_visualizer (Optional[Callable[[Any], Any]]): Function to visualize input data (default: None).
         target_visualizer (Optional[Callable[[Any], Any]]): Function to visualize target data (default: None).
 
     Attributes:
-        all_explainers (Sequence[ExplainerWArgs]): All explainer objects used in the experiment.
-        all_metrics (Sequence[EvaluationMetric]): All evaluation metrics used in the experiment.
+        all_explainers (Sequence[Explainer]): All explainer objects used in the experiment.
+        all_metrics (Sequence[Metric]): All evaluation metrics used in the experiment.
         errors (Sequence[Error]): 
-        is_image_task (bool): True if the task is an image-related task, False otherwise.
+        is_image_task (bool): True if the modality is an image-related modality, False otherwise.
         has_explanations (bool): True if the experiment has explanations, False otherwise.
     """
 
@@ -53,14 +58,16 @@ class Experiment(Observable):
         self,
         model: Model,
         data: DataSource,
-        explainers: Sequence[Union[ExplainerWArgs, Explainer]],
-        metrics: Optional[Sequence[EvaluationMetric]] = None,
-        task: Task = "image",
+        explainers: Sequence[Explainer],
+        metrics: Optional[Sequence[Metric]] = None,
+        modality: ModalityOrListOfModalities = "image",
         input_extractor: Optional[Callable[[Any], Any]] = None,
+        label_extractor: Optional[Callable[[Any], Any]] = None,
         target_extractor: Optional[Callable[[Any], Any]] = None,
         input_visualizer: Optional[Callable[[Any], Any]] = None,
         target_visualizer: Optional[Callable[[Any], Any]] = None,
         cache_device: Optional[Union[torch.device, str]] = None,
+        target_labels: bool = False,
     ):
         super(Experiment, self).__init__()
         self.model = model
@@ -76,12 +83,16 @@ class Experiment(Observable):
         self.input_extractor = input_extractor \
             if input_extractor is not None \
             else default_input_extractor
+        self.label_extractor = label_extractor \
+            if label_extractor is not None \
+            else default_target_extractor
         self.target_extractor = target_extractor \
             if target_extractor is not None \
             else default_target_extractor
         self.input_visualizer = input_visualizer
         self.target_visualizer = target_visualizer
-        self.task = task
+        self.modality = modality
+        self.target_labels = target_labels
         self.reset_errors()
 
     def reset_errors(self):
@@ -92,17 +103,17 @@ class Experiment(Observable):
         return self._errors
 
     @property
-    def all_explainers(self) -> Sequence[ExplainerWArgs]:
+    def all_explainers(self) -> Sequence[Explainer]:
         return self.manager.all_explainers
 
     @property
-    def all_metrics(self) -> Sequence[EvaluationMetric]:
+    def all_metrics(self) -> Sequence[Metric]:
         return self.manager.all_metrics
 
-    def get_current_explainers(self) -> List[ExplainerWArgs]:
+    def get_current_explainers(self) -> List[Explainer]:
         return self.manager.get_explainers()[0]
 
-    def get_current_metrics(self) -> List[EvaluationMetric]:
+    def get_current_metrics(self) -> List[Metric]:
         return self.manager.get_metrics()[0]
 
     def to_device(self, x):
@@ -133,13 +144,20 @@ class Experiment(Observable):
         """
         self.reset_errors()
         self.manager.set_config(data_ids, explainer_ids, metrics_ids)
+        
+        # inference
+        data, data_ids = self.manager.get_data_to_predict()
+        outputs = self._predict(data)
+        self.manager.save_outputs(outputs, data, data_ids)
+
+        # explain
         explainers, explainer_ids = self.manager.get_explainers()
 
         for explainer, explainer_id in zip(explainers, explainer_ids):
-            explainer_name = class_to_string(explainer.explainer)
+            explainer_name = class_to_string(explainer)
             data, data_ids = self.manager.get_data_to_process_for_explainer(
                 explainer_id)
-            explanations = self._explain(data, explainer)
+            explanations = self._explain(data, data_ids, explainer)
             self.manager.save_explanations(
                 explanations, data, data_ids, explainer_id
             )
@@ -159,7 +177,7 @@ class Experiment(Observable):
                     explainer_id, data_ids)
                 data, _ = self.manager.get_data(data_ids)
                 evaluations = self._evaluate(
-                    data, explanations, explainer, metric)
+                    data, data_ids, explanations, explainer, metric)
                 self.manager.save_evaluations(
                     evaluations, data, data_ids, explainer_id, metric_id)
 
@@ -168,29 +186,25 @@ class Experiment(Observable):
                 print(f"[Experiment] {message}")
                 self.fire(ExperimentObservableEvent(
                     self.manager, message, explainer, metric))
-
-        data, data_ids = self.manager.get_data_to_predict()
-        outputs = self._predict(data)
-        self.manager.save_outputs(outputs, data, data_ids)
-
         return self
 
     def _predict(self, data: DataSource):
         outputs = [
-            self.model(self.to_device(self.input_extractor(datum)))
-            for datum in data
+            self.model(*format_into_tuple(
+                self.to_device(self.input_extractor(datum)))
+            ) for datum in data
         ]
         return outputs
 
-    def _explain(self, data: DataSource, explainer: ExplainerWArgs):
+    def _explain(self, data: DataSource, data_ids: List[int], explainer: Explainer):
         explanations = [None] * len(data)
-        explainer_name = class_to_string(explainer.explainer)
-
-        for i, datum in enumerate(data):
+        explainer_name = class_to_string(explainer)
+        for i, (datum, data_id) in enumerate(zip(data, data_ids)):
             try:
                 datum = self.to_device(datum)
-                inputs = self.input_extractor(datum)
-                targets = self.target_extractor(datum)
+                inputs = format_into_tuple(self.input_extractor(datum))
+                targets = self.label_extractor(datum) if self.target_labels \
+                    else self._get_targets(data_ids)
                 explanations[i] = explainer.attribute(
                     inputs=inputs,
                     targets=targets,
@@ -203,29 +217,27 @@ class Experiment(Observable):
                 warnings.warn(
                     f"\n[Experiment] {get_message('experiment.errors.explanation', explainer=explainer_name, error=e)}")
                 self._errors.append(e)
-
         return explanations
 
-    def _evaluate(self, data: DataSource, explanations: DataSource, explainer: ExplainerWArgs, metric: EvaluationMetric):
+    def _evaluate(self, data: DataSource, data_ids: List[int], explanations: DataSource, explainer: Explainer, metric: Metric):
         if explanations is None:
             return None
         started_at = time.time()
         metric_name = class_to_string(metric)
-        explainer_name = class_to_string(explainer.explainer)
+        explainer_name = class_to_string(explainer)
 
         evaluations = [None] * len(data)
-        for i, (datum, explanation) in enumerate(zip(data, explanations)):
+        for i, (datum, data_id, explanation) in enumerate(zip(data, data_ids, explanations)):
             if explanation is None:
                 continue
             datum = self.to_device(datum)
             explanation = self.to_device(explanation)
             inputs = self.input_extractor(datum)
-            targets = self.target_extractor(datum)
+            targets = self.label_extractor(datum) if self.target_labels \
+                else self._get_targets(data_ids)
             try:
                 # [GH] input args as kwargs to compute metric in an experiment
-                evaluations[i] = metric(
-                    model=self.model,
-                    explainer_w_args=explainer,
+                evaluations[i] = metric.evaluate(
                     inputs=inputs,
                     targets=targets,
                     attributions=explanation,
@@ -236,9 +248,16 @@ class Experiment(Observable):
                 self._errors.append(e)
         elapsed_time = time.time() - started_at
         print(
-            f"[Experiment] {get_message('elapsed', task=metric_name, elapsed=elapsed_time)}")
+            f"[Experiment] {get_message('elapsed', modality=metric_name, elapsed=elapsed_time)}")
 
         return evaluations
+
+    def _get_targets(self, data_ids: List[int]):
+        outputs = torch.stack([
+            self.manager._cache.get_output(data_id)
+            for data_id in data_ids
+        ])
+        return self.target_extractor(outputs)
 
     def get_visualizations_flattened(self) -> Sequence[Sequence[Figure]]:
         """
@@ -251,6 +270,7 @@ class Experiment(Observable):
         and generates visualizations using Plotly Express. The results are flattened based on the data points
         and returned as a list of lists of figures.
         """
+        assert self.modality == 'image', f"Visualization for '{self.modality} is not supported yet"
         explainers, explainer_ids = self.manager.get_explainers()
         # Get all data ids
         experiment_data_ids = self.manager.get_data_ids()
@@ -262,25 +282,51 @@ class Experiment(Observable):
                 explainer_id)
             data = self.manager.get_data(data_ids)[0]
             explainer_visualizations = []
-            # Visualize each valid explanataion
-            for datum, explanation in zip(data, explanations):
-                inputs = self.input_extractor(datum)
-                targets = self.target_extractor(datum)
-                formatted = explainer.format_outputs_for_visualization(
-                    inputs=inputs,
-                    targets=targets,
-                    explanations=explanation,
-                    task=self.task
-                )
+            for explanation in explanations:
+                figs = []
+                for attr in explanation:
+                    postprocessed = postprocess_attr(
+                        attr,
+                        channel_dim=0,
+                        pooling_method='l2normsq',
+                        normalization_method='minmax'
+                    ).detach().numpy()
+                    fig = px.imshow(postprocessed, color_continuous_scale='RdBu_R', color_continuous_midpoint=.5)
+                    figs.append(fig)
+                explainer_visualizations.append(figs)
 
-                if not self.manager.is_batched:
-                    formatted = [formatted]
-                formatted_visualizations = [
-                    px.imshow(explanation, color_continuous_scale="RdBu_r", color_continuous_midpoint=0.0) for explanation in formatted
-                ]
-                if not self.manager.is_batched:
-                    formatted_visualizations = formatted_visualizations[0]
-                explainer_visualizations.append(formatted_visualizations)
+            # explainer_visualizations = [[
+            #     px.imshow(
+            #         postprocess_attr(
+            #             attr, # C x H x W
+            #             channel_dim=0,
+            #             pooling_method='l2normsq',
+            #             normalization_method='minmax',
+            #         ).detach().numpy(),
+            #         color_continuous_scale='RdBu_R',
+            #         color_continuous_midpoint=.5,
+            #     ) for attr in explanation]
+            #     for explanation in explanations
+            # ]
+            # # Visualize each valid explanataion
+            # for datum, explanation in zip(data, explanations):
+            #     inputs = self.input_extractor(datum)
+            #     targets = self.target_extractor(datum)
+            #     formatted = explainer.format_outputs_for_visualization(
+            #         inputs=inputs,
+            #         targets=targets,
+            #         explanations=explanation,
+            #         modality=self.modality
+            #     )
+
+            #     if not self.manager.is_batched:
+            #         formatted = [formatted]
+            #     formatted_visualizations = [
+            #         px.imshow(explanation, color_continuous_scale="RdBu_r", color_continuous_midpoint=0.0) for explanation in formatted
+            #     ]
+            #     if not self.manager.is_batched:
+            #         formatted_visualizations = formatted_visualizations[0]
+            #     explainer_visualizations.append(formatted_visualizations)
 
             flat_explainer_visualizations = self.manager.flatten_if_batched(
                 explainer_visualizations, data)
@@ -329,8 +375,9 @@ class Experiment(Observable):
 
         This method retrieves target data using the target extractor and flattens it for further processing.
         """
-        data, _ = self.manager.get_data()
-        targets = [self.target_extractor(datum)for datum in data]
+        data, data_ids = self.manager.get_data()
+        targets = [self.label_extractor(datum) for datum in data] \
+            if self.target_labels else [self._get_targets(data_ids)]
         return self.manager.flatten_if_batched(targets, data)
 
     def get_outputs_flattened(self) -> Sequence[Tensor]:
@@ -426,7 +473,7 @@ class Experiment(Observable):
 
     @property
     def is_image_task(self):
-        return self.task == 'image'
+        return self.modality == 'image'
 
     @property
     def has_explanations(self):
