@@ -1,6 +1,7 @@
 from typing import Any, Callable, Optional, Sequence, Union, List
 import time
 import warnings
+import itertools
 
 import torch
 from torch import Tensor
@@ -478,3 +479,88 @@ class Experiment(Observable):
     @property
     def has_explanations(self):
         return self.manager.has_explanations
+
+    @property
+    def records(self):
+        return ExperimentRecords(self)
+
+
+class ExperimentRecords:
+    def __init__(self, experiment: Experiment):
+        self.experiment = experiment
+        self._zipped_data = zip(
+            self.experiment.manager.get_data()[-1], # data_id; data_ids[data_loc]
+            self.experiment.get_inputs_flattened(), # input; inputs[data_loc]
+            self.experiment.get_outputs_flattened(), # output; outputs[data_loc]
+            self.experiment.get_targets_flattened(), # target; targets[data_loc]
+            self._rearrange_explanations(),
+            self._rearrange_evaluations(),
+        )
+
+    def _rearrange_explanations(self):
+        # expls[explainer_id][data_loc] -> expls[data_loc][explainer_id]
+        rearranged = []
+        for expl_id, expl_by_data in enumerate(self.experiment.get_explanations_flattened()):
+            for data_loc, expl in enumerate(expl_by_data):
+                if len(rearranged) < data_loc + 1:
+                    rearranged.append([])
+                if len(rearranged[data_loc]) < expl_id + 1:
+                    rearranged[data_loc].append([])
+                rearranged[data_loc][expl_id].append(expl)
+        return rearranged
+
+    def _rearrange_evaluations(self):
+        # evals[explainer_id][metric_id][data_loc] -> evals[data_loc][explainer_id][metric_id]
+        rearranged = []
+        for expl_id, eval_by_expl in enumerate(self.experiment.get_evaluations_flattened()):
+            for metric_id, eval_by_data in enumerate(eval_by_expl):
+                for data_loc, metric in enumerate(eval_by_data):
+                    if len(rearranged) < data_loc + 1:
+                        rearranged.append([])
+                    if len(rearranged[data_loc]) < expl_id + 1:
+                        rearranged[data_loc].append([])
+                    if len(rearranged[data_loc][expl_id]) < metric_id + 1:
+                        rearranged[data_loc][expl_id].append([])
+                    rearranged[data_loc][expl_id][metric_id].append(metric)
+        return rearranged
+
+    @property
+    def explainers(self):
+        return {
+            explainer_id: class_to_string(explainer)
+            for explainer, explainer_id
+            in zip(*self.experiment.manager.get_explainers())
+        }
+
+    @property
+    def metrics(self):
+        return {
+            metric_id: class_to_string(metric)
+            for metric, metric_id
+            in zip(*self.experiment.manager.get_metrics())
+        }
+
+    def __len__(self):
+        return len(self.experiment.manager.get_data()[-1])
+
+    def __getitem__(self, data_loc):
+        row = next(itertools.islice(self._zipped_data, data_loc, None))
+        zipped_explanations = zip(self.explainers.items(), row[4])
+        zipped_evaluations = lambda explainer_id: zip(self.metrics.items(), row[5][explainer_id])
+        return {
+            'data_id': row[0],
+            'input': row[1],
+            'output': row[2],
+            'target': row[3],
+            'explanations': [{
+                'explainer_id': explainer_id,
+                'explainer_nm': explainer_nm,
+                'value': explanation[0],
+                'evaluations': [{
+                    'metric_id': metric_id,
+                    'metric_nm': metric_nm,
+                    'value': evaluation[0],
+                } for (metric_id, metric_nm), evaluation in zipped_evaluations(explainer_id)]
+            } for (explainer_id, explainer_nm), explanation in zipped_explanations]
+        }
+
