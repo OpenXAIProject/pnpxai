@@ -105,8 +105,8 @@ def explain(index):
     # explanation_images = {key: attr for key, attr in attrs.items()}
     explanation_images = [cmap(attr[0]) for _, attr in attrs.items()]
     # explanation_images = explanation_images['IntegratedGradients'][0]
-    label = idx_to_label(preds.item())
-    pred = idx_to_label(targets.item())
+    label = idx_to_label(labels.item())
+    pred = idx_to_label(preds.item())
 
     results = (label, pred, original_image, gt_mask) + tuple(explanation_images)
 
