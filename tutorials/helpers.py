@@ -68,3 +68,47 @@ def denormalize_image(inputs, mean, std):
         * Tensor(std)[:, None, None]
         + Tensor(mean)[:, None, None]
     )
+
+
+def get_livertumor_dataset(
+        transform,
+        subset_size: int=100, # ignored if indices is not None
+        root_dir="./data/LiverTumor",
+        indices: Optional[List[int]]=None,
+    ):
+    from datasets.liver_tumor import LiverTumorDataset
+
+    os.chdir(Path(__file__).parent) # ensure path
+    dataset = LiverTumorDataset(data_dir=root_dir, transform=transform)
+    if indices is not None:
+        return Subset(dataset, indices=indices)
+    indices = list(range(len(dataset)))
+    subset = Subset(dataset, indices=indices[:subset_size])
+    return subset
+
+
+def get_livertumor_model(model_dir):
+    from models.liver_tumor import ResNet50
+    import torch
+    from torchvision import transforms
+    model = ResNet50(in_channels=1, num_classes=2)
+    # checkpoint = torch.load(model_dir)['net']
+    checkpoint = torch.load(model_dir)
+    model.load_state_dict(checkpoint, strict=False)
+
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Resize((224, 224), antialias=True),
+        transforms.Normalize(mean=[.5], std=[.5]),
+    ])
+
+    return model, transform
+
+sample_to_np = lambda sample: sample.permute(1, 2, 0).squeeze(dim=-1).detach().numpy()
+
+def denormalize_sample(inputs, mean, std):
+    return sample_to_np(
+        inputs
+        * Tensor(std)
+        + Tensor(mean)
+    )

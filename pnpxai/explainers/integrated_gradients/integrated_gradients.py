@@ -24,7 +24,18 @@ class IntegratedGradients(Explainer):
     """
     def __init__(self, model: Model):
         super().__init__(model=model)
-        self.source = IntegratedGradientsZennit(self.model)
+        # self.source = IntegratedGradientsZennit(self.model)
+
+        # def baseline_fn(x):
+        #     print('\n\n\n\n', torch.min(x, dim=1, keepdim=True).values.shape, '\n\n\n\n')
+        #     # import pdb; pdb.set_trace()
+        #     return torch.ones_like(x) * torch.min(x, dim=1, keepdim=True).values
+        # def baseline_fn(x): return torch.ones_like(x) * torch.min(x, dim=1, keepdim=True).values
+
+        def baseline_fn(x): return torch.ones_like(x) * x.min()
+        # def baseline_fn(x): return torch.ones_like(x) * x.mean()
+        # def baseline_fn(x): return torch.ones_like(x) * x.max()
+        self.source = IntegratedGradientsZennit(self.model, baseline_fn=baseline_fn)
 
     def attribute(
         self,
