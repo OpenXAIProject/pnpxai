@@ -55,6 +55,8 @@ class GradientXInput(Explainer):
             target=targets,
             additional_forward_args=additional_forward_args,
         )
+        if isinstance(attrs, list):
+            attrs = tuple(attrs)
         if isinstance(attrs, tuple) and len(attrs) == 1:
             attrs = attrs[0]
         return attrs

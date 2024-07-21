@@ -6,6 +6,7 @@ from torch.nn.modules import Module
 from captum.attr import IntegratedGradients as CaptumIntegratedGradients
 from captum.attr import LayerIntegratedGradients as CaptumLayerIntegratedGradients
 
+from pnpxai.utils import format_into_tuple
 from .base import Explainer
 from .utils import captum_wrap_model_input
 
@@ -54,6 +55,7 @@ class IntegratedGradients(Explainer):
         targets: Tensor
     ) -> Union[Tensor, Tuple[Tensor]]:
         forward_args, additional_forward_args = self._extract_forward_args(inputs)
+        forward_args = format_into_tuple(forward_args)
         baselines = self.baseline_fn(*forward_args)
         attrs = self.explainer.attribute(
             inputs=forward_args,
@@ -62,6 +64,7 @@ class IntegratedGradients(Explainer):
             additional_forward_args=additional_forward_args,
             n_steps=self.n_steps,
         )
-        if isinstance(attrs, tuple) and len(attrs) == 1:
+        attrs = format_into_tuple(attrs)
+        if len(attrs) == 1:
             attrs = attrs[0]
         return attrs

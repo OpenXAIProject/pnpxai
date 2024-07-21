@@ -123,7 +123,7 @@ class LRPUniformEpsilon(LRPBase):
     def __init__(
         self,
         model: Module,
-        epsilon: Union[float, Callable[[Tensor], Tensor]]=1e-6,
+        epsilon: Union[float, Callable[[Tensor], Tensor]]=.25,
         stabilizer: Union[float, Callable[[Tensor], Tensor]]=1e-6,
         zennit_canonizers: Optional[List[Canonizer]]=None,
         forward_arg_extractor: Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]=None,

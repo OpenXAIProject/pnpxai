@@ -16,7 +16,7 @@ from captum._utils.gradient import (
 from zennit.attribution import Gradient as ZennitGradient
 from zennit.core import Composite
 
-from ..utils import _format_to_tuple
+from pnpxai.utils import format_into_tuple
 
 
 class Gradient(ZennitGradient):
@@ -114,10 +114,6 @@ class SmoothGradient(Gradient):
         targets: Tensor,
         additional_forward_args: Optional[Union[Tensor, Tuple[Tensor]]]=None,
     ) -> Union[Tensor, Tuple[Tensor]]:
-        noise_levels = _format_to_tuple(self.noise_level)
-        forward_args = self._process_forward_args_before_forward(forward_args)
-        forward_args = _format_to_tuple(forward_args)
-        assert len(noise_levels) == len(forward_args), "forward_args must have same length as noise_level"
         results = tuple(torch.zeros_like(inp) for inp in forward_args)
         for i in range(self.n_iter):
             dims = tuple(tuple(range(1, inp.ndim)) for inp in forward_args)
@@ -176,6 +172,9 @@ class LayerSmoothGradient(LayerGradient):
             target_ind=targets,
             additional_forward_args=additional_forward_args,
         )
+        if len(grads) == 1:
+            return grads
+        grads = tuple(g[0] for g in grads)
         return grads
 
     def forward(
@@ -188,7 +187,7 @@ class LayerSmoothGradient(LayerGradient):
         forward_args = self._process_forward_args_before_forward(forward_args)
 
         # forward to the layer
-        forward_args = _format_to_tuple(forward_args)
+        forward_args = format_into_tuple(forward_args)
         for i in range(self.n_iter):
             noise_fn = torch.zeros_like if i == self.n_iter - 1 else torch.randn_like
             grads = self.grad(

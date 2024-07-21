@@ -39,7 +39,6 @@ class VarGrad(SmoothGrad):
 		inputs: Union[Tensor, Tuple[Tensor]],
 		targets: Tensor,
 	) -> Union[Tensor, Tuple[Tensor]]:
-		import pdb; pdb.set_trace()
 		forward_args, additional_forward_args = self._extract_forward_args(inputs)
 		with self.attributor() as attributor:
 			avg_grads, avg_grads_sq = attributor.forward(
@@ -55,7 +54,6 @@ class VarGrad(SmoothGrad):
 			for avg_grad_sq, avg_grad
 			in zip(avg_grads_sq, avg_grads)
 		)
-		import pdb; pdb.set_trace()
 		if len(vargrads) == 1:
 			return vargrads[0]
 		return vargrads

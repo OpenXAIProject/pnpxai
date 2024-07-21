@@ -175,6 +175,8 @@ class ExperimentManager:
             if batch is None:
                 reference_len = self._get_batch_size(reference) or 1
                 batch = [None] * reference_len
+            if isinstance(batch, Tuple):
+                batch = zip(*[list(b) for b in batch])
             flattened.extend(list(batch))
         return flattened
 

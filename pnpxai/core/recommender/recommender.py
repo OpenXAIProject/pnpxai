@@ -42,7 +42,7 @@ from ._types import (
 
 
 # space, required, unsupported
-DEFAULT_MAP_DATA = {
+DEFAULT_EXPLAINER_MAP = {
     GradCam: {
         "modalities": ["image"],
         "module_types": [Convolution],
@@ -95,15 +95,28 @@ DEFAULT_MAP_DATA = {
         "modalities": ["image", "text", ("image", "text")],
         "module_types": [Convolution],
     },
-    AttentionRollout: {
-        "modalities": ["text", ("image", "text")],
-        "module_types": [Attention],
-    },
-    TransformerAttribution: {
-        "modalities": ["text", ("image", "text")],
-        "module_types": [Attention],
-    },
+    # AttentionRollout: {
+    #     "modalities": ["text", ("image", "text")],
+    #     "module_types": [Attention],
+    # },
+    # TransformerAttribution: {
+    #     "modalities": ["text", ("image", "text")],
+    #     "module_types": [Attention],
+    # },
 }
+
+DEFAULT_METRIC_MAP = {
+    MuFidelity: {
+        'modalities': ['image', 'text'],
+    },
+    Sensitivity: {
+        'modalities': ['image', 'text'],
+    },
+    Complexity: {
+        'modalities': ['image'],
+    }
+}
+
 
 AVAILABLE_METRICS = {MuFidelity, Sensitivity, Complexity}
 
@@ -134,7 +147,7 @@ class XaiRecommender:
         self.architecture_to_explainers_map = None
         self.explainer_to_metrics_map = None
 
-        self._map_data = DEFAULT_MAP_DATA
+        self._map_data = DEFAULT_EXPLAINER_MAP
         self._build_maps()
 
     def _build_maps(self):

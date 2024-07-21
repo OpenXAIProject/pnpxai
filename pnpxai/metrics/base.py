@@ -26,6 +26,10 @@ class Metric(ABC):
         self.explainer = explainer
         self.device = next(model.parameters()).device
 
+    def set_explainer(self, exlainer: Explainer):
+        self.explainer = explainer
+        return self
+
     def evaluate(
             self,
             inputs: Union[torch.Tensor, None],

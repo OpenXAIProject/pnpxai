@@ -1,3 +1,4 @@
+import warnings
 from typing import Callable, Optional
 
 import torch
@@ -12,14 +13,15 @@ class Sensitivity(Metric):
     def __init__(
         self,
         model: nn.Module,
-        explainer: Explainer,
+        explainer: Optional[Explainer] = None,
         n_iter: Optional[int] = 8,
         epsilon: Optional[float] = 0.2,
     ):
         super().__init__(model, explainer)
         self.n_iter = n_iter
         self.epsilon = epsilon
-
+        if explainer is None:
+            warnings.warn('[Sensitivity] explainer is not provided. Please set explainer before evaluate.')
 
     def evaluate(
         self,

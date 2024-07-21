@@ -23,6 +23,12 @@ def transform_attn_mask_of_transformers(in_args, in_kwargs, kept, out_module):
             src_len, 1
         )
         return attn_mask.view(-1, src_len, src_len)
+    elif bsz > 1 and num_heads == 1 and tgt_len > 1:
+        attn_mask = attn_mask.repeat(
+            1, out_module._converted_self_attention.num_heads,
+            1, 1,
+        )
+        return attn_mask.view(-1, tgt_len, src_len)
     else:
         raise Exception("Not covered yet")
 
@@ -273,7 +279,7 @@ TRANSFORMERS_VILT_LAYER = {
                 "keep_outputs": True,
             },
         },
-        "_converted_attention_attention": {
+        "_converted_self_attention": {
             "out_module_type": nn.MultiheadAttention,
             "args": {
                 "embed_dim":  lambda in_module: in_module.attention.attention.attention_head_size * in_module.attention.attention.num_attention_heads,
@@ -320,7 +326,7 @@ TRANSFORMERS_VILT_LAYER = {
             "module": lambda in_module: in_module.attention.output,
             "forward": {
                 "args": lambda in_args, in_kwargs, kept, out_module: (
-                    kept["outputs"]["_converted_attention_attention"][0],
+                    kept["outputs"]["_converted_self_attention"][0],
                     kept["outputs"]["_converted_layernorm_before"],
                 ),
                 "keep_outputs": True,
@@ -385,7 +391,7 @@ TRANSFORMERS_VILT_LAYER = {
     },
     "output_selector": lambda kept: (
         kept["outputs"]["_converted_second_residual_connection"],
-        kept["outputs"]["_converted_attention_attention"][1],
+        kept["outputs"]["_converted_self_attention"][1],
     ),
 }
 

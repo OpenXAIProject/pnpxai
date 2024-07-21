@@ -367,6 +367,11 @@ class Experiment(Observable):
         data = [self.input_extractor(datum) for datum in data]
         return self.manager.flatten_if_batched(data, data)
 
+    def get_labels_flattened(self) -> Sequence[Tensor]:
+        data, data_ids = self.manager.get_data()
+        labels = [self.label_extractor(datum) for datum in data]
+        return self.manager.flatten_if_batched(labels, data)
+
     def get_targets_flattened(self) -> Sequence[Tensor]:
         """
         Retrieve and flatten target data.
@@ -376,10 +381,14 @@ class Experiment(Observable):
 
         This method retrieves target data using the target extractor and flattens it for further processing.
         """
+        if self.target_labels:
+            return self.get_labels_flattened()
         data, data_ids = self.manager.get_data()
-        targets = [self.label_extractor(datum) for datum in data] \
-            if self.target_labels else [self._get_targets(data_ids)]
+        targets = [self._get_targets(data_ids)]
         return self.manager.flatten_if_batched(targets, data)
+        # targets = [self.label_extractor(datum) for datum in data] \
+        #     if self.target_labels else [self._get_targets(data_ids)]
+        # return self.manager.flatten_if_batched(targets, data)
 
     def get_outputs_flattened(self) -> Sequence[Tensor]:
         """
@@ -491,6 +500,7 @@ class ExperimentRecords:
         self._zipped_data = zip(
             self.experiment.manager.get_data()[-1], # data_id; data_ids[data_loc]
             self.experiment.get_inputs_flattened(), # input; inputs[data_loc]
+            self.experiment.get_labels_flattened(), # label; labels[data_loc]
             self.experiment.get_outputs_flattened(), # output; outputs[data_loc]
             self.experiment.get_targets_flattened(), # target; targets[data_loc]
             self._rearrange_explanations(),
@@ -498,30 +508,30 @@ class ExperimentRecords:
         )
 
     def _rearrange_explanations(self):
-        # expls[explainer_id][data_loc] -> expls[data_loc][explainer_id]
+        # expls[explainer_loc][data_loc] -> expls[data_loc][explainer_loc]
         rearranged = []
-        for expl_id, expl_by_data in enumerate(self.experiment.get_explanations_flattened()):
+        for expl_loc, expl_by_data in enumerate(self.experiment.get_explanations_flattened()):
             for data_loc, expl in enumerate(expl_by_data):
                 if len(rearranged) < data_loc + 1:
                     rearranged.append([])
-                if len(rearranged[data_loc]) < expl_id + 1:
+                if len(rearranged[data_loc]) < expl_loc + 1:
                     rearranged[data_loc].append([])
-                rearranged[data_loc][expl_id].append(expl)
+                rearranged[data_loc][expl_loc].append(expl)
         return rearranged
 
     def _rearrange_evaluations(self):
-        # evals[explainer_id][metric_id][data_loc] -> evals[data_loc][explainer_id][metric_id]
+        # evals[explainer_loc][metric_loc][data_loc] -> evals[data_loc][explainer_loc][metric_loc]
         rearranged = []
-        for expl_id, eval_by_expl in enumerate(self.experiment.get_evaluations_flattened()):
-            for metric_id, eval_by_data in enumerate(eval_by_expl):
+        for expl_loc, eval_by_expl in enumerate(self.experiment.get_evaluations_flattened()):
+            for metric_loc, eval_by_data in enumerate(eval_by_expl):
                 for data_loc, metric in enumerate(eval_by_data):
                     if len(rearranged) < data_loc + 1:
                         rearranged.append([])
-                    if len(rearranged[data_loc]) < expl_id + 1:
+                    if len(rearranged[data_loc]) < expl_loc + 1:
                         rearranged[data_loc].append([])
-                    if len(rearranged[data_loc][expl_id]) < metric_id + 1:
-                        rearranged[data_loc][expl_id].append([])
-                    rearranged[data_loc][expl_id][metric_id].append(metric)
+                    if len(rearranged[data_loc][expl_loc]) < metric_loc + 1:
+                        rearranged[data_loc][expl_loc].append([])
+                    rearranged[data_loc][expl_loc][metric_loc].append(metric)
         return rearranged
 
     @property
@@ -545,13 +555,14 @@ class ExperimentRecords:
 
     def __getitem__(self, data_loc):
         row = next(itertools.islice(self._zipped_data, data_loc, None))
-        zipped_explanations = zip(self.explainers.items(), row[4])
-        zipped_evaluations = lambda explainer_id: zip(self.metrics.items(), row[5][explainer_id])
+        zipped_explanations = zip(self.explainers.items(), row[5])
+        zipped_evaluations = lambda explainer_loc: zip(self.metrics.items(), row[6][explainer_loc])
         return {
             'data_id': row[0],
             'input': row[1],
-            'output': row[2],
-            'target': row[3],
+            'label': row[2],
+            'output': row[3],
+            'target': row[4],
             'explanations': [{
                 'explainer_id': explainer_id,
                 'explainer_nm': explainer_nm,
@@ -560,7 +571,7 @@ class ExperimentRecords:
                     'metric_id': metric_id,
                     'metric_nm': metric_nm,
                     'value': evaluation[0],
-                } for (metric_id, metric_nm), evaluation in zipped_evaluations(explainer_id)]
-            } for (explainer_id, explainer_nm), explanation in zipped_explanations]
+                } for (metric_id, metric_nm), evaluation in zipped_evaluations(explainer_loc)]
+            } for explainer_loc, ((explainer_id, explainer_nm), explanation) in enumerate(zipped_explanations)]
         }
 
