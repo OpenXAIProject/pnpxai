@@ -17,7 +17,8 @@ from helpers import get_imagenet_dataset, get_torchvision_model, denormalize_ima
 set_seed(seed=0)
 
 # Determine the device based on the availability
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device('cpu')
 
 
 # -----------------------------------------------------------------------------#
@@ -27,7 +28,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 cur_dir  = os.path.dirname(os.path.abspath(__file__))
 
 # Initialize Project 1
-project = Project('Test Project 1', config=os.path.join(cur_dir, 'config.example.yml'))
+project = Project('Test Project 1') #, config=os.path.join(cur_dir, 'config.example.yml'))
 
 
 # -----------------------------------------------------------------------------#
@@ -48,7 +49,8 @@ loader = DataLoader(dataset, batch_size=10)
 
 
 def input_extractor(x): return x[0].to(device)
-def target_extractor(x): return x[1].to(device)
+def label_extractor(x): return x[1].to(device)
+def target_extractor(y): return y.argmax(-1).to(device)
 
 # Define helper functions to visualize input and target
 
@@ -66,10 +68,22 @@ experiment_resnet = project.create_auto_experiment(
     loader,
     name='Resnet Experiment',
     input_extractor=input_extractor,
+    label_extractor=label_extractor,
     target_extractor=target_extractor,
     input_visualizer=input_visualizer,
     target_visualizer=target_visualizer,
+    target_labels=False,
 )
+
+
+# experiment_resnet.run(
+#     data_ids=[0],
+#     explainer_ids=range(len(experiment_resnet.all_explainers)),
+#     metrics_ids=range(len(experiment_resnet.all_metrics)),
+# )
+# vis = experiment_resnet.get_visualizations_flattened()
+# import pdb; pdb.set_trace()
+# import pdb; pdb.set_trace()
 
 
 # -----------------------------------------------------------------------------#
@@ -89,7 +103,7 @@ loader = DataLoader(dataset, batch_size=10)
 
 
 def input_extractor(x): return x[0].to(device)
-def target_extractor(x): return x[1].to(device)
+def label_extractor(x): return x[1].to(device)
 
 # Define helper functions to visualize input and target
 
@@ -103,12 +117,12 @@ def target_visualizer(x): return dataset.dataset.idx_to_label(x.item())
 
 # Create an experiment to explain the defined model and dataset
 # Use predefined config, since it is not AutoExperiment
-experiment_vit = project.create_experiment(
+experiment_vit = project.create_auto_experiment(
     model,
     loader,
     name='ViT Experiment',
     input_extractor=input_extractor,
-    target_extractor=target_extractor,
+    label_extractor=label_extractor,
     input_visualizer=input_visualizer,
     target_visualizer=target_visualizer,
 )
@@ -138,7 +152,7 @@ loader = DataLoader(dataset, batch_size=10)
 
 
 def input_extractor(x): return x[0].to(device)
-def target_extractor(x): return x[1].to(device)
+def label_extractor(x): return x[1].to(device)
 
 # Define helper functions to visualize input and target
 
@@ -156,7 +170,7 @@ experiment_project2 = project2.create_auto_experiment(
     loader,
     name='ViT Experiment for Project 2',
     input_extractor=input_extractor,
-    target_extractor=target_extractor,
+    label_extractor=label_extractor,
     input_visualizer=input_visualizer,
     target_visualizer=target_visualizer,
 )

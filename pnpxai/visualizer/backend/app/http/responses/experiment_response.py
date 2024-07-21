@@ -19,9 +19,9 @@ class ExperimentResponse(Response):
 
     @classmethod
     def to_dict(cls, experiment):
-        all_explainers = [
-            explainer.explainer for explainer in experiment.all_explainers]
-        explainers = cls.format_classes_by_name(all_explainers)
+        # all_explainers = [
+        #     explainer.explainer for explainer in experiment.all_explainers]
+        explainers = cls.format_classes_by_name(experiment.all_explainers)
         metrics = cls.format_classes_by_name(experiment.all_metrics)
 
         fields = {
@@ -99,7 +99,7 @@ class ExperimentRunsResponse(Response):
                 explainer_rank = explainer_ranks[idx] if explainer_ranks is not None else None
 
                 formatted[idx][APIItems.EXPLANATIONS.value].append({
-                    APIItems.EXPLAINER.value: class_to_string(explainer.explainer),
+                    APIItems.EXPLAINER.value: class_to_string(explainer),
                     APIItems.DATA.value: visualization.to_json() if visualization is not None else None,
                     APIItems.EVALUATION.value: formatted_evaluations,
                     APIItems.RANK.value: explainer_rank,
