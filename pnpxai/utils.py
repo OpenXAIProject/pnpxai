@@ -99,3 +99,9 @@ def linear_from_params(weight: Tensor, bias: Optional[Tensor] = None) -> nn.Line
         layer.bias.data = bias
 
     return layer
+
+
+def format_into_tuple(obj: Any):
+    if isinstance(obj, Sequence) and not isinstance(obj, str):
+        return tuple(obj)
+    return (obj,)

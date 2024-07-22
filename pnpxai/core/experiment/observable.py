@@ -1,7 +1,7 @@
 from typing import Optional
 from pnpxai.core.experiment.manager import ExperimentManager
-from pnpxai.explainers import ExplainerWArgs
-from pnpxai.evaluator import EvaluationMetric
+from pnpxai.explainers.base import Explainer
+from pnpxai.metrics.base import Metric
 
 
 class ExperimentObservableEvent:
@@ -9,8 +9,8 @@ class ExperimentObservableEvent:
         self,
         manager: ExperimentManager,
         message: str,
-        explainer: Optional[ExplainerWArgs] = None,
-        metric: Optional[EvaluationMetric] = None
+        explainer: Optional[Explainer] = None,
+        metric: Optional[Metric] = None
     ):
         self.message = message
         self.progress = self._compute_progress(manager, explainer, metric)
@@ -18,8 +18,8 @@ class ExperimentObservableEvent:
     def _compute_progress(
         self,
         manager: ExperimentManager,
-        explainer: Optional[ExplainerWArgs] = None,
-        metric: Optional[EvaluationMetric] = None
+        explainer: Optional[Explainer] = None,
+        metric: Optional[Metric] = None
     ):
         explainers = manager.get_explainers()[0]
         metrics = manager.get_metrics()[0]
