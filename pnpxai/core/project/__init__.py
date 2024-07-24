@@ -1,1 +1,1 @@
-from pnpxai.core.project.project import Project
+from .project import Project

@@ -17,6 +17,7 @@ clf_model = XGBClassifier()
 clf_model.fit(X_train, y_train)
 
 categorical_features = np.argwhere(np.array([len(set(X_train[:,x])) for x in range(X_train.shape[1])]) <= 10).flatten()
+import pdb; pdb.set_trace()
 bg_data = X_train
 explainer = TabLime(
     clf_model, bg_data, categorical_features=categorical_features, mode='classification'

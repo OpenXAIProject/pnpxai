@@ -6,34 +6,37 @@ from torch.utils.data import DataLoader, Subset, Dataset
 
 from pnpxai.core.experiment.cache import ExperimentCache
 from pnpxai.core._types import DataSource
-from pnpxai.explainers._explainer import Explainer, ExplainerWArgs
-from pnpxai.evaluator import EvaluationMetric
+from pnpxai.explainers.base import Explainer
+from pnpxai.metrics.base import Metric
+# from pnpxai.explainers._explainer import Explainer, Explainer
+# from pnpxai.evaluator import Metric
 
 
 class ExperimentManager:
     def __init__(
         self,
         data: DataSource,
-        explainers: Sequence[Union[ExplainerWArgs, Explainer]],
-        metrics: Sequence[EvaluationMetric],
+        explainers: Sequence[Explainer],
+        metrics: Sequence[Metric],
         cache_device: Optional[Union[torch.device, str]] = None,
     ):
         self._data = data
         self._metrics = metrics
-        self._explainers_w_args: List[ExplainerWArgs] = self.preprocess_explainers(explainers) \
-            if explainers is not None \
-            else explainers
+        self._explainers = explainers
+        # self._explainers_w_args: List[Explainer] = self.preprocess_explainers(explainers) \
+        #     if explainers is not None \
+        #     else explainers
 
         self._cache = ExperimentCache(cache_device)
         self.set_config()
 
-    def preprocess_explainers(self, explainers: Sequence[Union[ExplainerWArgs, Explainer]]) -> List[ExplainerWArgs]:
-        return [
-            explainer
-            if isinstance(explainer, ExplainerWArgs)
-            else ExplainerWArgs(explainer)
-            for explainer in explainers
-        ]
+    # def preprocess_explainers(self, explainers: Sequence[Explainer]) -> List[Explainer]:
+    #     return [
+    #         explainer
+    #         if isinstance(explainer, Explainer)
+    #         else Explainer(explainer)
+    #         for explainer in explainers
+    #     ]
 
     def set_config(
         self,
@@ -54,7 +57,8 @@ class ExperimentManager:
 
     def set_explainer_ids(self, explainer_ids: Optional[Sequence[int]] = None):
         self._explainer_ids = explainer_ids if explainer_ids is not None else list(
-            range(len(self._explainers_w_args))
+            range(len(self._explainers))
+            # range(len(self._explainers_w_args))
         )
 
     def set_metric_ids(self, metric_ids: Optional[Sequence[int]] = None):
@@ -62,16 +66,17 @@ class ExperimentManager:
             range(len(self._metrics))
         )
 
-    def get_explainers(self) -> Tuple[List[ExplainerWArgs], List[int]]:
+    def get_explainers(self) -> Tuple[List[Explainer], List[int]]:
         return self._get_explainers_by_ids(self._explainer_ids), self._explainer_ids
 
-    def _get_explainers_by_ids(self, explainer_ids: Optional[Sequence[int]] = None) -> List[ExplainerWArgs]:
-        return [self._explainers_w_args[idx] for idx in explainer_ids] if explainer_ids is not None else self._explainers_w_args
+    def _get_explainers_by_ids(self, explainer_ids: Optional[Sequence[int]] = None) -> List[Explainer]:
+        # return [self._explainers_w_args[idx] for idx in explainer_ids] if explainer_ids is not None else self._explainers_w_args
+        return [self._explainers[idx] for idx in explainer_ids] if explainer_ids is not None else self._explainers
 
-    def get_metrics(self) -> Tuple[List[EvaluationMetric], List[int]]:
+    def get_metrics(self) -> Tuple[List[Metric], List[int]]:
         return self._get_metrics_by_ids(self._metric_ids), self._metric_ids
 
-    def _get_metrics_by_ids(self, metric_ids: Optional[Sequence[int]] = None) -> List[EvaluationMetric]:
+    def _get_metrics_by_ids(self, metric_ids: Optional[Sequence[int]] = None) -> List[Metric]:
         return [self._metrics[idx] for idx in metric_ids] if metric_ids is not None else self._metrics
 
     def get_data_to_process_for_explainer(self, explainer_id: int) -> Tuple[DataSource, List[int]]:
@@ -112,7 +117,7 @@ class ExperimentManager:
             valid_data_ids.append(idx)
 
         if self.is_batched:
-            return self._copy_data_loader(valid_explanations, self._data.__class__), valid_data_ids
+            return self._copy_data_loader(valid_explanations, self._data.__class__, do_collate=False), valid_data_ids
 
         return valid_explanations, valid_data_ids
 
@@ -162,7 +167,6 @@ class ExperimentManager:
     def flatten_if_batched(self, values: DataSource, length_reference: DataSource):
         if not self.is_batched:
             return values
-
         assert len(values) == len(length_reference)
 
         flattened = []
@@ -170,6 +174,8 @@ class ExperimentManager:
             if batch is None:
                 reference_len = self._get_batch_size(reference) or 1
                 batch = [None] * reference_len
+            if isinstance(batch, Tuple):
+                batch = zip(*[list(b) for b in batch])
             flattened.extend(list(batch))
         return flattened
 
@@ -191,22 +197,24 @@ class ExperimentManager:
 
         return data
 
-    def _copy_data_loader(self, data: DataSource, data_loader: Type[DataLoader]):
+    def _copy_data_loader(self, data: DataSource, data_loader: Type[DataLoader], do_collate=True):
         duplicated_params = [
-            'batch_size', 'num_workers', 'collate_fn', 'pin_memory', 'drop_last', 'timeout',
+            'batch_size', 'num_workers', 'pin_memory', 'drop_last', 'timeout',
             'worker_init_fn', 'multiprocessing_context', 'generator', 'persistent_workers', 'pin_memory_device'
         ]
+        collate_fn = getattr(self._data, 'collate_fn') if do_collate else None
         return data_loader(
-            dataset=data, shuffle=False,
+            dataset=data, shuffle=False, collate_fn=collate_fn,
             **{param: getattr(self._data, param) for param in duplicated_params}
         )
 
     @property
-    def all_explainers(self) -> Sequence[ExplainerWArgs]:
-        return self._explainers_w_args
+    def all_explainers(self) -> Sequence[Explainer]:
+        # return self._explainers_w_args
+        return self._explainers
 
     @property
-    def all_metrics(self) -> Sequence[EvaluationMetric]:
+    def all_metrics(self) -> Sequence[Metric]:
         return self._metrics
 
     @property
