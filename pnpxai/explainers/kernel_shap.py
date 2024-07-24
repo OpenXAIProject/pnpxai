@@ -92,7 +92,7 @@ class TabKernelShap(SklearnExplainer):
             show=False,
         )
         if self.mode == 'classification':
-            attrs = format_into_array(attrs).transpose(1,2,0)
+            attrs = format_into_array(attrs)
             attrs = attrs[np.arange(attrs.shape[0]), :, targets]
         if isinstance(inputs, pd.DataFrame):
             attrs = pd.DataFrame(index=inputs.index, columns=inputs.columns, data=attrs)
