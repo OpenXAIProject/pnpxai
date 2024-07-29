@@ -5,6 +5,8 @@ from pnpxai.utils import to_device
 
 class ExperimentCache:
     __EXPLAINER_KEY = "explainer"
+    __METRIC_KEY = "metric"
+    __POSTPROCESSOR_KEY = "postprocessor"
     __EVALUATION_KEY = "evaluation"
     __DATA_KEY = "data"
 
@@ -27,8 +29,14 @@ class ExperimentCache:
         key = self._get_key(data_id, explainer_id)
         return self._global_cache.get(key, None)
 
-    def get_evaluation(self, data_id: int, explainer_id: int, metric_id: int) -> Optional[Any]:
-        key = self._get_key(data_id, explainer_id, metric_id)
+    def get_evaluation(
+        self,
+        data_id: int,
+        explainer_id: int,
+        postprocessor_id: int,
+        metric_id: int
+    ) -> Optional[Any]:
+        key = self._get_key(data_id, explainer_id, postprocessor_id, metric_id)
         return self._global_cache.get(key, None)
 
     def set_output(self, data_id: int, output: Any):
@@ -39,11 +47,24 @@ class ExperimentCache:
         key = self._get_key(data_id, explainer_id)
         self._global_cache[key] = self.to_device(explanation)
 
-    def set_evaluation(self, data_id: int, explainer_id: int, metric_id: int, evaluation: Any):
-        key = self._get_key(data_id, explainer_id, metric_id)
+    def set_evaluation(
+        self,
+        data_id: int,
+        explainer_id: int,
+        postprocessor_id: int,
+        metric_id: int,
+        evaluation: Any
+    ):
+        key = self._get_key(data_id, explainer_id, postprocessor_id, metric_id)
         self._global_cache[key] = self.to_device(evaluation)
 
-    def _get_key(self, data_id: int, explainer_id: Optional[int] = None, metric_id: Optional[int] = None):
+    def _get_key(
+        self,
+        data_id: int,
+        explainer_id: Optional[int] = None,
+        postprocessor_id: Optional[int] = None,
+        metric_id: Optional[int] = None
+    ):
         key = f"{self.__DATA_KEY}_{data_id}"
         if explainer_id is None:
             return key
@@ -52,4 +73,4 @@ class ExperimentCache:
         if metric_id is None:
             return key
 
-        return f"{key}.{self.__EVALUATION_KEY}_{metric_id}"
+        return f"{key}.{self.__POSTPROCESSOR_KEY}_{postprocessor_id}.{self.__EVALUATION_KEY}_{metric_id}"

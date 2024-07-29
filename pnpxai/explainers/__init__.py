@@ -59,3 +59,5 @@ AVAILABLE_EXPLAINERS = [
     TransformerAttribution,
 ]
 
+EXPLAINERS_FOR_TABULAR = []
+

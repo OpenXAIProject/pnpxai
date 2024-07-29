@@ -4,6 +4,7 @@ from captum.attr import GuidedGradCam as CaptumGuidedGradCam
 
 from .base import Explainer
 from .utils import find_cam_target_layer
+from pnpxai.utils import format_into_tuple
 
 
 class GuidedGradCam(Explainer):
@@ -18,6 +19,8 @@ class GuidedGradCam(Explainer):
     
     def attribute(self, inputs: Tensor, targets: Tensor) -> Tensor:
         forward_args, additional_forward_args = self._extract_forward_args(inputs)
+        forward_args = format_into_tuple(forward_args)
+        additional_forward_args = format_into_tuple(additional_forward_args)
         assert len(forward_args) == 1, 'GuidedGradCam for multiple inputs is not supported yet.'
         layer = find_cam_target_layer(self.model)
         explainer = CaptumGuidedGradCam(model=self.model, layer=layer)

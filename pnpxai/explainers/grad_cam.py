@@ -3,6 +3,7 @@ from captum.attr import LayerGradCam, LayerAttribution
 
 from .base import Explainer
 from .utils import find_cam_target_layer
+from pnpxai.utils import format_into_tuple
 
 
 class GradCam(Explainer):
@@ -17,6 +18,8 @@ class GradCam(Explainer):
 
     def attribute(self, inputs: Tensor, targets: Tensor) -> Tensor:
         forward_args, additional_forward_args = self._extract_forward_args(inputs)
+        forward_args = format_into_tuple(forward_args)
+        additional_forward_args = format_into_tuple(additional_forward_args)
         assert len(forward_args) == 1, 'GradCam for multiple inputs is not supported yet.'
         layer = find_cam_target_layer(self.model)
         explainer = LayerGradCam(forward_func=self.model, layer=layer)
