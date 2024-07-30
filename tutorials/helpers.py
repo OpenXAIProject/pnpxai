@@ -215,7 +215,7 @@ def load_model_and_dataloader_for_tutorial(modality, device):
         model.eval()
         dataset = get_imagenet_dataset(transform)
         loader = DataLoader(dataset, batch_size=8, shuffle=False)
-        return model, loader
+        return model, loader, transform
     elif modality == 'text':
         model = get_bert_model('fabriceyhc/bert-base-uncased-imdb', num_labels=2)
         model = model.to(device)

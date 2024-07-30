@@ -7,7 +7,7 @@ import torch
 from helpers import load_model_and_dataloader_for_tutorial
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model, loader = load_model_and_dataloader_for_tutorial('image', device)
+model, loader, _ = load_model_and_dataloader_for_tutorial('image', device)
 
 
 #------------------------------------------------------------------------------#
@@ -28,43 +28,43 @@ expr = AutoExperiment(
     channel_dim=1,
 )
 
-# run_batch returns a dict of results
-results = expr.run_batch(data_ids=[0, 1], explainer_id=1, postprocessor_id=0, metric_id=1)
+# # run_batch returns a dict of results
+# results = expr.run_batch(data_ids=[0, 1], explainer_id=1, postprocessor_id=0, metric_id=1)
 
-# Also, we can use experiment manager to browse results as follows
-# get data
-data = expr.manager.get_data_by_id(0) # a pair of single instance (input, label)
-batch = expr.manager.batch_data_by_ids(data_ids=[0, 1]) # a batch of multiple instances (inputs, labels)
+# # Also, we can use experiment manager to browse results as follows
+# # get data
+# data = expr.manager.get_data_by_id(0) # a pair of single instance (input, label)
+# batch = expr.manager.batch_data_by_ids(data_ids=[0, 1]) # a batch of multiple instances (inputs, labels)
 
-# get explainer
-explainer = expr.manager.get_explainer_by_id(0)
+# # get explainer
+# explainer = expr.manager.get_explainer_by_id(0)
 
-# get explanation
-attr = expr.manager.get_explanation_by_id(data_id=0, explainer_id=0)
-batched_attrs = expr.manager.batch_explanations_by_ids(data_ids=[0,1], explainer_id) # batched explanations
+# # get explanation
+# attr = expr.manager.get_explanation_by_id(data_id=0, explainer_id=0)
+# batched_attrs = expr.manager.batch_explanations_by_ids(data_ids=[0,1], explainer_id) # batched explanations
 
-# get postprocessor
-postprocessor = expr.manager.get_postprocessor_by_id(0)
+# # get postprocessor
+# postprocessor = expr.manager.get_postprocessor_by_id(0)
 
-# postprocess
-postprocessed = postprocessor(batched_attrs) # Note that this work only for batched attrs
+# # postprocess
+# postprocessed = postprocessor(batched_attrs) # Note that this work only for batched attrs
 
-# get metric
-metric = expr.manager.get_metric_by_id(0)
+# # get metric
+# metric = expr.manager.get_metric_by_id(0)
 
-# get evaluation
-evaluation = expr.manager.get_evaluations_by_id(
-    data_id=0,
-    explainer_id=0,
-    postprocessor_id=0,
-    metric_id=0,
-)
-evaluations = expr.manager.batch_evaluations_by_ids( # batched evaluations
-    data_ids=[0, 1],
-    explainer_id=0,
-    postprocessor_id=0,
-    metric_id=0,
-)
+# # get evaluation
+# evaluation = expr.manager.get_evaluations_by_id(
+#     data_id=0,
+#     explainer_id=0,
+#     postprocessor_id=0,
+#     metric_id=0,
+# )
+# evaluations = expr.manager.batch_evaluations_by_ids( # batched evaluations
+#     data_ids=[0, 1],
+#     explainer_id=0,
+#     postprocessor_id=0,
+#     metric_id=0,
+# )
 
 
 
