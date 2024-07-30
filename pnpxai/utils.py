@@ -104,4 +104,10 @@ def linear_from_params(weight: Tensor, bias: Optional[Tensor] = None) -> nn.Line
 def format_into_tuple(obj: Any):
     if isinstance(obj, Sequence) and not isinstance(obj, str):
         return tuple(obj)
+    elif isinstance(obj, type(None)):
+        return ()
     return (obj,)
+
+
+def format_into_tuple_all(**kwargs):
+    return {k: format_into_tuple(v) for k, v in kwargs.items()}

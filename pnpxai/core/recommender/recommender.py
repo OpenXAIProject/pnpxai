@@ -34,6 +34,10 @@ from pnpxai.metrics import (
     MuFidelity,
     Sensitivity,
     Complexity,
+    MoRF,
+    LeRF,
+    AbPC,
+    AVAILABLE_METRICS,
 )
 
 from ._types import (
@@ -116,9 +120,6 @@ DEFAULT_METRIC_MAP = {
         'modalities': ['image'],
     }
 }
-
-
-AVAILABLE_METRICS = {MuFidelity, Sensitivity, Complexity}
 
 CAM_BASED_EXPLAINERS = {GradCam, GuidedGradCam}
 

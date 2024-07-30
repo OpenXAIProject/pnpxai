@@ -60,6 +60,7 @@ class Experiment(Observable):
         model: Model,
         data: DataSource,
         explainers: Sequence[Explainer],
+        postprocessors: Optional[Sequence[Callable]] = None,
         metrics: Optional[Sequence[Metric]] = None,
         modality: ModalityOrListOfModalities = "image",
         input_extractor: Optional[Callable[[Any], Any]] = None,
@@ -74,12 +75,13 @@ class Experiment(Observable):
         self.model = model
         self.model_device = next(self.model.parameters()).device
 
-        self.manager = ExperimentManager(
-            data=data,
-            explainers=explainers,
-            metrics=metrics or [],
-            cache_device=cache_device,
-        )
+        self.manager = ExperimentManager(data=data, cache_device=cache_device)
+        for explainer in explainers:
+            self.manager.add_explainer(explainer)
+        for postprocessor in postprocessors:
+            self.manager.add_postprocessor(postprocessor)
+        for metric in metrics:
+            self.manager.add_metric(metric)
 
         self.input_extractor = input_extractor \
             if input_extractor is not None \
@@ -103,28 +105,136 @@ class Experiment(Observable):
     def errors(self):
         return self._errors
 
-    @property
-    def all_explainers(self) -> Sequence[Explainer]:
-        return self.manager.all_explainers
+    # @property
+    # def all_explainers(self) -> Sequence[Explainer]:
+    #     return self.manager.all_explainers
 
-    @property
-    def all_metrics(self) -> Sequence[Metric]:
-        return self.manager.all_metrics
+    # @property
+    # def all_metrics(self) -> Sequence[Metric]:
+    #     return self.manager.all_metrics
 
-    def get_current_explainers(self) -> List[Explainer]:
-        return self.manager.get_explainers()[0]
+    # def get_current_explainers(self) -> List[Explainer]:
+    #     return self.manager.get_explainers()[0]
 
-    def get_current_metrics(self) -> List[Metric]:
-        return self.manager.get_metrics()[0]
+    # def get_current_metrics(self) -> List[Metric]:
+    #     return self.manager.get_metrics()[0]
 
     def to_device(self, x):
         return to_device(x, self.model_device)
+
+    def run_batch(
+        self,
+        data_ids: List[int],
+        explainer_id: int,
+        postprocessor_id: int,
+        metric_id: int,
+    ):
+        self.predict_batch(data_ids)
+        self.explain_batch(data_ids, explainer_id)
+        self.evaluate_batch(
+            data_ids, explainer_id, postprocessor_id, metric_id)
+        data = self.manager.batch_data_by_ids(data_ids)
+        return {
+            'inputs': self.input_extractor(data),
+            'labels': self.label_extractor(data),
+            'outputs': self.manager.batch_outputs_by_ids(data_ids),
+            'targets': self._get_targets(data_ids),
+            'explainer': self.manager.get_explainer_by_id(explainer_id),
+            'explanation': self.manager.batch_explanations_by_ids(data_ids, explainer_id),
+            'postprocessor': self.manager.get_postprocessor_by_id(postprocessor_id),
+            'postprocessed': self.postprocess_batch(data_ids, explainer_id, postprocessor_id),
+            'metric': self.manager.get_metric_by_id(metric_id),
+            'evaluation': self.manager.batch_evaluations_by_ids(data_ids, explainer_id, postprocessor_id, metric_id),
+        }
+
+
+    def predict_batch(
+        self,
+        data_ids: List[int],
+    ):
+        data_ids_pred = [
+            idx for idx in data_ids
+            if self.manager.get_output_by_id(idx) is None
+        ]
+        if len(data_ids_pred) > 0:
+            data = self.manager.batch_data_by_ids(data_ids_pred)
+            outputs = self.model(*format_into_tuple(self.input_extractor(data)))
+            self.manager.cache_outputs(data_ids_pred, outputs)
+        return self.manager.batch_outputs_by_ids(data_ids)
+
+    def explain_batch(
+        self,
+        data_ids: List[int],
+        explainer_id: int,
+    ):
+        data_ids_expl = [
+            idx for idx in data_ids
+            if self.manager.get_explanation_by_id(idx, explainer_id) is None
+        ]
+        if len(data_ids_expl):
+            data = self.manager.batch_data_by_ids(data_ids_expl)
+            inputs = self.input_extractor(data)
+            targets = self._get_targets(data_ids_expl)
+            explainer = self.manager.get_explainer_by_id(explainer_id)
+            explanations = explainer.attribute(inputs, targets)
+            self.manager.cache_explanations(
+                explainer_id, data_ids_expl, explanations)
+        return self.manager.batch_explanations_by_ids(data_ids, explainer_id)
+
+    def postprocess_batch(
+        self,
+        data_ids: List[int],
+        explainer_id: int,
+        postprocessor_id: int,
+    ):
+        explanations = self.manager.batch_explanations_by_ids(data_ids, explainer_id)
+        postprocessor = self.manager.get_postprocessor_by_id(postprocessor_id)
+        return postprocessor(explanations)
+
+    def evaluate_batch(
+        self,
+        data_ids: List[int],
+        explainer_id: int,
+        postprocessor_id: int,
+        metric_id: int,
+    ):
+        data_ids_eval = [
+            idx for idx in data_ids
+            if self.manager.get_evaluation_by_id(
+                idx, explainer_id, postprocessor_id, metric_id) is None
+        ]
+        if len(data_ids_eval):
+            data = self.manager.batch_data_by_ids(data_ids_eval)
+            inputs = self.input_extractor(data)
+            targets = self._get_targets(data_ids_eval)
+            postprocessed = self.postprocess_batch(
+                data_ids_eval, explainer_id, postprocessor_id)
+            explainer = self.manager.get_explainer_by_id(explainer_id)
+            metric = self.manager.get_metric_by_id(metric_id)
+            evaluations = metric.set_explainer(explainer).evaluate(
+                inputs, targets, postprocessed)
+            self.manager.cache_evaluations(
+                explainer_id, postprocessor_id, metric_id,
+                data_ids_eval, evaluations
+            )
+        return self.manager.batch_evaluations_by_ids(
+            data_ids, explainer_id, postprocessor_id, metric_id
+        )
+
+
+    def _get_targets(self, data_ids):
+        if self.target_labels:
+            return self.label_extractor(self.manager.batch_data_by_ids(data_ids))
+        outputs = self.manager.batch_outputs_by_ids(data_ids)
+        return self.target_extractor(outputs)
+
 
     def run(
         self,
         data_ids: Optional[Sequence[int]] = None,
         explainer_ids: Optional[Sequence[int]] = None,
-        metrics_ids: Optional[Sequence[int]] = None,
+        postprocessor_ids: Optional[Sequence[int]] = None,
+        metric_ids: Optional[Sequence[int]] = None,
     ) -> 'Experiment':
         """
         Run the experiment by processing data, generating explanations, evaluating with metrics, caching and retrieving the data.
@@ -144,23 +254,29 @@ class Experiment(Observable):
         If not provided, the method processes all available data, explainers, and metrics.
         """
         self.reset_errors()
-        self.manager.set_config(data_ids, explainer_ids, metrics_ids)
+        # self.manager.set_config(data_ids, explainer_ids, metrics_ids)
         
         # inference
-        data, data_ids = self.manager.get_data_to_predict()
+
+        # data_ids is filtered out data indices whose output is saved in cache
+        data, data_ids_pred = self.manager.get_data_to_predict(data_ids)
         outputs = self._predict(data)
-        self.manager.save_outputs(outputs, data, data_ids)
+        self.manager.save_outputs(outputs, data, data_ids_pred)
 
         # explain
-        explainers, explainer_ids = self.manager.get_explainers()
+        explainers, _ = self.manager.get_explainers(explainer_ids)
+        postprocessors, _ = self.manager.get_postprocessors(postprocessor_ids)
+        metrics, _ = self.manager.get_metrics(metric_ids)
 
         for explainer, explainer_id in zip(explainers, explainer_ids):
             explainer_name = class_to_string(explainer)
-            data, data_ids = self.manager.get_data_to_process_for_explainer(
-                explainer_id)
-            explanations = self._explain(data, data_ids, explainer)
+
+            # data_ids is filtered out data indices whose explanation is saved in cache
+            data, data_ids_expl = self.manager.get_data_to_process_for_explainer(
+                explainer_id, data_ids)
+            explanations = self._explain(data, data_ids_expl, explainer)
             self.manager.save_explanations(
-                explanations, data, data_ids, explainer_id
+                explanations, data, data_ids_expl, explainer_id
             )
             message = get_message(
                 'experiment.event.explainer', explainer=explainer_name
@@ -169,24 +285,24 @@ class Experiment(Observable):
             self.fire(ExperimentObservableEvent(
                 self.manager, message, explainer))
 
-            metrics, metric_ids = self.manager.get_metrics()
-            for metric, metric_id in zip(metrics, metric_ids):
-                metric_name = class_to_string(metric)
-                data, data_ids = self.manager.get_data_to_process_for_metric(
-                    explainer_id, metric_id)
-                explanations, data_ids = self.manager.get_valid_explanations(
-                    explainer_id, data_ids)
-                data, _ = self.manager.get_data(data_ids)
-                evaluations = self._evaluate(
-                    data, data_ids, explanations, explainer, metric)
-                self.manager.save_evaluations(
-                    evaluations, data, data_ids, explainer_id, metric_id)
+            for postprocessor, postprocessor_id in zip(postprocessors, postprocessor_ids):
+                for metric, metric_id in zip(metrics, metric_ids):
+                    metric_name = class_to_string(metric)
+                    data, data_ids_eval = self.manager.get_data_to_process_for_metric(
+                        explainer_id, postprocessor_id, metric_id, data_ids)
+                    explanations, data_ids_eval = self.manager.get_valid_explanations(
+                        explainer_id, data_ids_eval)
+                    data, _ = self.manager.get_data(data_ids_eval)
+                    evaluations = self._evaluate(
+                        data, data_ids_eval, explanations, explainer, postprocessor, metric)
+                    self.manager.save_evaluations(
+                        evaluations, data, data_ids_eval, explainer_id, postprocessor_id, metric_id)
 
-                message = get_message(
-                    'experiment.event.explainer.metric', explainer=explainer_name, metric=metric_name)
-                print(f"[Experiment] {message}")
-                self.fire(ExperimentObservableEvent(
-                    self.manager, message, explainer, metric))
+                    message = get_message(
+                        'experiment.event.explainer.metric', explainer=explainer_name, metric=metric_name)
+                    print(f"[Experiment] {message}")
+                    self.fire(ExperimentObservableEvent(
+                        self.manager, message, explainer, metric))
         return self
 
     def _predict(self, data: DataSource):
@@ -220,7 +336,7 @@ class Experiment(Observable):
                 self._errors.append(e)
         return explanations
 
-    def _evaluate(self, data: DataSource, data_ids: List[int], explanations: DataSource, explainer: Explainer, metric: Metric):
+    def _evaluate(self, data: DataSource, data_ids: List[int], explanations: DataSource, explainer: Explainer, postprocessor: Callable, metric: Metric):
         if explanations is None:
             return None
         started_at = time.time()
@@ -237,13 +353,14 @@ class Experiment(Observable):
             targets = self.label_extractor(datum) if self.target_labels \
                 else self._get_targets(data_ids)
             try:
-                # [GH] input args as kwargs to compute metric in an experiment
+                metric = metric.set_explainer(explainer).set_postprocessor(postprocessor)
                 evaluations[i] = metric.evaluate(
                     inputs=inputs,
                     targets=targets,
                     attributions=explanation,
                 )
             except Exception as e:
+                import pdb; pdb.set_trace()
                 warnings.warn(
                     f"\n[Experiment] {get_message('experiment.errors.evaluation', explainer=explainer_name, metric=metric_name, error=e)}")
                 self._errors.append(e)
@@ -341,7 +458,7 @@ class Experiment(Observable):
 
         return visualizations
 
-    def get_inputs_flattened(self) -> Sequence[Tensor]:
+    def get_inputs_flattened(self, data_ids: Optional[List[int]]=None) -> Sequence[Tensor]:
         """
         Retrieve and flatten last run input data.
 
@@ -350,7 +467,7 @@ class Experiment(Observable):
 
         This method retrieves input data using the input extractor and flattens it for further processing.
         """
-        data, _ = self.manager.get_data()
+        data, _ = self.manager.get_data(data_ids)
         data = [self.input_extractor(datum) for datum in data]
         return self.manager.flatten_if_batched(data, data)
 
@@ -367,12 +484,12 @@ class Experiment(Observable):
         data = [self.input_extractor(datum) for datum in data]
         return self.manager.flatten_if_batched(data, data)
 
-    def get_labels_flattened(self) -> Sequence[Tensor]:
-        data, data_ids = self.manager.get_data()
+    def get_labels_flattened(self, data_ids: Optional[List[int]]=None) -> Sequence[Tensor]:
+        data, _ = self.manager.get_data(data_ids)
         labels = [self.label_extractor(datum) for datum in data]
         return self.manager.flatten_if_batched(labels, data)
 
-    def get_targets_flattened(self) -> Sequence[Tensor]:
+    def get_targets_flattened(self, data_ids: Optional[List[int]]=None) -> Sequence[Tensor]:
         """
         Retrieve and flatten target data.
 
@@ -382,15 +499,15 @@ class Experiment(Observable):
         This method retrieves target data using the target extractor and flattens it for further processing.
         """
         if self.target_labels:
-            return self.get_labels_flattened()
-        data, data_ids = self.manager.get_data()
+            return self.get_labels_flattened(data_ids)
+        data, _ = self.manager.get_data(data_ids)
         targets = [self._get_targets(data_ids)]
         return self.manager.flatten_if_batched(targets, data)
         # targets = [self.label_extractor(datum) for datum in data] \
         #     if self.target_labels else [self._get_targets(data_ids)]
         # return self.manager.flatten_if_batched(targets, data)
 
-    def get_outputs_flattened(self) -> Sequence[Tensor]:
+    def get_outputs_flattened(self, data_ids: Optional[List[int]]=None) -> Sequence[Tensor]:
         """
         Retrieve and flatten model outputs.
 
@@ -401,7 +518,7 @@ class Experiment(Observable):
         """
         return self.manager.get_flat_outputs()
 
-    def get_explanations_flattened(self) -> Sequence[Sequence[Tensor]]:
+    def get_explanations_flattened(self, data_ids: Optional[List[int]]=None) -> Sequence[Sequence[Tensor]]:
         """
         Retrieve and flatten explanations from all explainers.
 
@@ -412,11 +529,11 @@ class Experiment(Observable):
         """
         _, explainer_ids = self.manager.get_explainers()
         return [
-            self.manager.get_flat_explanations(explainer_id)
+            self.manager.get_flat_explanations(explainer_id, data_ids)
             for explainer_id in explainer_ids
         ]
 
-    def get_evaluations_flattened(self) -> Sequence[Sequence[Sequence[Tensor]]]:
+    def get_evaluations_flattened(self, data_ids: Optional[List[int]]=None) -> Sequence[Sequence[Sequence[Tensor]]]:
         """
         Retrieve and flatten evaluations for all explainers and metrics.
 
@@ -427,12 +544,15 @@ class Experiment(Observable):
         get_flat_evaluations method.
         """
         _, explainer_ids = self.manager.get_explainers()
+        _, postprocessor_ids = self.manager.get_postprocessors()
         _, metric_ids = self.manager.get_metrics()
 
-        formatted = [[
-            self.manager.get_flat_evaluations(explainer_id, metric_id)
-            for metric_id in metric_ids
-        ] for explainer_id in explainer_ids]
+        formatted = [[[
+                self.manager.get_flat_evaluations(
+                    explainer_id, postprocessor_id, metric_id, data_ids)
+                for metric_id in metric_ids
+            ] for postprocessor_id in postprocessor_ids]
+        for explainer_id in explainer_ids]
 
         return formatted
 
@@ -490,88 +610,65 @@ class Experiment(Observable):
         return self.manager.has_explanations
 
     @property
+    def _records(self):
+        records = []
+        data_ids = [
+            idx for idx, output in enumerate(self.get_outputs_flattened())
+            if output is not None
+        ]
+        _, explainer_ids = self.manager.get_explainers()
+        _, postprocessor_ids = self.manager.get_postprocessors()
+        _, metric_ids = self.manager.get_metrics()
+        return itertools.product(data_ids, explainer_ids, postprocessor_ids, [metric_ids])
+
+    @property
     def records(self):
-        return ExperimentRecords(self)
+        records = []
+        for data_id, explainer_id, postprocessor_id, metric_ids in self._records:
+            explanation = self.manager._cache.get_explanation(data_id, explainer_id)
+            if explanation is None:
+                continue
+            data, _ = self.manager.get_data([data_id])
 
+            inp = self.get_inputs_flattened([data_id])[0]
+            label = self.get_labels_flattened([data_id])[0]
+            output = self.get_outputs_flattened([data_id])[0]
+            target = self.get_targets_flattened([data_id])[0]
 
-class ExperimentRecords:
-    def __init__(self, experiment: Experiment):
-        self.experiment = experiment
-        self._zipped_data = zip(
-            self.experiment.manager.get_data()[-1], # data_id; data_ids[data_loc]
-            self.experiment.get_inputs_flattened(), # input; inputs[data_loc]
-            self.experiment.get_labels_flattened(), # label; labels[data_loc]
-            self.experiment.get_outputs_flattened(), # output; outputs[data_loc]
-            self.experiment.get_targets_flattened(), # target; targets[data_loc]
-            self._rearrange_explanations(),
-            self._rearrange_evaluations(),
-        )
+            postprocessor = self.manager.postprocessors[postprocessor_id]
+            explanation = format_into_tuple(explanation)
+            postprocessor = format_into_tuple(postprocessor)
 
-    def _rearrange_explanations(self):
-        # expls[explainer_loc][data_loc] -> expls[data_loc][explainer_loc]
-        rearranged = []
-        for expl_loc, expl_by_data in enumerate(self.experiment.get_explanations_flattened()):
-            for data_loc, expl in enumerate(expl_by_data):
-                if len(rearranged) < data_loc + 1:
-                    rearranged.append([])
-                if len(rearranged[data_loc]) < expl_loc + 1:
-                    rearranged[data_loc].append([])
-                rearranged[data_loc][expl_loc].append(expl)
-        return rearranged
-
-    def _rearrange_evaluations(self):
-        # evals[explainer_loc][metric_loc][data_loc] -> evals[data_loc][explainer_loc][metric_loc]
-        rearranged = []
-        for expl_loc, eval_by_expl in enumerate(self.experiment.get_evaluations_flattened()):
-            for metric_loc, eval_by_data in enumerate(eval_by_expl):
-                for data_loc, metric in enumerate(eval_by_data):
-                    if len(rearranged) < data_loc + 1:
-                        rearranged.append([])
-                    if len(rearranged[data_loc]) < expl_loc + 1:
-                        rearranged[data_loc].append([])
-                    if len(rearranged[data_loc][expl_loc]) < metric_loc + 1:
-                        rearranged[data_loc][expl_loc].append([])
-                    rearranged[data_loc][expl_loc][metric_loc].append(metric)
-        return rearranged
-
-    @property
-    def explainers(self):
-        return {
-            explainer_id: class_to_string(explainer)
-            for explainer, explainer_id
-            in zip(*self.experiment.manager.get_explainers())
-        }
-
-    @property
-    def metrics(self):
-        return {
-            metric_id: class_to_string(metric)
-            for metric, metric_id
-            in zip(*self.experiment.manager.get_metrics())
-        }
-
-    def __len__(self):
-        return len(self.experiment.manager.get_data()[-1])
-
-    def __getitem__(self, data_loc):
-        row = next(itertools.islice(self._zipped_data, data_loc, None))
-        zipped_explanations = zip(self.explainers.items(), row[5])
-        zipped_evaluations = lambda explainer_loc: zip(self.metrics.items(), row[6][explainer_loc])
-        return {
-            'data_id': row[0],
-            'input': row[1],
-            'label': row[2],
-            'output': row[3],
-            'target': row[4],
-            'explanations': [{
+            postprocessed = []
+            for pp, expl in zip(postprocessor, explanation):
+                channel_dim = pp.channel_dim
+                if channel_dim != -1:
+                    channel_dim -= 1
+                postprocessed.append(pp.copy().set_channel_dim(channel_dim)(expl))
+            postprocessed = format_into_tuple(postprocessed)
+            if len(postprocessed) == 1:
+                postprocessed = postprocessed[0]
+            evaluations = [
+                self.get_evaluations_flattened([data_id])[explainer_id][postprocessor_id][metric_id][0]
+                for metric_id in metric_ids
+            ]
+            records.append({
+                'data_id': data_id,
                 'explainer_id': explainer_id,
-                'explainer_nm': explainer_nm,
-                'value': explanation[0],
+                'postprocessor_id': postprocessor_id,
+                'input': inp,
+                'label': label,
+                'output': output,
+                'target': target,
+                'explainer': self.manager.explainers[explainer_id],
+                'postprocessor': self.manager.postprocessors[postprocessor_id],
+                'explanation': postprocessed,
                 'evaluations': [{
                     'metric_id': metric_id,
-                    'metric_nm': metric_nm,
-                    'value': evaluation[0],
-                } for (metric_id, metric_nm), evaluation in zipped_evaluations(explainer_loc)]
-            } for explainer_loc, ((explainer_id, explainer_nm), explanation) in enumerate(zipped_explanations)]
-        }
-
+                    'metric': metric,
+                    'evaluation': evaluation,
+                } for metric_id, metric, evaluation in zip(
+                    metric_ids, self.manager.metrics, evaluations)
+                ],
+            })
+        return records
