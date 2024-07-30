@@ -21,9 +21,9 @@ class DeepLift(Explainer):
         source (DeepLiftCaptum): The DeepLift source for explanations.
     """
 
-    def __init__(self, model: Model):
+    def __init__(self, model: Model, classification: bool = True):
         super().__init__(model=model)
-        self.source = DeepLiftCaptum(model)
+        self.source = DeepLiftCaptum(model, classification=classification)
 
     def attribute(
         self,

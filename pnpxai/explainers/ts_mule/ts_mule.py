@@ -120,6 +120,7 @@ class TSMule(Explainer):
 
         # Get labels vectors from segmentation
         seg_unique_labels = np.unique(segments)
+        
         assert coef.shape == seg_unique_labels.shape
 
         for i, l in enumerate(seg_unique_labels):

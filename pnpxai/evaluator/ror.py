@@ -131,7 +131,7 @@ class ROR(EvaluationMetric):
             attrs = explainer_w_args.attribute(inputs=x, targets=y)
             attrs = attrs - attrs.min(dim=-1, keepdim=True)[0]
             attrs = attrs / attrs.sum(dim=-1, keepdim=True)
-            cur_score = (attrs * mask.float()).sum(dim=-1).mean()
+            cur_score = (attrs * mask.float()).sum(dim=-1).mean().item()
             print(cur_score)
             score += cur_score
 

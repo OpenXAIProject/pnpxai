@@ -104,7 +104,7 @@ class RORTSF(EvaluationMetric):
         n_entries: int,
         input_shape: list,
         val_range: int = 100,
-        noise_range: int = 10,
+        noise_range: int = 100,
         seq_axis: int = -1,
     ) -> Tuple[np.ndarray, np.ndarray]:
         seq_axis = seq_axis % len(input_shape)
@@ -117,17 +117,15 @@ class RORTSF(EvaluationMetric):
         )
         params = params.reshape(n_entries, dim_ch, dim_seq)
 
-        intervention_params, masks = _generate_offset_interventions(
-            n_entries, dim_seq, self.mask_start_region, val_range
+        interventions, masks = _generate_offset_interventions(
+            n_entries, dim_seq, self.mask_start_region, noise_range
         )
-        intervention_params, masks = [
+        interventions, masks = [
             np.tile(np.expand_dims(datum, -2), (1, dim_ch, 1))
-            for datum in [intervention_params, masks]
+            for datum in [interventions, masks]
         ]
-        interventions = np.random.randint(
-            0, noise_range, size=(n_entries, dim_ch, 1)
-        )
-        intervention_params = intervention_params + interventions
+        interventions = interventions * val_range / noise_range
+        
         params = (params + interventions) % val_range / val_range
 
         target_shape = list(range(len(input_shape)))
@@ -233,18 +231,22 @@ class RORTSF(EvaluationMetric):
             model, inputs, seq_axis, with_mask=True
         ).valid
         score = 0
+        evaluated = 0
 
         for batch in dl:
             x, y, mask = [datum.to(device) for datum in batch]
             attrs = explainer_w_args.attribute(inputs=x, targets=y)
-            attrs = attrs - attrs.min(dim=-1, keepdim=True)[0]
-            attrs = attrs / attrs.sum(dim=-1, keepdim=True)
-            cur_score = (attrs * mask.float()).sum(dim=-1).mean()
-            cur_score = cur_score.nan_to_num().item()
+            attrs = attrs - attrs.min(dim=seq_axis, keepdim=True)[0]
+            attrs = attrs / attrs.sum(dim=seq_axis, keepdim=True)
+            cur_score = (attrs * mask.float()).sum(dim=seq_axis)
+            if torch.isnan(cur_score).any():
+                continue
+            cur_score = cur_score.mean().nan_to_num().item()
             print(cur_score)
             score += cur_score
+            evaluated += 1
 
-        return score / len(dl)
+        return score / max(1, evaluated)
 
     def eval_ts(
         self,

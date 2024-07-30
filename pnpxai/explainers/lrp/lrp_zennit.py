@@ -75,19 +75,22 @@ class LRPZennit(Explainer):
     ) -> List[torch.Tensor]:
         model = self._replace_add_func_with_mod()
 
+        if n_classes is None:
+            n_classes = self.model(inputs).shape[-1]
+            
         if self.classification:
             if isinstance(targets, int):
                 targets = [targets] * len(inputs)
             elif torch.is_tensor(targets):
                 targets = targets.tolist()
+            elif isinstance(targets, list):
+                pass
             else:
                 raise Exception(
                     f"[LRP] Unsupported target type: {type(targets)}")
             targets = torch.eye(n_classes)[targets]
 
-        if n_classes is None:
-            n_classes = self.model(inputs).shape[-1]
-
+        targets = targets.to(self.device)
         additional_layer_map = [
             (Linear, Epsilon(epsilon=epsilon)),
             (nn.MultiheadAttention, AttentionHeadRule(stabilizer=epsilon)),
