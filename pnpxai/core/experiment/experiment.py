@@ -228,26 +228,38 @@ class Experiment(Observable):
         explanations = [None] * len(data)
         explainer_name = class_to_string(explainer)
         for i, (datum, data_id) in enumerate(zip(data, data_ids)):
-            try:
-                datum = self.to_device(datum)
-                inputs = self.input_extractor(datum)
-                targets = self.label_extractor(datum) if self.target_labels \
-                    else self._get_targets(data_ids)
-                explanation = explainer.attribute(
-                    inputs=inputs,
-                    targets=targets,
-                )
-                if self.is_sklearn_model:
-                    explanation = format_into_array(explanation)
-                explanations[i] = explanation
-            except NotImplementedError as error:
-                warnings.warn(
-                    f"\n[Experiment] {get_message('experiment.errors.explainer_unsupported', explainer=explainer_name)}")
-                raise error
-            except Exception as e:
-                warnings.warn(
-                    f"\n[Experiment] {get_message('experiment.errors.explanation', explainer=explainer_name, error=e)}")
-                self._errors.append(e)
+            datum = self.to_device(datum)
+            inputs = self.input_extractor(datum)
+            targets = self.label_extractor(datum) if self.target_labels \
+                else self._get_targets(data_ids)
+            explanation = explainer.attribute(
+                inputs=inputs,
+                targets=targets,
+            )
+            if self.is_sklearn_model:
+                explanation = format_into_array(explanation)
+            explanations[i] = explanation
+            
+            # try:
+            #     datum = self.to_device(datum)
+            #     inputs = self.input_extractor(datum)
+            #     targets = self.label_extractor(datum) if self.target_labels \
+            #         else self._get_targets(data_ids)
+            #     explanation = explainer.attribute(
+            #         inputs=inputs,
+            #         targets=targets,
+            #     )
+            #     if self.is_sklearn_model:
+            #         explanation = format_into_array(explanation)
+            #     explanations[i] = explanation
+            # except NotImplementedError as error:
+            #     warnings.warn(
+            #         f"\n[Experiment] {get_message('experiment.errors.explainer_unsupported', explainer=explainer_name)}")
+            #     raise error
+            # except Exception as e:
+            #     warnings.warn(
+            #         f"\n[Experiment] {get_message('experiment.errors.explanation', explainer=explainer_name, error=e)}")
+            #     self._errors.append(e)
         return explanations
 
     def _evaluate(self, data: DataSource, data_ids: List[int], explanations: DataSource, explainer: Explainer, metric: Metric):
@@ -266,12 +278,31 @@ class Experiment(Observable):
             inputs = self.input_extractor(datum)
             targets = self.label_extractor(datum) if self.target_labels \
                 else self._get_targets(data_ids)
+            
+            def explain_func(model, inputs, targets):
+                if isinstance(inputs, np.ndarray):
+                    inputs = torch.tensor(inputs)
+                if isinstance(targets, np.ndarray):
+                    targets = torch.tensor(targets)
+
+                attr = explainer.attribute(
+                    inputs=inputs,
+                    targets=targets
+                )
+                if isinstance(attr, Tensor):
+                    attr = attr.detach().cpu().numpy()
+
+                return attr
+
+
+            
             try:
                 # [GH] input args as kwargs to compute metric in an experiment
                 evaluations[i] = metric.evaluate(
                     inputs=inputs,
                     targets=targets,
                     attributions=explanation,
+                    explain_func=explain_func,
                 )
             except Exception as e:
                 warnings.warn(

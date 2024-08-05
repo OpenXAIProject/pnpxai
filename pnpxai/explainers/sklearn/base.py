@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Union
+from typing import Union, Callable
 
 from sklearn.base import ClassifierMixin, RegressorMixin
 from xgboost import XGBClassifier, XGBRegressor

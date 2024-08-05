@@ -28,7 +28,10 @@ def set_n_classes_before(func):
     def wrapper(*args, **kwargs):
         self = args[0]
         if self.n_classes is None:
-            inputs = kwargs.get("inputs") or args[1]
+            if "inputs" in kwargs:
+                inputs = kwargs["inputs"]
+            else:
+                inputs = args[1]
             if isinstance(inputs, Tensor):
                 inputs = (inputs,)
             if self.n_classes is None:

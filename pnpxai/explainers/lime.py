@@ -73,6 +73,9 @@ class TabLime(SklearnExplainer):
         inputs: np.array,
         targets: Optional[np.array]=None,
     ) -> List[np.ndarray]:
+        if isinstance(inputs, Tensor):
+            inputs = inputs.detach().cpu().numpy()
+
         explainer = LimeTabularExplainer(
             self.background_data,
             categorical_features=self.categorical_features, 

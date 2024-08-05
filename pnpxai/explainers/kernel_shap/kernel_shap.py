@@ -95,9 +95,7 @@ class KernelShap(Explainer):
 
 
 class TabKernelShap(Explainer):
-
     kmeans = kmeans
-    
     def __init__(self, model: Callable, bg_data: DenseData, mode: str = "classification"):
         super().__init__(model)
         if isinstance(model, XGBClassifier) or isinstance(model, BaseEstimator):

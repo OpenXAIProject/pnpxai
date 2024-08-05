@@ -4,7 +4,6 @@ import plotly.graph_objs as go
 import pandas as pd
 import numpy as np
 from typing import List, Dict, Any, Union
-import joblib
 
 import pickle
 from model import TabResNet
@@ -14,7 +13,7 @@ from plotly.subplots import make_subplots
 import matplotlib.pyplot as plt
 
 # Assuming you have these explainers implemented
-from pnpxai.explainers import KernelShap, Lime, LRP, IntegratedGradients, TabKernelShap, TabLime
+from pnpxai.explainers import KernelShap, Lime, LRPEpsilonGammaBox, IntegratedGradients, TabKernelShap, TabLime
 
 demo = None
 
@@ -666,4 +665,4 @@ trained_models = {
 
 xai_app = XAIApp(raw_data.drop(columns=['fraud_bool']), preprocessed_data, metadata, trained_models, bg_data=X_train)
 demo = launch_app(xai_app)
-demo.launch(favicon_path="static/XAI-Top-PnP.svg")
+demo.launch(favicon_path="static/XAI-Top-PnP.svg", share=True)

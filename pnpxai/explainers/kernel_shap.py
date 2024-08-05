@@ -82,6 +82,9 @@ class TabKernelShap(SklearnExplainer):
         if self.mode == "classification":
             assert len(inputs) == len(targets), "The number of inputs and targets must have same length"
 
+        if isinstance(inputs, Tensor):
+            inputs = inputs.cpu().numpy()
+
         explainer = KernelExplainer(
             _tab_ks_model_wrapper(self._predict_fn),
             kmeans(self.background_data, self.k_means),

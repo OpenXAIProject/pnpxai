@@ -6,7 +6,7 @@ from typing import Optional, Union, Callable
 import torch
 from torch import nn
 
-from pnpxai.core._types import ExplanationType
+from pnpxai.core._types import ExplanationType, Model
 from pnpxai.explainers.base import Explainer
 
 # Ensure compatibility with Python 2/3
@@ -18,15 +18,18 @@ class Metric(ABC):
 
     def __init__(
             self,
-            model: nn.Module,
+            model: Model,
             explainer: Optional[Explainer] = None,
             **kwargs
         ):
-        self.model = model.eval()
         self.explainer = explainer
-        self.device = next(model.parameters()).device
+        if isinstance(model, nn.Module):
+            self.model = model.eval()
+            self.device = next(model.parameters()).device
+        else:
+            self.model = model
 
-    def set_explainer(self, exlainer: Explainer):
+    def set_explainer(self, explainer: Explainer):
         self.explainer = explainer
         return self
 
