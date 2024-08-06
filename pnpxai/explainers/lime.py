@@ -35,7 +35,7 @@ class Lime(Explainer):
         forward_args = format_into_tuple(forward_args)
         baselines = self.baseline_fn(*forward_args)
         baselines = format_into_tuple(baselines)
-        feature_mask = self.feature_mask_fn(*forward_args)
+        feature_mask = self.feature_mask_fn(*forward_args) if self.feature_mask_fn is not None else None 
         
         explainer = CaptumLime(self.model, perturb_func=self.perturb_fn)
         attrs = explainer.attribute(
