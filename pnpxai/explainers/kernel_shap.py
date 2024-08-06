@@ -1,17 +1,10 @@
 from typing import Callable, Tuple, Union, Optional
 
 import torch
-import pandas as pd
-import numpy as np
 from torch import Tensor
 from torch.nn.modules import Module
 from captum.attr import KernelShap as CaptumKernelShap
-from shap import KernelExplainer
-from shap.utils._legacy import kmeans
 
-from pnpxai.core._types import Task
-from pnpxai.explainers.sklearn.base import SklearnExplainer
-from pnpxai.explainers.sklearn.utils import format_into_array
 from pnpxai.utils import format_into_tuple
 from .base import Explainer
 
@@ -58,45 +51,4 @@ class KernelShap(Explainer):
         )
         if isinstance(attrs, tuple) and len(attrs) == 1:
             attrs = attrs[0]
-        return attrs
-
-
-def _tab_ks_model_wrapper(predict_fn):
-    def callable(inputs):
-        return predict_fn(inputs)
-    return callable
-
-class TabKernelShap(SklearnExplainer):
-    def __init__(
-        self,
-        model: Callable,
-        background_data: pd.DataFrame,
-        k_means: int=100,
-        n_samples: Optional[int]=None,
-    ):
-        super().__init__(model, background_data)
-        self.n_samples = n_samples if n_samples else 'auto'
-        self.k_means = k_means
-
-    def attribute(self, inputs, targets):
-        if self.mode == "classification":
-            assert len(inputs) == len(targets), "The number of inputs and targets must have same length"
-
-        if isinstance(inputs, Tensor):
-            inputs = inputs.cpu().numpy()
-
-        explainer = KernelExplainer(
-            _tab_ks_model_wrapper(self._predict_fn),
-            kmeans(self.background_data, self.k_means),
-        )
-        attrs = explainer.shap_values(
-            X=inputs,
-            nsamples=self.n_samples,
-            show=False,
-        )
-        if self.mode == 'classification':
-            attrs = format_into_array(attrs)
-            attrs = attrs[np.arange(attrs.shape[0]), :, targets]
-        if isinstance(inputs, pd.DataFrame):
-            attrs = pd.DataFrame(index=inputs.index, columns=inputs.columns, data=attrs)
         return attrs

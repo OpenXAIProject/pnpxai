@@ -1,4 +1,4 @@
-from typing import Literal, Callable, Optional, Type
+from typing import Literal, Callable, Optional, Type, Union, Tuple
 
 from pnpxai.core.experiment.experiment import Experiment
 from pnpxai.core.detector import detect_model_architecture
@@ -13,14 +13,25 @@ from pnpxai.explainers import (
     IntegratedGradients,
 )
 from pnpxai.explainers.types import TargetLayerOrListOfTargetLayers, ForwardArgumentExtractor
-from pnpxai.explainers.utils import get_default_feature_mask_fn, get_default_baseline_fn
-
+from pnpxai.explainers.utils import (
+    get_default_feature_mask_fn,
+    get_default_baseline_fn,
+)
+from pnpxai.explainers.utils.postprocess import (
+    PostProcessor,
+    all_postprocessors,
+)
+from pnpxai.metrics import PIXEL_FLIPPING_METRICS
+from pnpxai.metrics.utils import get_default_channel_dim
 
 EXPLAINERS_NO_KWARGS = CAM_BASED_EXPLAINERS
 EXPLAINERS_FEATURE_MASK_AVAILABLE = PERTURBATION_BASED_EXPLAINERS
 EXPLAINERS_BASELINE_FN_AVAILABLE = PERTURBATION_BASED_EXPLAINERS + [IntegratedGradients]
 EXPLAINERS_LAYER_AVAILABLE = GRADIENT_BASED_EXPLAINERS
 EXPLAINERS_BG_DATA_REQUIRED = EXPLAINERS_FOR_TABULAR
+
+METRICS_BASELINE_FN_REQUIRED = PIXEL_FLIPPING_METRICS
+METRICS_CHANNEL_DIM_REQUIRED = PIXEL_FLIPPING_METRICS
 
 
 class AutoExperiment(Experiment):
@@ -49,9 +60,8 @@ class AutoExperiment(Experiment):
         input_extractor: Optional[Callable] = None,
         label_extractor: Optional[Callable] = None,
         target_extractor: Optional[Callable] = None,
-        input_visualizer: Optional[Callable] = None,
-        target_visualizer: Optional[Callable] = None,
         target_labels: bool = False,
+        channel_dim: Optional[int] = None,
         **kwargs,
     ):
         if (modality == 'text' or 'text' in modality):
@@ -81,25 +91,33 @@ class AutoExperiment(Experiment):
                     explainer_kwargs['layer'] = kwargs.get('layer')
             explainers.append(explainer_type(model, **explainer_kwargs))
 
-        # # TODO: metrics for other modalities
-        if modality != 'tabular' and evaluator_enabled:
+        if modality == 'tabular' and evaluator_enabled:
             raise NotImplementedError(f"Evaluator for {modality} is not supported yet.")
-        
-        metrics = [
-            metric_type(model)
-            for metric_type in self.recommended.metrics
-        ] if evaluator_enabled else []
+
+        # channel dim for postprocess
+        channel_dim = channel_dim or get_default_channel_dim(modality)
+
+        # metrics but explainer is not assigned yet
+        # an explainer will be assigned when run the experiment
+        empty_metrics = []
+        for metric_type in self.recommended.metrics:
+            metric_kwargs = {}
+            if metric_type in METRICS_BASELINE_FN_REQUIRED:
+                metric_kwargs['baseline_fn'] = kwargs.get('baselin_fn') \
+                    or get_default_baseline_fn(modality, mask_token_id=kwargs.get('mask_token_id') or 0)
+            if metric_type in METRICS_CHANNEL_DIM_REQUIRED:
+                metric_kwargs['channel_dim'] = channel_dim
+            empty_metrics.append(metric_type(model, **metric_kwargs))
         super().__init__(
             model=model,
             data=data,
             explainers=explainers,
-            metrics=metrics,
+            postprocessors=all_postprocessors(channel_dim),
+            metrics=empty_metrics,
             modality=modality,
             input_extractor=input_extractor,
             label_extractor=label_extractor,
             target_extractor=target_extractor,
-            input_visualizer=input_visualizer,
-            target_visualizer=target_visualizer,
             target_labels=target_labels,
         )
 

@@ -12,8 +12,8 @@ from .lrp import (
     LRPEpsilonPlus,
     LRPEpsilonAlpha2Beta1,
 )
-from .kernel_shap import KernelShap, TabKernelShap
-from .lime import Lime, TabLime
+from .kernel_shap import KernelShap
+from .lime import Lime
 
 from .attention_rollout import (
     AttentionRollout,
@@ -58,7 +58,6 @@ AVAILABLE_EXPLAINERS = [
     AttentionRollout,
     TransformerAttribution,
 ]
-EXPLAINERS_FOR_TABULAR = [
-    TabLime,
-    TabKernelShap,
-]
+
+EXPLAINERS_FOR_TABULAR = []
+

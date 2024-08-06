@@ -5,6 +5,8 @@ from sklearn.base import ClassifierMixin, RegressorMixin
 from typing import Union, Sequence, Literal, List
 from enum import Enum
 
+
+
 # Data types
 TensorSequence = Union[Dataset, Sequence[Tensor]]
 TensorOrTensorSequence = Union[TensorSequence, Tensor]
@@ -18,6 +20,12 @@ Model = Union[TorchModel, XGBModel, SklearnModel]
 
 # Modalities and tasks
 Task = Literal['classification', 'regression']
+Modality = Literal["image", "tabular", "time_series", "text"]
+ModalityOrListOfModalities = Union[Modality, List[Modality]]
+Question = Literal["why"]
+ExplanationType = Literal["attribution"]
+Model = nn.Module  # TODO: List other model types in Union[Type1, Type2, ...]
+Task = Literal["classification"]
 Modality = Literal["image", "tabular", "time_series", "text"]
 ModalityOrListOfModalities = Union[Modality, List[Modality]]
 Question = Literal["why"]

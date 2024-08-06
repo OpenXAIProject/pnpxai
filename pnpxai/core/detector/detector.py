@@ -10,9 +10,7 @@ from .types import (
     LSTM,
     Attention,
     Embedding,
-    SklearnModel,
 )
-
 
 DEFAULT_MODULE_TYPES_TO_DETECT = (
     Linear,
@@ -84,6 +82,7 @@ def extract_graph_data(graph_module: fx.GraphModule):
     return data
             
 
+
 def detect_model_architecture(
         model: Model,
         targets: Optional[Tuple[ModuleType]]=None,
@@ -97,8 +96,33 @@ def detect_model_architecture(
     Returns:
         ModelArchitectureSummary: A summary of model architecture
     """
-    if isinstance(model, SklearnModel):
-        return {SklearnModel}
+    targets = targets or DEFAULT_MODULE_TYPES_TO_DETECT
+    detected = set()
+    traced_model = symbolic_trace(model)
+    for node in traced_model.graph.nodes:
+        m = get_target_module_of(node)
+        if m is None:
+            continue
+        tp = next((target for target in targets if isinstance(m, target)), None)
+        if tp is None:
+            continue
+        detected.add(tp)
+    return detected
+
+
+def detect_model_architecture(
+        model: Model,
+        targets: Optional[Tuple[ModuleType]]=None,
+    ) -> Set[ModuleType]:
+    """
+    A function detecting architecture for a given model.
+
+    Args:
+        model (Model): The machine learning model to be detected
+
+    Returns:
+        ModelArchitectureSummary: A summary of model architecture
+    """
     targets = targets or DEFAULT_MODULE_TYPES_TO_DETECT
     detected = set()
     for nm, module in model.named_modules():

@@ -55,8 +55,6 @@ def get_default_feature_mask_fn(modality):
         return default_feature_mask_fn_text
     elif modality == ('image', 'text'):
         return default_feature_mask_fn_image_text
-    elif modality == 'tabular':
-        return default_feature_mask_fn_text
     else:
         raise NotImplementedError(f"default_feature_mask_fn for '{modality}' not supported.")
 
@@ -70,18 +68,13 @@ def default_baseline_fn_text(inputs: torch.Tensor, mask_token_id: int=0):
 def default_baseline_fn_image_text(images: torch.Tensor, text: torch.Tensor, mask_token_id: int=0):
     return default_baseline_fn_image(images), default_baseline_fn_text(text, mask_token_id)
 
-def default_baseline_fn_tabular(inputs: torch.Tensor):
-    return torch.zeros_like(inputs)
-
 def get_default_baseline_fn(modality, mask_token_id=0):
     if modality == 'image':
         return default_baseline_fn_image
     elif modality == 'text':
-        return functools.partial(default_baseline_fn_text, mask_token_id=mask_token_id)
+        return default_baseline_fn_text
     elif modality == ('image', 'text'):
         return functools.partial(default_baseline_fn_image_text, mask_token_id=mask_token_id)
-    elif modality == 'tabular':
-        return default_baseline_fn_tabular
     else:
         raise NotImplementedError(f"default_baseline_fn for '{modality}' not supported.")
 

@@ -10,7 +10,6 @@ from pnpxai.core.detector.types import (
     RNN,
     Attention,
     Embedding,
-    SklearnModel,
 )
 from pnpxai.explainers.base import Explainer
 from pnpxai.explainers import (
@@ -29,18 +28,16 @@ from pnpxai.explainers import (
     LRPEpsilonAlpha2Beta1,
     AttentionRollout,
     TransformerAttribution,
-    TabLime,
-    TabKernelShap,
 )
 from pnpxai.metrics.base import Metric
 from pnpxai.metrics import (
     MuFidelity,
     Sensitivity,
     Complexity,
-    TabABPC,
-    TabAvgSensitivity,
-    TabInfidelity,
-    TabComplexity
+    MoRF,
+    LeRF,
+    AbPC,
+    AVAILABLE_METRICS,
 )
 
 from ._types import (
@@ -59,11 +56,11 @@ DEFAULT_EXPLAINER_MAP = {
         "module_types": [Convolution],
     },
     Lime: {
-        "modalities": ["image", "text", "time-series", "tabular", ("image", "text")],
+        "modalities": ["image", "text", "time-series", ("image", "text")],
         "module_types": [Linear, Convolution, LSTM, RNN, Attention],
     },
     KernelShap: {
-        "modalities": ["image", "text", "time-series", "tabular", ("image", "text")],
+        "modalities": ["image", "text", "time-series", ("image", "text")],
         "module_types": [Linear, Convolution, LSTM, RNN, Attention],
     },
     Gradient: {
@@ -83,11 +80,11 @@ DEFAULT_EXPLAINER_MAP = {
         "module_types": [Linear, Convolution, LSTM, RNN, Attention],
     },
     IntegratedGradients: {
-        "modalities": ["image", "text", ("image", "text"), "tabular"],
+        "modalities": ["image", "text", ("image", "text")],
         "module_types": [Linear, Convolution, Attention],
     },
     LRPUniformEpsilon: {
-        "modalities": ["image", "text", ("image", "text"), "tabular"],
+        "modalities": ["image", "text", ("image", "text")],
         "module_types": [Linear, Convolution, LSTM, RNN, Attention],
     },
     LRPEpsilonGammaBox: {
@@ -95,8 +92,8 @@ DEFAULT_EXPLAINER_MAP = {
         "module_types": [Convolution],
     },
     LRPEpsilonPlus: {
-        "modalities": ["image", "text", ("image", "text")],
         "module_types": [Convolution],
+        "modalities": ["image", "text", ("image", "text")],
     },
     LRPEpsilonAlpha2Beta1: {
         "modalities": ["image", "text", ("image", "text")],
@@ -110,14 +107,6 @@ DEFAULT_EXPLAINER_MAP = {
     #     "modalities": ["text", ("image", "text")],
     #     "module_types": [Attention],
     # },
-    TabLime: {
-        'modalities': ['tabular'],
-        'module_types': [SklearnModel],
-    },
-    TabKernelShap: {
-        'modalities': ['tabular'],
-        'module_types': [SklearnModel],
-    }
 }
 
 DEFAULT_METRIC_MAP = {
@@ -129,23 +118,8 @@ DEFAULT_METRIC_MAP = {
     },
     Complexity: {
         'modalities': ['image'],
-    },
-    TabABPC: {
-        'modalities': ['tabular'],
-    },
-    TabAvgSensitivity: {
-        'modalities': ['tabular'],
-    },
-    TabInfidelity: {
-        'modalities': ['tabular'],
-    },
-    TabComplexity: {
-        'modalities': ['tabular'],
-    },
+    }
 }
-
-
-AVAILABLE_METRICS = {MuFidelity, Sensitivity, Complexity, TabABPC, TabAvgSensitivity, TabInfidelity, TabComplexity}
 
 CAM_BASED_EXPLAINERS = {GradCam, GuidedGradCam}
 
@@ -272,7 +246,7 @@ class XaiRecommender:
             explainers = explainers.difference(CAM_BASED_EXPLAINERS)
         return list(explainers)
 
-    def _suggest_metrics(self, explainers: List[Type[Explainer]], modality: Modality) -> List[Type[Metric]]:
+    def _suggest_metrics(self, explainers: List[Type[Explainer]]):
         """
         Suggests evaluation metrics based on the list of compatible explainers.
 
@@ -286,11 +260,6 @@ class XaiRecommender:
             self.explainer_to_metrics_map.data.get(explainer, set())
             for explainer in explainers
         ))
-
-        for metric in metrics.copy():
-            if modality not in DEFAULT_METRIC_MAP[metric]['modalities']:
-                metrics.remove(metric)
-
         return list(metrics)
 
     def recommend(self, modality: Modality, model: Model):
@@ -307,7 +276,7 @@ class XaiRecommender:
         """
         arch = detect_model_architecture(model)
         explainers = self._filter_explainers(modality, arch)
-        metrics = self._suggest_metrics(explainers, modality)
+        metrics = self._suggest_metrics(explainers)
         return RecommenderOutput(
             architecture=arch,
             explainers=_sort_by_name(explainers),
