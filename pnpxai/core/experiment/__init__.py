@@ -1,2 +1,2 @@
 from pnpxai.core.experiment.experiment import Experiment
-from pnpxai.core.experiment.auto_experiment import AutoExperiment
+from pnpxai.core.experiment.auto_explanation import AutoExplanation

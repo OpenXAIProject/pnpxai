@@ -7,9 +7,9 @@ from torch.nn.modules import Module
 from pnpxai.explainers.types import Tensor, TensorOrTupleOfTensors
 from pnpxai.explainers.base import Explainer
 from pnpxai.explainers import GradCam
-from pnpxai.metrics.base import Metric
 from pnpxai.utils import format_into_tuple, format_into_tuple_all
 from pnpxai.explainers.utils.postprocess import PostProcessor
+from pnpxai.evaluator.metrics.base import Metric
 
 
 BaselineFunction = Union[Callable[[Tensor], Tensor], Tuple[Callable[[Tensor], Tensor]]]

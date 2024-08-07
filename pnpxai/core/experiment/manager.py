@@ -10,7 +10,7 @@ from pnpxai.core.experiment.cache import ExperimentCache
 from pnpxai.core._types import DataSource
 from pnpxai.explainers.base import Explainer
 from pnpxai.explainers.utils.postprocess import PostProcessor
-from pnpxai.metrics.base import Metric
+from pnpxai.evaluator.metrics.base import Metric
 from pnpxai.utils import format_into_tuple
 
 
@@ -88,7 +88,7 @@ class ExperimentManager:
         assert len(evaluations) == len(data_ids)
         for idx, evaluation in zip(data_ids, evaluations):
             self._cache.set_evaluation(
-                idx, explainer_id, metric_id, postprocessor_id, evaluation)
+                idx, explainer_id, postprocessor_id, metric_id, evaluation)
 
     def get_data_ids(self) -> Sequence[int]:
         return self._data_ids

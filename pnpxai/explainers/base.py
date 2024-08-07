@@ -2,6 +2,7 @@ import abc
 import sys
 from typing import Tuple, Callable, Optional, Union, Type
 
+import copy
 from torch import Tensor
 from torch.nn.modules import Module
 
@@ -26,7 +27,6 @@ class Explainer(ABC):
         self.additional_forward_arg_extractor = additional_forward_arg_extractor
         self.device = next(model.parameters()).device
 
-
     def _extract_forward_args(
             self,
             inputs: Union[Tensor, Tuple[Tensor]]
@@ -36,6 +36,17 @@ class Explainer(ABC):
         additional_forward_args = self.additional_forward_arg_extractor(inputs) \
             if self.additional_forward_arg_extractor else None
         return forward_args, additional_forward_args
+
+    def copy(self):
+        return copy.copy(self)
+
+    def set_kwargs(self, **kwargs):
+        clone = self.copy()
+        for k, v in kwargs.items():
+            if not hasattr(self, k):
+                raise AttributeError(f'{self} has no attribute {k}.')
+            setattr(clone, k, v)
+        return clone
         
         
     def attribute(
