@@ -34,4 +34,6 @@ class GradCam(Explainer):
             interpolate_dims=forward_args[0].shape[2:],
             interpolate_mode=self.interpolate_mode,
         )
+
+        upsampled = LayerAttribution.interpolate(layer_attribution=attrs,interpolate_dims=(224,224), interpolate_mode=self.interpolate_mode)
         return upsampled

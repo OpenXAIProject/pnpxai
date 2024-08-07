@@ -334,7 +334,7 @@ class ExperimentManager:
 
         for idx, evaluation in zip(data_ids, evaluations):
             self._cache.set_evaluation(
-                idx, explainer_id, metric_id, postprocessor_id, evaluation)
+                idx, explainer_id, postprocessor_id, metric_id, evaluation)
 
     def save_outputs(self, outputs: DataSource, data: DataSource, data_ids: Sequence[int]):
         outputs = self.flatten_if_batched(outputs, data)

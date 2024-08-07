@@ -27,7 +27,7 @@ class Sensitivity(Metric):
         self,
         inputs: torch.Tensor,
         targets: torch.Tensor,
-        attributions: Optional[torch.Tensor],
+        attributions: Optional[torch.Tensor]
     ) -> torch.Tensor:
         inputs = inputs.to(self.device)
         targets = targets.to(self.device)

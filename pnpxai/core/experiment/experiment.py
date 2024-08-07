@@ -72,7 +72,6 @@ class Experiment(Observable):
         target_visualizer: Optional[Callable[[Any], Any]] = None,
         cache_device: Optional[Union[torch.device, str]] = None,
         target_labels: bool = False,
-        target_labels: bool = False,
     ):
         super(Experiment, self).__init__()
         self.model = model
@@ -302,6 +301,7 @@ class Experiment(Observable):
 
             for postprocessor, postprocessor_id in zip(postprocessors, postprocessor_ids):
                 for metric, metric_id in zip(metrics, metric_ids):
+                    metric.set_explainer(explainer)
                     metric_name = class_to_string(metric)
                     data, data_ids_eval = self.manager.get_data_to_process_for_metric(
                         explainer_id, postprocessor_id, metric_id, data_ids)
@@ -376,19 +376,23 @@ class Experiment(Observable):
             inputs = self.input_extractor(datum)
             targets = self.label_extractor(datum) if self.target_labels \
                 else self._get_targets(data_ids)
-            try:
-                metric = metric.set_explainer(explainer).set_postprocessor(postprocessor)
-                evaluations[i] = metric.evaluate(
-                    inputs=inputs,
-                    targets=targets,
-                    attributions=explanation,
-                    explain_func=explain_func,
-                )
-            except Exception as e:
-                import pdb; pdb.set_trace()
-                warnings.warn(
-                    f"\n[Experiment] {get_message('experiment.errors.evaluation', explainer=explainer_name, metric=metric_name, error=e)}")
-                self._errors.append(e)
+            
+            evaluations[i] = metric.evaluate(
+                        inputs=inputs,
+                        targets=targets,
+                        attributions=explanation,
+                        )
+            # try:
+            #     # [GH] input args as kwargs to compute metric in an experiment
+            #     evaluations[i] = metric.evaluate(
+            #         inputs=inputs,
+            #         targets=targets,
+            #         attributions=explanation,
+            #     )
+            # except Exception as e:
+            #     warnings.warn(
+            #         f"\n[Experiment] {get_message('experiment.errors.evaluation', explainer=explainer_name, metric=metric_name, error=e)}")
+            #     self._errors.append(e)
         elapsed_time = time.time() - started_at
         print(
             f"[Experiment] {get_message('elapsed', modality=metric_name, elapsed=elapsed_time)}")
@@ -545,7 +549,7 @@ class Experiment(Observable):
 
         This method retrieves flattened model outputs using the manager's get_flat_outputs method.
         """
-        return self.manager.get_flat_outputs()
+        return self.manager.get_flat_outputs(data_ids)
 
     def get_explanations_flattened(self, data_ids: Optional[List[int]]=None) -> Sequence[Sequence[Tensor]]:
         """

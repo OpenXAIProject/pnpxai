@@ -403,6 +403,7 @@ def _match_channel_dim_if_pooled(batch, channel_dim, x_batch_size):
         return batch
     n_channels = x_batch_size[channel_dim]
     n_repeats = tuple(n_channels if d == channel_dim else 1 for d in range(len(x_batch_size)))
-    return batch.unsqueeze(channel_dim).repeat(*n_repeats)
+    # return batch.unsqueeze(channel_dim).repeat(*n_repeats) # It occurs error in Image case
+    return batch.repeat(*n_repeats)
 
 

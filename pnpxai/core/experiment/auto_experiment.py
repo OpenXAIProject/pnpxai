@@ -93,8 +93,8 @@ class AutoExperiment(Experiment):
 
         if modality == 'tabular' and evaluator_enabled:
             raise NotImplementedError(f"Evaluator for {modality} is not supported yet.")
-
-        # channel dim for postprocess
+        
+         # channel dim for postprocess
         channel_dim = channel_dim or get_default_channel_dim(modality)
 
         # metrics but explainer is not assigned yet
@@ -108,6 +108,7 @@ class AutoExperiment(Experiment):
             if metric_type in METRICS_CHANNEL_DIM_REQUIRED:
                 metric_kwargs['channel_dim'] = channel_dim
             empty_metrics.append(metric_type(model, **metric_kwargs))
+
         super().__init__(
             model=model,
             data=data,
@@ -118,6 +119,8 @@ class AutoExperiment(Experiment):
             input_extractor=input_extractor,
             label_extractor=label_extractor,
             target_extractor=target_extractor,
+            input_visualizer=kwargs.get('input_visualizer'),
+            target_visualizer=kwargs.get('target_visualizer'),
             target_labels=target_labels,
         )
 
