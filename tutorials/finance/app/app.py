@@ -318,4 +318,4 @@ if __name__ == '__main__':
     experiments.append(experiment2)
 
     app = FinanceApp(experiments)
-    app.launch()
+    app.launch(share=True)

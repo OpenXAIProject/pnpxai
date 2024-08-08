@@ -1,26 +1,37 @@
-from typing import Any, Callable, Optional, Sequence, Union, List
+from typing import Any, Callable, Optional, Sequence, Union, List, Dict, Literal
 import time
 import warnings
-import itertools
 import itertools
 
 import torch
 from torch import Tensor
 import numpy as np
+import optuna
 from plotly import express as px
 from plotly.graph_objects import Figure
+from sklearn.base import ClassifierMixin as SklearnClassifier
+from sklearn.base import RegressorMixin as SklearnRegressor
 
-from pnpxai.core.detector.types import SklearnModel, SklearnRegressor, SklearnClassifier
+from pnpxai.core._types import DataSource, Model, ModalityOrListOfModalities, SklearnModel
 from pnpxai.core.experiment.experiment_metrics_defaults import EVALUATION_METRIC_REVERSE_SORT, EVALUATION_METRIC_SORT_PRIORITY
 from pnpxai.core.experiment.observable import ExperimentObservableEvent
-from pnpxai.utils import class_to_string, Observable, to_device, format_into_tuple
-from pnpxai.messages import get_message
 from pnpxai.core.experiment.manager import ExperimentManager
 from pnpxai.explainers.base import Explainer
-from pnpxai.metrics.base import Metric
-from pnpxai.core._types import DataSource, Model, ModalityOrListOfModalities
-from pnpxai.explainers.utils.postprocess import postprocess_attr
+from pnpxai.explainers.utils.postprocess import PostProcessor
+from pnpxai.evaluator.optimizer.objectives import Objective
+from pnpxai.evaluator.optimizer.search_spaces import (
+    create_default_search_space,
+    create_default_suggest_methods,
+)
+from pnpxai.evaluator.optimizer.utils import (
+    load_sampler,
+    get_default_n_trials,
+    format_params,
+)
+from pnpxai.evaluator.metrics.base import Metric
+from pnpxai.messages import get_message
 
+from pnpxai.utils import class_to_string, Observable, to_device, format_into_tuple
 
 def default_input_extractor(x):
     return x[0]
@@ -117,19 +128,6 @@ class Experiment(Observable):
     def errors(self):
         return self._errors
 
-    # @property
-    # def all_explainers(self) -> Sequence[Explainer]:
-    #     return self.manager.all_explainers
-
-    # @property
-    # def all_metrics(self) -> Sequence[Metric]:
-    #     return self.manager.all_metrics
-
-    # def get_current_explainers(self) -> List[Explainer]:
-    #     return self.manager.get_explainers()[0]
-
-    # def get_current_metrics(self) -> List[Metric]:
-    #     return self.manager.get_metrics()[0]
 
     def to_device(self, x):
         if self.is_sklearn_model:
@@ -160,7 +158,6 @@ class Experiment(Observable):
             'metric': self.manager.get_metric_by_id(metric_id),
             'evaluation': self.manager.batch_evaluations_by_ids(data_ids, explainer_id, postprocessor_id, metric_id),
         }
-
 
     def predict_batch(
         self,
@@ -242,6 +239,65 @@ class Experiment(Observable):
         outputs = self.manager.batch_outputs_by_ids(data_ids)
         return self.target_extractor(outputs)
 
+    def optimize(
+        self,
+        data_id: int,
+        explainer_id: int,
+        metric_id: int,
+        direction: Literal['minimize', 'maximize']='maximize',
+        sampler: Literal['grid', 'random', 'tpe']='tpe',
+        suggest_methods: Optional[Dict[str, Callable]]=None,
+        search_space: Optional[Dict[str, Any]]=None,
+        n_trials: Optional[int]=None,
+        timeout: Optional[float]=None,
+        return_study: bool=False,
+        **kwargs, # sampler kwargs
+    ):
+        assert n_trials is None or timeout is None
+        data = self.manager.batch_data_by_ids([data_id])
+        explainer = self.manager.get_explainer_by_id(explainer_id)
+        postprocessor = self.manager.get_postprocessor_by_id(0) # sample postprocessor to ensure channel_dim
+        metric = self.manager.get_metric_by_id(metric_id)
+        suggest_methods = suggest_methods or create_default_suggest_methods(explainer)
+        objective = Objective(
+            explainer=explainer,
+            metric=metric,
+            suggest_methods=suggest_methods,
+            channel_dim=postprocessor.channel_dim,
+            inputs=self.input_extractor(data),
+            targets=self._get_targets([data_id])
+        )
+        if sampler == 'grid':
+            kwargs['search_space'] = search_space or create_default_search_space(explainer)
+        if timeout is None:
+            n_trials = n_trials or get_default_n_trials(sampler)
+
+        # optimize
+        study = optuna.create_study(
+            sampler=load_sampler(sampler, **kwargs),
+            direction=direction,
+        )
+        study.optimize(
+            objective,
+            n_trials=n_trials,
+            timeout=timeout,
+        )
+
+        # update explainer
+        best_params = study.best_params.copy()
+        explainer_kwargs = format_params(best_params)
+        postprocessor_kwargs = {
+            'pooling_method': explainer_kwargs.pop('pooling_method', 'sumpos'),
+            'normalization_method': explainer_kwargs.pop('normalization_method', 'minmax'),
+            'channel_dim': objective.channel_dim,
+        }
+        opt_explainer = explainer.set_kwargs(**explainer_kwargs)
+        opt_postprocessor = PostProcessor(**postprocessor_kwargs)
+        opt_explainer_id = self.manager.add_explainer(opt_explainer)
+        opt_postprocessor_id = self.manager.add_postprocessor(opt_postprocessor) # TODO: find same postprocessor
+        if not return_study:
+            return opt_explainer_id, opt_postprocessor_id
+        return opt_explainer_id, opt_postprocessor_id, study
 
     def run(
         self,
@@ -360,132 +416,136 @@ class Experiment(Observable):
                 self._errors.append(e)
         return explanations
 
-    def _evaluate(self, data: DataSource, data_ids: List[int], explanations: DataSource, explainer: Explainer, postprocessor: Callable, metric: Metric):
-        if explanations is None:
-            return None
-        started_at = time.time()
-        metric_name = class_to_string(metric)
-        explainer_name = class_to_string(explainer)
+    # def _evaluate(self, data: DataSource, data_ids: List[int], explanations: DataSource, explainer: Explainer, postprocessor: Callable, metric: Metric):
+    #     if explanations is None:
+    #         return None
+    #     started_at = time.time()
+    #     metric_name = class_to_string(metric)
+    #     explainer_name = class_to_string(explainer)
 
-        evaluations = [None] * len(data)
-        for i, (datum, data_id, explanation) in enumerate(zip(data, data_ids, explanations)):
-            if explanation is None:
-                continue
-            datum = self.to_device(datum)
-            explanation = self.to_device(explanation)
-            inputs = self.input_extractor(datum)
-            targets = self.label_extractor(datum) if self.target_labels \
-                else self._get_targets(data_ids)
-            
-            evaluations[i] = metric.evaluate(
-                        inputs=inputs,
-                        targets=targets,
-                        attributions=explanation,
-                        )
-            # try:
-            #     # [GH] input args as kwargs to compute metric in an experiment
-            #     evaluations[i] = metric.evaluate(
-            #         inputs=inputs,
-            #         targets=targets,
-            #         attributions=explanation,
-            #     )
-            # except Exception as e:
-            #     warnings.warn(
-            #         f"\n[Experiment] {get_message('experiment.errors.evaluation', explainer=explainer_name, metric=metric_name, error=e)}")
-            #     self._errors.append(e)
-        elapsed_time = time.time() - started_at
-        print(
-            f"[Experiment] {get_message('elapsed', modality=metric_name, elapsed=elapsed_time)}")
+    #     evaluations = [None] * len(data)
+    #     for i, (datum, data_id, explanation) in enumerate(zip(data, data_ids, explanations)):
+    #         if explanation is None:
+    #             continue
+    #         datum = self.to_device(datum)
+    #         explanation = self.to_device(explanation)
+    #         inputs = self.input_extractor(datum)
+    #         targets = self.label_extractor(datum) if self.target_labels \
+    #             else self._get_targets(data_ids)
+    #         try:
+    #             metric = metric.set_explainer(explainer).set_postprocessor(postprocessor)
+    #             evaluations[i] = metric.evaluate(
+    #                 inputs=inputs,
+    #                 targets=targets,
+    #                 attributions=explanation,
+    #             )
+    #         except Exception as e:
+    #             import pdb; pdb.set_trace()
+    #             warnings.warn(
+    #                 f"\n[Experiment] {get_message('experiment.errors.evaluation', explainer=explainer_name, metric=metric_name, error=e)}")
+    #             self._errors.append(e)
+    #     elapsed_time = time.time() - started_at
+    #     print(
+    #         f"[Experiment] {get_message('elapsed', modality=metric_name, elapsed=elapsed_time)}")
 
-        return evaluations
+    #     return evaluations
 
     def _get_targets(self, data_ids: List[int]):
+        # predict if not cached
+        not_predicted = [
+            data_id for data_id in data_ids
+            if self.manager._cache.get_output(data_id) is None
+        ]
+        if len(not_predicted) > 0:
+            self.predict_batch(not_predicted)
+
+        # load outputs from cache
         outputs = torch.stack([
             self.manager._cache.get_output(data_id)
             for data_id in data_ids
         ])
         return self.target_extractor(outputs)
 
-    def get_visualizations_flattened(self) -> Sequence[Sequence[Figure]]:
-        """
-        Generate flattened visualizations for each data point based on explanations.
+    # def get_visualizations_flattened(self) -> Sequence[Sequence[Figure]]:
+    #     """
+    #     Generate flattened visualizations for each data point based on explanations.
 
-        Returns:
-            List of visualizations for each data point across explainers.
+    #     Returns:
+    #         List of visualizations for each data point across explainers.
 
-        This method retrieves valid explanations for each explainer, formats them for visualization,
-        and generates visualizations using Plotly Express. The results are flattened based on the data points
-        and returned as a list of lists of figures.
-        """
-        assert self.modality == 'image', f"Visualization for '{self.modality} is not supported yet"
-        explainers, explainer_ids = self.manager.get_explainers()
-        # Get all data ids
-        experiment_data_ids = self.manager.get_data_ids()
-        visualizations = []
+    #     This method retrieves valid explanations for each explainer, formats them for visualization,
+    #     and generates visualizations using Plotly Express. The results are flattened based on the data points
+    #     and returned as a list of lists of figures.
+    #     """
+    #     assert self.modality == 'image', f"Visualization for '{self.modality} is not supported yet"
+    #     explainers, explainer_ids = self.manager.get_explainers()
+    #     # Get all data ids
+    #     experiment_data_ids = self.manager.get_data_ids()
+    #     visualizations = []
 
-        for explainer, explainer_id in zip(explainers, explainer_ids):
-            # Get all valid explanations and data ids for this explainer
-            explanations, data_ids = self.manager.get_valid_explanations(
-                explainer_id)
-            data = self.manager.get_data(data_ids)[0]
-            explainer_visualizations = []
-            for explanation in explanations:
-                figs = []
-                for attr in explanation:
-                    postprocessed = postprocess_attr(
-                        attr,
-                        channel_dim=0,
-                        pooling_method='l2normsq',
-                        normalization_method='minmax'
-                    ).detach().numpy()
-                    fig = px.imshow(postprocessed, color_continuous_scale='RdBu_R', color_continuous_midpoint=.5)
-                    figs.append(fig)
-                explainer_visualizations.append(figs)
+    #     for explainer, explainer_id in zip(explainers, explainer_ids):
+    #         # Get all valid explanations and data ids for this explainer
+    #         explanations, data_ids = self.manager.get_valid_explanations(
+    #             explainer_id)
+    #         data = self.manager.get_data(data_ids)[0]
+    #         explainer_visualizations = []
+    #         for explanation in explanations:
+    #             figs = []
+    #             for attr in explanation:
+    #                 postprocessed = postprocess_attr(
+    #                     attr,
+    #                     channel_dim=0,
+    #                     pooling_method='l2normsq',
+    #                     normalization_method='minmax'
+    #                 ).detach().numpy()
+    #                 fig = px.imshow(postprocessed, color_continuous_scale='RdBu_R', color_continuous_midpoint=.5)
+    #                 figs.append(fig)
+    #             explainer_visualizations.append(figs)
 
-            # explainer_visualizations = [[
-            #     px.imshow(
-            #         postprocess_attr(
-            #             attr, # C x H x W
-            #             channel_dim=0,
-            #             pooling_method='l2normsq',
-            #             normalization_method='minmax',
-            #         ).detach().numpy(),
-            #         color_continuous_scale='RdBu_R',
-            #         color_continuous_midpoint=.5,
-            #     ) for attr in explanation]
-            #     for explanation in explanations
-            # ]
-            # # Visualize each valid explanataion
-            # for datum, explanation in zip(data, explanations):
-            #     inputs = self.input_extractor(datum)
-            #     targets = self.target_extractor(datum)
-            #     formatted = explainer.format_outputs_for_visualization(
-            #         inputs=inputs,
-            #         targets=targets,
-            #         explanations=explanation,
-            #         modality=self.modality
-            #     )
+    #         # explainer_visualizations = [[
+    #         #     px.imshow(
+    #         #         postprocess_attr(
+    #         #             attr, # C x H x W
+    #         #             channel_dim=0,
+    #         #             pooling_method='l2normsq',
+    #         #             normalization_method='minmax',
+    #         #         ).detach().numpy(),
+    #         #         color_continuous_scale='RdBu_R',
+    #         #         color_continuous_midpoint=.5,
+    #         #     ) for attr in explanation]
+    #         #     for explanation in explanations
+    #         # ]
+    #         # # Visualize each valid explanataion
+    #         # for datum, explanation in zip(data, explanations):
+    #         #     inputs = self.input_extractor(datum)
+    #         #     targets = self.target_extractor(datum)
+    #         #     formatted = explainer.format_outputs_for_visualization(
+    #         #         inputs=inputs,
+    #         #         targets=targets,
+    #         #         explanations=explanation,
+    #         #         modality=self.modality
+    #         #     )
 
-            #     if not self.manager.is_batched:
-            #         formatted = [formatted]
-            #     formatted_visualizations = [
-            #         px.imshow(explanation, color_continuous_scale="RdBu_r", color_continuous_midpoint=0.0) for explanation in formatted
-            #     ]
-            #     if not self.manager.is_batched:
-            #         formatted_visualizations = formatted_visualizations[0]
-            #     explainer_visualizations.append(formatted_visualizations)
+    #         #     if not self.manager.is_batched:
+    #         #         formatted = [formatted]
+    #         #     formatted_visualizations = [
+    #         #         px.imshow(explanation, color_continuous_scale="RdBu_r", color_continuous_midpoint=0.0) for explanation in formatted
+    #         #     ]
+    #         #     if not self.manager.is_batched:
+    #         #         formatted_visualizations = formatted_visualizations[0]
+    #         #     explainer_visualizations.append(formatted_visualizations)
 
-            flat_explainer_visualizations = self.manager.flatten_if_batched(
-                explainer_visualizations, data)
-            # Set visualizaions of all data ids as None
-            explainer_visualizations = {
-                idx: None for idx in experiment_data_ids}
-            # Fill all valid visualizations
-            for visualization, data_id in zip(flat_explainer_visualizations, data_ids):
-                explainer_visualizations[data_id] = visualization
-            visualizations.append(list(explainer_visualizations.values()))
+    #         flat_explainer_visualizations = self.manager.flatten_if_batched(
+    #             explainer_visualizations, data)
+    #         # Set visualizaions of all data ids as None
+    #         explainer_visualizations = {
+    #             idx: None for idx in experiment_data_ids}
+    #         # Fill all valid visualizations
+    #         for visualization, data_id in zip(flat_explainer_visualizations, data_ids):
+    #             explainer_visualizations[data_id] = visualization
+    #         visualizations.append(list(explainer_visualizations.values()))
 
-        return visualizations
+    #     return visualizations
 
     def get_inputs_flattened(self, data_ids: Optional[List[int]]=None) -> Sequence[Tensor]:
         """
@@ -634,74 +694,10 @@ class Experiment(Observable):
 
         return scores.argsort(axis=-2).argsort(axis=-2).tolist()
 
-    @property
-    def is_image_task(self):
-        return self.modality == 'image'
+    # @property
+    # def is_image_task(self):
+    #     return self.modality == 'image'
 
     @property
     def has_explanations(self):
         return self.manager.has_explanations
-
-    @property
-    def _records(self):
-        records = []
-        data_ids = [
-            idx for idx, output in enumerate(self.get_outputs_flattened())
-            if output is not None
-        ]
-        _, explainer_ids = self.manager.get_explainers()
-        _, postprocessor_ids = self.manager.get_postprocessors()
-        _, metric_ids = self.manager.get_metrics()
-        return itertools.product(data_ids, explainer_ids, postprocessor_ids, [metric_ids])
-
-    @property
-    def records(self):
-        records = []
-        for data_id, explainer_id, postprocessor_id, metric_ids in self._records:
-            explanation = self.manager._cache.get_explanation(data_id, explainer_id)
-            if explanation is None:
-                continue
-            data, _ = self.manager.get_data([data_id])
-
-            inp = self.get_inputs_flattened([data_id])[0]
-            label = self.get_labels_flattened([data_id])[0]
-            output = self.get_outputs_flattened([data_id])[0]
-            target = self.get_targets_flattened([data_id])[0]
-
-            postprocessor = self.manager.postprocessors[postprocessor_id]
-            explanation = format_into_tuple(explanation)
-            postprocessor = format_into_tuple(postprocessor)
-
-            postprocessed = []
-            for pp, expl in zip(postprocessor, explanation):
-                channel_dim = pp.channel_dim
-                if channel_dim != -1:
-                    channel_dim -= 1
-                postprocessed.append(pp.copy().set_channel_dim(channel_dim)(expl))
-            postprocessed = format_into_tuple(postprocessed)
-            if len(postprocessed) == 1:
-                postprocessed = postprocessed[0]
-            evaluations = [
-                self.get_evaluations_flattened([data_id])[explainer_id][postprocessor_id][metric_id][0]
-                for metric_id in metric_ids
-            ]
-            records.append({
-                'data_id': data_id,
-                'explainer_id': explainer_id,
-                'postprocessor_id': postprocessor_id,
-                'input': inp,
-                'label': label,
-                'output': output,
-                'target': target,
-                'explainer': self.manager.explainers[explainer_id],
-                'postprocessor': self.manager.postprocessors[postprocessor_id],
-                'explanation': postprocessed,
-                'evaluations': [{
-                    'metric_id': metric_id,
-                    'metric': metric,
-                    'evaluation': evaluation,
-                } for metric_id, metric, evaluation in zip(
-                    metric_ids, self.manager.metrics, evaluations)
-                ],
-            })
-        return records
