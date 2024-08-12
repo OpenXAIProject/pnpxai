@@ -28,6 +28,9 @@ METRICS_BASELINE_FN_REQUIRED = PIXEL_FLIPPING_METRICS
 METRICS_CHANNEL_DIM_REQUIRED = PIXEL_FLIPPING_METRICS
 DEFAULT_METRICS = [
     AbPC,
+    MoRF,
+    LeRF,
+    MuFidelity,
     Sensitivity,
     Complexity,
 ]
@@ -56,6 +59,8 @@ class AutoExplanation(Experiment):
         label_extractor: Optional[Callable] = None,
         target_extractor: Optional[Callable] = None,
         target_labels: bool = False,
+        input_visualizer: Optional[Callable] = None,
+        target_visualizer: Optional[Callable] = None,
         **kwargs,
     ):
         self.modality = modality
@@ -74,6 +79,8 @@ class AutoExplanation(Experiment):
             label_extractor=label_extractor,
             target_extractor=target_extractor,
             target_labels=target_labels,
+            input_visualizer=input_visualizer,
+            target_visualizer=target_visualizer,
         )
 
     def _check_layer(self, kwargs):

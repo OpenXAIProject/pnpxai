@@ -20,8 +20,6 @@ class Sensitivity(Metric):
         super().__init__(model, explainer)
         self.n_iter = n_iter
         self.epsilon = epsilon
-        if explainer is None:
-            warnings.warn('[Sensitivity] explainer is not provided. Please set explainer before evaluate.')
 
     def evaluate(
         self,
@@ -29,6 +27,9 @@ class Sensitivity(Metric):
         targets: torch.Tensor,
         attributions: Optional[torch.Tensor]
     ) -> torch.Tensor:
+        
+        if self.explainer is None:
+            raise ValueError("Explainer is not provided.")
         inputs = inputs.to(self.device)
         targets = targets.to(self.device)
         if attributions is None:
