@@ -82,8 +82,6 @@ class Experiment(Observable):
         target_visualizer: Optional[Callable[[Any], Any]]=None,
         cache_device: Optional[Union[torch.device, str]]=None,
         target_labels: bool=False,
-        modality: Optional[ModalityOrTupleOfModalities]=None, # to set default conf for optimiztion
-        mask_token_id: Optional[int]=None, # to set defualt conf for optimization for text modality
     ):
         super(Experiment, self).__init__()
         self.model = model
@@ -110,8 +108,6 @@ class Experiment(Observable):
         self.target_visualizer = target_visualizer
         self.target_labels = target_labels
 
-        self.modality = modality
-        self.mask_token_id = mask_token_id
         self.reset_errors()
 
     def reset_errors(self):

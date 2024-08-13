@@ -49,8 +49,6 @@ class Explainer(ABC):
     def set_kwargs(self, **kwargs):
         clone = self.copy()
         for k, v in kwargs.items():
-            if not hasattr(self, k):
-                raise AttributeError(f'{self} has no attribute {k}.')
             setattr(clone, k, v)
         return clone
 

@@ -40,8 +40,6 @@ class Metric(ABC):
 
     def set_kwargs(self, **kwargs):
         for k, v in kwargs.items():
-            if not hasattr(self, k):
-                raise AttributeError
             setattr(self, k, v)
         return self
 

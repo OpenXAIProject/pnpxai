@@ -1,10 +1,14 @@
-from typing import Literal, Callable, Optional, Type, Union, Tuple
+from abc import abstractmethod
+from typing import Literal, Callable, Optional, Type, Union, Tuple, List
+
+from torch.nn.modules import Module
+from torch.utils.data import DataLoader
 
 from pnpxai.core.experiment.experiment import Experiment
 from pnpxai.core.detector import detect_model_architecture
 from pnpxai.core.recommender import XaiRecommender
 from pnpxai.core._types import DataSource, Model, ModalityOrTupleOfModalities, Modality
-from pnpxai.explainers.types import TargetLayerOrListOfTargetLayers, ForwardArgumentExtractor
+from pnpxai.explainers.types import TargetLayer, ForwardArgumentExtractor
 from pnpxai.explainers.utils.baselines import get_default_baseline_function
 from pnpxai.explainers.utils.feature_masks import get_default_feature_mask_fn
 from pnpxai.explainers.utils.postprocess import (
@@ -52,91 +56,208 @@ class AutoExplanation(Experiment):
         self,
         model: Model,
         data: DataSource,
-        modality: ModalityOrTupleOfModalities = "image",
-        input_extractor: Optional[Callable] = None,
-        label_extractor: Optional[Callable] = None,
-        target_extractor: Optional[Callable] = None,
-        target_labels: bool = False,
-        **kwargs,
+        input_extractor: Optional[Callable]=None,
+        label_extractor: Optional[Callable]=None,
+        target_extractor: Optional[Callable]=None,
+        target_labels: bool=False,
+        channel_dim: Union[int, Tuple[int]]=1,
     ):
-        self.modality = modality
-        self._check_layer(kwargs)
-        self._check_background_data(kwargs)
-        self._check_mask_token_id(kwargs)
-        self.recommended = XaiRecommender().recommend(modality=modality, model=model)
+        self.channel_dim = channel_dim
         super().__init__(
             model=model,
             data=data,
-            explainers=self._load_default_explainers(model, kwargs),
-            postprocessors=self._load_default_postprocessors(kwargs),
-            metrics=self._load_default_metrics(model, kwargs),
+            explainers=self._load_default_explainers(model),
+            postprocessors=self._load_default_postprocessors(),
+            metrics=self._load_default_metrics(model),
             input_extractor=input_extractor,
             label_extractor=label_extractor,
             target_extractor=target_extractor,
             target_labels=target_labels,
-            modality=modality,
-            mask_token_id=kwargs.get('mask_token_id'),
         )
 
-    def _check_layer(self, kwargs):
-        modality = format_into_tuple(self.modality)
-        if 'text' in modality:
-            assert kwargs.get('layer'), "Must have 'layer' for text modality. It might be a word embedding layer of your model."
-    
-    def _check_background_data(self, kwargs):
-        if self.modality == 'tabular':
-            assert kwargs.get('background_data') is not None, "Must have 'background_data' for tabular modality."
-
-    def _check_mask_token_id(self, kwargs):
-        modality = format_into_tuple(self.modality)
-        if 'text' in modality:
-            assert kwargs.get('mask_token_id'), "Must have 'mask_token_id' for text modality."
-
-    def _load_default_explainers(self, model, kwargs):
-        # explainers
+    def _load_default_explainers(self, model):
         explainers = []
         for explainer_type in self.recommended.explainers:
             explainer = explainer_type(model=model)
-            default_kwargs = self._generate_default_kwargs_for_explainer(kwargs)
+            default_kwargs = self._generate_default_kwargs_for_explainer()
             for k, v in default_kwargs.items():
                 if hasattr(explainer, k):
                     explainer = explainer.set_kwargs(**{k: v})
             explainers.append(explainer)
         return explainers
 
-    def _load_default_postprocessors(self, kwargs):
-        channel_dim = kwargs.get('channel_dim') or get_default_channel_dim(self.modality)
-        return all_postprocessors(channel_dim)
+    def _load_default_postprocessors(self):
+        return all_postprocessors(self.channel_dim)
 
-    def _load_default_metrics(self, model, kwargs):
-        channel_dim = kwargs.get('channel_dim') or get_default_channel_dim(self.modality)
-        empty_metrics = []
+    def _load_default_metrics(self, model):
+        empty_metrics = [] # empty means that explainer is not assigned yet
         for metric_type in DEFAULT_METRICS:
             metric = metric_type(model=model)
-            default_kwargs = self._generate_default_kwargs_for_metric(kwargs)
+            default_kwargs = self._generate_default_kwargs_for_metric()
             for k, v in default_kwargs.items():
                 if hasattr(metric, k):
                     metric = metric.set_kwargs(**{k: v})
             empty_metrics.append(metric)
         return empty_metrics
 
-    def _generate_default_kwargs_for_explainer(self, kwargs):
+    @abstractmethod
+    def _generate_default_kwargs_for_explainer(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def _generate_default_kwargs_for_metric(self):
+        raise NotImplementedError
+
+
+class AutoExplanationForImageClassification(AutoExplanation):
+    def __init__(
+        self,
+        model: Module,
+        data: DataLoader,
+        input_extractor: Optional[Callable]=None,
+        label_extractor: Optional[Callable]=None,
+        target_extractor: Optional[Callable]=None,
+        target_labels: bool=False,
+        channel_dim: int=1,
+    ):
+        self.recommended = XaiRecommender().recommend(modality='image', model=model)
+        super().__init__(
+            model=model,
+            data=data,
+            input_extractor=input_extractor,
+            label_extractor=label_extractor,
+            target_extractor=target_extractor,
+            target_labels=target_labels,
+            channel_dim=channel_dim,
+        )
+
+    def _generate_default_kwargs_for_explainer(self):
         return {
-            'layer': kwargs.get('layer'),
-            'background_data': kwargs.get('background_data'),
-            'forward_arg_extractor': kwargs.get('forward_arg_extractor'),
-            'additional_forward_arg_extractor': kwargs.get('additional_forward_arg_extractor'),
-            'feature_mask_fn': kwargs.get('feature_mask_fn') \
-                or get_default_feature_mask_fn(self.modality),
-            'baseline_fn': kwargs.get('baseline_fn') \
-                or get_default_baseline_function(self.modality, mask_token_id=kwargs.get('mask_token_id')),
+            'feature_mask_fn': get_default_feature_mask_fn(modality='image'),
+            'baseline_fn': get_default_baseline_function(modality='image'),
         }
 
-    def _generate_default_kwargs_for_metric(self, kwargs):
+    def _generate_default_kwargs_for_metric(self):
         return {
-            'baseline_fn': kwargs.get('baseline_fn') \
-                or get_default_baseline_function(self.modality, mask_token_id=kwargs.get('mask_token_id')),
-            'channel_dim': kwargs.get('channel_dim') \
-                or get_default_channel_dim(self.modality)
+            'baseline_fn': get_default_baseline_function(modality='image'),
+            'channel_dim': self.channel_dim or get_default_channel_dim(modality='image'),
         }
 
+
+class AutoExplanationForTextClassification(AutoExplanation):
+    def __init__(
+        self,
+        model: Module,
+        data: DataLoader,
+        layer: TargetLayer,
+        mask_token_id: int,
+        input_extractor: Optional[Callable]=None,
+        forward_arg_extractor: Optional[Callable]=None,
+        additional_forward_arg_extractor: Optional[Callable]=None,
+        label_extractor: Optional[Callable]=None,
+        target_extractor: Optional[Callable]=None,
+        target_labels: bool=False,
+        channel_dim: int=-1,
+    ):
+        self.layer = layer
+        self.mask_token_id = mask_token_id
+        self.forward_arg_extractor = forward_arg_extractor
+        self.additional_forward_arg_extractor = additional_forward_arg_extractor
+
+        self.recommended = XaiRecommender().recommend(modality='text', model=model)
+        super().__init__(
+            model=model,
+            data=data,
+            input_extractor=input_extractor,
+            label_extractor=label_extractor,
+            target_extractor=target_extractor,
+            target_labels=target_labels,
+            channel_dim=channel_dim,
+        )
+
+    def _generate_default_kwargs_for_explainer(self):
+        return {
+            'layer': self.layer,
+            'forward_arg_extractor': self.forward_arg_extractor,
+            'additional_forward_arg_extractor': self.additional_forward_arg_extractor,
+            'feature_mask_fn': get_default_feature_mask_fn(modality='text'),
+            'baseline_fn': get_default_baseline_function(
+                modality='text',
+                mask_token_id=self.mask_token_id,
+            ),
+        }
+
+    def _generate_default_kwargs_for_metric(self):
+        return {
+            'baseline_fn': get_default_baseline_function(
+                modality='text',
+                mask_token_id=self.mask_token_id,
+            ),
+            'channel_dim': self.channel_dim or get_default_channel_dim(modality='text'),
+        }
+
+
+class AutoExplanationForVisualQuestionAnswering(AutoExplanation):
+    def __init__(
+        self,
+        model: Module,
+        data: DataLoader,
+        layer: List[TargetLayer],
+        mask_token_id: int,
+        input_extractor: Optional[Callable]=None,
+        forward_arg_extractor: Optional[Callable]=None,
+        additional_forward_arg_extractor: Optional[Callable]=None,
+        label_extractor: Optional[Callable]=None,
+        target_extractor: Optional[Callable]=None,
+        target_labels: bool=False,
+        channel_dim: Tuple[int]=(1, -1),
+    ):
+        self.layer = layer
+        self.mask_token_id = mask_token_id
+        self.forward_arg_extractor = forward_arg_extractor
+        self.additional_forward_arg_extractor = additional_forward_arg_extractor
+
+        self.recommended = XaiRecommender().recommend(
+            modality=('image', 'text'),
+            model=model,
+        )
+        super().__init__(
+            model=model,
+            data=data,
+            input_extractor=input_extractor,
+            label_extractor=label_extractor,
+            target_extractor=target_extractor,
+            target_labels=target_labels,
+            channel_dim=channel_dim,
+        )
+
+    def _generate_default_kwargs_for_explainer(self):
+        return {
+            'layer': self.layer,
+            'forward_arg_extractor': self.forward_arg_extractor,
+            'additional_forward_arg_extractor': self.additional_forward_arg_extractor,
+            'feature_mask_fn': get_default_feature_mask_fn(modality=('image', 'text')),
+            'baseline_fn': get_default_baseline_function(
+                modality=('image', 'text'),
+                mask_token_id=self.mask_token_id,
+            ),
+        }
+
+    def _generate_default_kwargs_for_metric(self):
+        return {
+            'baseline_fn': get_default_baseline_function(
+                modality='text',
+                mask_token_id=self.mask_token_id,
+            ),
+            'channel_dim': self.channel_dim \
+                or get_default_channel_dim(modality=('image', 'text')),
+        }
+
+
+class AutoExplanationForTabularClassification(AutoExplanation):
+    def __init__(self):
+        pass
+
+    def _check_background_data(self, kwargs):
+        if self.modality == 'tabular':
+            assert kwargs.get('background_data') is not None, "Must have 'background_data' for tabular modality."
