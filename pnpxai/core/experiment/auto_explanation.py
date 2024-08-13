@@ -95,8 +95,11 @@ class AutoExplanation(Experiment):
         # explainers
         explainers = []
         for explainer_type in self.recommended.explainers:
-            explainer = explainer_type(model=model)
             default_kwargs = self._generate_default_kwargs_for_explainer(kwargs)
+            if explainer_type.__name__ in ["Lime", "KernelShap"]:
+                explainer = explainer_type(model=model, feature_mask_fn=default_kwargs['feature_mask_fn'], baseline_fn=default_kwargs['baseline_fn'])
+            else:
+                explainer = explainer_type(model=model)
             for k, v in kwargs.items():
                 try:
                     explainer.set_kwargs(**{k: v})

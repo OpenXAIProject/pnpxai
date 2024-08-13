@@ -1,7 +1,9 @@
 # python image_gradio.py >> ./logs/image_gradio.log 2>&1
+import time
 import gradio as gr
 from pnpxai.core.experiment import AutoExplanation
 from pnpxai.core.detector import extract_graph_data, symbolic_trace
+import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 import plotly.express as px
 import networkx as nx
@@ -43,7 +45,7 @@ class DetectionTab(Tab):
 
             for exp in self.experiments:
                 detector_res = DetectorRes(exp)
-                # detector_res.show()
+                detector_res.show()
 
 class LocalExpTab(Tab):
     def __init__(self, experiments):
@@ -65,67 +67,103 @@ class LocalExpTab(Tab):
 
 class DetectorRes(Component):
     def __init__(self, experiment):
+        self.experiment = experiment
         graph_module = symbolic_trace(experiment.model)
         self.graph_data = extract_graph_data(graph_module)
 
     def describe(self):
         return "This component shows the detection result."
-
+    
     def show(self):
-        # Create a directed graph
         G = nx.DiGraph()
-
-        # Add nodes
+        root = None
         for node in self.graph_data['nodes']:
-            G.add_node(node['name'], label=node['target'].split("(")[0])
+            if node['op'] == 'placeholder':
+                root = node['name']
 
-        # Add edges
+            G.add_node(node['name'])
+
+
         for edge in self.graph_data['edges']:
-            G.add_edge(edge['source'], edge['target'])
+            if edge['source'] in G.nodes and edge['target'] in G.nodes:
+                G.add_edge(edge['source'], edge['target'])
 
-        # Draw the graph
-        pos = nx.spring_layout(G)  # positions for all nodes
 
-        edge_trace = []
-        for edge in G.edges():
-            edge_trace.append(
-                go.Scatter(
-                    x=[pos[edge[0]][0], pos[edge[1]][0], None],
-                    y=[pos[edge[0]][1], pos[edge[1]][1], None],
-                    line=dict(width=1, color='#888'),
-                    hoverinfo='none',
-                    mode='lines'))
+        def get_pos1(graph):
+            graph = graph.copy()
+            for layer, nodes in enumerate(reversed(tuple(nx.topological_generations(graph)))):
+                for node in nodes:
+                    graph.nodes[node]["layer"] = layer
 
-        node_trace = go.Scatter(
-            x=[pos[node][0] for node in G.nodes()],
-            y=[pos[node][1] for node in G.nodes()],
-            text=[G.nodes[node]['label'] for node in G.nodes()],
-            mode='markers+text',
-            hoverinfo='text',
-            marker=dict(
-                showscale=True,
-                colorscale='YlGnBu',
-                size=10,
-                colorbar=dict(
-                    thickness=15,
-                    title='Node Connections',
-                    xanchor='left',
-                    titleside='right'
-                ),
-            )
-        )
+            pos = nx.multipartite_layout(graph, subset_key="layer", align='horizontal')
+            return pos
 
-        fig = go.Figure(data=edge_trace + [node_trace],
-                        layout=go.Layout(
-                            title='Directed Acyclical Graph Visualization',
-                            titlefont=dict(size=16),
-                            showlegend=False,
-                            hovermode='closest',
-                            margin=dict(b=20, l=5, r=5, t=40),
-                            xaxis=dict(showgrid=False, zeroline=False),
-                            yaxis=dict(showgrid=False, zeroline=False))
-                        )
-        graph = gr.Plot(value=fig, label="Model Graph")
+
+        def get_pos2(graph, root, levels=None, width=1., height=1.):
+            '''
+            G: the graph
+            root: the root node
+            levels: a dictionary
+                    key: level number (starting from 0)
+                    value: number of nodes in this level
+            width: horizontal space allocated for drawing
+            height: vertical space allocated for drawing
+            '''
+            TOTAL = "total"
+            CURRENT = "current"
+
+            def make_levels(levels, node=root, currentLevel=0, parent=None):
+                # Compute the number of nodes for each level
+                if not currentLevel in levels:
+                    levels[currentLevel] = {TOTAL: 0, CURRENT: 0}
+                levels[currentLevel][TOTAL] += 1
+                neighbors = graph.neighbors(node)
+                for neighbor in neighbors:
+                    if not neighbor == parent:
+                        levels = make_levels(levels, neighbor, currentLevel + 1, node)
+                return levels
+
+            def make_pos(pos, node=root, currentLevel=0, parent=None, vert_loc=0):
+                dx = 1/levels[currentLevel][TOTAL]
+                left = dx/2
+                pos[node] = ((left + dx*levels[currentLevel][CURRENT])*width, vert_loc)
+                levels[currentLevel][CURRENT] += 1
+                neighbors = graph.neighbors(node)
+                for neighbor in neighbors:
+                    if not neighbor == parent:
+                        pos = make_pos(pos, neighbor, currentLevel +
+                                    1, node, vert_loc-vert_gap)
+                return pos
+            
+            if levels is None:
+                levels = make_levels({})
+            else:
+                levels = {l: {TOTAL: levels[l], CURRENT: 0} for l in levels}
+            vert_gap = height / (max([l for l in levels])+1)
+            return make_pos({})
+
+
+        def plot_graph(graph, pos):
+            fig = plt.figure(figsize=(12, 24))
+            ax = fig.gca()
+            nx.draw(graph, pos=pos, with_labels=True, node_size=60, font_size=8, ax=ax)
+
+            fig.tight_layout()
+            return fig
+
+
+
+        pos = get_pos1(G)
+        fig = plot_graph(G, pos)
+        # pos = get_pos2(G, root)
+        # fig = plot_graph(G, pos)
+
+        with gr.Row():
+            gr.Textbox(value="Image Classficiation", label="Task")
+            gr.Textbox(value=f"{self.experiment.model.__class__.__name__}", label="Model")
+        gr.Plot(value=fig, label=f"Model Architecture of {self.experiment.model.__class__.__name__}", visible=True)
+
+
 
 class ImgGallery(Component):
     def __init__(self, imgs):
@@ -219,7 +257,8 @@ class Experiment(Component):
                 cnt += 1
 
         # Sort record['explanations'] with respect to the metric values
-        record['explanations'] = sorted(record['explanations'], key=lambda x: x['evaluations'][0]['value'], reverse=True)
+        if len(record['explanations'][0]['evaluations']) > 0:
+            record['explanations'] = sorted(record['explanations'], key=lambda x: x['evaluations'][0]['value'], reverse=True)
 
         return record
 
@@ -268,6 +307,7 @@ class Experiment(Component):
             invisible.change(show_result, outputs=plots)
             invisible.value = 1
 
+
         return inner_func
 
 
@@ -296,12 +336,21 @@ class Experiment(Component):
         cp_metrics_names = ["Complexity"]
         with gr.Accordion("Evaluators", open=True):
             with gr.Row():
-                cr_metrics = gr.CheckboxGroup(choices=cr_metrics_names, value=cr_metrics_names, label="Correctness")
+                cr_metrics = gr.CheckboxGroup(choices=cr_metrics_names, value=[cr_metrics_names[0]], label="Correctness")
+                def on_select(metrics):
+                    if cr_metrics_names[0] not in metrics:
+                        gr.Warning(f"{cr_metrics_names[0]} is required for the sorting the explanations.")
+                        return [cr_metrics_names[0]] + metrics
+                    else:
+                        return metrics
+
+                cr_metrics.select(on_select, inputs=cr_metrics, outputs=cr_metrics)
             with gr.Row():
                 # cn_metrics = gr.CheckboxGroup(choices=cn_metrics_names, value=cn_metrics_names, label="Continuity")
                 cn_metrics = gr.CheckboxGroup(choices=cn_metrics_names, label="Continuity")
             with gr.Row():
-                cp_metrics = gr.CheckboxGroup(choices=cp_metrics_names, value=cp_metrics_names, label="Compactness")
+                # cp_metrics = gr.CheckboxGroup(choices=cp_metrics_names, value=cp_metrics_names[0], label="Compactness")
+                cp_metrics = gr.CheckboxGroup(choices=cp_metrics_names, label="Compactness")
 
         metric_inputs = [cr_metrics, cn_metrics, cp_metrics]
 
@@ -338,15 +387,25 @@ class ExplainerCheckboxGroup(Component):
 
     def update_gallery_change(self):
         checkboxes = []
+        bttns = []
         checkboxes += [gr.Checkbox(label="Default Parameter", value=True, interactive=True)] * len(self.explainer_objs)
-        checkboxes += [gr.Checkbox(label="Optimized Parameter (Not Optimal)", interactive=False)] * len(self.explainer_objs)
-        return checkboxes
+        checkboxes += [gr.Checkbox(label="Optimized Parameter (Not Optimal)", value=False, interactive=False)] * len(self.explainer_objs)
+        bttns += [gr.Button(value="Optimize", size="sm", variant="primary")] * len(self.explainer_objs)
+
+        for exp in self.explainer_objs:
+            self.update_check(exp.default_exp_id, True)
+            if hasattr(exp, "optimal_exp_id"):
+                self.update_check(exp.optimal_exp_id, False)
+        return checkboxes + bttns
 
     def get_checkboxes(self):
         checkboxes = []
         checkboxes += [exp.default_check for exp in self.explainer_objs]
         checkboxes += [exp.opt_check for exp in self.explainer_objs]
         return checkboxes
+    
+    def get_bttns(self):
+        return [exp.bttn for exp in self.explainer_objs]
     
     def show(self):
         cnt = 0
@@ -360,9 +419,10 @@ class ExplainerCheckboxGroup(Component):
                     cnt += 1
         
         checkboxes = self.get_checkboxes()
+        bttns = self.get_bttns()
         self.gallery.gallery_obj.select(
             fn=self.update_gallery_change,
-            outputs=checkboxes
+            outputs=checkboxes + bttns
         )
 
     
@@ -388,6 +448,10 @@ class ExplainerCheckbox(Component):
 
 
     def optimize(self):
+        if self.explainer_name in ["Lime", "KernelShap", "IntegratedGradients"]:
+            gr.Info("Lime, KernelShap and IntegratedGradients currently do not support hyperparameter optimization.")
+            return [gr.update()] * 2
+        
         data_id = self.gallery.selected_index
 
         opt_explainer_id, opt_postprocessor_id = self.experiment.optimize(
@@ -407,6 +471,7 @@ class ExplainerCheckbox(Component):
 
         return [checkbox, bttn]
 
+
     def default_on_select(self, evt: gr.EventData):
         self.groups.update_check(self.default_exp_id, evt._data['value'])
 
@@ -417,15 +482,15 @@ class ExplainerCheckbox(Component):
             raise ValueError("Optimal explainer id is not found.")
 
     def show(self):
-        with gr.Accordion(self.explainer_name, open=False):
+        with gr.Accordion(self.explainer_name, open=True):
             self.default_check = gr.Checkbox(label="Default Parameter", value=True, interactive=True)
             self.opt_check = gr.Checkbox(label="Optimized Parameter (Not Optimal)", interactive=False)
 
             self.default_check.select(self.default_on_select)
             self.opt_check.select(self.optimal_on_select)
 
-            bttn = gr.Button(value="Optimize", size="sm", variant="primary")
-            bttn.click(self.optimize, outputs=[self.opt_check, bttn])
+            self.bttn = gr.Button(value="Optimize", size="sm", variant="primary")
+            self.bttn.click(self.optimize, outputs=[self.opt_check, self.bttn])
         
 
 class ExpRes(Component):
@@ -570,4 +635,5 @@ experiments.append(experiment2)
 
 app = ImageClsApp(experiments)
 demo = app.launch()
-demo.launch(favicon_path="data/static/XAI-Top-PnP.svg", share=True)
+# demo.launch(favicon_path="data/static/XAI-Top-PnP.svg", share=True)
+demo.launch(favicon_path="data/static/XAI-Top-PnP.svg")
