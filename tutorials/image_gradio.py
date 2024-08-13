@@ -1,5 +1,5 @@
 # python image_gradio.py >> ./logs/image_gradio.log 2>&1
-import time
+import os
 import gradio as gr
 from pnpxai.core.experiment import AutoExplanation
 from pnpxai.core.detector import extract_graph_data, symbolic_trace
@@ -570,7 +570,9 @@ class ImageClsApp(App):
         with gr.Blocks(
             title=self.name,
         ) as demo:
-            gr.set_static_paths("./")
+            cwd = os.getcwd()
+            gr.set_static_paths(cwd)
+            # gr.set_static_paths("./")
             gr.HTML(self.title())
 
             self.overview_tab.show()
@@ -635,5 +637,5 @@ experiments.append(experiment2)
 
 app = ImageClsApp(experiments)
 demo = app.launch()
-# demo.launch(favicon_path="data/static/XAI-Top-PnP.svg", share=True)
-demo.launch(favicon_path="data/static/XAI-Top-PnP.svg")
+demo.launch(favicon_path="data/static/XAI-Top-PnP.svg", share=True)
+# demo.launch(favicon_path="data/static/XAI-Top-PnP.svg")
