@@ -6,6 +6,7 @@ import warnings
 import torch
 from torch import nn, fx, Tensor
 from torch.nn.modules import Module
+from optuna.trial import Trial
 
 from zennit.attribution import Gradient
 from zennit.core import Composite
@@ -20,13 +21,14 @@ from zennit.types import Linear
 from zennit.rules import Epsilon
 from zennit.canonizers import SequentialMergeBatchNorm, Canonizer
 
-from .attentions.module_converters import default_attention_converters
-from .attentions.rules import ConservativeAttentionPropagation
-from .zennit.attribution import Gradient, LayerGradient
-from .zennit.rules import LayerNormRule
-from .zennit.base import ZennitExplainer
-from .zennit.layer import StackAndSum
-from .utils import captum_wrap_model_input
+from pnpxai.explainers.attentions.module_converters import default_attention_converters
+from pnpxai.explainers.attentions.rules import ConservativeAttentionPropagation
+from pnpxai.explainers.zennit.attribution import Gradient, LayerGradient
+from pnpxai.explainers.zennit.rules import LayerNormRule
+from pnpxai.explainers.zennit.base import ZennitExplainer
+from pnpxai.explainers.zennit.layer import StackAndSum
+from pnpxai.explainers.utils import captum_wrap_model_input
+from pnpxai.evaluator.optimizer.utils import generate_param_key
 
 
 class LRPBase(ZennitExplainer):
@@ -145,6 +147,14 @@ class LRPUniformEpsilon(LRPBase):
             n_classes
         )
 
+    def suggest_tunables(self, trial: Trial, key: Optional[str]=None):
+        return {
+            'epsilon': trial.suggest_float(
+                generate_param_key(key, 'epsilon'),
+                1e-6, 1., log=True,
+            ),
+        }
+
 
 class LRPEpsilonGammaBox(LRPBase):
     def __init__(
@@ -178,6 +188,18 @@ class LRPEpsilonGammaBox(LRPBase):
             n_classes
         )
 
+    def suggest_tunables(self, trial: Trial, key: Optional[str]=None):
+        return {
+            'epsilon': trial.suggest_float(
+                generate_param_key(key, 'epsilon'),
+                1e-6, 1., log=True,
+            ),
+            'gamma': trial.suggest_float(
+                generate_param_key(key, 'gamma'),
+                1e-6, 1., log=True,
+            ),
+        }
+
 
 class LRPEpsilonPlus(LRPBase):
     def __init__(
@@ -205,6 +227,14 @@ class LRPEpsilonPlus(LRPBase):
             n_classes
         )
 
+    def suggest_tunables(self, trial: Trial, key: Optional[str]=None):
+        return {
+            'epsilon': trial.suggest_float(
+                generate_param_key(key, 'epsilon'),
+                1e-6, 1., log=True,
+            ),
+        }
+
 
 class LRPEpsilonAlpha2Beta1(LRPBase):
     def __init__(
@@ -231,6 +261,14 @@ class LRPEpsilonAlpha2Beta1(LRPBase):
             layer,
             n_classes
         )
+
+    def suggest_tunables(self, trial: Trial, key: Optional[str]=None):
+        return {
+            'epsilon': trial.suggest_float(
+                generate_param_key(key, 'epsilon'),
+                1e-6, 1., log=True,
+            ),
+        }
     
 
 def _get_uniform_epsilon_composite(epsilon, stabilizer, zennit_canonizers):

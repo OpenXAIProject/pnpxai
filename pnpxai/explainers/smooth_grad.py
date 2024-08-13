@@ -2,12 +2,15 @@ from typing import Tuple, Callable, Sequence, Union, Optional
 
 from torch import Tensor
 from torch.nn.modules import Module
+from optuna.trial import Trial
 from zennit.core import Composite
 
-from .zennit.attribution import SmoothGradient as SmoothGradAttributor
-from .zennit.attribution import LayerSmoothGradient as LayerSmoothGradAttributor
-from .zennit.base import ZennitExplainer
-from .utils import captum_wrap_model_input, _format_to_tuple
+from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
+from pnpxai.explainers.zennit.attribution import SmoothGradient as SmoothGradAttributor
+from pnpxai.explainers.zennit.attribution import LayerSmoothGradient as LayerSmoothGradAttributor
+from pnpxai.explainers.zennit.base import ZennitExplainer
+from pnpxai.explainers.utils import captum_wrap_model_input, _format_to_tuple
+from pnpxai.evaluator.optimizer.utils import generate_param_key
 
 
 class SmoothGrad(ZennitExplainer):
@@ -16,6 +19,7 @@ class SmoothGrad(ZennitExplainer):
         model: Module,
         noise_level: float=.1,
         n_iter: int=20,
+        square: bool=False,
         forward_arg_extractor: Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]=None,
         additional_forward_arg_extractor: Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]=None,
         layer: Optional[Union[Union[str, Module], Sequence[Union[str, Module]]]]=None,
@@ -47,13 +51,13 @@ class SmoothGrad(ZennitExplainer):
             n_iter=self.n_iter,
         )
 
+    @property
     def _attributor(self) -> SmoothGradAttributor:
-        return NotImplmentedError('Not supported')
-        # return SmoothGradAttributor(
-        #     self.model,
-        #     noise_level=self.noise_level,
-        #     n_iter=self.n_iter,
-        # )
+        return SmoothGradAttributor(
+            model=self.model,
+            noise_level=self.noise_level,
+            n_iter=self.n_iter,
+        )
     
     def attributor(self) -> Union[SmoothGradAttributor, LayerSmoothGradAttributor]:
         if self.layer is None:
@@ -67,14 +71,22 @@ class SmoothGrad(ZennitExplainer):
     ) -> Union[Tensor, Tuple[Tensor]]:
         forward_args, additional_forward_args = self._extract_forward_args(inputs)
         with self.attributor() as attributor:
-            grads = attributor.forward(
+            grads = format_into_tuple(attributor.forward(
                 forward_args,
                 targets,
                 additional_forward_args,
                 return_squared=False,
-            )
-        if len(grads) == 1:
-            return grads[0]
-        return grads
+            ))
+        return format_out_tuple_if_single(grads)
 
-
+    def suggest_tunables(self, trial: Trial, key: Optional[str]=None):
+        return {
+            'noise_level': trial.suggest_float(
+                generate_param_key(key, 'noise_level'),
+                low=.1, high=1., step=.1,
+            ),
+            'n_iter': trial.suggest_int(
+                generate_param_key(key, 'n_iter'),
+                low=10, high=100, step=10,
+            ),
+        }

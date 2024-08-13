@@ -1,4 +1,4 @@
-from typing import Any, Callable, Optional, Sequence, Union, List, Dict, Literal
+from typing import Any, Callable, Optional, Sequence, Union, List, Dict, Literal, Tuple
 import time
 import warnings
 import itertools
@@ -10,7 +10,7 @@ import optuna
 from plotly import express as px
 from plotly.graph_objects import Figure
 
-from pnpxai.core._types import DataSource, Model, ModalityOrListOfModalities
+from pnpxai.core._types import DataSource, Model, ModalityOrTupleOfModalities
 from pnpxai.core.experiment.experiment_metrics_defaults import EVALUATION_METRIC_REVERSE_SORT, EVALUATION_METRIC_SORT_PRIORITY
 from pnpxai.core.experiment.observable import ExperimentObservableEvent
 from pnpxai.core.experiment.manager import ExperimentManager
@@ -19,17 +19,19 @@ from pnpxai.explainers.utils.postprocess import PostProcessor
 from pnpxai.evaluator.optimizer.objectives import Objective
 from pnpxai.evaluator.optimizer.search_spaces import (
     create_default_search_space,
-    create_default_suggest_methods,
 )
 from pnpxai.evaluator.optimizer.utils import (
     load_sampler,
     get_default_n_trials,
-    format_params,
+    nest_params,
 )
 from pnpxai.evaluator.metrics.base import Metric
 from pnpxai.messages import get_message
 
-from pnpxai.utils import class_to_string, Observable, to_device, format_into_tuple
+from pnpxai.utils import (
+    class_to_string, Observable, to_device,
+    format_into_tuple, format_out_tuple_if_single,
+)
 
 def default_input_extractor(x):
     return x[0]
@@ -52,7 +54,7 @@ class Experiment(Observable):
         data (DataSource): The data used for the experiment.
         explainers (Sequence[Explainer]): Explainer objects or their arguments for interpreting the model.
         metrics (Optional[Sequence[Metric]]): Evaluation metrics used to assess model interpretability.
-        modality (ModalityOrListOfModalities): The type of modality the model is designed for (default: "image").
+        modality (ModalityOrTupleOfModalities): The type of modality the model is designed for (default: "image").
         input_extractor (Optional[Callable[[Any], Any]]): Function to extract inputs from data (default: None).
         target_extractor (Optional[Callable[[Any], Any]]): Function to extract targets from data (default: None).
         input_visualizer (Optional[Callable[[Any], Any]]): Function to visualize input data (default: None).
@@ -71,16 +73,17 @@ class Experiment(Observable):
         model: Model,
         data: DataSource,
         explainers: Sequence[Explainer],
-        postprocessors: Optional[Sequence[Callable]] = None,
-        metrics: Optional[Sequence[Metric]] = None,
-        modality: ModalityOrListOfModalities = "image",
-        input_extractor: Optional[Callable[[Any], Any]] = None,
-        label_extractor: Optional[Callable[[Any], Any]] = None,
-        target_extractor: Optional[Callable[[Any], Any]] = None,
-        input_visualizer: Optional[Callable[[Any], Any]] = None,
-        target_visualizer: Optional[Callable[[Any], Any]] = None,
-        cache_device: Optional[Union[torch.device, str]] = None,
-        target_labels: bool = False,
+        postprocessors: Optional[Sequence[Callable]]=None,
+        metrics: Optional[Sequence[Metric]]=None,
+        input_extractor: Optional[Callable[[Any], Any]]=None,
+        label_extractor: Optional[Callable[[Any], Any]]=None,
+        target_extractor: Optional[Callable[[Any], Any]]=None,
+        input_visualizer: Optional[Callable[[Any], Any]]=None,
+        target_visualizer: Optional[Callable[[Any], Any]]=None,
+        cache_device: Optional[Union[torch.device, str]]=None,
+        target_labels: bool=False,
+        modality: Optional[ModalityOrTupleOfModalities]=None, # to set default conf for optimiztion
+        mask_token_id: Optional[int]=None, # to set defualt conf for optimization for text modality
     ):
         super(Experiment, self).__init__()
         self.model = model
@@ -105,8 +108,10 @@ class Experiment(Observable):
             else default_target_extractor
         self.input_visualizer = input_visualizer
         self.target_visualizer = target_visualizer
-        self.modality = modality
         self.target_labels = target_labels
+
+        self.modality = modality
+        self.mask_token_id = mask_token_id
         self.reset_errors()
 
     def reset_errors(self):
@@ -115,7 +120,6 @@ class Experiment(Observable):
     @property
     def errors(self):
         return self._errors
-
 
     def to_device(self, x):
         return to_device(x, self.model_device)
@@ -186,7 +190,14 @@ class Experiment(Observable):
     ):
         explanations = self.manager.batch_explanations_by_ids(data_ids, explainer_id)
         postprocessor = self.manager.get_postprocessor_by_id(postprocessor_id)
-        return postprocessor(explanations)
+        explanations = format_into_tuple(explanations)
+        postprocessor = format_into_tuple(postprocessor)
+        assert len(explanations) == len(postprocessor)
+        pass_pooling = self.manager.get_explainer_by_id(explainer_id).__class__.__name__ in ['KernelShap', 'Lime']
+        batch = tuple(
+            pp.normalize_attributions(expl) if pass_pooling else pp(expl)
+            for pp, expl in zip(postprocessor, explanations))
+        return format_out_tuple_if_single(batch)
 
     def evaluate_batch(
         self,
@@ -232,29 +243,26 @@ class Experiment(Observable):
         metric_id: int,
         direction: Literal['minimize', 'maximize']='maximize',
         sampler: Literal['grid', 'random', 'tpe']='tpe',
-        suggest_methods: Optional[Dict[str, Callable]]=None,
-        search_space: Optional[Dict[str, Any]]=None,
         n_trials: Optional[int]=None,
         timeout: Optional[float]=None,
-        return_study: bool=False,
         **kwargs, # sampler kwargs
     ):
-        assert n_trials is None or timeout is None
         data = self.manager.batch_data_by_ids([data_id])
-        explainer = self.manager.get_explainer_by_id(explainer_id)
+        explainer = self.manager.get_explainer_by_id(explainer_id)        
         postprocessor = self.manager.get_postprocessor_by_id(0) # sample postprocessor to ensure channel_dim
         metric = self.manager.get_metric_by_id(metric_id)
-        suggest_methods = suggest_methods or create_default_suggest_methods(explainer)
+
         objective = Objective(
             explainer=explainer,
+            postprocessor=postprocessor,
             metric=metric,
-            suggest_methods=suggest_methods,
-            channel_dim=postprocessor.channel_dim,
             inputs=self.input_extractor(data),
-            targets=self._get_targets([data_id])
+            targets=self._get_targets([data_id]),
         )
+        # TODO: grid search
         if sampler == 'grid':
             kwargs['search_space'] = search_space or create_default_search_space(explainer)
+            raise NotImplementedError('grid search is not supported.')
         if timeout is None:
             n_trials = n_trials or get_default_n_trials(sampler)
 
@@ -270,20 +278,19 @@ class Experiment(Observable):
         )
 
         # update explainer
-        best_params = study.best_params.copy()
-        explainer_kwargs = format_params(best_params)
-        postprocessor_kwargs = {
-            'pooling_method': explainer_kwargs.pop('pooling_method', 'sumpos'),
-            'normalization_method': explainer_kwargs.pop('normalization_method', 'minmax'),
-            'channel_dim': objective.channel_dim,
-        }
-        opt_explainer = explainer.set_kwargs(**explainer_kwargs)
-        opt_postprocessor = PostProcessor(**postprocessor_kwargs)
+        opt_explainer, opt_postprocessor = objective.load_from_optuna_params(
+            study.best_params.copy()
+        )
         opt_explainer_id = self.manager.add_explainer(opt_explainer)
         opt_postprocessor_id = self.manager.add_postprocessor(opt_postprocessor) # TODO: find same postprocessor
-        if not return_study:
-            return opt_explainer_id, opt_postprocessor_id
-        return opt_explainer_id, opt_postprocessor_id, study
+
+        optimized = {
+            'data_id': data_id,
+            'explainer_id': opt_explainer_id,
+            'postprocessor_id': opt_postprocessor_id,
+            'metric_id': metric_id,
+        }
+        return optimized, objective, study
 
     def run(
         self,

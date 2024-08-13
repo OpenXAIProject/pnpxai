@@ -9,8 +9,8 @@ from typing import (
 from torch import Tensor
 from torch.nn.modules import Module
 
-from .smooth_grad import SmoothGrad
-from .utils import _format_to_tuple
+from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
+from pnpxai.explainers.smooth_grad import SmoothGrad
 
 
 class VarGrad(SmoothGrad):
@@ -47,13 +47,10 @@ class VarGrad(SmoothGrad):
 				additional_forward_args,
 				return_squared=True,
 			)
-		avg_grads = _format_to_tuple(avg_grads)
-		avg_grads_sq = _format_to_tuple(avg_grads_sq)
 		vargrads = tuple(
-			avg_grad_sq - avg_grad
-			for avg_grad_sq, avg_grad
-			in zip(avg_grads_sq, avg_grads)
+			avg_grad_sq - avg_grad for avg_grad_sq, avg_grad in zip(
+				format_into_tuple(avg_grads_sq),
+				format_into_tuple(avg_grads),
+			)
 		)
-		if len(vargrads) == 1:
-			return vargrads[0]
-		return vargrads
+		return format_out_tuple_if_single(vargrads)

@@ -17,6 +17,7 @@ from zennit.attribution import Gradient as ZennitGradient
 from zennit.core import Composite
 
 from pnpxai.utils import format_into_tuple
+from pnpxai.core._types import TensorOrTupleOfTensors, Tensor
 
 
 class Gradient(ZennitGradient):
@@ -110,39 +111,32 @@ class SmoothGradient(Gradient):
 
     def forward(
         self,
-        forward_args: Union[Tensor, Tuple[Tensor]],
+        inputs: TensorOrTupleOfTensors,
         targets: Tensor,
-        additional_forward_args: Optional[Union[Tensor, Tuple[Tensor]]]=None,
-    ) -> Union[Tensor, Tuple[Tensor]]:
-        results = tuple(torch.zeros_like(inp) for inp in forward_args)
-        for i in range(self.n_iter):
-            dims = tuple(tuple(range(1, inp.ndim)) for inp in forward_args)
-            stds = tuple(
-                noise_level * (inp.amax(dim=dim, keepdim=True) - inp.amin(dim=dim, keepdim=True))
-                for noise_level, inp, dim in zip(noise_levels, forward_args, dims)
-            )
-            if i  == self.n_iter - 1:
-                epsilons = tuple(torch.zeros_like(inp) for inp in forward_args)
+        additional_forward_args: Optional[TensorOrTupleOfTensors]=None,
+        return_squared: bool=False,
+    ):
+        dims = tuple(range(1, inputs.ndim))
+        std = self.noise_level * (inputs.amax(dims, keepdim=True) - inputs.amin(dims, keepdim=True))
+
+        result = torch.zeros_like(inputs)
+        result_sq = torch.zeros_like(inputs)
+        for n in range(self.n_iter):
+            if n == self.n_iter - 1:
+                epsilon = torch.zeros_like(inputs)
             else:
-                epsilons = tuple(
-                    torch.randn_like(inp) * std
-                    for inp, std in zip(forward_args, stds)
-                )
-            gradients = self.grad(
-                forward_args=tuple(
-                    inp + epsilon
-                    for inp, epsilon in zip(forward_args, epsilons)
-                ),
-                targets=targets,
-                additional_forward_args=additional_forward_args,
+                epsilon = torch.randn_like(inputs) * std
+            grad = self.grad(
+                inputs + epsilon,
+                targets,
+                additional_forward_args,
             )
-            results = tuple(
-                result + gradient / self.n_iter
-                for result, gradient in zip(results, gradients)
-            )
-        if len(results) == 1:
-            results = results[0]
-        return results
+            result += grad / self.n_iter
+            if return_squared:
+                result_sq += grad.pow(2) / self.n_iter
+        if return_squared:
+            return result, result_sq
+        return result
 
 
 class LayerSmoothGradient(LayerGradient):

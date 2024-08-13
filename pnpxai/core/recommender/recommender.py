@@ -28,6 +28,7 @@ from pnpxai.explainers import (
     LRPEpsilonGammaBox,
     LRPEpsilonPlus,
     LRPEpsilonAlpha2Beta1,
+    RAP,
     AttentionRollout,
     TransformerAttribution,
 )
@@ -70,11 +71,11 @@ DEFAULT_EXPLAINER_MAP = {
         "module_types": [Linear, Convolution, LSTM, RNN, Attention],
     },
     SmoothGrad: {
-        "modalities": ["text", ("image", "text")],
+        "modalities": ["image", "text", ("image", "text")],
         "module_types": [Linear, Convolution, LSTM, RNN, Attention],
     },
     VarGrad: {
-        "modalities": ["text", ("image", "text")],
+        "modalities": ["image", "text", ("image", "text")],
         "module_types": [Linear, Convolution, LSTM, RNN, Attention],
     },
     IntegratedGradients: {
@@ -97,14 +98,18 @@ DEFAULT_EXPLAINER_MAP = {
         "modalities": ["image", "text", ("image", "text")],
         "module_types": [Convolution],
     },
-    AttentionRollout: {
-        "modalities": ["text", ("image", "text")],
-        "module_types": [Attention],
+    RAP: {
+        'modalities': ['image'],
+        'module_types': [Linear, Convolution],
     },
-    TransformerAttribution: {
-        "modalities": ["text", ("image", "text")],
-        "module_types": [Attention],
-    },
+    # AttentionRollout: {
+    #     "modalities": ["text", ("image", "text")],
+    #     "module_types": [Attention],
+    # },
+    # TransformerAttribution: {
+    #     "modalities": ["text", ("image", "text")],
+    #     "module_types": [Attention],
+    # },
 }
 
 

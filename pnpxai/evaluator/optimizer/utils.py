@@ -1,8 +1,8 @@
-from typing import Literal, Dict, Any
+from typing import Literal, Dict, Any, Union
 
 import optuna
-from pnpxai.explainers.utils.postprocess import RELEVANCE_POOLING_METHODS
-from pnpxai.explainers.utils.baselines import DEFAULT_BASELINE_METHODS
+
+from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 
 
 AVAILABLE_SAMPLERS = {
@@ -23,9 +23,19 @@ def load_sampler(sampler: Literal['grid', 'random', 'tpe']='tpe', **kwargs):
 def get_default_n_trials(sampler):
     return DEFAULT_N_TRIALS[sampler]
 
-def format_params(params: Dict[str, Any]):
-    formatted = params.copy()
-    for k in params.keys():
-        if k == 'baseline_fn':
-            formatted[k] = DEFAULT_BASELINE_METHODS[k]
-    return formatted
+def generate_param_key(*args):
+    # ensure the uniqueness of param name of optuna
+    return '.'.join([str(arg) for arg in args if arg is not None])
+
+def nest_params(flattened_params):
+    nested = {}
+    for k, v in flattened_params.items():
+        ref = nested
+        splits = k.split('.')
+        while splits:
+            s = splits.pop(0)
+            if s not in ref:
+                _v = {} if len(splits) > 0 else v
+                ref[s] = _v
+            ref = ref[s]
+    return nested

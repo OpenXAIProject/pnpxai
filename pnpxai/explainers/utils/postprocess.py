@@ -1,5 +1,11 @@
+from typing import Optional
+import copy
 import math
 from torch import Tensor
+from optuna.trial import Trial
+from pnpxai.core._types import ModalityOrTupleOfModalities
+from pnpxai.evaluator.optimizer.utils import generate_param_key
+
 
 RELEVANCE_POOLING_METHODS = {
     'sumpos': lambda attrs, channel_dim: attrs.sum(channel_dim).clamp(min=0),
@@ -66,6 +72,16 @@ class PostProcessor:
         self.channel_dim = channel_dim
         return self
 
+    def set_kwargs(self, **kwargs):
+        clone = self.copy()
+        for k, v in kwargs.items():
+            if hasattr(self, k):
+                setattr(clone, k, v)
+        return clone
+
+    def copy(self):
+        return copy.copy(self)
+
     def pool_attributions(self, attrs):
         return relevance_pooling(attrs, channel_dim=self.channel_dim, method=self.pooling_method)
 
@@ -87,6 +103,18 @@ class PostProcessor:
             channel_dim=self.channel_dim,
         )
 
+    def suggest_tunables(self, trial: Trial, key: Optional[str]=None):
+        return {
+            'pooling_method': trial.suggest_categorical(
+                generate_param_key(key, 'pooling_method'),
+                choices=list(RELEVANCE_POOLING_METHODS.keys()),
+            ),
+            'normalization_method': trial.suggest_categorical(
+                generate_param_key(key, 'normalization_method'),
+                choices=list(RELEVANCE_NORMALIZATION_METHODS.keys()),
+            ),
+        }
+
 
 def all_postprocessors(channel_dim):
     if isinstance(channel_dim, int):
@@ -100,6 +128,15 @@ def all_postprocessors(channel_dim):
         PostProcessor(
             pooling_method=pm,
             normalization_method=nm,
-            channel_dim=channel_dim[d]
+            channel_dim=d,
         ) for d in channel_dim
     ) for pm in RELEVANCE_POOLING_METHODS for nm in RELEVANCE_NORMALIZATION_METHODS]
+
+
+def get_default_channel_dim(modality: ModalityOrTupleOfModalities):
+    if modality == 'image':
+        return 1
+    elif modality == 'text':
+        return -1
+    elif modality == ('image', 'text'):
+        return tuple(get_default_channel_dim(m) for m in modality)

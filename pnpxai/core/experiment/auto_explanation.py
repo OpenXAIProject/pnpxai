@@ -3,15 +3,14 @@ from typing import Literal, Callable, Optional, Type, Union, Tuple
 from pnpxai.core.experiment.experiment import Experiment
 from pnpxai.core.detector import detect_model_architecture
 from pnpxai.core.recommender import XaiRecommender
-from pnpxai.core._types import DataSource, Model, ModalityOrListOfModalities, Modality
+from pnpxai.core._types import DataSource, Model, ModalityOrTupleOfModalities, Modality
 from pnpxai.explainers.types import TargetLayerOrListOfTargetLayers, ForwardArgumentExtractor
-from pnpxai.explainers.utils import (
-    get_default_feature_mask_fn,
-    get_default_baseline_fn,
-)
+from pnpxai.explainers.utils.baselines import get_default_baseline_function
+from pnpxai.explainers.utils.feature_masks import get_default_feature_mask_fn
 from pnpxai.explainers.utils.postprocess import (
     PostProcessor,
     all_postprocessors,
+    get_default_channel_dim,
 )
 from pnpxai.evaluator.metrics import PIXEL_FLIPPING_METRICS
 from pnpxai.evaluator.metrics import(
@@ -22,11 +21,13 @@ from pnpxai.evaluator.metrics import(
     LeRF,
     AbPC,
 )
-from pnpxai.evaluator.metrics.utils import get_default_channel_dim
+from pnpxai.utils import format_into_tuple
+
 
 METRICS_BASELINE_FN_REQUIRED = PIXEL_FLIPPING_METRICS
 METRICS_CHANNEL_DIM_REQUIRED = PIXEL_FLIPPING_METRICS
 DEFAULT_METRICS = [
+    MuFidelity,
     AbPC,
     Sensitivity,
     Complexity,
@@ -51,7 +52,7 @@ class AutoExplanation(Experiment):
         self,
         model: Model,
         data: DataSource,
-        modality: ModalityOrListOfModalities = "image",
+        modality: ModalityOrTupleOfModalities = "image",
         input_extractor: Optional[Callable] = None,
         label_extractor: Optional[Callable] = None,
         target_extractor: Optional[Callable] = None,
@@ -61,9 +62,8 @@ class AutoExplanation(Experiment):
         self.modality = modality
         self._check_layer(kwargs)
         self._check_background_data(kwargs)
-
+        self._check_mask_token_id(kwargs)
         self.recommended = XaiRecommender().recommend(modality=modality, model=model)
-
         super().__init__(
             model=model,
             data=data,
@@ -74,15 +74,23 @@ class AutoExplanation(Experiment):
             label_extractor=label_extractor,
             target_extractor=target_extractor,
             target_labels=target_labels,
+            modality=modality,
+            mask_token_id=kwargs.get('mask_token_id'),
         )
 
     def _check_layer(self, kwargs):
-        if (self.modality == 'text' or 'text' in self.modality):
+        modality = format_into_tuple(self.modality)
+        if 'text' in modality:
             assert kwargs.get('layer'), "Must have 'layer' for text modality. It might be a word embedding layer of your model."
     
     def _check_background_data(self, kwargs):
         if self.modality == 'tabular':
             assert kwargs.get('background_data') is not None, "Must have 'background_data' for tabular modality."
+
+    def _check_mask_token_id(self, kwargs):
+        modality = format_into_tuple(self.modality)
+        if 'text' in modality:
+            assert kwargs.get('mask_token_id'), "Must have 'mask_token_id' for text modality."
 
     def _load_default_explainers(self, model, kwargs):
         # explainers
@@ -90,11 +98,9 @@ class AutoExplanation(Experiment):
         for explainer_type in self.recommended.explainers:
             explainer = explainer_type(model=model)
             default_kwargs = self._generate_default_kwargs_for_explainer(kwargs)
-            for k, v in kwargs.items():
-                try:
-                    explainer.set_kwargs(**{k: v})
-                except AttributeError:
-                    pass
+            for k, v in default_kwargs.items():
+                if hasattr(explainer, k):
+                    explainer = explainer.set_kwargs(**{k: v})
             explainers.append(explainer)
         return explainers
 
@@ -106,15 +112,13 @@ class AutoExplanation(Experiment):
         channel_dim = kwargs.get('channel_dim') or get_default_channel_dim(self.modality)
         empty_metrics = []
         for metric_type in DEFAULT_METRICS:
-            metric_kwargs = {}
-            if metric_type in METRICS_BASELINE_FN_REQUIRED:
-                metric_kwargs['baseline_fn'] = kwargs.get('baseline_fn') \
-                    or get_default_baseline_fn(self.modality, mask_token_id=kwargs.get('mask_token_id') or 0)
-            if metric_type in METRICS_CHANNEL_DIM_REQUIRED:
-                metric_kwargs['channel_dim'] = channel_dim
-            empty_metrics.append(metric_type(model, **metric_kwargs))
+            metric = metric_type(model=model)
+            default_kwargs = self._generate_default_kwargs_for_metric(kwargs)
+            for k, v in default_kwargs.items():
+                if hasattr(metric, k):
+                    metric = metric.set_kwargs(**{k: v})
+            empty_metrics.append(metric)
         return empty_metrics
-
 
     def _generate_default_kwargs_for_explainer(self, kwargs):
         return {
@@ -125,13 +129,13 @@ class AutoExplanation(Experiment):
             'feature_mask_fn': kwargs.get('feature_mask_fn') \
                 or get_default_feature_mask_fn(self.modality),
             'baseline_fn': kwargs.get('baseline_fn') \
-                or get_default_baseline_fn(self.modality, mask_token_id=kwargs.get('mask_token_id') or 0),
+                or get_default_baseline_function(self.modality, mask_token_id=kwargs.get('mask_token_id')),
         }
 
     def _generate_default_kwargs_for_metric(self, kwargs):
         return {
             'baseline_fn': kwargs.get('baseline_fn') \
-                or get_default_baseline_fn(self.modality, mask_token_id=kwargs.get('mask_token_id')),
+                or get_default_baseline_function(self.modality, mask_token_id=kwargs.get('mask_token_id')),
             'channel_dim': kwargs.get('channel_dim') \
                 or get_default_channel_dim(self.modality)
         }
