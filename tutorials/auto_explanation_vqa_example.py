@@ -1,7 +1,7 @@
 import functools
 import torch
 from torch.utils.data import DataLoader
-from pnpxai import AutoExplanation
+from pnpxai import AutoExplanationForVisualQuestionAnswering
 from helpers import (
     get_vqa_dataset,
     get_vilt_model,
@@ -33,17 +33,16 @@ additional_forward_arg_extractor = lambda inputs: inputs[2:]
 label_extractor = lambda batch: batch[-1].to(device)
 target_extractor = lambda outputs: outputs.argmax(-1).to(device)
 
-expr = AutoExplanation(
+expr = AutoExplanationForVisualQuestionAnswering(
     model=model,
     data=loader,
     layer=['pixel_values', model.vilt.embeddings.text_embeddings.word_embeddings],
-    modality=('image', 'text'),
+    mask_token_id=processor.tokenizer.mask_token_id,
     input_extractor=input_extractor,
     label_extractor=label_extractor,
     target_extractor=target_extractor,
     forward_arg_extractor=forward_arg_extractor,
     additional_forward_arg_extractor=additional_forward_arg_extractor,
-    mask_token_id=processor.tokenizer.mask_token_id,
 )
 
 

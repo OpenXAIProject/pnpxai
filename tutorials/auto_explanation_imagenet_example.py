@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import DataLoader
-from pnpxai import AutoExplanation
+from pnpxai import AutoExplanationForImageClassification
 
 from helpers import get_imagenet_dataset, get_torchvision_model, denormalize_image
 
@@ -16,10 +16,9 @@ dataset = get_imagenet_dataset(transform, indices=range(1000))
 loader = DataLoader(dataset, batch_size=4, shuffle=False)
 
 # create auto explanation
-expr = AutoExplanation(
+expr = AutoExplanationForImageClassification(
     model=model.to(device),
     data=loader,
-    modality='image',
     input_extractor=lambda batch: batch[0].to(device),
     label_extractor=lambda batch: batch[-1].to(device),
     target_extractor=lambda outputs: outputs.argmax(-1).to(device),
