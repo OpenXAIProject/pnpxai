@@ -7,9 +7,9 @@ from torch.nn.modules import Module
 from pnpxai.explainers.types import Tensor, TensorOrTupleOfTensors
 from pnpxai.explainers.base import Explainer
 from pnpxai.explainers import GradCam
-from pnpxai.metrics.base import Metric
 from pnpxai.utils import format_into_tuple, format_into_tuple_all
 from pnpxai.explainers.utils.postprocess import PostProcessor
+from pnpxai.evaluator.metrics.base import Metric
 
 
 BaselineFunction = Union[Callable[[Tensor], Tensor], Tuple[Callable[[Tensor], Tensor]]]
@@ -82,6 +82,7 @@ class PixelFlipping(Metric):
             forward_args=forward_args,
             additional_forward_args=additional_forward_args,
             attributions=attributions,
+            channel_dim=self.channel_dim,
             baseline_fn=self.baseline_fn,
             attention_mask=attention_mask or (None,)*len(format_into_tuple(forward_args)),
         )
@@ -111,6 +112,7 @@ class PixelFlipping(Metric):
 
             valid_n_features = (~attrs.isinf()).sum(-1)
             n_flipped_per_step = valid_n_features // self.n_steps
+            n_flipped_per_step = n_flipped_per_step.clamp(min=1) # ensure at least a pixel flipped
             sorted_indices = torch.argsort(
                 attrs,
                 descending=descending,
@@ -122,17 +124,16 @@ class PixelFlipping(Metric):
                 n_flipped = n_flipped_per_step * step
                 if step + 1 == self.n_steps:
                     n_flipped = valid_n_features
-
                 is_index_of_flipped = (
                     F.one_hot(n_flipped-1, num_classes=attrs.size(-1)).to(self.device)
                     .flip(-1).cumsum(-1).flip(-1)
                 )
-
-                is_flipped = _sort_by_order(is_index_of_flipped, sorted_indices.argsort(-1))
+                is_flipped = _sort_by_order(
+                    is_index_of_flipped, sorted_indices.argsort(-1))
                 is_flipped = _recover_shape_if_flattened(is_flipped, original_size)
                 is_flipped = _match_channel_dim_if_pooled(
                     is_flipped,
-                    self.channel_dim,
+                    formatted['channel_dim'][pos],
                     forward_arg.size()
                 )
 
@@ -382,7 +383,7 @@ def _extract_target_probs(probs, targets):
 def _sort_by_order(x, permutation):
     d1, d2 = x.size()
     ret = x[
-        torch.arange(d1).unsqueeze(1).repeat((1, d2)).flatten(),
+        torch.arange(d1).unsqueeze(1).repeat((1, d2)).flatten().to(x.device),
         permutation.flatten().to(x.device)
     ].view(d1, d2)
     return ret

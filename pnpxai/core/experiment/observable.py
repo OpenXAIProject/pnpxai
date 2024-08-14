@@ -1,7 +1,7 @@
 from typing import Optional
 from pnpxai.core.experiment.manager import ExperimentManager
 from pnpxai.explainers.base import Explainer
-from pnpxai.metrics.base import Metric
+from pnpxai.evaluator.metrics.base import Metric
 
 
 class ExperimentObservableEvent:

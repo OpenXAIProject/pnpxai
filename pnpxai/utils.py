@@ -1,7 +1,7 @@
 import random
 from io import TextIOWrapper
 from contextlib import contextmanager
-from typing import Sequence, Callable, Any, Union, Optional
+from typing import Sequence, Callable, Any, Union, Optional, Tuple
 
 import numpy as np
 import torch
@@ -107,6 +107,12 @@ def format_into_tuple(obj: Any):
     elif isinstance(obj, type(None)):
         return ()
     return (obj,)
+
+
+def format_out_tuple_if_single(obj: Tuple[Any]):
+    if len(obj) == 1:
+        return obj[0]
+    return obj
 
 
 def format_into_tuple_all(**kwargs):

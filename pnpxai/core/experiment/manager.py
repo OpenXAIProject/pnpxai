@@ -10,8 +10,8 @@ from pnpxai.core.experiment.cache import ExperimentCache
 from pnpxai.core._types import DataSource
 from pnpxai.explainers.base import Explainer
 from pnpxai.explainers.utils.postprocess import PostProcessor
-from pnpxai.metrics.base import Metric
-from pnpxai.utils import format_into_tuple
+from pnpxai.evaluator.metrics.base import Metric
+from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 
 
 def _index_combinations(*indices):
@@ -69,12 +69,14 @@ class ExperimentManager:
 
     def cache_explanations(
         self,
-        explainer_id,
-        data_ids,
+        explainer_id: int,
+        data_ids: List[int],
         explanations,
     ):
-        assert len(explanations) == len(data_ids)
-        for idx, explanation in zip(data_ids, explanations):
+        explanations = format_into_tuple(explanations)
+        assert all(len(expl) == len(data_ids) for expl in explanations)
+        for idx, *explanation in zip(data_ids, *explanations):
+            explanation = format_into_tuple(explanation)
             self._cache.set_explanation(idx, explainer_id, explanation)
 
     def cache_evaluations(
@@ -85,10 +87,12 @@ class ExperimentManager:
         data_ids: List[int],
         evaluations: DataSource,
     ):
-        assert len(evaluations) == len(data_ids)
-        for idx, evaluation in zip(data_ids, evaluations):
+        evaluations = format_into_tuple(evaluations)
+        assert all(len(ev) == len(data_ids) for ev in evaluations)
+        for idx, *evaluation in zip(data_ids, *evaluations):
+            evaluation = format_into_tuple(evaluation)
             self._cache.set_evaluation(
-                idx, explainer_id, metric_id, postprocessor_id, evaluation)
+                idx, explainer_id, postprocessor_id, metric_id, evaluation)
 
     def get_data_ids(self) -> Sequence[int]:
         return self._data_ids
@@ -133,7 +137,10 @@ class ExperimentManager:
         return self._explainers[explainer_id]
 
     def get_explanation_by_id(self, data_id: int, explainer_id: int):
-        return self._cache.get_explanation(data_id, explainer_id)
+        cached = self._cache.get_explanation(data_id, explainer_id)
+        if isinstance(cached, Tuple):
+            return format_out_tuple_if_single(cached)
+        return cached # This may be None
 
     def get_postprocessor_by_id(self, postprocessor_id: int):
         return self._postprocessors[postprocessor_id]
@@ -148,8 +155,11 @@ class ExperimentManager:
         postprocessor_id: int,
         metric_id: int
     ):
-        return self._cache.get_evaluation(
+        cached = self._cache.get_evaluation(
             data_id, explainer_id, postprocessor_id, metric_id)
+        if isinstance(cached, Tuple):
+            return format_out_tuple_if_single(cached)
+        return cached # This may be None
 
     def batch_data_by_ids(
         self,
@@ -197,9 +207,19 @@ class ExperimentManager:
         return self._format_batch(batch)
 
     def _format_batch(self, batch):
-        if torch.is_tensor(batch[0]):
-            return torch.stack(batch)
-        return batch            
+        if isinstance(batch[0], Tuple):
+            cnt = len(batch[0])
+            batch = [[data[i] for data in batch] for i in range(cnt)]
+        else:
+            batch = [batch]
+        formatted = *(self._stack_batch(b) for b in batch),
+        formatted = format_out_tuple_if_single(formatted)
+        return formatted
+
+    def _stack_batch(self, single_batch):
+        if torch.is_tensor(single_batch[0]):
+            return torch.stack(single_batch)
+        return single_batch            
 
     def add_explainer(self, explainer: Explainer) -> int:
         explainer_id = len(self._explainers)

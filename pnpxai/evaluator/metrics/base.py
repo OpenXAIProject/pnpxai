@@ -3,6 +3,7 @@ import sys
 import warnings
 from typing import Optional, Union, Callable, Tuple
 
+import copy
 import torch
 from torch import nn
 
@@ -28,9 +29,18 @@ class Metric(ABC):
         self.explainer = explainer
         self.device = next(model.parameters()).device
 
+    def copy(self):
+        return copy.copy(self)
+
     def set_explainer(self, explainer: Explainer):
         assert self.model is explainer.model, 'Must have same model of metric.'
-        self.explainer = explainer
+        clone = self.copy()
+        clone.explainer = explainer
+        return clone
+
+    def set_kwargs(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
         return self
 
     def evaluate(

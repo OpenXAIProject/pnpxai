@@ -1,9 +1,12 @@
+from typing import Optional
 from torch import Tensor, nn
 from captum.attr import LayerGradCam, LayerAttribution
+from optuna.trial import Trial
 
+from pnpxai.utils import format_into_tuple
+from pnpxai.evaluator.optimizer.utils import generate_param_key
 from .base import Explainer
 from .utils import find_cam_target_layer
-from pnpxai.utils import format_into_tuple
 
 
 class GradCam(Explainer):
@@ -35,3 +38,11 @@ class GradCam(Explainer):
             interpolate_mode=self.interpolate_mode,
         )
         return upsampled
+
+    def suggest_tunables(self, trial: Trial, key: Optional[str]=None):
+        return {
+            'interpolate_mode': trial.suggest_categorical(
+                generate_param_key(key, 'interpolate_mode'),
+                choices=['bilinear', 'bicubic'],
+            ),
+        }

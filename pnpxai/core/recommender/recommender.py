@@ -1,5 +1,7 @@
 from typing import List, Type, Dict, Set, Any, Sequence, Tuple
+from dataclasses import dataclass, asdict
 from tabulate import tabulate
+
 from pnpxai.core._types import Modality, ExplanationType, Model
 from pnpxai.core.detector import detect_model_architecture
 from pnpxai.core.detector.types import (
@@ -26,11 +28,12 @@ from pnpxai.explainers import (
     LRPEpsilonGammaBox,
     LRPEpsilonPlus,
     LRPEpsilonAlpha2Beta1,
+    RAP,
     AttentionRollout,
     TransformerAttribution,
 )
-from pnpxai.metrics.base import Metric
-from pnpxai.metrics import (
+from pnpxai.evaluator.metrics.base import Metric
+from pnpxai.evaluator.metrics import (
     MuFidelity,
     Sensitivity,
     Complexity,
@@ -38,10 +41,6 @@ from pnpxai.metrics import (
     LeRF,
     AbPC,
     AVAILABLE_METRICS,
-)
-
-from ._types import (
-    RecommenderOutput,
 )
 
 
@@ -72,11 +71,11 @@ DEFAULT_EXPLAINER_MAP = {
         "module_types": [Linear, Convolution, LSTM, RNN, Attention],
     },
     SmoothGrad: {
-        "modalities": ["text", ("image", "text")],
+        "modalities": ["image", "text", ("image", "text")],
         "module_types": [Linear, Convolution, LSTM, RNN, Attention],
     },
     VarGrad: {
-        "modalities": ["text", ("image", "text")],
+        "modalities": ["image", "text", ("image", "text")],
         "module_types": [Linear, Convolution, LSTM, RNN, Attention],
     },
     IntegratedGradients: {
@@ -99,6 +98,10 @@ DEFAULT_EXPLAINER_MAP = {
         "modalities": ["image", "text", ("image", "text")],
         "module_types": [Convolution],
     },
+    RAP: {
+        'modalities': ['image'],
+        'module_types': [Linear, Convolution],
+    },
     # AttentionRollout: {
     #     "modalities": ["text", ("image", "text")],
     #     "module_types": [Attention],
@@ -109,19 +112,20 @@ DEFAULT_EXPLAINER_MAP = {
     # },
 }
 
-DEFAULT_METRIC_MAP = {
-    MuFidelity: {
-        'modalities': ['image', 'text'],
-    },
-    Sensitivity: {
-        'modalities': ['image', 'text'],
-    },
-    Complexity: {
-        'modalities': ['image'],
-    }
-}
 
 CAM_BASED_EXPLAINERS = {GradCam, GuidedGradCam}
+
+
+@dataclass
+class RecommenderOutput:
+    detected_architectures: Set[ModuleType]
+    explainers: list
+
+    def print_tabular(self):
+        print(tabulate([
+            [k, [v.__name__ for v in vs]]
+            for k, vs in asdict(self).items()
+        ]))
 
 
 def _sort_by_name(vals):
@@ -154,7 +158,7 @@ class XaiRecommender:
     def _build_maps(self):
         self._build_modality_to_explainers_map()
         self._build_architecture_to_explainers_map()
-        self._build_explainer_to_metrics_map()
+        # self._build_explainer_to_metrics_map()
 
     def _build_modality_to_explainers_map(self):
         map_data = {}
@@ -174,15 +178,15 @@ class XaiRecommender:
                 map_data[arch].add(explainer_type)
         self.architecture_to_explainers_map = RecommendationMap(map_data, ["architecture", "explainers"])
 
-    def _build_explainer_to_metrics_map(self):
-        map_data = {}
-        for explainer_type in self._map_data:
-            for metric_type in AVAILABLE_METRICS:
-                if explainer_type not in map_data:
-                    map_data[explainer_type] = set()
-                if explainer_type.EXPLANATION_TYPE == metric_type.SUPPORTED_EXPLANATION_TYPE:
-                    map_data[explainer_type].add(metric_type)
-        self.explainer_to_metrics_map = RecommendationMap(map_data, ["explainer", "metrics"])
+    # def _build_explainer_to_metrics_map(self):
+    #     map_data = {}
+    #     for explainer_type in self._map_data:
+    #         for metric_type in AVAILABLE_METRICS:
+    #             if explainer_type not in map_data:
+    #                 map_data[explainer_type] = set()
+    #             if explainer_type.EXPLANATION_TYPE == metric_type.SUPPORTED_EXPLANATION_TYPE:
+    #                 map_data[explainer_type].add(metric_type)
+    #     self.explainer_to_metrics_map = RecommendationMap(map_data, ["explainer", "metrics"])
 
     def add_explainer(
             self,
@@ -246,21 +250,21 @@ class XaiRecommender:
             explainers = explainers.difference(CAM_BASED_EXPLAINERS)
         return list(explainers)
 
-    def _suggest_metrics(self, explainers: List[Type[Explainer]]):
-        """
-        Suggests evaluation metrics based on the list of compatible explainers.
+    # def _suggest_metrics(self, explainers: List[Type[Explainer]]):
+    #     """
+    #     Suggests evaluation metrics based on the list of compatible explainers.
 
-        Args:
-        - methods (List[Type[Explainer]]): List of explainers supported for the given scenario.
+    #     Args:
+    #     - methods (List[Type[Explainer]]): List of explainers supported for the given scenario.
 
-        Returns:
-        - List[Type[EvaluationMetric]]: List of compatible evaluation metrics for the explainers.
-        """
-        metrics = set.union(*(
-            self.explainer_to_metrics_map.data.get(explainer, set())
-            for explainer in explainers
-        ))
-        return list(metrics)
+    #     Returns:
+    #     - List[Type[EvaluationMetric]]: List of compatible evaluation metrics for the explainers.
+    #     """
+    #     metrics = set.union(*(
+    #         self.explainer_to_metrics_map.data.get(explainer, set())
+    #         for explainer in explainers
+    #     ))
+    #     return list(metrics)
 
     def recommend(self, modality: Modality, model: Model):
         """
@@ -276,11 +280,11 @@ class XaiRecommender:
         """
         arch = detect_model_architecture(model)
         explainers = self._filter_explainers(modality, arch)
-        metrics = self._suggest_metrics(explainers)
+        # metrics = self._suggest_metrics(explainers)
         return RecommenderOutput(
-            architecture=arch,
+            detected_architectures=arch,
             explainers=_sort_by_name(explainers),
-            metrics=_sort_by_name(metrics),
+            # metrics=_sort_by_name(metrics),
         )
 
 

@@ -9,6 +9,14 @@ zennit
 pytest>7.0.0
 pyyaml>=5.2
 tabulate
+shap
+lime
+timm
+xgboost
+flask
+flask-cors
+flask-restx
+optuna
 
 # for text explainers
 transformers>=4.0.0
