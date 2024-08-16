@@ -54,6 +54,9 @@ class BaselineFunction:
         self.method = method
         self.kwargs = kwargs
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}(method={self.method})"
+
     @property
     def modality(self):
         if self.method in BASELINE_METHODS_FOR_IMAGE:

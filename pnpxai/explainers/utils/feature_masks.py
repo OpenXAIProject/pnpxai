@@ -107,6 +107,9 @@ class FeatureMaskFunction:
         self.method = method
         self.kwargs = kwargs
 
+    def __repr__(self):
+        return f"{self.__class__.__name__}(method={self.method})"
+
     @property
     def modality(self):
         if self.method in FEATURE_MASK_FUNCTIONS_FOR_IMAGE:

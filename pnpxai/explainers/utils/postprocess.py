@@ -66,7 +66,7 @@ class PostProcessor:
         self.channel_dim = channel_dim
 
     def __repr__(self):
-        return f"PostProcessor(pooling_method='{self.pooling_method}', normalization_method='{self.normalization_method}', channel_dim={self.channel_dim})"
+        return f"PostProcessor(pooling_method={self.pooling_method}, normalization_method={self.normalization_method})"
 
     def set_channel_dim(self, channel_dim: int):
         self.channel_dim = channel_dim

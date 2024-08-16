@@ -18,6 +18,15 @@ from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 ABC = abc.ABC if sys.version_info >= (3, 4) else abc.ABCMeta(str('ABC'), (), {})
 
 
+NON_DISPLAYED_ATTRS = [
+    'model',
+    'forward_arg_extractor',
+    'additional_forward_args',
+    'device',
+    'n_classes',
+    'zennit_composite',
+]
+
 class Explainer(ABC):
     EXPLANATION_TYPE: ExplanationType = "attribution"
 
@@ -32,6 +41,13 @@ class Explainer(ABC):
         self.forward_arg_extractor = forward_arg_extractor
         self.additional_forward_arg_extractor = additional_forward_arg_extractor
         self.device = next(model.parameters()).device
+
+    def __repr__(self):
+        displayed_attrs = ', '.join([
+            f'{k}={v}' for k, v in self.__dict__.items()
+            if k not in NON_DISPLAYED_ATTRS and v is not None]
+        )
+        return f"{self.__class__.__name__}({displayed_attrs})"
 
     def _extract_forward_args(
             self,

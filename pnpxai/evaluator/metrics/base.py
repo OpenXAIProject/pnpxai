@@ -15,6 +15,13 @@ from pnpxai.explainers.utils.postprocess import PostProcessor
 # Ensure compatibility with Python 2/3
 ABC = abc.ABC if sys.version_info >= (3, 4) else abc.ABCMeta(str('ABC'), (), {})
 
+NON_DISPLAYED_ATTRS = [
+    'model',
+    'explainer',
+    'device',
+    'prob_fn',
+    'pred_fn',
+]
 
 class Metric(ABC):
     SUPPORTED_EXPLANATION_TYPE: ExplanationType = "attribution"
@@ -28,6 +35,13 @@ class Metric(ABC):
         self.model = model.eval()
         self.explainer = explainer
         self.device = next(model.parameters()).device
+
+    def __repr__(self):
+        displayed_attrs = ', '.join([
+            f'{k}={v}' for k, v in self.__dict__.items()
+            if k not in NON_DISPLAYED_ATTRS and v is not None]
+        )
+        return f"{self.__class__.__name__}({displayed_attrs})"
 
     def copy(self):
         return copy.copy(self)
