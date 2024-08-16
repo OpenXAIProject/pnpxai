@@ -4,9 +4,8 @@ import torch
 from torch import Tensor, nn
 
 from pnpxai.core._types import Model, DataSource, Task
-from pnpxai.explainers._explainer import Explainer
+from pnpxai.explainers.base import Explainer
 from pnpxai.explainers.rap.rap import RelativeAttributePropagation
-from pnpxai.explainers.utils.post_process import postprocess_attr
 
 
 class RAP(Explainer):
