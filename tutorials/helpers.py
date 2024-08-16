@@ -83,10 +83,12 @@ def get_livertumor_dataset(
     if indices is not None:
         return Subset(dataset, indices=indices)
     indices = list(range(len(dataset)))
-    subset = Subset(dataset, indices=indices[:subset_size])
+    # subset = Subset(dataset, indices=indices[:subset_size])
+    subset = Subset(dataset, indices=indices[900:1300])
     return subset
 
 
+'''
 def get_livertumor_model(model_dir):
     from models.liver_tumor import ResNet50
     import torch
@@ -100,6 +102,45 @@ def get_livertumor_model(model_dir):
         transforms.ToTensor(),
         transforms.Resize((224, 224), antialias=True),
         transforms.Normalize(mean=[.5], std=[.5]),
+    ])
+
+    return model, transform
+'''
+def get_livertumor_model(model_dir):
+    from collections import OrderedDict
+    from models.liver_tumor import ResNet50
+    import torch
+    from torchvision import transforms
+
+    model = ResNet50(in_channels=1, num_classes=2)
+    checkpoint = torch.load(model_dir)
+
+    old_keys = list(checkpoint.keys())
+    key_mappings = [
+        ('module.model', 'model')
+    ]
+    new_keys = []
+    for idx, key in enumerate(checkpoint):
+        new_key = key
+        for key_mapping in key_mappings:
+            new_key = new_key.replace(key_mapping[0], key_mapping[1])
+        new_keys.append(new_key)
+    new_checkpoint = OrderedDict()
+    for i, new_key in enumerate(new_keys):
+        new_checkpoint[new_key] = checkpoint[old_keys[i]]
+    del checkpoint
+
+    model.load_state_dict(new_checkpoint, strict=True)
+
+    height, width = 512, 512
+    diagonal = int((height ** 2 + width ** 2) ** 0.5)
+    padding = (diagonal - height) // 2, (diagonal - width) // 2
+
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        # transforms.Pad(padding),
+        transforms.Resize((224, 224), antialias=False),
+        # transforms.Normalize(mean=[.5], std=[.5]),
     ])
 
     return model, transform
