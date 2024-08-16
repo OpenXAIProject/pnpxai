@@ -102,14 +102,14 @@ DEFAULT_EXPLAINER_MAP = {
         'modalities': ['image'],
         'module_types': [Linear, Convolution],
     },
-    # AttentionRollout: {
-    #     "modalities": ["text", ("image", "text")],
-    #     "module_types": [Attention],
-    # },
-    # TransformerAttribution: {
-    #     "modalities": ["text", ("image", "text")],
-    #     "module_types": [Attention],
-    # },
+    AttentionRollout: {
+        "modalities": ["text", ("image", "text")],
+        "module_types": [Attention],
+    },
+    TransformerAttribution: {
+        "modalities": ["text", ("image", "text")],
+        "module_types": [Attention],
+    },
 }
 
 
