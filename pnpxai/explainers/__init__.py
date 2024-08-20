@@ -4,6 +4,7 @@ from pnpxai.explainers.gradient import Gradient
 from pnpxai.explainers.grad_x_input import GradientXInput
 from pnpxai.explainers.smooth_grad import SmoothGrad
 from pnpxai.explainers.var_grad import VarGrad
+from pnpxai.explainers.full_grad import FullGrad
 from pnpxai.explainers.integrated_gradients import IntegratedGradients
 from pnpxai.explainers.lrp import (
     LRPBase,

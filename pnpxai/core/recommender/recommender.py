@@ -23,6 +23,7 @@ from pnpxai.explainers import (
     GradientXInput,
     SmoothGrad,
     VarGrad,
+    FullGrad,
     IntegratedGradients,
     LRPUniformEpsilon,
     LRPEpsilonGammaBox,
@@ -77,6 +78,10 @@ DEFAULT_EXPLAINER_MAP = {
     VarGrad: {
         "modalities": ["image", "text", ("image", "text")],
         "module_types": [Linear, Convolution, LSTM, RNN, Attention],
+    },
+    FullGrad: {
+        'modalities': ['image'],
+        'module_types': [Convolution],
     },
     IntegratedGradients: {
         "modalities": ["image", "text", ("image", "text")],

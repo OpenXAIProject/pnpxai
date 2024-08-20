@@ -1,5 +1,6 @@
 from typing import Callable, Optional, Tuple, Union
 
+import torch
 from torch import Tensor
 from torch.nn import Module
 
@@ -22,6 +23,9 @@ class ZennitExplainer(Explainer):
     def __init_subclass__(cls) -> None:
         cls.attribute = set_n_classes_before(cls.attribute)
         return super().__init_subclass__()
+
+    def _format_targets(self, targets):
+        return torch.eye(self.n_classes)[targets.tolist()].to(self.device)
 
 
 def set_n_classes_before(func):
