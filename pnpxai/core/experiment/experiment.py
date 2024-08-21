@@ -2,6 +2,7 @@ from typing import Any, Callable, Optional, Sequence, Union, List, Dict, Literal
 import time
 import warnings
 import itertools
+import threading
 
 import torch
 from torch import Tensor
@@ -116,6 +117,8 @@ class Experiment(Observable):
         self.modality = modality
         self.target_labels = target_labels
         self.reset_errors()
+
+        self._lock = threading.Lock()
 
     def reset_errors(self):
         self._errors: List[BaseException] = []
@@ -253,51 +256,52 @@ class Experiment(Observable):
         return_study: bool=False,
         **kwargs, # sampler kwargs
     ):
-        assert n_trials is None or timeout is None
-        data = self.manager.batch_data_by_ids([data_id])
-        explainer = self.manager.get_explainer_by_id(explainer_id)
-        postprocessor = self.manager.get_postprocessor_by_id(0) # sample postprocessor to ensure channel_dim
-        metric = self.manager.get_metric_by_id(metric_id)
-        suggest_methods = suggest_methods or create_default_suggest_methods(explainer)
-        objective = Objective(
-            explainer=explainer,
-            metric=metric,
-            suggest_methods=suggest_methods,
-            channel_dim=postprocessor.channel_dim,
-            inputs=self.input_extractor(data),
-            targets=self._get_targets([data_id])
-        )
-        if sampler == 'grid':
-            kwargs['search_space'] = search_space or create_default_search_space(explainer)
-        if timeout is None:
-            n_trials = n_trials or get_default_n_trials(sampler)
+        with self._lock:
+            assert n_trials is None or timeout is None
+            data = self.manager.batch_data_by_ids([data_id])
+            explainer = self.manager.get_explainer_by_id(explainer_id)
+            postprocessor = self.manager.get_postprocessor_by_id(0) # sample postprocessor to ensure channel_dim
+            metric = self.manager.get_metric_by_id(metric_id)
+            suggest_methods = suggest_methods or create_default_suggest_methods(explainer)
+            objective = Objective(
+                explainer=explainer,
+                metric=metric,
+                suggest_methods=suggest_methods,
+                channel_dim=postprocessor.channel_dim,
+                inputs=self.input_extractor(data),
+                targets=self._get_targets([data_id])
+            )
+            if sampler == 'grid':
+                kwargs['search_space'] = search_space or create_default_search_space(explainer)
+            if timeout is None:
+                n_trials = n_trials or get_default_n_trials(sampler)
 
-        # optimize
-        study = optuna.create_study(
-            sampler=load_sampler(sampler, **kwargs),
-            direction=direction,
-        )
-        study.optimize(
-            objective,
-            n_trials=n_trials,
-            timeout=timeout,
-        )
+            # optimize
+            study = optuna.create_study(
+                sampler=load_sampler(sampler, **kwargs),
+                direction=direction,
+            )
+            study.optimize(
+                objective,
+                n_trials=n_trials,
+                timeout=timeout,
+            )
 
-        # update explainer
-        best_params = study.best_params.copy()
-        explainer_kwargs = format_params(best_params)
-        postprocessor_kwargs = {
-            'pooling_method': explainer_kwargs.pop('pooling_method', 'sumpos'),
-            'normalization_method': explainer_kwargs.pop('normalization_method', 'minmax'),
-            'channel_dim': objective.channel_dim,
-        }
-        opt_explainer = explainer.set_kwargs(**explainer_kwargs)
-        opt_postprocessor = PostProcessor(**postprocessor_kwargs)
-        opt_explainer_id = self.manager.add_explainer(opt_explainer)
-        opt_postprocessor_id = self.manager.add_postprocessor(opt_postprocessor) # TODO: find same postprocessor
-        if not return_study:
-            return opt_explainer_id, opt_postprocessor_id
-        return opt_explainer_id, opt_postprocessor_id, study
+            # update explainer
+            best_params = study.best_params.copy()
+            explainer_kwargs = format_params(best_params)
+            postprocessor_kwargs = {
+                'pooling_method': explainer_kwargs.pop('pooling_method', 'sumpos'),
+                'normalization_method': explainer_kwargs.pop('normalization_method', 'minmax'),
+                'channel_dim': objective.channel_dim,
+            }
+            opt_explainer = explainer.set_kwargs(**explainer_kwargs)
+            opt_postprocessor = PostProcessor(**postprocessor_kwargs)
+            opt_explainer_id = self.manager.add_explainer(opt_explainer)
+            opt_postprocessor_id = self.manager.add_postprocessor(opt_postprocessor) # TODO: find same postprocessor
+            if not return_study:
+                return opt_explainer_id, opt_postprocessor_id
+            return opt_explainer_id, opt_postprocessor_id, study
 
     def run(
         self,

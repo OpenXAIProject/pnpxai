@@ -59,8 +59,6 @@ class AutoExplanation(Experiment):
         label_extractor: Optional[Callable] = None,
         target_extractor: Optional[Callable] = None,
         target_labels: bool = False,
-        input_visualizer: Optional[Callable] = None,
-        target_visualizer: Optional[Callable] = None,
         **kwargs,
     ):
         self.modality = modality

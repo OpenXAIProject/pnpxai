@@ -268,53 +268,6 @@ class Experiment(Component):
 
         return record
 
-    def gen_handle_click(self, data_id, metric_inputs, bttn, placeholder):
-        @gr.render(inputs=[data_id] + metric_inputs, triggers=[bttn.click])
-        def inner_func(data_id, *metric_inputs):
-            metric_input = []
-            for metric in metric_inputs:
-                if metric:
-                    metric_input += metric
-                    
-            record = self.generate_record(data_id, metric_input)
-
-            pred = self.get_prediction(record)
-            gr.Textbox(label="Prediction result", value=pred)
-            
-
-            n_rows = len(record['explanations']) // PLOT_PER_LINE
-            n_rows = n_rows + 1 if len(record['explanations']) % PLOT_PER_LINE != 0 else n_rows
-            plots = []
-            figs = []
-            for i in range(n_rows):
-                with gr.Row():
-                    for j in range(PLOT_PER_LINE):
-                        if i*PLOT_PER_LINE+j < len(record['explanations']):
-                            exp_res = record['explanations'][i*PLOT_PER_LINE+j]
-                            fig = self.get_exp_plot(data_id, exp_res)
-                            plot_obj = gr.Plot(value=go.Figure(), label=f"{exp_res['explainer_nm']} ({exp_res['mode']})", visible=False)
-                            plots.append(plot_obj)
-                            figs.append(fig)
-                        else:
-                            plots.append(gr.Plot(value=None, label="Blank", visible=False))
-                        
-            def show_result():
-                _plots = []
-                for i in range(n_rows):
-                    for j in range(PLOT_PER_LINE):
-                        if i*PLOT_PER_LINE+j < len(record['explanations']):
-                            _plots.append(gr.Plot(value=figs[i*PLOT_PER_LINE+j], visible=True))
-                        else:
-                            _plots.append(gr.Plot(value=None, visible=True))
-                return _plots
-            
-            invisible = gr.Number(value=0, visible=False)
-            invisible.change(show_result, outputs=plots)
-            invisible.value = 1
-
-
-        return inner_func
-
 
     def show(self):
         with gr.Row():
@@ -361,81 +314,68 @@ class Experiment(Component):
 
         data_id = gallery.selected_index
         bttn = gr.Button("Explain", variant="primary")
-        loaded = gr.State(False)
 
-        @gr.render(triggers=[bttn.click])
-        def generate_loading_box():
-            obj = gr.Plot(label="Loading...", visible=True)
-            controller = gr.Number(value=0, visible=False)
-            def hide_loading():
-                while not loaded.value:
-                    time.sleep(0.1)
-                return gr.update(visible=False)
-            controller.change(hide_loading, outputs=obj)
-            loaded.value = False
-            controller.value = 1
+        buffer_size =  2 * len(explainer_names)
+        buffer_n_rows = buffer_size // PLOT_PER_LINE
+        buffer_n_rows = buffer_n_rows + 1 if buffer_size % PLOT_PER_LINE != 0 else buffer_n_rows
 
-        @gr.render(inputs=[data_id] + metric_inputs, triggers=[bttn.click])
-        def explain(data_id, *metric_inputs):
-            try:
-                metric_input = []
-                for metric in metric_inputs:
-                    if metric:
-                        metric_input += metric
-                        
-                record = self.generate_record(data_id, metric_input)
+        plots = [gr.Textbox(label="Prediction result", visible=False)]
+        for i in range(buffer_n_rows):
+            with gr.Row():
+                for j in range(PLOT_PER_LINE):
+                    plot = gr.Image(value=None, label="Blank", visible=False)
+                    plots.append(plot)
 
-                pred = self.get_prediction(record)
-                gr.Textbox(label="Prediction result", value=pred)
-                
-
-                n_rows = len(record['explanations']) // PLOT_PER_LINE
-                n_rows = n_rows + 1 if len(record['explanations']) % PLOT_PER_LINE != 0 else n_rows
-                plots = []
-                figs = []
-                for i in range(n_rows):
-                    with gr.Column():
-                        with gr.Row():
-                            for j in range(PLOT_PER_LINE):
-                                if i*PLOT_PER_LINE+j < len(record['explanations']):
-                                    exp_res = record['explanations'][i*PLOT_PER_LINE+j]
-                                    path = self.get_exp_plot(data_id, exp_res)
-                                    plot_obj = gr.Image(value=path, label=f"{exp_res['explainer_nm']} ({exp_res['mode']})", visible=False)
-                                    # plot_obj = gr.Plot(value=go.Figure(), label=f"{exp_res['explainer_nm']} ({exp_res['mode']})", visible=False)
-                                    plots.append(plot_obj)
-                                    figs.append(path)
-                                else:
-                                    # plots.append(gr.Plot(value=None, label="Blank", visible=False))
-                                    plots.append(gr.Image(value=None, label="Blank", visible=False))
-                
-                def show_result():
-                    _plots = []
-                    for i in range(n_rows):
-                        for j in range(PLOT_PER_LINE):
-                            if i*PLOT_PER_LINE+j < len(record['explanations']):
-                                # _plots.append(gr.Plot(value=figs[i*PLOT_PER_LINE+j], visible=True))
-                                _plots.append(gr.Image(value=figs[i*PLOT_PER_LINE+j], visible=True))
-                            else:
-                                _plots.append(gr.Image(value=None, visible=True))
-                                # _plots.append(gr.Plot(value=None, visible=True))
-
-                    return _plots
-                
-                invisible = gr.Number(value=0, visible=False)
-                invisible.change(show_result, outputs=plots)
-                invisible.value = 1
-            except Exception as e:
-                gr.Error(f"Error: {e}")
-            finally:
-                loaded.value = True
+        def show_plots():
+            _plots = [gr.Textbox(label="Prediction result", visible=False)]
+            num_plots = sum([1 for info in self.explainer_checkbox_group.info if info['checked']])
+            n_rows = num_plots // PLOT_PER_LINE
+            n_rows = n_rows + 1 if num_plots % PLOT_PER_LINE != 0 else n_rows
+            _plots += [gr.Image(value=None, label="Blank", visible=True)] * (n_rows * PLOT_PER_LINE)
+            _plots += [gr.Image(value=None, label="Blank", visible=False)] * ((buffer_n_rows - n_rows) * PLOT_PER_LINE)
+            return _plots
         
-        @gr.render(triggers=[bttn.click])
-        def clear_cache():
+        def render_plots(data_id, *metric_inputs):
+            # Clear Cache Files
             cache_dir = f"{os.environ['GRADIO_TEMP_DIR']}/res"
             if not os.path.exists(cache_dir): os.makedirs(cache_dir)
             for f in os.listdir(cache_dir):
                 if len(f.split(".")[0]) == 16:
                     os.remove(os.path.join(cache_dir, f))
+
+            # Render Plots
+            metric_input = []
+            for metric in metric_inputs:
+                if metric:
+                    metric_input += metric
+                    
+            record = self.generate_record(data_id, metric_input)
+
+            pred = self.get_prediction(record)
+            plots = [gr.Textbox(label="Prediction result", value=pred, visible=True)]
+
+            num_plots = sum([1 for info in self.explainer_checkbox_group.info if info['checked']])
+            n_rows = num_plots // PLOT_PER_LINE
+            n_rows = n_rows + 1 if num_plots % PLOT_PER_LINE != 0 else n_rows
+
+            for i in range(n_rows):
+                for j in range(PLOT_PER_LINE):
+                    if i*PLOT_PER_LINE+j < len(record['explanations']):
+                        exp_res = record['explanations'][i*PLOT_PER_LINE+j]
+                        path = self.get_exp_plot(data_id, exp_res)
+                        plot_obj = gr.Image(value=path, label=f"{exp_res['explainer_nm']} ({exp_res['mode']})", visible=True)
+                        plots.append(plot_obj)
+                    else:
+                        plots.append(gr.Image(value=None, label="Blank", visible=True))
+            
+            plots += [gr.Image(value=None, label="Blank", visible=False)] * ((buffer_n_rows - n_rows) * PLOT_PER_LINE)
+
+            return plots
+        
+        bttn.click(show_plots, outputs=plots)
+        bttn.click(render_plots, inputs=[data_id] + metric_inputs, outputs=plots)
+
+
 
 class ExplainerCheckboxGroup(Component):
     def __init__(self, explainer_names, experiment, gallery):
@@ -561,7 +501,7 @@ class ExplainerCheckbox(Component):
             raise ValueError("Optimal explainer id is not found.")
 
     def show(self):
-        with gr.Accordion(self.explainer_name, open=True):
+        with gr.Accordion(self.explainer_name, open=False):
             self.default_check = gr.Checkbox(label="Default Parameter", value=True, interactive=True)
             self.opt_check = gr.Checkbox(label="Optimized Parameter (Not Optimal)", interactive=False)
 
@@ -569,7 +509,7 @@ class ExplainerCheckbox(Component):
             self.opt_check.select(self.optimal_on_select)
 
             self.bttn = gr.Button(value="Optimize", size="sm", variant="primary")
-            self.bttn.click(self.optimize, outputs=[self.opt_check, self.bttn])
+            self.bttn.click(self.optimize, outputs=[self.opt_check, self.bttn], queue=True, concurrency_limit=1)
         
 
 class ExpRes(Component):
@@ -651,13 +591,8 @@ class ImageClsApp(App):
         """
 
     def launch(self, **kwargs):
-        css = """
-        .plotly .svg-container {width: 100%; aspect-ratio: 10 / 9;}
-        .plot-container {width: 100%; aspect-ratio: 10 / 9;}
-        """
         with gr.Blocks(
             title=self.name,
-            css=css
         ) as demo:
             cwd = os.getcwd()
             gr.set_static_paths(cwd)
@@ -729,7 +664,4 @@ experiments['experiment2'] = {
 
 app = ImageClsApp(experiments)
 demo = app.launch()
-# demo.launch(favicon_path="data/static/XAI-Top-PnP.svg", share=True)
-demo.launch(favicon_path="data/static/XAI-Top-PnP.svg")
-
-from torchvision import models
+demo.launch(favicon_path="data/static/XAI-Top-PnP.svg", share=True)
