@@ -174,7 +174,7 @@ class ExperimentManager:
         for data_id in data_ids:
             output = self.get_output_by_id(data_id)
             if output is None:
-                raise KeyError(f"Output for {data} does not exist in cache.")
+                raise KeyError(f"Output for {data_id} does not exist in cache.")
             batch.append(output)
         return self._format_batch(batch)
 

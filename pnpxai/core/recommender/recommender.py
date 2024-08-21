@@ -47,11 +47,11 @@ from pnpxai.evaluator.metrics import (
 # space, required, unsupported
 DEFAULT_EXPLAINER_MAP = {
     GradCam: {
-        "modalities": ["image"],
+        "modalities": ["image", "time-series"],
         "module_types": [Convolution],
     },
     GuidedGradCam: {
-        "modalities": ["image"],
+        "modalities": ["image", "time-series"],
         "module_types": [Convolution],
     },
     Lime: {
@@ -63,51 +63,51 @@ DEFAULT_EXPLAINER_MAP = {
         "module_types": [Linear, Convolution, LSTM, RNN, Attention],
     },
     Gradient: {
-        "modalities": ["image", "text", ("image", "text")],
+        "modalities": ["image", "text", "time-series", ("image", "text")],
         "module_types": [Linear, Convolution, LSTM, RNN, Attention],
     },
     GradientXInput: {
-        "modalities": ["image", "text", ("image", "text")],
+        "modalities": ["image", "text", "time-series", ("image", "text")],
         "module_types": [Linear, Convolution, LSTM, RNN, Attention],
     },
     SmoothGrad: {
-        "modalities": ["image", "text", ("image", "text")],
+        "modalities": ["image", "text", "time-series", ("image", "text")],
         "module_types": [Linear, Convolution, LSTM, RNN, Attention],
     },
     VarGrad: {
-        "modalities": ["image", "text", ("image", "text")],
+        "modalities": ["image", "text", "time-series", ("image", "text")],
         "module_types": [Linear, Convolution, LSTM, RNN, Attention],
     },
     IntegratedGradients: {
-        "modalities": ["image", "text", ("image", "text")],
+        "modalities": ["image", "text", ("image", "text"), "time-series"],
         "module_types": [Linear, Convolution, Attention],
     },
     LRPUniformEpsilon: {
-        "modalities": ["image", "text", ("image", "text")],
+        "modalities": ["image", "text", ("image", "text"), "time-series"],
         "module_types": [Linear, Convolution, LSTM, RNN, Attention],
     },
     LRPEpsilonGammaBox: {
-        "modalities": ["image", "text", ("image", "text")],
+        "modalities": ["image", "text", ("image", "text"), "time-series"],
         "module_types": [Convolution],
     },
     LRPEpsilonPlus: {
         "module_types": [Convolution],
-        "modalities": ["image", "text", ("image", "text")],
+        "modalities": ["image", "text", ("image", "text"), "time-series"],
     },
     LRPEpsilonAlpha2Beta1: {
-        "modalities": ["image", "text", ("image", "text")],
+        "modalities": ["image", "text", ("image", "text"), "time-series"],
         "module_types": [Convolution],
     },
     RAP: {
-        'modalities': ['image'],
+        'modalities': ['image', "time-series"],
         'module_types': [Linear, Convolution],
     },
     AttentionRollout: {
-        "modalities": ["text", ("image", "text")],
+        "modalities": ["text", "time-series", ("image", "text")],
         "module_types": [Attention],
     },
     TransformerAttribution: {
-        "modalities": ["text", ("image", "text")],
+        "modalities": ["text", "time-series", ("image", "text")],
         "module_types": [Attention],
     },
 }
@@ -136,7 +136,7 @@ class RecommendationMap:
     def __init__(self, data: Dict[Any, Set[Any]], headers: Sequence[str]) -> None:
         self.data = data
         self.headers = headers
-    
+
     def print_tabular(self):
         table = [self.headers]
         for k, vs in self.data.items():
@@ -167,7 +167,8 @@ class XaiRecommender:
                 if modality not in map_data:
                     map_data[modality] = set()
                 map_data[modality].add(explainer_type)
-        self.modality_to_explainers_map = RecommendationMap(map_data, ["modality", "explainers"])
+        self.modality_to_explainers_map = RecommendationMap(
+            map_data, ["modality", "explainers"])
 
     def _build_architecture_to_explainers_map(self):
         map_data = {}
@@ -176,7 +177,8 @@ class XaiRecommender:
                 if arch not in map_data:
                     map_data[arch] = set()
                 map_data[arch].add(explainer_type)
-        self.architecture_to_explainers_map = RecommendationMap(map_data, ["architecture", "explainers"])
+        self.architecture_to_explainers_map = RecommendationMap(
+            map_data, ["architecture", "explainers"])
 
     # def _build_explainer_to_metrics_map(self):
     #     map_data = {}
@@ -189,13 +191,14 @@ class XaiRecommender:
     #     self.explainer_to_metrics_map = RecommendationMap(map_data, ["explainer", "metrics"])
 
     def add_explainer(
-            self,
-            explainer_type: Type[Explainer],
-            supporting_modalities: List[Modality],
-            supporting_module_types: List[ModuleType],
-        ) -> None:
+        self,
+        explainer_type: Type[Explainer],
+        supporting_modalities: List[Modality],
+        supporting_module_types: List[ModuleType],
+    ) -> None:
         if explainer_type in self._map_data:
-            raise Exception(f"Explainer type '{explainer_type}' already exists.")
+            raise Exception(
+                f"Explainer type '{explainer_type}' already exists.")
         self._map_data[explainer_type] = {
             "modalities": supporting_modalities,
             "module_types": supporting_module_types,
@@ -205,18 +208,20 @@ class XaiRecommender:
     def remove_explainer(self, explainer_type: Type[Explainer]) -> Dict[Type[Explainer], Dict[str, List]]:
         removed = self._map_data.pop(explainer_type, None)
         if removed is None:
-            raise Exception(f"Explainer type '{explainer_type}' does not exist.")
+            raise Exception(
+                f"Explainer type '{explainer_type}' does not exist.")
         self._build_maps()
         return {explainer_type: removed}
 
     def update_explainer(
-            self,
-            explainer_type: Type[Explainer],
-            supporting_modalities: List[Modality],
-            supporting_module_types: List[ModuleType],
-        ) -> None:
+        self,
+        explainer_type: Type[Explainer],
+        supporting_modalities: List[Modality],
+        supporting_module_types: List[ModuleType],
+    ) -> None:
         if explainer_type not in self._map_data:
-            raise Exception(f"Explainer type '{explainer_type}' does not exist.")
+            raise Exception(
+                f"Explainer type '{explainer_type}' does not exist.")
         self._map_data[explainer_type] = {
             "modalities": supporting_modalities,
             "module_types": supporting_module_types,
@@ -224,10 +229,10 @@ class XaiRecommender:
         self._build_maps()
 
     def _filter_explainers(
-            self,
-            modality: Modality,
-            arch: Set[ModuleType],
-        ) -> List[Type[Explainer]]:
+        self,
+        modality: Modality,
+        arch: Set[ModuleType],
+    ) -> List[Type[Explainer]]:
         """
         Filters explainers based on the user's question, task, and model architecture.
 
@@ -240,12 +245,14 @@ class XaiRecommender:
         - List[Type[Explainer]]: List of compatible explainers based on the given inputs.
         """
         # question_to_method = QUESTION_TO_EXPLAINERS.get(question, set())
-        modality_to_explainers = self.modality_to_explainers_map.data.get(modality, set())
+        modality_to_explainers = self.modality_to_explainers_map.data.get(
+            modality, set())
         arch_to_explainers = set.union(*(
             self.architecture_to_explainers_map.data.get(module_type, set())
             for module_type in arch
         ))
-        explainers = set.intersection(modality_to_explainers, arch_to_explainers)
+        explainers = set.intersection(
+            modality_to_explainers, arch_to_explainers)
         if arch.difference({Convolution, Linear}):
             explainers = explainers.difference(CAM_BASED_EXPLAINERS)
         return list(explainers)
@@ -286,7 +293,3 @@ class XaiRecommender:
             explainers=_sort_by_name(explainers),
             # metrics=_sort_by_name(metrics),
         )
-
-
-
-

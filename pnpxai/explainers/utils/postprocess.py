@@ -18,6 +18,7 @@ RELEVANCE_POOLING_METHODS = {
     'posmaxnorm': lambda attrs, channel_dim: attrs.clamp(min=0).max(channel_dim)[0],
     'posl2norm': lambda attrs, channel_dim: attrs.clamp(min=0).pow(2).sum(channel_dim).sqrt(),
     'posl2normsq': lambda attrs, channel_dim: attrs.clamp(min=0).pow(2).sum(channel_dim),
+    'none': lambda attrs, channel_dim: attrs,
 }
 
 

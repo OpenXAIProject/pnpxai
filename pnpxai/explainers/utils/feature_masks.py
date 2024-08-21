@@ -217,6 +217,8 @@ def get_default_feature_mask_fn(modality: ModalityOrTupleOfModalities):
         return FeatureMaskFunction(method='felzenszwalb', scale=250)
     elif modality == 'text':
         return FeatureMaskFunction(method='no_mask')
+    elif modality == 'time-series':
+        return FeatureMaskFunction(method='no_mask')
     elif isinstance(modality, tuple):
         return tuple(get_default_feature_mask_fn(m) for m in modality)
     else:

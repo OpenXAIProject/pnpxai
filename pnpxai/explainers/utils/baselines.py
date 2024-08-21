@@ -11,25 +11,33 @@ from pnpxai.evaluator.optimizer.utils import generate_param_key
 def token_baseline_function(inputs: torch.Tensor, token_id: int, **kwargs):
     return torch.ones_like(inputs, dtype=torch.long) * token_id
 
+
 def zero_baseline_function(inputs, **kwargs):
     return torch.zeros_like(inputs)
+
+
+def mean_baseline_function(inputs, target_dim: int = -1, **kwargs):
+    return torch.mean(inputs, dim=target_dim, keepdim=True)
+
 
 def invert_baseline_function(inputs, **kwargs):
     return TF.invert(inputs)
 
+
 def gaussian_blur_baseline_function(
-        inputs,
-        kernel_size_x,
-        kernel_size_y,
-        sigma_x,
-        sigma_y,
-        **kwargs
-    ):
+    inputs,
+    kernel_size_x,
+    kernel_size_y,
+    sigma_x,
+    sigma_y,
+    **kwargs
+):
     return TF.gaussian_blur(
         inputs,
         kernel_size=[kernel_size_x, kernel_size_y],
         sigma=[sigma_x, sigma_y],
     )
+
 
 BASELINE_METHODS_FOR_IMAGE = {
     'zeros': zero_baseline_function,
@@ -41,13 +49,20 @@ BASELINE_METHODS_FOR_TEXT = {
     'mask_token': token_baseline_function,
 }
 
+BASELINE_METHODS_FOR_TIME_SERIES = {
+    'zeros': zero_baseline_function,
+    'mean': mean_baseline_function,
+}
+
 BASELINE_METHODS = {
     **BASELINE_METHODS_FOR_IMAGE,
     **BASELINE_METHODS_FOR_TEXT,
+    **BASELINE_METHODS_FOR_TIME_SERIES,
 }
 
 
 BaselineMethod = Literal['zeros', 'invert', 'gaussian_blur', 'mask_token']
+
 
 class BaselineFunction:
     def __init__(self, method: BaselineMethod, **kwargs):
@@ -88,8 +103,7 @@ class BaselineFunction:
     def __call__(self, inputs: torch.Tensor):
         return BASELINE_METHODS[self.method](inputs, **self.kwargs)
 
-
-    def suggest_tunables(self, trial: Trial, key: Optional[str]=None):
+    def suggest_tunables(self, trial: Trial, key: Optional[str] = None):
         method = trial.suggest_categorical(
             generate_param_key(key, 'method'),
             choices=list(self.available_methods.keys()),
@@ -120,20 +134,23 @@ class BaselineFunction:
                 'sigma_x': sigma_x,
                 'sigma_y': sigma_y,
             }
- 
+
 
 def get_default_baseline_function(
     modality: ModalityOrTupleOfModalities,
-    mask_token_id: Optional[int]=None
+    mask_token_id: Optional[int] = None
 ):
     if modality == 'image':
         return BaselineFunction(method='zeros')
     elif modality == 'text':
         return BaselineFunction(method='mask_token', token_id=mask_token_id)
+    elif modality == 'time-series':
+        return BaselineFunction(method='zeros')
     elif isinstance(modality, tuple):
         return tuple(get_default_baseline_function(m, mask_token_id) for m in modality)
     else:
-        raise NotImplementedError(f"There is no default baseline function for '{modality}'.")
+        raise NotImplementedError(
+            f"There is no default baseline function for '{modality}'.")
 
 
 BaselineMethodOrFunction = Union[BaselineMethod, BaselineFunction]

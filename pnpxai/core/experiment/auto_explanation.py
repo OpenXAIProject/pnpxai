@@ -17,7 +17,7 @@ from pnpxai.explainers.utils.postprocess import (
     get_default_channel_dim,
 )
 from pnpxai.evaluator.metrics import PIXEL_FLIPPING_METRICS
-from pnpxai.evaluator.metrics import(
+from pnpxai.evaluator.metrics import (
     MuFidelity,
     Sensitivity,
     Complexity,
@@ -37,6 +37,7 @@ DEFAULT_METRICS = [
     Complexity,
 ]
 
+
 class AutoExplanation(Experiment):
     """
     An extension of Experiment class with automatic explainers and evaluation metrics recommendation.
@@ -52,15 +53,16 @@ class AutoExplanation(Experiment):
         input_visualizer (Optional[Callable], optional): Custom function for visualizing input features. Defaults to None.
         target_visualizer (Optional[Callable], optional): Custom function for visualizing target labels. Defaults to None.
     """
+
     def __init__(
         self,
         model: Model,
         data: DataSource,
-        input_extractor: Optional[Callable]=None,
-        label_extractor: Optional[Callable]=None,
-        target_extractor: Optional[Callable]=None,
-        target_labels: bool=False,
-        channel_dim: Union[int, Tuple[int]]=1,
+        input_extractor: Optional[Callable] = None,
+        label_extractor: Optional[Callable] = None,
+        target_extractor: Optional[Callable] = None,
+        target_labels: bool = False,
+        channel_dim: Union[int, Tuple[int]] = 1,
     ):
         self.channel_dim = channel_dim
         super().__init__(
@@ -90,7 +92,7 @@ class AutoExplanation(Experiment):
         return all_postprocessors(self.channel_dim)
 
     def _load_default_metrics(self, model):
-        empty_metrics = [] # empty means that explainer is not assigned yet
+        empty_metrics = []  # empty means that explainer is not assigned yet
         for metric_type in DEFAULT_METRICS:
             metric = metric_type(model=model)
             default_kwargs = self._generate_default_kwargs_for_metric()
@@ -114,11 +116,11 @@ class AutoExplanationForImageClassification(AutoExplanation):
         self,
         model: Module,
         data: DataLoader,
-        input_extractor: Optional[Callable]=None,
-        label_extractor: Optional[Callable]=None,
-        target_extractor: Optional[Callable]=None,
-        target_labels: bool=False,
-        channel_dim: int=1,
+        input_extractor: Optional[Callable] = None,
+        label_extractor: Optional[Callable] = None,
+        target_extractor: Optional[Callable] = None,
+        target_labels: bool = False,
+        channel_dim: int = 1,
     ):
         self.recommended = XaiRecommender().recommend(modality='image', model=model)
         super().__init__(
@@ -151,13 +153,13 @@ class AutoExplanationForTextClassification(AutoExplanation):
         data: DataLoader,
         layer: TargetLayer,
         mask_token_id: int,
-        input_extractor: Optional[Callable]=None,
-        forward_arg_extractor: Optional[Callable]=None,
-        additional_forward_arg_extractor: Optional[Callable]=None,
-        label_extractor: Optional[Callable]=None,
-        target_extractor: Optional[Callable]=None,
-        target_labels: bool=False,
-        channel_dim: int=-1,
+        input_extractor: Optional[Callable] = None,
+        forward_arg_extractor: Optional[Callable] = None,
+        additional_forward_arg_extractor: Optional[Callable] = None,
+        label_extractor: Optional[Callable] = None,
+        target_extractor: Optional[Callable] = None,
+        target_labels: bool = False,
+        channel_dim: int = -1,
     ):
         self.layer = layer
         self.mask_token_id = mask_token_id
@@ -204,13 +206,13 @@ class AutoExplanationForVisualQuestionAnswering(AutoExplanation):
         data: DataLoader,
         layer: List[TargetLayer],
         mask_token_id: int,
-        input_extractor: Optional[Callable]=None,
-        forward_arg_extractor: Optional[Callable]=None,
-        additional_forward_arg_extractor: Optional[Callable]=None,
-        label_extractor: Optional[Callable]=None,
-        target_extractor: Optional[Callable]=None,
-        target_labels: bool=False,
-        channel_dim: Tuple[int]=(1, -1),
+        input_extractor: Optional[Callable] = None,
+        forward_arg_extractor: Optional[Callable] = None,
+        additional_forward_arg_extractor: Optional[Callable] = None,
+        label_extractor: Optional[Callable] = None,
+        target_extractor: Optional[Callable] = None,
+        target_labels: bool = False,
+        channel_dim: Tuple[int] = (1, -1),
     ):
         self.layer = layer
         self.mask_token_id = mask_token_id
@@ -249,8 +251,8 @@ class AutoExplanationForVisualQuestionAnswering(AutoExplanation):
                 modality='text',
                 mask_token_id=self.mask_token_id,
             ),
-            'channel_dim': self.channel_dim \
-                or get_default_channel_dim(modality=('image', 'text')),
+            'channel_dim': self.channel_dim
+            or get_default_channel_dim(modality=('image', 'text')),
         }
 
 
@@ -260,4 +262,50 @@ class AutoExplanationForTabularClassification(AutoExplanation):
 
     def _check_background_data(self, kwargs):
         if self.modality == 'tabular':
-            assert kwargs.get('background_data') is not None, "Must have 'background_data' for tabular modality."
+            assert kwargs.get(
+                'background_data') is not None, "Must have 'background_data' for tabular modality."
+
+
+class AutoExplanationForTSClassification(AutoExplanation):
+    def __init__(
+        self,
+        model: Module,
+        data: DataLoader,
+        input_extractor: Optional[Callable] = None,
+        label_extractor: Optional[Callable] = None,
+        target_extractor: Optional[Callable] = None,
+        target_labels: bool = False,
+        sequence_dim: Tuple[int] = -1,
+    ):
+        self.recommended = XaiRecommender().recommend(
+            modality='time-series',
+            model=model,
+        )
+        super().__init__(
+            model=model,
+            data=data,
+            input_extractor=input_extractor,
+            label_extractor=label_extractor,
+            target_extractor=target_extractor,
+            target_labels=target_labels,
+            channel_dim=sequence_dim,
+        )
+
+    def _generate_default_kwargs_for_explainer(self):
+        return {
+            'feature_mask_fn': get_default_feature_mask_fn(modality='time-series'),
+            'baseline_fn': get_default_baseline_function(
+                modality='time-series',
+            ),
+        }
+
+    def _generate_default_kwargs_for_metric(self):
+        return {
+            'baseline_fn': get_default_baseline_function(modality='time-series'),
+            'channel_dim': self.channel_dim
+            or get_default_channel_dim(modality='time-series'),
+            'mask_agg_dim': 1,
+        }
+
+    def _load_default_postprocessors(self):
+        return [PostProcessor(pooling_method='none', normalization_method='minmax')]
