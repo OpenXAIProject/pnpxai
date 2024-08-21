@@ -1,4 +1,5 @@
 # python image_gradio.py >> ./logs/image_gradio.log 2>&1
+import time
 import os
 import gradio as gr
 from pnpxai.core.experiment import AutoExplanation
@@ -7,6 +8,7 @@ import matplotlib.pyplot as plt
 import plotly.graph_objects as go
 import plotly.express as px
 import networkx as nx
+import secrets
 
 
 PLOT_PER_LINE = 4
@@ -43,7 +45,8 @@ class DetectionTab(Tab):
         with gr.Tab(label="Detection") as tab:
             gr.Label("This is the detection tab.")
 
-            for exp in self.experiments:
+            for nm, exp_info in self.experiments.items():
+                exp = exp_info['experiment']
                 detector_res = DetectorRes(exp)
                 detector_res.show()
 
@@ -52,8 +55,8 @@ class LocalExpTab(Tab):
         self.experiments = experiments
 
         self.experiment_components = []
-        for exp in self.experiments:
-            self.experiment_components.append(Experiment(exp))
+        for nm, exp_info in self.experiments.items():
+            self.experiment_components.append(Experiment(exp_info))
 
     def description(self):
         return "This tab shows the local explanation."
@@ -179,11 +182,14 @@ class ImgGallery(Component):
 
 
 class Experiment(Component):
-    def __init__(self, experiment):
-        self.experiment = experiment
+    def __init__(self, exp_info):
+        self.exp_info = exp_info
+        self.experiment = exp_info['experiment']
+        self.input_visualizer = exp_info['input_visualizer']
+        self.target_visualizer = exp_info['target_visualizer']
 
     def viz_input(self, input, data_id):
-        orig_img_np = self.experiment.input_visualizer(input)
+        orig_img_np = self.input_visualizer(input)
         orig_img = px.imshow(orig_img_np)
 
         orig_img.update_layout(
@@ -207,10 +213,10 @@ class Experiment(Component):
 
     def get_prediction(self, record, topk=3):
         probs = record['output'].softmax(-1).squeeze().detach().numpy()
-        text = f"Ground Truth Label: {self.experiment.target_visualizer(record['label'])}\n"
+        text = f"Ground Truth Label: {self.target_visualizer(record['label'])}\n"
 
         for ind, pred in enumerate(probs.argsort()[-topk:][::-1]):
-            label = self.experiment.target_visualizer(torch.tensor(pred))
+            label = self.target_visualizer(torch.tensor(pred))
             prob = probs[pred]
             text += f"Top {ind+1} Prediction: {label} ({prob:.2f})\n"
         
@@ -262,7 +268,7 @@ class Experiment(Component):
 
         return record
 
-    def gen_handle_click(self, data_id, metric_inputs, bttn):
+    def gen_handle_click(self, data_id, metric_inputs, bttn, placeholder):
         @gr.render(inputs=[data_id] + metric_inputs, triggers=[bttn.click])
         def inner_func(data_id, *metric_inputs):
             metric_input = []
@@ -291,8 +297,7 @@ class Experiment(Component):
                             figs.append(fig)
                         else:
                             plots.append(gr.Plot(value=None, label="Blank", visible=False))
-
-
+                        
             def show_result():
                 _plots = []
                 for i in range(n_rows):
@@ -320,7 +325,7 @@ class Experiment(Component):
         dset = self.experiment.manager._data.dataset
         imgs = []
         for i in range(len(dset)):
-            img = self.experiment.input_visualizer(dset[i][0])
+            img = self.input_visualizer(dset[i][0])
             imgs.append(img)
         gallery = ImgGallery(imgs)
         gallery.show()
@@ -354,10 +359,84 @@ class Experiment(Component):
 
         metric_inputs = [cr_metrics, cn_metrics, cp_metrics]
 
+        data_id = gallery.selected_index
         bttn = gr.Button("Explain", variant="primary")
-        handle_click = self.gen_handle_click(gallery.selected_index, metric_inputs, bttn)
+        loaded = gr.State(False)
 
-                    
+        @gr.render(triggers=[bttn.click])
+        def generate_loading_box():
+            obj = gr.Plot(label="Loading...", visible=True)
+            controller = gr.Number(value=0, visible=False)
+            def hide_loading():
+                while not loaded.value:
+                    time.sleep(0.1)
+                return gr.update(visible=False)
+            controller.change(hide_loading, outputs=obj)
+            loaded.value = False
+            controller.value = 1
+
+        @gr.render(inputs=[data_id] + metric_inputs, triggers=[bttn.click])
+        def explain(data_id, *metric_inputs):
+            try:
+                metric_input = []
+                for metric in metric_inputs:
+                    if metric:
+                        metric_input += metric
+                        
+                record = self.generate_record(data_id, metric_input)
+
+                pred = self.get_prediction(record)
+                gr.Textbox(label="Prediction result", value=pred)
+                
+
+                n_rows = len(record['explanations']) // PLOT_PER_LINE
+                n_rows = n_rows + 1 if len(record['explanations']) % PLOT_PER_LINE != 0 else n_rows
+                plots = []
+                figs = []
+                for i in range(n_rows):
+                    with gr.Column():
+                        with gr.Row():
+                            for j in range(PLOT_PER_LINE):
+                                if i*PLOT_PER_LINE+j < len(record['explanations']):
+                                    exp_res = record['explanations'][i*PLOT_PER_LINE+j]
+                                    path = self.get_exp_plot(data_id, exp_res)
+                                    plot_obj = gr.Image(value=path, label=f"{exp_res['explainer_nm']} ({exp_res['mode']})", visible=False)
+                                    # plot_obj = gr.Plot(value=go.Figure(), label=f"{exp_res['explainer_nm']} ({exp_res['mode']})", visible=False)
+                                    plots.append(plot_obj)
+                                    figs.append(path)
+                                else:
+                                    # plots.append(gr.Plot(value=None, label="Blank", visible=False))
+                                    plots.append(gr.Image(value=None, label="Blank", visible=False))
+                
+                def show_result():
+                    _plots = []
+                    for i in range(n_rows):
+                        for j in range(PLOT_PER_LINE):
+                            if i*PLOT_PER_LINE+j < len(record['explanations']):
+                                # _plots.append(gr.Plot(value=figs[i*PLOT_PER_LINE+j], visible=True))
+                                _plots.append(gr.Image(value=figs[i*PLOT_PER_LINE+j], visible=True))
+                            else:
+                                _plots.append(gr.Image(value=None, visible=True))
+                                # _plots.append(gr.Plot(value=None, visible=True))
+
+                    return _plots
+                
+                invisible = gr.Number(value=0, visible=False)
+                invisible.change(show_result, outputs=plots)
+                invisible.value = 1
+            except Exception as e:
+                gr.Error(f"Error: {e}")
+            finally:
+                loaded.value = True
+        
+        @gr.render(triggers=[bttn.click])
+        def clear_cache():
+            cache_dir = f"{os.environ['GRADIO_TEMP_DIR']}/res"
+            if not os.path.exists(cache_dir): os.makedirs(cache_dir)
+            for f in os.listdir(cache_dir):
+                if len(f.split(".")[0]) == 16:
+                    os.remove(os.path.join(cache_dir, f))
+
 class ExplainerCheckboxGroup(Component):
     def __init__(self, explainer_names, experiment, gallery):
         super().__init__()
@@ -514,22 +593,21 @@ class ExpRes(Component):
         while cnt * n < len(metric_values):
             metric_text = ', '.join(metric_values[cnt*n:cnt*n+n])
             fig.add_annotation(
-                x=-0.1,
-                y=-0.15 - 0.1 * cnt,
+                x=0,
+                y=-0.1 * (cnt+1),
                 xref='paper',
                 yref='paper',
                 text=metric_text,
                 showarrow=False,
                 font=dict(
-                    size=12,
+                    size=18,
                 ),
             )
             cnt += 1
 
 
         fig = fig.update_layout(
-            title="",
-            width=400,
+            width=380,
             height=400,
             xaxis=dict(
                 showticklabels=False,
@@ -541,10 +619,16 @@ class ExpRes(Component):
                 ticks='',
                 showgrid=False
             ),
-            margin=dict(t=10, b=10, l=10, r=10),
+            margin=dict(t=40, b=40*cnt, l=20, r=20),
         )
 
-        return fig
+        # Generate Random Unique ID
+        root = f"{os.environ['GRADIO_TEMP_DIR']}/res"
+        if not os.path.exists(root): os.makedirs(root)
+        key = secrets.token_hex(8)
+        path = f"{root}/{key}.png"
+        fig.write_image(path)
+        return path
 
 
 class ImageClsApp(App):
@@ -567,12 +651,16 @@ class ImageClsApp(App):
         """
 
     def launch(self, **kwargs):
+        css = """
+        .plotly .svg-container {width: 100%; aspect-ratio: 10 / 9;}
+        .plot-container {width: 100%; aspect-ratio: 10 / 9;}
+        """
         with gr.Blocks(
             title=self.name,
+            css=css
         ) as demo:
             cwd = os.getcwd()
             gr.set_static_paths(cwd)
-            # gr.set_static_paths("./")
             gr.HTML(self.title())
 
             self.overview_tab.show()
@@ -592,7 +680,7 @@ os.environ['GRADIO_TEMP_DIR'] = '.tmp'
 
 def target_visualizer(x): return dataset.dataset.idx_to_label(x.item())
 
-experiments = []
+experiments = {}
 
 model, transform = get_torchvision_model('resnet18')
 dataset = get_imagenet_dataset(transform)
@@ -606,11 +694,15 @@ experiment1 = AutoExplanation(
     input_extractor=lambda batch: batch[0],
     label_extractor=lambda batch: batch[-1],
     target_extractor=lambda outputs: outputs.argmax(-1),
-    input_visualizer=lambda x: denormalize_image(x, transform.mean, transform.std),
-    target_visualizer=target_visualizer,
-    target_labels=False, # target prediction if False
     channel_dim=1
 )
+
+experiments['experiment1'] = {
+    'name': 'ResNet18',
+    'experiment': experiment1,
+    'input_visualizer': lambda x: denormalize_image(x, transform.mean, transform.std),
+    'target_visualizer': target_visualizer,
+}
 
 
 model, transform = get_torchvision_model('vit_b_16')
@@ -625,17 +717,19 @@ experiment2 = AutoExplanation(
     input_extractor=lambda batch: batch[0],
     label_extractor=lambda batch: batch[-1],
     target_extractor=lambda outputs: outputs.argmax(-1),
-    input_visualizer=lambda x: denormalize_image(x, transform.mean, transform.std),
-    target_visualizer=target_visualizer,
-    target_labels=False, # target prediction if False
     channel_dim=1
 )
 
-
-experiments.append(experiment1)
-experiments.append(experiment2)
+experiments['experiment2'] = {
+    'name': 'ViT-B_16',
+    'experiment': experiment2,
+    'input_visualizer': lambda x: denormalize_image(x, transform.mean, transform.std),
+    'target_visualizer': target_visualizer,
+}
 
 app = ImageClsApp(experiments)
 demo = app.launch()
-demo.launch(favicon_path="data/static/XAI-Top-PnP.svg", share=True)
-# demo.launch(favicon_path="data/static/XAI-Top-PnP.svg")
+# demo.launch(favicon_path="data/static/XAI-Top-PnP.svg", share=True)
+demo.launch(favicon_path="data/static/XAI-Top-PnP.svg")
+
+from torchvision import models

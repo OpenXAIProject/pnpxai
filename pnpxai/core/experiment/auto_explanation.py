@@ -79,8 +79,6 @@ class AutoExplanation(Experiment):
             label_extractor=label_extractor,
             target_extractor=target_extractor,
             target_labels=target_labels,
-            input_visualizer=input_visualizer,
-            target_visualizer=target_visualizer,
         )
 
     def _check_layer(self, kwargs):

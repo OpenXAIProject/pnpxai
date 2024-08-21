@@ -45,7 +45,7 @@ class Sensitivity(Metric):
             )
             perturbed += noise
             # Get perturbed attribution results
-            perturbed = _format_to_tuple(perturbed)
+            # perturbed = _format_to_tuple(perturbed)
             perturbed_attr = self.explainer.attribute(
                 inputs=perturbed,
                 targets=target.repeat(self.n_iter)

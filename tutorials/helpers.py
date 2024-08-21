@@ -13,7 +13,7 @@ import torchvision
 from torch import Tensor
 from torch.nn.modules import Module
 from torch.utils.data import Dataset, Subset, DataLoader
-from torchtext.datasets import IMDB
+# from torchtext.datasets import IMDB
 from transformers import BertTokenizer, BertForSequenceClassification
 from transformers import ViltForQuestionAnswering, ViltProcessor
 

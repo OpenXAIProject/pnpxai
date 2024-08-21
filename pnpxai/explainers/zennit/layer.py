@@ -16,6 +16,7 @@ class StackAndSum(torch.nn.Module):
         self.zennit_sum = Sum(dim=dim)
 
     def forward(self, a, b):
-        out = torch.stack([a, b], dim=self.dim)
+        # out = torch.stack([a, b], dim=self.dim)
+        out = torch.stack([a, b.expand(a.size())], dim=self.dim)
         '''Computes the sum along a dimension.'''
         return self.zennit_sum(out)
