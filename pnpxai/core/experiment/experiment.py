@@ -10,16 +10,13 @@ import optuna
 from plotly import express as px
 from plotly.graph_objects import Figure
 
-from pnpxai.core._types import DataSource, Model, ModalityOrTupleOfModalities
+from pnpxai.core._types import DataSource, Model
+from pnpxai.core.modality.modality import Modality
 from pnpxai.core.experiment.experiment_metrics_defaults import EVALUATION_METRIC_REVERSE_SORT, EVALUATION_METRIC_SORT_PRIORITY
 from pnpxai.core.experiment.observable import ExperimentObservableEvent
 from pnpxai.core.experiment.manager import ExperimentManager
 from pnpxai.explainers.base import Explainer
-from pnpxai.explainers.utils.postprocess import PostProcessor
 from pnpxai.evaluator.optimizer.objectives import Objective
-from pnpxai.evaluator.optimizer.search_spaces import (
-    create_default_search_space,
-)
 from pnpxai.evaluator.optimizer.utils import (
     load_sampler,
     get_default_n_trials,
@@ -72,6 +69,7 @@ class Experiment(Observable):
         self,
         model: Model,
         data: DataSource,
+        modality: Modality,
         explainers: Sequence[Explainer],
         postprocessors: Optional[Sequence[Callable]]=None,
         metrics: Optional[Sequence[Metric]]=None,
@@ -107,6 +105,7 @@ class Experiment(Observable):
         self.input_visualizer = input_visualizer
         self.target_visualizer = target_visualizer
         self.target_labels = target_labels
+        self.modality = modality
 
         self.reset_errors()
 
@@ -252,13 +251,11 @@ class Experiment(Observable):
             explainer=explainer,
             postprocessor=postprocessor,
             metric=metric,
+            modality=self.modality,
             inputs=self.input_extractor(data),
             targets=self._get_targets([data_id]),
         )
         # TODO: grid search
-        if sampler == 'grid':
-            kwargs['search_space'] = search_space or create_default_search_space(explainer)
-            raise NotImplementedError('grid search is not supported.')
         if timeout is None:
             n_trials = n_trials or get_default_n_trials(sampler)
 

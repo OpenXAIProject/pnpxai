@@ -4,6 +4,7 @@ from torch.nn.modules import Module
 from captum.attr import GuidedGradCam as CaptumGuidedGradCam
 from optuna.trial import Trial
 
+from pnpxai.core.detector.types import Convolution
 from pnpxai.explainers.base import Explainer
 from pnpxai.explainers.types import ForwardArgumentExtractor
 from pnpxai.explainers.utils.baselines import BaselineMethodOrFunction
@@ -17,6 +18,7 @@ from pnpxai.utils import (
 
 
 class GuidedGradCam(Explainer):
+    SUPPORTED_MODULES = [Convolution]
     def __init__(
         self,
         model: Module,

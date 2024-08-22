@@ -9,11 +9,14 @@ from typing import (
 from torch import Tensor
 from torch.nn.modules import Module
 
+from pnpxai.core.detector.types import Linear, Convolution, LSTM, RNN, Attention
 from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 from pnpxai.explainers.smooth_grad import SmoothGrad
 
 
 class VarGrad(SmoothGrad):
+	SUPPORTED_MODULES = [Linear, Convolution, LSTM, RNN, Attention]
+
 	def __init__(
 		self,
 		model: Module,

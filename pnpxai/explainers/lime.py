@@ -6,6 +6,7 @@ from torch.nn.modules import Module
 from captum.attr import Lime as CaptumLime
 from optuna.trial import Trial
 
+from pnpxai.core.detector.types import Linear, Convolution, LSTM, RNN, Attention
 from pnpxai.explainers.base import Explainer
 from pnpxai.explainers.utils.baselines import BaselineMethodOrFunction
 from pnpxai.explainers.utils.feature_masks import FeatureMaskMethodOrFunction
@@ -14,6 +15,8 @@ from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 
 
 class Lime(Explainer):
+    SUPPORTED_MODULES = [Linear, Convolution, LSTM, RNN, Attention]
+
     def __init__(
         self,
         model: Module,

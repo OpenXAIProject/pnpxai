@@ -1,21 +1,13 @@
-from abc import abstractmethod
-from typing import Literal, Callable, Optional, Type, Union, Tuple, List
+from typing import Callable, Optional, Tuple, List
 
 from torch.nn.modules import Module
 from torch.utils.data import DataLoader
 
+from pnpxai.core._types import Model, DataSource
 from pnpxai.core.experiment.experiment import Experiment
-from pnpxai.core.detector import detect_model_architecture
+from pnpxai.core.modality.modality import Modality, ImageModality, TextModality, TimeSeriesModality, ImageTextModality
 from pnpxai.core.recommender import XaiRecommender
-from pnpxai.core._types import DataSource, Model, ModalityOrTupleOfModalities, Modality
-from pnpxai.explainers.types import TargetLayer, ForwardArgumentExtractor
-from pnpxai.explainers.utils.baselines import get_default_baseline_function
-from pnpxai.explainers.utils.feature_masks import get_default_feature_mask_fn
-from pnpxai.explainers.utils.postprocess import (
-    PostProcessor,
-    all_postprocessors,
-    get_default_channel_dim,
-)
+from pnpxai.explainers.types import TargetLayer
 from pnpxai.evaluator.metrics import PIXEL_FLIPPING_METRICS
 from pnpxai.evaluator.metrics import (
     MuFidelity,
@@ -25,7 +17,6 @@ from pnpxai.evaluator.metrics import (
     LeRF,
     AbPC,
 )
-from pnpxai.utils import format_into_tuple
 
 
 METRICS_BASELINE_FN_REQUIRED = PIXEL_FLIPPING_METRICS
@@ -58,16 +49,19 @@ class AutoExplanation(Experiment):
         self,
         model: Model,
         data: DataSource,
+        modality: Modality,
         input_extractor: Optional[Callable] = None,
         label_extractor: Optional[Callable] = None,
         target_extractor: Optional[Callable] = None,
-        target_labels: bool = False,
-        channel_dim: Union[int, Tuple[int]] = 1,
+        target_labels: bool = False
     ):
-        self.channel_dim = channel_dim
+        self.recommended = XaiRecommender().recommend(modality=modality, model=model)
+        self.modality = modality
+
         super().__init__(
             model=model,
             data=data,
+            modality=modality,
             explainers=self._load_default_explainers(model),
             postprocessors=self._load_default_postprocessors(),
             metrics=self._load_default_metrics(model),
@@ -88,9 +82,6 @@ class AutoExplanation(Experiment):
             explainers.append(explainer)
         return explainers
 
-    def _load_default_postprocessors(self):
-        return all_postprocessors(self.channel_dim)
-
     def _load_default_metrics(self, model):
         empty_metrics = []  # empty means that explainer is not assigned yet
         for metric_type in DEFAULT_METRICS:
@@ -102,13 +93,20 @@ class AutoExplanation(Experiment):
             empty_metrics.append(metric)
         return empty_metrics
 
-    @abstractmethod
-    def _generate_default_kwargs_for_explainer(self):
-        raise NotImplementedError
+    def _load_default_postprocessors(self):
+        return self.modality.get_default_postprocessors()
 
-    @abstractmethod
+    def _generate_default_kwargs_for_explainer(self):
+        return {
+            'feature_mask_fn': self.modality.get_default_baseline_fn(),
+            'baseline_fn': self.modality.get_default_baseline_fn(),
+        }
+
     def _generate_default_kwargs_for_metric(self):
-        raise NotImplementedError
+        return {
+            'baseline_fn': self.modality.get_default_baseline_fn(),
+            'channel_dim': self.modality.channel_dim,
+        }
 
 
 class AutoExplanationForImageClassification(AutoExplanation):
@@ -122,28 +120,15 @@ class AutoExplanationForImageClassification(AutoExplanation):
         target_labels: bool = False,
         channel_dim: int = 1,
     ):
-        self.recommended = XaiRecommender().recommend(modality='image', model=model)
         super().__init__(
             model=model,
             data=data,
+            modality=ImageModality(channel_dim),
             input_extractor=input_extractor,
             label_extractor=label_extractor,
             target_extractor=target_extractor,
-            target_labels=target_labels,
-            channel_dim=channel_dim,
+            target_labels=target_labels
         )
-
-    def _generate_default_kwargs_for_explainer(self):
-        return {
-            'feature_mask_fn': get_default_feature_mask_fn(modality='image'),
-            'baseline_fn': get_default_baseline_function(modality='image'),
-        }
-
-    def _generate_default_kwargs_for_metric(self):
-        return {
-            'baseline_fn': get_default_baseline_function(modality='image'),
-            'channel_dim': self.channel_dim or get_default_channel_dim(modality='image'),
-        }
 
 
 class AutoExplanationForTextClassification(AutoExplanation):
@@ -166,15 +151,14 @@ class AutoExplanationForTextClassification(AutoExplanation):
         self.forward_arg_extractor = forward_arg_extractor
         self.additional_forward_arg_extractor = additional_forward_arg_extractor
 
-        self.recommended = XaiRecommender().recommend(modality='text', model=model)
         super().__init__(
             model=model,
             data=data,
+            modality=TextModality(channel_dim),
             input_extractor=input_extractor,
             label_extractor=label_extractor,
             target_extractor=target_extractor,
-            target_labels=target_labels,
-            channel_dim=channel_dim,
+            target_labels=target_labels
         )
 
     def _generate_default_kwargs_for_explainer(self):
@@ -182,20 +166,14 @@ class AutoExplanationForTextClassification(AutoExplanation):
             'layer': self.layer,
             'forward_arg_extractor': self.forward_arg_extractor,
             'additional_forward_arg_extractor': self.additional_forward_arg_extractor,
-            'feature_mask_fn': get_default_feature_mask_fn(modality='text'),
-            'baseline_fn': get_default_baseline_function(
-                modality='text',
-                mask_token_id=self.mask_token_id,
-            ),
+            'feature_mask_fn': self.modality.get_default_feature_mask_fn(),
+            'baseline_fn': self.modality.get_default_baseline_fn(self.mask_token_id),
         }
 
     def _generate_default_kwargs_for_metric(self):
         return {
-            'baseline_fn': get_default_baseline_function(
-                modality='text',
-                mask_token_id=self.mask_token_id,
-            ),
-            'channel_dim': self.channel_dim or get_default_channel_dim(modality='text'),
+            'baseline_fn': self.modality.get_default_baseline_fn(self.mask_token_id),
+            'channel_dim': self.modality.channel_dim,
         }
 
 
@@ -219,18 +197,14 @@ class AutoExplanationForVisualQuestionAnswering(AutoExplanation):
         self.forward_arg_extractor = forward_arg_extractor
         self.additional_forward_arg_extractor = additional_forward_arg_extractor
 
-        self.recommended = XaiRecommender().recommend(
-            modality=('image', 'text'),
-            model=model,
-        )
         super().__init__(
             model=model,
             data=data,
+            modality=ImageTextModality(channel_dim),
             input_extractor=input_extractor,
             label_extractor=label_extractor,
             target_extractor=target_extractor,
-            target_labels=target_labels,
-            channel_dim=channel_dim,
+            target_labels=target_labels
         )
 
     def _generate_default_kwargs_for_explainer(self):
@@ -238,21 +212,14 @@ class AutoExplanationForVisualQuestionAnswering(AutoExplanation):
             'layer': self.layer,
             'forward_arg_extractor': self.forward_arg_extractor,
             'additional_forward_arg_extractor': self.additional_forward_arg_extractor,
-            'feature_mask_fn': get_default_feature_mask_fn(modality=('image', 'text')),
-            'baseline_fn': get_default_baseline_function(
-                modality=('image', 'text'),
-                mask_token_id=self.mask_token_id,
-            ),
+            'feature_mask_fn': self.modality.get_default_feature_mask_fn(),
+            'baseline_fn': self.modality.get_default_baseline_fn(self.mask_token_id)
         }
 
     def _generate_default_kwargs_for_metric(self):
         return {
-            'baseline_fn': get_default_baseline_function(
-                modality='text',
-                mask_token_id=self.mask_token_id,
-            ),
-            'channel_dim': self.channel_dim
-            or get_default_channel_dim(modality=('image', 'text')),
+            'baseline_fn': self.modality.get_default_baseline_fn(self.mask_token_id),
+            'channel_dim': self.modality.channel_dim,
         }
 
 
@@ -275,37 +242,23 @@ class AutoExplanationForTSClassification(AutoExplanation):
         label_extractor: Optional[Callable] = None,
         target_extractor: Optional[Callable] = None,
         target_labels: bool = False,
-        sequence_dim: Tuple[int] = -1,
+        sequence_dim: int = -1,
+        mask_agg_dim: int = -2,
     ):
-        self.recommended = XaiRecommender().recommend(
-            modality='time-series',
-            model=model,
-        )
+        self.mask_agg_dim = mask_agg_dim
         super().__init__(
             model=model,
             data=data,
+            modality=TimeSeriesModality(sequence_dim),
             input_extractor=input_extractor,
             label_extractor=label_extractor,
             target_extractor=target_extractor,
-            target_labels=target_labels,
-            channel_dim=sequence_dim,
+            target_labels=target_labels
         )
-
-    def _generate_default_kwargs_for_explainer(self):
-        return {
-            'feature_mask_fn': get_default_feature_mask_fn(modality='time-series'),
-            'baseline_fn': get_default_baseline_function(
-                modality='time-series',
-            ),
-        }
 
     def _generate_default_kwargs_for_metric(self):
         return {
-            'baseline_fn': get_default_baseline_function(modality='time-series'),
-            'channel_dim': self.channel_dim
-            or get_default_channel_dim(modality='time-series'),
-            'mask_agg_dim': 1,
+            'baseline_fn': self.modality.get_default_baseline_fn(),
+            'channel_dim': self.modality.channel_dim,
+            'mask_agg_dim': self.mask_agg_dim,
         }
-
-    def _load_default_postprocessors(self):
-        return [PostProcessor(pooling_method='none', normalization_method='minmax')]

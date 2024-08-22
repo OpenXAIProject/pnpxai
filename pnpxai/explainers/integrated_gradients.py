@@ -7,6 +7,7 @@ from captum.attr import IntegratedGradients as CaptumIntegratedGradients
 from captum.attr import LayerIntegratedGradients as CaptumLayerIntegratedGradients
 from optuna.trial import Trial
 
+from pnpxai.core.detector.types import Linear, Convolution, Attention
 from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 from pnpxai.explainers.utils.baselines import BaselineMethodOrFunction
 from pnpxai.evaluator.optimizer.utils import generate_param_key
@@ -15,6 +16,8 @@ from .utils import captum_wrap_model_input
 
 
 class IntegratedGradients(Explainer):
+    SUPPORTED_MODULES = [Linear, Convolution, Attention]
+
     def __init__(
         self,
         model: Module,

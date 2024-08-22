@@ -21,6 +21,7 @@ from zennit.types import Linear
 from zennit.rules import Epsilon
 from zennit.canonizers import SequentialMergeBatchNorm, Canonizer
 
+from pnpxai.core.detector.types import Linear, Convolution, LSTM, RNN, Attention
 from pnpxai.explainers.attentions.module_converters import default_attention_converters
 from pnpxai.explainers.attentions.rules import ConservativeAttentionPropagation
 from pnpxai.explainers.zennit.attribution import Gradient, LayerGradient
@@ -122,6 +123,8 @@ class LRPBase(ZennitExplainer):
 
 
 class LRPUniformEpsilon(LRPBase):
+    SUPPORTED_MODULES = [Linear, Convolution, LSTM, RNN, Attention]
+
     def __init__(
         self,
         model: Module,
@@ -157,6 +160,8 @@ class LRPUniformEpsilon(LRPBase):
 
 
 class LRPEpsilonGammaBox(LRPBase):
+    SUPPORTED_MODULES = [Convolution]
+
     def __init__(
         self,
         model: Module,
@@ -202,6 +207,8 @@ class LRPEpsilonGammaBox(LRPBase):
 
 
 class LRPEpsilonPlus(LRPBase):
+    SUPPORTED_MODULES = [Convolution]
+
     def __init__(
         self,
         model: Module,
@@ -237,6 +244,8 @@ class LRPEpsilonPlus(LRPBase):
 
 
 class LRPEpsilonAlpha2Beta1(LRPBase):
+    SUPPORTED_MODULES = [Convolution]
+    
     def __init__(
         self,
         model: Module,

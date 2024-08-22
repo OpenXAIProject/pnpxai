@@ -1,10 +1,9 @@
-from typing import Literal, Tuple, Optional, Union, Literal
+from typing import Literal, Optional, Union, Literal
 import copy
 
 import torch
 import torchvision.transforms.functional as TF
 from optuna.trial import Trial
-from pnpxai.core._types import ModalityOrTupleOfModalities, Modality
 from pnpxai.evaluator.optimizer.utils import generate_param_key
 
 
@@ -134,23 +133,6 @@ class BaselineFunction:
                 'sigma_x': sigma_x,
                 'sigma_y': sigma_y,
             }
-
-
-def get_default_baseline_function(
-    modality: ModalityOrTupleOfModalities,
-    mask_token_id: Optional[int] = None
-):
-    if modality == 'image':
-        return BaselineFunction(method='zeros')
-    elif modality == 'text':
-        return BaselineFunction(method='mask_token', token_id=mask_token_id)
-    elif modality == 'time-series':
-        return BaselineFunction(method='zeros')
-    elif isinstance(modality, tuple):
-        return tuple(get_default_baseline_function(m, mask_token_id) for m in modality)
-    else:
-        raise NotImplementedError(
-            f"There is no default baseline function for '{modality}'.")
 
 
 BaselineMethodOrFunction = Union[BaselineMethod, BaselineFunction]

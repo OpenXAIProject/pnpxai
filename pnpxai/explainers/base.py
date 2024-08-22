@@ -29,6 +29,7 @@ NON_DISPLAYED_ATTRS = [
 
 class Explainer(ABC):
     EXPLANATION_TYPE: ExplanationType = "attribution"
+    SUPPORTED_MODULES = []
 
     def __init__(
             self,

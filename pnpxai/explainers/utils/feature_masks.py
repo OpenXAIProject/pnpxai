@@ -8,7 +8,6 @@ from skimage.segmentation import (
     watershed,
 )
 from optuna.trial import Trial
-from pnpxai.core._types import ModalityOrTupleOfModalities
 from pnpxai.evaluator.optimizer.utils import generate_param_key
 
 
@@ -211,15 +210,3 @@ class FeatureMaskFunction:
 
 FeatureMaskMethod = Literal['felzenszwalb', 'quickshift', 'slic', 'watershed', 'no_mask']
 FeatureMaskMethodOrFunction = Union[FeatureMaskMethod, FeatureMaskFunction]
-
-def get_default_feature_mask_fn(modality: ModalityOrTupleOfModalities):
-    if modality == 'image':
-        return FeatureMaskFunction(method='felzenszwalb', scale=250)
-    elif modality == 'text':
-        return FeatureMaskFunction(method='no_mask')
-    elif modality == 'time-series':
-        return FeatureMaskFunction(method='no_mask')
-    elif isinstance(modality, tuple):
-        return tuple(get_default_feature_mask_fn(m) for m in modality)
-    else:
-        raise NotImplementedError(f"There is no default feature_mask_fn for '{modality}.")

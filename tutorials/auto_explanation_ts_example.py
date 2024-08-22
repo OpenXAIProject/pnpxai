@@ -11,7 +11,8 @@ from tsai.all import get_UCR_data, combine_split_data, Categorize, TSDatasets, T
 # ------------------------------------------------------------------------------#
 
 # setup
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cpu')
 cur_path = os.path.dirname(os.path.realpath(__file__))
 batch_size = 64
 
@@ -85,12 +86,14 @@ expr.manager.get_metric_by_id(3)  # -> Metric. In this case, AbPC
 
 # user inputs
 explainer_id = 3  # explainer_id to be optimized: KernelShap
-metric_id = 0  # metric_id to be used as objective: AbPC
+metric_id = 1  # metric_id to be used as objective: AbPC
 post_processor_id = 0
 data_id = 0
 
 explainer = expr.manager.get_explainer_by_id(explainer_id)
 metric = expr.manager.get_metric_by_id(metric_id)
+print("Explainer: ", explainer.__class__.__name__)
+print("Metric: ", metric.__class__.__name__)
 
 # explain and evaluate
 results = expr.run_batch(
@@ -99,7 +102,6 @@ results = expr.run_batch(
     postprocessor_id=post_processor_id,
     metric_id=metric_id,
 )
-print(results['evaluation'])
 
 
 # ------------------------------------------------------------------------------#

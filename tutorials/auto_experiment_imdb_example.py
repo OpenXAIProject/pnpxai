@@ -84,7 +84,7 @@ expr.run(
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 import matplotlib.image as mpimg
-from pnpxai.explainers.utils.postprocess import postprocess_attr, normalize_relevance
+from pnpxai.explainers.utils.postprocess.postprocess import postprocess_attr, normalize_relevance
 
 span = lambda string, bg_color: f'''
     <span style='background-color: {bg_color};'>

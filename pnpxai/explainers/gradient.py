@@ -3,6 +3,7 @@ from typing import Tuple, Callable, Sequence, Union, Optional
 from torch import Tensor
 from torch.nn.modules import Module
 
+from pnpxai.core.detector.types import Linear, Convolution, LSTM, RNN, Attention
 from .zennit.attribution import Gradient as GradientAttributor
 from .zennit.attribution import LayerGradient as LayerGradientAttributor
 from .zennit.base import ZennitExplainer
@@ -10,6 +11,8 @@ from .utils import captum_wrap_model_input
 
 
 class Gradient(ZennitExplainer):
+    SUPPORTED_MODULES = [Linear, Convolution, LSTM, RNN, Attention]
+
     def __init__(
         self,
         model: Module,

@@ -5,11 +5,14 @@ from optuna.trial import Trial
 
 from pnpxai.utils import format_into_tuple
 from pnpxai.evaluator.optimizer.utils import generate_param_key
+from pnpxai.core.detector.types import Convolution
 from .base import Explainer
 from .utils import find_cam_target_layer
 
 
 class GradCam(Explainer):
+    SUPPORTED_MODULES = [Convolution]
+
     def __init__(
             self,
             model: nn.Module,

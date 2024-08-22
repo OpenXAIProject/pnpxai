@@ -5,6 +5,7 @@ from torch.nn.modules import Module
 from optuna.trial import Trial
 from zennit.core import Composite
 
+from pnpxai.core.detector.types import Linear, Convolution, LSTM, RNN, Attention
 from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 from pnpxai.explainers.zennit.attribution import SmoothGradient as SmoothGradAttributor
 from pnpxai.explainers.zennit.attribution import LayerSmoothGradient as LayerSmoothGradAttributor
@@ -14,6 +15,8 @@ from pnpxai.evaluator.optimizer.utils import generate_param_key
 
 
 class SmoothGrad(ZennitExplainer):
+    SUPPORTED_MODULES = [Linear, Convolution, LSTM, RNN, Attention]
+
     def __init__(
         self,
         model: Module,

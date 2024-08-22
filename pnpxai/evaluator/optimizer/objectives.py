@@ -3,8 +3,10 @@ from torch import Tensor
 from optuna.trial import Trial
 
 from pnpxai.core._types import TensorOrTupleOfTensors
+from pnpxai.core.modality.modality import Modality
 from pnpxai.explainers.base import Explainer
-from pnpxai.explainers.utils.postprocess import PostProcessor
+from pnpxai.explainers import KernelShap, Lime
+from pnpxai.explainers.utils.postprocess.postprocess import PostProcessor
 from pnpxai.explainers.utils.baselines import BaselineFunction
 from pnpxai.evaluator.metrics.base import Metric
 from pnpxai.evaluator.optimizer.utils import generate_param_key, nest_params
@@ -20,12 +22,14 @@ class Objective:
         explainer: Explainer,
         postprocessor: PostProcessor,
         metric: Metric,
-        inputs: Optional[TensorOrTupleOfTensors]=None,
-        targets: Optional[Tensor]=None,
+        modality: Modality,
+        inputs: Optional[TensorOrTupleOfTensors] = None,
+        targets: Optional[Tensor] = None,
     ):
         self.explainer = explainer
         self.postprocessor = postprocessor
         self.metric = metric
+        self.modality = modality
         self.inputs = inputs
         self.targets = targets
 
@@ -46,7 +50,7 @@ class Objective:
         formatted = kwargs.copy()
         for k, v in kwargs.items():
             if k == 'baseline_fn':
-                formatted[k]= self._format_baseline_fn(v)
+                formatted[k] = self._format_baseline_fn(v)
             if k == 'feature_mask_fn':
                 formatted[k] = self._format_feature_mask_fn(v)
         return formatted
@@ -58,7 +62,7 @@ class Objective:
             in zip(
                 format_into_tuple(self.explainer.baseline_fn),
                 format_into_tuple(kwargs),
-        )))
+            )))
 
     def _format_feature_mask_fn(self, kwargs):
         return format_out_tuple_if_single(tuple(
@@ -67,7 +71,7 @@ class Objective:
             in zip(
                 format_into_tuple(self.explainer.feature_mask_fn),
                 format_into_tuple(kwargs),
-        )))
+            )))
 
     def format_postprocessor_kwargs(self, kwargs):
         return kwargs
@@ -101,10 +105,10 @@ class Objective:
             key=self.EXPLAINER_KEY,
         )
         postprocessor_kwargs = tuple(
-            pp.suggest_tunables(
-                trial=trial,
-                key=generate_param_key(self.POSTPROCESSOR_KEY, order)
-            ) for order, pp in enumerate(format_into_tuple(self.postprocessor))
+            self.modality.suggest_tunable_post_processors(
+                trial=trial, key=generate_param_key(self.POSTPROCESSOR_KEY, order)
+            )
+            for order, pp in enumerate(format_into_tuple(self.postprocessor))
         )
         explainer, postprocessor = self.load_from_optuna_params(trial.params)
 
@@ -112,7 +116,8 @@ class Objective:
         attrs = format_into_tuple(
             explainer.attribute(self.inputs, self.targets)
         )
-        pass_pooling = explainer.__class__.__name__ in ['KernelShap', 'Lime']
+        pass_pooling = isinstance(explainer, (KernelShap, Lime))
+
         postprocessed = format_out_tuple_if_single(tuple(
             pp.normalize_attributions(attr) if pass_pooling else pp(attr)
             for pp, attr in zip(
