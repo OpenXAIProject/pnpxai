@@ -110,8 +110,8 @@ class ImageTextModality(ImageModality, TextModality):
 
     def get_default_baseline_fn(self, mask_token_id: Optional[int] = None):
         return (
-            ImageModality.get_default_feature_mask_fn(self, ),
-            TextModality.get_default_feature_mask_fn(self, mask_token_id),
+            ImageModality.get_default_baseline_fn(self),
+            TextModality.get_default_baseline_fn(self, mask_token_id),
         )
 
     def get_default_postprocessors(self):
