@@ -1,4 +1,4 @@
-from typing import Literal, Union, Optional
+from typing import Literal, Union, Optional, Sequence
 import copy
 import torch
 from skimage.segmentation import (
@@ -14,16 +14,17 @@ from pnpxai.evaluator.optimizer.utils import generate_param_key
 def _skseg_for_tensor(fn, inputs: torch.Tensor, **kwargs):
     feature_mask = [
         torch.tensor(fn(
-            inp.permute(1,2,0).detach().cpu().numpy(),
+            inp.permute(1, 2, 0).detach().cpu().numpy(),
             **kwargs
         )) for inp in inputs
     ]
     return torch.stack(feature_mask).long().to(inputs.device)
 
+
 def felzenszwalb_for_tensor(
     inputs: torch.Tensor,
-    scale: float=250.,
-    sigma: float=1.,
+    scale: float = 250.,
+    sigma: float = 1.,
     **kwargs
 ):
     return _skseg_for_tensor(
@@ -34,9 +35,10 @@ def felzenszwalb_for_tensor(
         min_size=50,
     )
 
+
 def quickshift_for_tensor(
     inputs: torch.Tensor,
-    ratio: float, # [0,1]
+    ratio: float,  # [0,1]
     kernel_size: float,
     max_dist: int,
     sigma: float,
@@ -51,10 +53,11 @@ def quickshift_for_tensor(
         sigma=sigma,
     )
 
+
 def slic_for_tensor(
     inputs,
     n_segments: int,
-    compactness: float, # [0, 100] logscale
+    compactness: float,  # [0, 100] logscale
     sigma: float,
     **kwargs
 ):
@@ -65,6 +68,7 @@ def slic_for_tensor(
         compactness=compactness,
         sigma=sigma,
     )
+
 
 def watershed_for_tensor(
     inputs,
@@ -79,10 +83,12 @@ def watershed_for_tensor(
         compactness=compactness,
     )
 
+
 def no_mask_for_text(inputs, **kwargs):
     bsz, seq_len = inputs.size()
     seq_masks = torch.arange(seq_len).repeat(bsz).view(bsz, seq_len)
     return seq_masks.to(inputs.device)
+
 
 FEATURE_MASK_FUNCTIONS_FOR_IMAGE = {
     'felzenszwalb': felzenszwalb_for_tensor,
@@ -109,22 +115,6 @@ class FeatureMaskFunction:
     def __repr__(self):
         return f"{self.__class__.__name__}(method={self.method})"
 
-    @property
-    def modality(self):
-        if self.method in FEATURE_MASK_FUNCTIONS_FOR_IMAGE:
-            return 'image'
-        elif self.method in FEATURE_MASK_FUNCTIONS_FOR_TEXT:
-            return 'text'
-        else:
-            raise KeyError
-
-    @property
-    def available_methods(self):
-        if self.modality == 'image':
-            return FEATURE_MASK_FUNCTIONS_FOR_IMAGE
-        elif self.modality == 'text':
-            return FEATURE_MASK_FUNCTIONS_FOR_TEXT
-
     def copy(self):
         return copy.copy(self)
 
@@ -140,73 +130,89 @@ class FeatureMaskFunction:
     def __call__(self, inputs: torch.Tensor):
         return FEATURE_MASK_FUNCTIONS[self.method](inputs, **self.kwargs)
 
-    def suggest_tunables(self, trial: Trial, key: Optional[str]=None):
-        method = trial.suggest_categorical(
-            generate_param_key(key, 'method'),
-            choices=self.available_methods.keys(),
-        )
-        if method == 'felzenszwalb':
-            return {
-                'method': method,
-                'scale': trial.suggest_float(
-                  generate_param_key(key, 'scale'),
-                    low=1e0, high=1e3, log=True,
-                ),
-                'sigma': trial.suggest_float(
-                  generate_param_key(key, 'sigma'),
-                    low=0., high=2., step=.1,
-                ),
-            }
-        elif method == 'quickshift':
-            return {
-                'method': method,
-                'ratio': trial.suggest_float(
-                    generate_param_key(key, 'ratio'),
-                    low=0., high=1., step=.1,
-                ),
-                'kernel_size': trial.suggest_float(
-                    generate_param_key(key, 'kernel_size'),
-                    low=1., high=10., step=.1,
-                ),
-                'max_dist': trial.suggest_int(
-                    generate_param_key(key, 'max_dist'),
-                    low=1, high=20, step=1,
-                ),
-                'sigma': trial.suggest_float(
-                    generate_param_key(key, 'sigma'),
-                    low=0., high=2., step=.1,
-                ),
-            }
-        elif method == 'slic':
-            return {
-                'method': method,
-                'n_segments': trial.suggest_int(
-                    generate_param_key(key, 'n_segments'),
-                    low=10, high=200, step=10,
-                ),
-                'compactness': trial.suggest_float(
-                    generate_param_key(key, 'compactness'),
-                    low=1e-2, high=1e2, log=True,
-                ),
-                'sigma': trial.suggest_float(
-                    generate_param_key(key, 'sigma'),
-                    low=0., high=2., step=.1,
-                ),
-            }
-        elif method == 'watershed':
-            return {
-                'method': method,
-                'markers': trial.suggest_int(
-                    generate_param_key(key, 'markers'),
-                    low=10, high=200, step=10,
-                ),
-                'compactness': trial.suggest_float(
-                    generate_param_key(key, 'compactness'),
-                    low=1e-6, high=1., log=True,
-                ),
-            }
-        elif method == 'no_mask':
-            return {'method': method}
+    def suggest_tunables(self, trial: Trial, key: Optional[str] = None):
+        choice_sets = [FEATURE_MASK_FUNCTIONS_FOR_IMAGE,
+                       FEATURE_MASK_FUNCTIONS_FOR_TEXT]
+        choices = sum([
+            list(choice_set.keys())
+            for choice_set in choice_sets
+            if self.method in choice_set
+        ], [])
 
-FeatureMaskMethod = Literal['felzenszwalb', 'quickshift', 'slic', 'watershed', 'no_mask']
+        return suggest_tunable_feature_masks(choices, trial, key)
+
+
+def suggest_tunable_feature_masks(feature_masks: Sequence[str], trial: Trial, key: str) -> dict:
+    method = trial.suggest_categorical(
+        generate_param_key(key, 'method'),
+        choices=feature_masks,
+    )
+    return _suggest_tunable_feature_mask_params(method, trial, key)
+
+
+def _suggest_tunable_feature_mask_params(method: str, trial: Trial, key: Optional[str] = None):
+    return {
+        'felzenszwalb': {
+            'method': method,
+            'scale': trial.suggest_float(
+                generate_param_key(key, 'scale'),
+                low=1e0, high=1e3, log=True,
+            ),
+            'sigma': trial.suggest_float(
+                generate_param_key(key, 'sigma'),
+                low=0., high=2., step=.1,
+            ),
+        },
+        'quickshift': {
+            'method': method,
+            'ratio': trial.suggest_float(
+                generate_param_key(key, 'ratio'),
+                low=0., high=1., step=.1,
+            ),
+            'kernel_size': trial.suggest_float(
+                generate_param_key(key, 'kernel_size'),
+                low=1., high=10., step=.1,
+            ),
+            'max_dist': trial.suggest_int(
+                generate_param_key(key, 'max_dist'),
+                low=1, high=20, step=1,
+            ),
+            'sigma': trial.suggest_float(
+                generate_param_key(key, 'sigma'),
+                low=0., high=2., step=.1,
+            ),
+        },
+        'slic': {
+            'method': method,
+            'n_segments': trial.suggest_int(
+                generate_param_key(key, 'n_segments'),
+                low=10, high=200, step=10,
+            ),
+            'compactness': trial.suggest_float(
+                generate_param_key(key, 'compactness'),
+                low=1e-2, high=1e2, log=True,
+            ),
+            'sigma': trial.suggest_float(
+                generate_param_key(key, 'sigma'),
+                low=0., high=2., step=.1,
+            ),
+        },
+        'watershed': {
+            'method': method,
+            'markers': trial.suggest_int(
+                generate_param_key(key, 'markers'),
+                low=10, high=200, step=10,
+            ),
+            'compactness': trial.suggest_float(
+                generate_param_key(key, 'compactness'),
+                low=1e-6, high=1., log=True,
+            ),
+        },
+        'no_mask': {'method': method}
+    }.get(method, {})
+
+
+FeatureMaskMethod = Literal[
+    'felzenszwalb', 'quickshift', 'slic', 'watershed', 'no_mask'
+]
 FeatureMaskMethodOrFunction = Union[FeatureMaskMethod, FeatureMaskFunction]

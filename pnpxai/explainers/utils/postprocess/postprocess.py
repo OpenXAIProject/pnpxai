@@ -12,6 +12,7 @@ def postprocess_attr(
     pooled_attr = relevance_pooling(attr, channel_dim, method=pooling_method)
     normalized_attr = normalize_relevance(
         pooled_attr, method=normalization_method)
+    print(attr.shape, pooled_attr.shape, normalized_attr.shape)
     return normalized_attr
 
 

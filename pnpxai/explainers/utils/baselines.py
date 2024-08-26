@@ -1,4 +1,4 @@
-from typing import Literal, Optional, Union, Literal
+from typing import Literal, Optional, Union, Literal, Sequence
 import copy
 
 import torch
@@ -71,22 +71,6 @@ class BaselineFunction:
     def __repr__(self):
         return f"{self.__class__.__name__}(method={self.method})"
 
-    @property
-    def modality(self):
-        if self.method in BASELINE_METHODS_FOR_IMAGE:
-            return 'image'
-        elif self.method in BASELINE_METHODS_FOR_TEXT:
-            return 'text'
-        else:
-            raise KeyError
-
-    @property
-    def available_methods(self):
-        if self.modality == 'image':
-            return BASELINE_METHODS_FOR_IMAGE
-        elif self.modality == 'text':
-            return BASELINE_METHODS_FOR_TEXT
-
     def copy(self):
         return copy.copy(self)
 
@@ -103,36 +87,49 @@ class BaselineFunction:
         return BASELINE_METHODS[self.method](inputs, **self.kwargs)
 
     def suggest_tunables(self, trial: Trial, key: Optional[str] = None):
-        method = trial.suggest_categorical(
-            generate_param_key(key, 'method'),
-            choices=list(self.available_methods.keys()),
-        )
-        if method in ['zeros', 'invert', 'mask_token']:
-            return {'method': method}
-        if method == 'gaussian_blur':
-            kernel_size_x = trial.suggest_int(
+        choice_sets = [BASELINE_METHODS_FOR_IMAGE, BASELINE_METHODS_FOR_TEXT, BASELINE_METHODS_FOR_TIME_SERIES]
+        choices = sum([
+            list(choice_set.keys())
+            for choice_set in choice_sets
+            if self.method in choice_set
+        ], [])
+
+        return suggest_tunable_baselines(choices, trial, key)
+
+
+def suggest_tunable_baselines(baselines: Sequence[str], trial: Trial, key: str) -> dict:
+    method = trial.suggest_categorical(
+        generate_param_key(key, 'method'),
+        choices=baselines,
+    )
+    return _suggest_tunable_baseline_params(method, trial, key)
+
+
+def _suggest_tunable_baseline_params(method: str, trial: Trial, key: Optional[str] = None):
+    return {
+        'zeros': {'method': method},
+        'invert': {'method': method},
+        'mask_token': {'method': method},
+        'gaussian_blur': {
+            'method': method,
+            'kernel_size_x': trial.suggest_int(
                 generate_param_key(key, 'kernel_size_x'),
                 low=1, high=11, step=2,
-            )
-            kernel_size_y = trial.suggest_int(
+            ),
+            'kernel_size_y': trial.suggest_int(
                 generate_param_key(key, 'kernel_size_y'),
                 low=1, high=11, step=2,
-            )
-            sigma_x = trial.suggest_float(
+            ),
+            'sigma_x': trial.suggest_float(
                 generate_param_key(key, 'sigma_x'),
                 low=.05, high=2., step=.05,
-            )
-            sigma_y = trial.suggest_float(
+            ),
+            'sigma_y': trial.suggest_float(
                 generate_param_key(key, 'sigma_y'),
                 low=.05, high=2., step=.05,
-            )
-            return {
-                'method': method,
-                'kernel_size_x': kernel_size_x,
-                'kernel_size_y': kernel_size_y,
-                'sigma_x': sigma_x,
-                'sigma_y': sigma_y,
-            }
+            ),
+        }
+    }.get(method, {})
 
 
 BaselineMethodOrFunction = Union[BaselineMethod, BaselineFunction]

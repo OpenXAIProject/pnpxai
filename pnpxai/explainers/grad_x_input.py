@@ -1,6 +1,5 @@
 from typing import Callable, Optional, List, Tuple, Union, Sequence
 
-import torch
 from torch import Tensor
 from torch.nn.modules import Module
 from captum.attr import InputXGradient as CaptumGradientXInput

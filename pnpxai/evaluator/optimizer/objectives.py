@@ -11,6 +11,7 @@ from pnpxai.explainers.utils.baselines import BaselineFunction
 from pnpxai.evaluator.metrics.base import Metric
 from pnpxai.evaluator.optimizer.utils import generate_param_key, nest_params
 from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
+from pnpxai.evaluator.optimizer.suggestor import suggest_explainer_params
 
 
 class Objective:
@@ -100,9 +101,8 @@ class Objective:
         return explainer, postprocessor
 
     def __call__(self, trial: Trial) -> float:
-        explainer_kwargs = self.explainer.suggest_tunables(
-            trial=trial,
-            key=self.EXPLAINER_KEY,
+        explainer_kwargs = suggest_explainer_params(
+            self.explainer, self.modality, trial, key=self.EXPLAINER_KEY
         )
         postprocessor_kwargs = tuple(
             self.modality.suggest_tunable_post_processors(

@@ -1,9 +1,7 @@
-from typing import Tuple, Callable, Sequence, Union, Optional
+from typing import Tuple, Callable, Sequence, Union, Optional, Dict
 
 from torch import Tensor
 from torch.nn.modules import Module
-from optuna.trial import Trial
-from zennit.core import Composite
 
 from pnpxai.core.detector.types import Linear, Convolution, LSTM, RNN, Attention
 from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
@@ -20,13 +18,16 @@ class SmoothGrad(ZennitExplainer):
     def __init__(
         self,
         model: Module,
-        noise_level: float=.1,
-        n_iter: int=20,
-        square: bool=False,
-        forward_arg_extractor: Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]=None,
-        additional_forward_arg_extractor: Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]=None,
-        layer: Optional[Union[Union[str, Module], Sequence[Union[str, Module]]]]=None,
-        n_classes: Optional[int]=None,
+        noise_level: float = .1,
+        n_iter: int = 20,
+        square: bool = False,
+        forward_arg_extractor: Optional[Callable[[
+            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
+        additional_forward_arg_extractor: Optional[Callable[[
+            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
+        layer: Optional[Union[Union[str, Module],
+                              Sequence[Union[str, Module]]]] = None,
+        n_classes: Optional[int] = None,
     ) -> None:
         super().__init__(
             model,
@@ -61,7 +62,7 @@ class SmoothGrad(ZennitExplainer):
             noise_level=self.noise_level,
             n_iter=self.n_iter,
         )
-    
+
     def attributor(self) -> Union[SmoothGradAttributor, LayerSmoothGradAttributor]:
         if self.layer is None:
             return self._attributor
@@ -72,7 +73,8 @@ class SmoothGrad(ZennitExplainer):
         inputs: Union[Tensor, Tuple[Tensor]],
         targets: Tensor,
     ) -> Union[Tensor, Tuple[Tensor]]:
-        forward_args, additional_forward_args = self._extract_forward_args(inputs)
+        forward_args, additional_forward_args = self._extract_forward_args(
+            inputs)
         with self.attributor() as attributor:
             grads = format_into_tuple(attributor.forward(
                 forward_args,
@@ -82,14 +84,8 @@ class SmoothGrad(ZennitExplainer):
             ))
         return format_out_tuple_if_single(grads)
 
-    def suggest_tunables(self, trial: Trial, key: Optional[str]=None):
+    def get_tunables(self) -> Dict[str, Tuple[type, dict]]:
         return {
-            'noise_level': trial.suggest_float(
-                generate_param_key(key, 'noise_level'),
-                low=.1, high=1., step=.1,
-            ),
-            'n_iter': trial.suggest_int(
-                generate_param_key(key, 'n_iter'),
-                low=10, high=100, step=10,
-            ),
+            'noise_level': (float, {"low": 1., "high": 1, "step": 1.}),
+            'n_iter': (int, {"low": 10, "high": 100, "step": 10}),
         }

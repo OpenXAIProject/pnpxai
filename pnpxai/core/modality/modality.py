@@ -1,9 +1,9 @@
-from typing import Union, Tuple, Optional
-from abc import abstractmethod, ABC
+from typing import Union, Tuple, Optional, List, Sequence
+from abc import ABC
 from optuna import Trial
 from pnpxai.evaluator.optimizer.utils import generate_param_key
-from pnpxai.explainers.utils.feature_masks import FeatureMaskFunction
-from pnpxai.explainers.utils.baselines import BaselineFunction
+from pnpxai.explainers.utils.feature_masks import FeatureMaskFunction, FEATURE_MASK_FUNCTIONS, FEATURE_MASK_FUNCTIONS_FOR_IMAGE, FEATURE_MASK_FUNCTIONS_FOR_TEXT, suggest_tunable_feature_masks
+from pnpxai.explainers.utils.baselines import BaselineFunction, BASELINE_METHODS_FOR_IMAGE, BASELINE_METHODS_FOR_TEXT, BASELINE_METHODS_FOR_TIME_SERIES, BASELINE_METHODS, suggest_tunable_baselines
 from pnpxai.explainers.utils.postprocess.postprocess import PostProcessor
 from pnpxai.explainers.utils.postprocess.methods import RELEVANCE_POOLING_METHODS, RELEVANCE_NORMALIZATION_METHODS
 from pnpxai.explainers import (
@@ -31,6 +31,8 @@ class Modality(ABC):
     PP_RELEVANCE_NORMALIZATION_METHODS = tuple(
         RELEVANCE_NORMALIZATION_METHODS.keys()
     )
+    FEATURE_MASKS = tuple(FEATURE_MASK_FUNCTIONS.keys())
+    BASELINES = tuple(BASELINE_METHODS.keys())
 
     def __init__(self, channel_dim: Union[int, Tuple[int]]):
         self.channel_dim = channel_dim
@@ -41,7 +43,7 @@ class Modality(ABC):
     def get_default_baseline_fn(self, *args, **kwargs):
         return BaselineFunction(method='zeros')
 
-    def get_default_postprocessors(self):
+    def get_default_postprocessors(self) -> List[PostProcessor]:
         return [
             PostProcessor(
                 pooling_method=pm,
@@ -63,8 +65,17 @@ class Modality(ABC):
             ),
         }
 
+    def suggest_tunable_feature_masks(self, trial: Trial, key: Optional[str] = None):
+        return suggest_tunable_feature_masks(self.FEATURE_MASKS, trial, key)
+
+    def suggest_tunable_baselines(self, trial: Trial, key: Optional[str] = None):
+        return suggest_tunable_baselines(self.BASELINES, trial, key)
+
 
 class ImageModality(Modality):
+    FEATURE_MASKS = tuple(FEATURE_MASK_FUNCTIONS_FOR_TEXT.keys())
+    BASELINES = tuple(BASELINE_METHODS_FOR_IMAGE.keys())
+
     def __init__(self, channel_dim: int = 1):
         super(ImageModality, self).__init__(channel_dim)
 
@@ -88,6 +99,8 @@ class TextModality(Modality):
         AttentionRollout,
         TransformerAttribution
     )
+    FEATURE_MASKS = tuple(FEATURE_MASK_FUNCTIONS_FOR_IMAGE.keys())
+    BASELINES = tuple(BASELINE_METHODS_FOR_TEXT.keys())
 
     def __init__(self, channel_dim: int = -1):
         super(TextModality, self).__init__(channel_dim)
@@ -129,6 +142,7 @@ class ImageTextModality(ImageModality, TextModality):
 class TimeSeriesModality(Modality):
     PP_RELEVANCE_POOLING_METHODS = ('identity',)
     PP_RELEVANCE_NORMALIZATION_METHODS = ('identity',)
+    BASELINES = tuple(BASELINE_METHODS_FOR_TIME_SERIES.keys())
 
     def __init__(self, channel_dim: int = -1):
         super(TimeSeriesModality, self).__init__(channel_dim)
