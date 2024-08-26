@@ -1,3 +1,5 @@
+from typing import Tuple
+from pnpxai.explainers.base import Explainer
 from pnpxai.explainers.grad_cam import GradCam
 from pnpxai.explainers.guided_grad_cam import GuidedGradCam
 from pnpxai.explainers.gradient import Gradient
@@ -41,7 +43,7 @@ ATTENTION_SPECIFIC_EXPLAINERS = [
     AttentionRollout,
     TransformerAttribution,
 ]
-AVAILABLE_EXPLAINERS = [
+AVAILABLE_EXPLAINERS: Tuple[Explainer] = (
     GradCam,
     GuidedGradCam,
     Gradient,
@@ -57,6 +59,6 @@ AVAILABLE_EXPLAINERS = [
     Lime,
     AttentionRollout,
     TransformerAttribution,
-]
+)
 
 EXPLAINERS_FOR_TABULAR = []

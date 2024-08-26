@@ -1,29 +1,31 @@
-from typing import Optional
+from typing import Dict, Tuple
 from torch import Tensor, nn
 from captum.attr import LayerGradCam, LayerAttribution
-from optuna.trial import Trial
 
 from pnpxai.utils import format_into_tuple
-from pnpxai.evaluator.optimizer.utils import generate_param_key
+from pnpxai.core.detector.types import Convolution
 from .base import Explainer
 from .utils import find_cam_target_layer
 
 
 class GradCam(Explainer):
+    SUPPORTED_MODULES = [Convolution]
+
     def __init__(
-            self,
-            model: nn.Module,
-            interpolate_mode: str="bilinear",
-        ) -> None:
+        self,
+        model: nn.Module,
+        interpolate_mode: str = "bilinear",
+    ) -> None:
         super().__init__(model)
         self.interpolate_mode = interpolate_mode
-        
 
     def attribute(self, inputs: Tensor, targets: Tensor) -> Tensor:
-        forward_args, additional_forward_args = self._extract_forward_args(inputs)
+        forward_args, additional_forward_args = self._extract_forward_args(
+            inputs)
         forward_args = format_into_tuple(forward_args)
         additional_forward_args = format_into_tuple(additional_forward_args)
-        assert len(forward_args) == 1, 'GradCam for multiple inputs is not supported yet.'
+        assert len(
+            forward_args) == 1, 'GradCam for multiple inputs is not supported yet.'
         layer = find_cam_target_layer(self.model)
         explainer = LayerGradCam(forward_func=self.model, layer=layer)
         attrs = explainer.attribute(
@@ -39,10 +41,7 @@ class GradCam(Explainer):
         )
         return upsampled
 
-    def suggest_tunables(self, trial: Trial, key: Optional[str]=None):
+    def get_tunables(self) -> Dict[str, Tuple[type, dict]]:
         return {
-            'interpolate_mode': trial.suggest_categorical(
-                generate_param_key(key, 'interpolate_mode'),
-                choices=['bilinear', 'bicubic'],
-            ),
+            'interpolate_mode': (list, {'choices': ['bilinear', 'bicubic']}),
         }

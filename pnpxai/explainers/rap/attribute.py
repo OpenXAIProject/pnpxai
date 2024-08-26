@@ -3,12 +3,15 @@ from typing import Any, Optional, Dict
 import torch
 from torch import Tensor, nn
 
+from pnpxai.core.detector.types import Linear, Convolution
 from pnpxai.core._types import Model, DataSource, Task
 from pnpxai.explainers.base import Explainer
 from pnpxai.explainers.rap.rap import RelativeAttributePropagation
 
 
 class RAP(Explainer):
+    SUPPORTED_MODULES = [Linear, Convolution]
+
     """
     Computes Relative Attribute Propagation (RAP) explanations for a given model.
 

@@ -9,9 +9,8 @@ from zennit.types import Linear
 from .lrp import LRPBase, canonizers_base
 
 from .types import (
-    TensorOrTupleOfTensors,
     ForwardArgumentExtractor,
-    TargetLayerInput,
+    TargetLayer,
 )
 
 
@@ -34,7 +33,7 @@ class GuidedBackprop(LRPBase):
         stabilizer: float=1e-6,
         forward_arg_extractor: Optional[ForwardArgumentExtractor]=None,
         additional_forward_arg_extractor: Optional[ForwardArgumentExtractor]=None,
-        layer: Optional[TargetLayerInput]=None,
+        layer: Optional[TargetLayer]=None,
         n_classes: Optional[int]=None,
     ) -> None:
         self.stabilizer = stabilizer

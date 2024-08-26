@@ -1,12 +1,10 @@
-from typing import List, Tuple, Callable, Sequence, Union, Optional
+from typing import Dict, List, Tuple, Callable, Sequence, Union, Optional
 
 import _operator
 import warnings
 
-import torch
 from torch import nn, fx, Tensor
 from torch.nn.modules import Module
-from optuna.trial import Trial
 
 from zennit.attribution import Gradient
 from zennit.core import Composite
@@ -21,6 +19,7 @@ from zennit.types import Linear
 from zennit.rules import Epsilon
 from zennit.canonizers import SequentialMergeBatchNorm, Canonizer
 
+from pnpxai.core.detector.types import Linear, Convolution, LSTM, RNN, Attention
 from pnpxai.explainers.attentions.module_converters import default_attention_converters
 from pnpxai.explainers.attentions.rules import ConservativeAttentionPropagation
 from pnpxai.explainers.zennit.attribution import Gradient, LayerGradient
@@ -36,10 +35,13 @@ class LRPBase(ZennitExplainer):
         self,
         model: Module,
         zennit_composite: Composite,
-        forward_arg_extractor: Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]=None,
-        additional_forward_arg_extractor: Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]=None,
-        layer: Optional[Union[Union[str, Module], Sequence[Union[str, Module]]]]=None,
-        n_classes: Optional[int]=None,
+        forward_arg_extractor: Optional[Callable[[
+            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
+        additional_forward_arg_extractor: Optional[Callable[[
+            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
+        layer: Optional[Union[Union[str, Module],
+                              Sequence[Union[str, Module]]]] = None,
+        n_classes: Optional[int] = None,
     ) -> None:
         super().__init__(
             model,
@@ -52,7 +54,8 @@ class LRPBase(ZennitExplainer):
 
     def _layer_explainer(self, model: Union[Module, fx.GraphModule]) -> LayerGradient:
         wrapped_model = captum_wrap_model_input(model)
-        stack = self.layer.copy() if isinstance(self.layer, Sequence) else [self.layer]
+        stack = self.layer.copy() if isinstance(
+            self.layer, Sequence) else [self.layer]
         layers = []
         while stack:
             layer = stack.pop(0)
@@ -76,13 +79,15 @@ class LRPBase(ZennitExplainer):
                         if len(path_to_node) == 0:
                             continue
                         ancestors = [
-                            self.model.get_submodule(".".join(path_to_node[:i+1]))
+                            self.model.get_submodule(
+                                ".".join(path_to_node[:i+1]))
                             for i in range(len(path_to_node))
                         ]
                         if any(anc is layer for anc in ancestors):
                             child_nodes.append(node)
                 if not found:
-                    last_child = self.model.get_submodule(child_nodes[-1].target)
+                    last_child = self.model.get_submodule(
+                        child_nodes[-1].target)
                     layers.append(last_child)
             elif isinstance(model, Module):
                 layers.append(layer)
@@ -99,7 +104,7 @@ class LRPBase(ZennitExplainer):
             model=model,
             composite=self.zennit_composite
         )
-    
+
     def explainer(self, model) -> Union[Gradient, LayerGradient]:
         if self.layer is None:
             return self._explainer(model)
@@ -111,7 +116,8 @@ class LRPBase(ZennitExplainer):
         targets: Tensor
     ) -> Union[Tensor, Tuple[Tensor]]:
         model = _replace_add_function_with_sum_module(self.model)
-        forward_args, additional_forward_args = self._extract_forward_args(inputs)
+        forward_args, additional_forward_args = self._extract_forward_args(
+            inputs)
         with self.explainer(model=model) as attributor:
             attrs = attributor.forward(
                 forward_args,
@@ -122,22 +128,28 @@ class LRPBase(ZennitExplainer):
 
 
 class LRPUniformEpsilon(LRPBase):
+    SUPPORTED_MODULES = [Linear, Convolution, LSTM, RNN, Attention]
+
     def __init__(
         self,
         model: Module,
-        epsilon: Union[float, Callable[[Tensor], Tensor]]=.25,
-        stabilizer: Union[float, Callable[[Tensor], Tensor]]=1e-6,
-        zennit_canonizers: Optional[List[Canonizer]]=None,
-        forward_arg_extractor: Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]=None,
-        additional_forward_arg_extractor: Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]=None,
-        layer: Optional[Union[str, Module, Sequence[Union[str, Module]]]]=None,
-        n_classes: Optional[int]=None
+        epsilon: Union[float, Callable[[Tensor], Tensor]] = .25,
+        stabilizer: Union[float, Callable[[Tensor], Tensor]] = 1e-6,
+        zennit_canonizers: Optional[List[Canonizer]] = None,
+        forward_arg_extractor: Optional[Callable[[
+            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
+        additional_forward_arg_extractor: Optional[Callable[[
+            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
+        layer: Optional[Union[str, Module,
+                              Sequence[Union[str, Module]]]] = None,
+        n_classes: Optional[int] = None
     ) -> None:
         self.epsilon = epsilon
         self.stabilizer = stabilizer
         self.zennit_canonizers = zennit_canonizers
 
-        zennit_composite = _get_uniform_epsilon_composite(epsilon, stabilizer, zennit_canonizers)
+        zennit_composite = _get_uniform_epsilon_composite(
+            epsilon, stabilizer, zennit_canonizers)
         super().__init__(
             model,
             zennit_composite,
@@ -147,29 +159,31 @@ class LRPUniformEpsilon(LRPBase):
             n_classes
         )
 
-    def suggest_tunables(self, trial: Trial, key: Optional[str]=None):
+    def get_tunables(self) -> Dict[str, Tuple[type, dict]]:
         return {
-            'epsilon': trial.suggest_float(
-                generate_param_key(key, 'epsilon'),
-                1e-6, 1., log=True,
-            ),
+            'epsilon': (float, {"low": 1e-6, "high": 1, "log": True}),
         }
 
 
 class LRPEpsilonGammaBox(LRPBase):
+    SUPPORTED_MODULES = [Convolution]
+
     def __init__(
         self,
         model: Module,
-        low: float=-3.,
-        high: float=3.,
-        epsilon: Union[float, Callable[[Tensor], Tensor]]=1e-6,
-        gamma: float=.25,
-        stabilizer: Union[float, Callable[[Tensor], Tensor]]=1e-6,
-        zennit_canonizers: Optional[List[Canonizer]]=None,
-        forward_arg_extractor: Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]=None,
-        additional_forward_arg_extractor: Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]=None,
-        layer: Optional[Union[str, Module, Sequence[Union[str, Module]]]]=None,
-        n_classes: Optional[int]=None,
+        low: float = -3.,
+        high: float = 3.,
+        epsilon: Union[float, Callable[[Tensor], Tensor]] = 1e-6,
+        gamma: float = .25,
+        stabilizer: Union[float, Callable[[Tensor], Tensor]] = 1e-6,
+        zennit_canonizers: Optional[List[Canonizer]] = None,
+        forward_arg_extractor: Optional[Callable[[
+            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
+        additional_forward_arg_extractor: Optional[Callable[[
+            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
+        layer: Optional[Union[str, Module,
+                              Sequence[Union[str, Module]]]] = None,
+        n_classes: Optional[int] = None,
     ) -> None:
         self.low = low
         self.high = high
@@ -178,7 +192,8 @@ class LRPEpsilonGammaBox(LRPBase):
         self.stabilizer = stabilizer
         self.zennit_canonizers = zennit_canonizers
 
-        zennit_composite = _get_epsilon_gamma_box_composite(low, high, epsilon, gamma, stabilizer, zennit_canonizers)
+        zennit_composite = _get_epsilon_gamma_box_composite(
+            low, high, epsilon, gamma, stabilizer, zennit_canonizers)
         super().__init__(
             model,
             zennit_composite,
@@ -188,36 +203,36 @@ class LRPEpsilonGammaBox(LRPBase):
             n_classes
         )
 
-    def suggest_tunables(self, trial: Trial, key: Optional[str]=None):
+    def get_tunables(self) -> Dict[str, Tuple[type, dict]]:
         return {
-            'epsilon': trial.suggest_float(
-                generate_param_key(key, 'epsilon'),
-                1e-6, 1., log=True,
-            ),
-            'gamma': trial.suggest_float(
-                generate_param_key(key, 'gamma'),
-                1e-6, 1., log=True,
-            ),
+            'epsilon': (float, {"low": 1e-6, "high": 1, "log": True}),
+            'gamma': (float, {"low": 1e-6, "high": 1, "log": True}),
         }
 
 
 class LRPEpsilonPlus(LRPBase):
+    SUPPORTED_MODULES = [Convolution]
+
     def __init__(
         self,
         model: Module,
-        epsilon: Union[float, Callable[[Tensor], Tensor]]=1e-6,
-        stabilizer: Union[float, Callable[[Tensor], Tensor]]=1e-6,
-        zennit_canonizers: Optional[List[Canonizer]]=None,
-        forward_arg_extractor: Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]=None,
-        additional_forward_arg_extractor: Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]=None,
-        layer: Optional[Union[str, Module, Sequence[Union[str, Module]]]]=None,
-        n_classes: Optional[int]=None
+        epsilon: Union[float, Callable[[Tensor], Tensor]] = 1e-6,
+        stabilizer: Union[float, Callable[[Tensor], Tensor]] = 1e-6,
+        zennit_canonizers: Optional[List[Canonizer]] = None,
+        forward_arg_extractor: Optional[Callable[[
+            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
+        additional_forward_arg_extractor: Optional[Callable[[
+            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
+        layer: Optional[Union[str, Module,
+                              Sequence[Union[str, Module]]]] = None,
+        n_classes: Optional[int] = None
     ) -> None:
         self.epsilon = epsilon
         self.stabilizer = stabilizer
         self.zennit_canonizers = zennit_canonizers
 
-        zennit_composite = _get_epsilon_plus_composite(epsilon, stabilizer, zennit_canonizers)
+        zennit_composite = _get_epsilon_plus_composite(
+            epsilon, stabilizer, zennit_canonizers)
         super().__init__(
             model,
             zennit_composite,
@@ -227,32 +242,35 @@ class LRPEpsilonPlus(LRPBase):
             n_classes
         )
 
-    def suggest_tunables(self, trial: Trial, key: Optional[str]=None):
+    def get_tunables(self) -> Dict[str, Tuple[type, dict]]:
         return {
-            'epsilon': trial.suggest_float(
-                generate_param_key(key, 'epsilon'),
-                1e-6, 1., log=True,
-            ),
+            'epsilon': (float, {"low": 1e-6, "high": 1, "log": True}),
         }
 
 
 class LRPEpsilonAlpha2Beta1(LRPBase):
+    SUPPORTED_MODULES = [Convolution]
+
     def __init__(
         self,
         model: Module,
-        epsilon: Union[float, Callable[[Tensor], Tensor]]=1e-6,
-        stabilizer: Union[float, Callable[[Tensor], Tensor]]=1e-6,
-        zennit_canonizers: Optional[List[Canonizer]]=None,
-        forward_arg_extractor: Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]=None,
-        additional_forward_arg_extractor: Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]=None,
-        layer: Optional[Union[str, Module, Sequence[Union[str, Module]]]]=None,
-        n_classes: Optional[int]=None
+        epsilon: Union[float, Callable[[Tensor], Tensor]] = 1e-6,
+        stabilizer: Union[float, Callable[[Tensor], Tensor]] = 1e-6,
+        zennit_canonizers: Optional[List[Canonizer]] = None,
+        forward_arg_extractor: Optional[Callable[[
+            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
+        additional_forward_arg_extractor: Optional[Callable[[
+            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
+        layer: Optional[Union[str, Module,
+                              Sequence[Union[str, Module]]]] = None,
+        n_classes: Optional[int] = None
     ) -> None:
         self.epsilon = epsilon
         self.stabilizer = stabilizer
         self.zennit_canonizers = zennit_canonizers
 
-        zennit_composite = _get_epsilon_alpha2_beta1_composite(epsilon, stabilizer, zennit_canonizers)
+        zennit_composite = _get_epsilon_alpha2_beta1_composite(
+            epsilon, stabilizer, zennit_canonizers)
         super().__init__(
             model,
             zennit_composite,
@@ -262,14 +280,11 @@ class LRPEpsilonAlpha2Beta1(LRPBase):
             n_classes
         )
 
-    def suggest_tunables(self, trial: Trial, key: Optional[str]=None):
+    def get_tunables(self) -> Dict[str, Tuple[type, dict]]:
         return {
-            'epsilon': trial.suggest_float(
-                generate_param_key(key, 'epsilon'),
-                1e-6, 1., log=True,
-            ),
+            'epsilon': (float, {"low": 1e-6, "high": 1, "log": True}),
         }
-    
+
 
 def _get_uniform_epsilon_composite(epsilon, stabilizer, zennit_canonizers):
     zennit_canonizers = zennit_canonizers or []
@@ -322,7 +337,7 @@ def _get_epsilon_alpha2_beta1_composite(epsilon, stabilizer, zennit_canonizers):
     return composite
 
 
-def transformer_layer_map(stabilizer: float=1e-6):
+def transformer_layer_map(stabilizer: float = 1e-6):
     layer_map = [
         (nn.MultiheadAttention, ConservativeAttentionPropagation(stabilizer=stabilizer)),
         (nn.LayerNorm, LayerNormRule(stabilizer=stabilizer)),
@@ -338,20 +353,23 @@ def _replace_add_function_with_sum_module(model: Module) -> fx.GraphModule:
     try:
         traced_model = fx.symbolic_trace(model)
     except:
-        warnings.warn("Your model cannot be traced by torch.fx.symbolic_trace.")
+        warnings.warn(
+            "Your model cannot be traced by torch.fx.symbolic_trace.")
         return model
     treated = False
     for node in traced_model.graph.nodes:
         if node.target is _operator.add:
             treated = True
             with traced_model.graph.inserting_after(node):
-                traced_model.add_submodule(f"_replaced_{node.name}", StackAndSum())
-                replacement = traced_model.graph.call_module(f"_replaced_{node.name}", args=node.args)
+                traced_model.add_submodule(
+                    f"_replaced_{node.name}", StackAndSum())
+                replacement = traced_model.graph.call_module(
+                    f"_replaced_{node.name}", args=node.args)
                 node.replace_all_uses_with(replacement)
                 traced_model.graph.erase_node(node)
     if not treated:
         return model
-    
+
     # ensure changes
     traced_model.graph.lint()
     traced_model.recompile()

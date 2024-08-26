@@ -7,4 +7,5 @@ from pnpxai.core.experiment import (
     AutoExplanationForTextClassification,
     AutoExplanationForVisualQuestionAnswering,
     AutoExplanationForTabularClassification,
+    AutoExplanationForTSClassification,
 )    

@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader, Subset, Dataset
 from pnpxai.core.experiment.cache import ExperimentCache
 from pnpxai.core._types import DataSource
 from pnpxai.explainers.base import Explainer
-from pnpxai.explainers.utils.postprocess import PostProcessor
+from pnpxai.explainers.utils.postprocess.postprocess import PostProcessor
 from pnpxai.evaluator.metrics.base import Metric
 from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 
@@ -28,7 +28,7 @@ class ExperimentManager:
         self.set_data_ids()
         self._explainers: List[Explainer] = []
         self._explainer_ids: List[int] = []
-        self._postprocessors: List[Callable] =[]
+        self._postprocessors: List[PostProcessor] =[]
         self._postprocessor_ids: List[int] = []
         self._metrics: List[Metric] = []
         self._metric_ids: List[int] = []
@@ -174,7 +174,7 @@ class ExperimentManager:
         for data_id in data_ids:
             output = self.get_output_by_id(data_id)
             if output is None:
-                raise KeyError(f"Output for {data} does not exist in cache.")
+                raise KeyError(f"Output for {data_id} does not exist in cache.")
             batch.append(output)
         return self._format_batch(batch)
 
