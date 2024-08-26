@@ -99,6 +99,10 @@ class TextModality(Modality):
         AttentionRollout,
         TransformerAttribution
     )
+    PP_RELEVANCE_POOLING_METHODS = tuple(
+        k for k in RELEVANCE_POOLING_METHODS.keys()
+        if k != 'identity'
+    )
     FEATURE_MASKS = tuple(FEATURE_MASK_FUNCTIONS_FOR_IMAGE.keys())
     BASELINES = tuple(BASELINE_METHODS_FOR_TEXT.keys())
 
@@ -110,7 +114,19 @@ class TextModality(Modality):
 
 
 class ImageTextModality(ImageModality, TextModality):
-    EXPLAINERS = tuple(iter(TextModality.EXPLAINERS))
+    EXPLAINERS = (
+        Gradient,
+        GradientXInput,
+        SmoothGrad,
+        VarGrad,
+        IntegratedGradients,
+        LRPUniformEpsilon,
+        LRPEpsilonPlus,
+        LRPEpsilonGammaBox,
+        LRPEpsilonAlpha2Beta1,
+        KernelShap,
+        Lime,
+    )
 
     def __init__(self, channel_dim: Tuple[int] = (1, -1)):
         super().__init__(channel_dim)

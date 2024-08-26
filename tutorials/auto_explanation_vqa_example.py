@@ -45,7 +45,6 @@ expr = AutoExplanationForVisualQuestionAnswering(
     additional_forward_arg_extractor=additional_forward_arg_extractor,
 )
 
-
 # test
 for explainer_id in range(len(expr.manager.explainers)):
     optimized, objective, study = expr.optimize(
@@ -54,5 +53,4 @@ for explainer_id in range(len(expr.manager.explainers)):
         metric_id=1,
         direction='maximize',
         sampler='tpe',
-        n_trials=1,
     )
