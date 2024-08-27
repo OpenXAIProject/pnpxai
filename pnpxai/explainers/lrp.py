@@ -369,7 +369,6 @@ def _replace_add_function_with_sum_module(model: Module) -> fx.GraphModule:
                 traced_model.graph.erase_node(node)
     if not treated:
         return model
-
     # ensure changes
     traced_model.graph.lint()
     traced_model.recompile()

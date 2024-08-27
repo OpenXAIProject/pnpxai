@@ -268,6 +268,7 @@ class Experiment(Observable):
             objective,
             n_trials=n_trials,
             timeout=timeout,
+            n_jobs=1,
         )
 
         # update explainer

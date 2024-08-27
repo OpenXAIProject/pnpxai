@@ -58,17 +58,15 @@ def quickshift_for_tensor(
 
 def slic_for_tensor(
     inputs,
-    n_segments: int,
-    compactness: float,  # [0, 100] logscale
-    sigma: float,
+    compactness: float, # [0, 100] logscale
     **kwargs
 ):
     return _skseg_for_tensor(
         slic,
         inputs,
-        n_segments=n_segments,
+        n_segments=150,
         compactness=compactness,
-        sigma=sigma,
+        sigma=0,
     )
 
 
@@ -96,7 +94,7 @@ FEATURE_MASK_FUNCTIONS_FOR_IMAGE = {
     'felzenszwalb': felzenszwalb_for_tensor,
     'quickshift': quickshift_for_tensor,
     'slic': slic_for_tensor,
-    # 'watershed': watershed_for_tensor,
+    # 'watershed': watershed_for_tensor, TODO: watershed
 }
 
 FEATURE_MASK_FUNCTIONS_FOR_TEXT = {
