@@ -4,8 +4,7 @@ from optuna import Trial
 from pnpxai.evaluator.optimizer.utils import generate_param_key
 from pnpxai.explainers.utils.feature_masks import FeatureMaskFunction, FEATURE_MASK_FUNCTIONS, FEATURE_MASK_FUNCTIONS_FOR_IMAGE, FEATURE_MASK_FUNCTIONS_FOR_TEXT, suggest_tunable_feature_masks
 from pnpxai.explainers.utils.baselines import BaselineFunction, BASELINE_METHODS_FOR_IMAGE, BASELINE_METHODS_FOR_TEXT, BASELINE_METHODS_FOR_TIME_SERIES, BASELINE_METHODS, suggest_tunable_baselines
-from pnpxai.explainers.utils.postprocess.postprocess import PostProcessor
-from pnpxai.explainers.utils.postprocess.methods import RELEVANCE_POOLING_METHODS, RELEVANCE_NORMALIZATION_METHODS
+from pnpxai.explainers.utils.postprocess import PostProcessor, RELEVANCE_POOLING_METHODS, RELEVANCE_NORMALIZATION_METHODS
 from pnpxai.explainers import (
     Gradient,
     GradientXInput,
@@ -157,7 +156,7 @@ class ImageTextModality(ImageModality, TextModality):
 
 class TimeSeriesModality(Modality):
     PP_RELEVANCE_POOLING_METHODS = ('identity',)
-    PP_RELEVANCE_NORMALIZATION_METHODS = ('identity',)
+    PP_RELEVANCE_NORMALIZATION_METHODS = ('identity', 'minmax')
     BASELINES = tuple(BASELINE_METHODS_FOR_TIME_SERIES.keys())
 
     def __init__(self, channel_dim: int = -1):
