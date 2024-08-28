@@ -27,7 +27,6 @@ from pnpxai.explainers.zennit.rules import LayerNormRule
 from pnpxai.explainers.zennit.base import ZennitExplainer
 from pnpxai.explainers.zennit.layer import StackAndSum
 from pnpxai.explainers.utils import captum_wrap_model_input
-from pnpxai.evaluator.optimizer.utils import generate_param_key
 
 
 class LRPBase(ZennitExplainer):

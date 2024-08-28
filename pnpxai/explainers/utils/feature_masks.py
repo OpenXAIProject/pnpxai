@@ -12,8 +12,6 @@ from pnpxai.evaluator.optimizer.utils import generate_param_key
 
 
 def _skseg_for_tensor(fn, inputs: torch.Tensor, **kwargs):
-    if fn == quickshift:
-        inputs = inputs.tile(1, 3, 1, 1)
     feature_mask = [
         torch.tensor(fn(
             inp.permute(1, 2, 0).detach().cpu().numpy(),
@@ -86,10 +84,11 @@ def watershed_for_tensor(
     )
 
 
-def no_mask_for_text(inputs, **kwargs):
-    bsz, seq_len = inputs.size()
-    seq_masks = torch.arange(seq_len).repeat(bsz).view(bsz, seq_len)
-    return seq_masks.to(inputs.device)
+def no_mask(inputs, channel_dim: int = -1, **kwargs):
+    return torch.arange(inputs.size(channel_dim))\
+        .expand_as(inputs)\
+        .long()\
+        .to(inputs.device)
 
 
 FEATURE_MASK_FUNCTIONS_FOR_IMAGE = {
@@ -100,12 +99,17 @@ FEATURE_MASK_FUNCTIONS_FOR_IMAGE = {
 }
 
 FEATURE_MASK_FUNCTIONS_FOR_TEXT = {
-    'no_mask': no_mask_for_text,
+    'no_mask': no_mask,
+}
+
+FEATURE_MASK_FUNCTIONS_FOR_TIME_SERIES = {
+    'no_mask': no_mask,
 }
 
 FEATURE_MASK_FUNCTIONS = {
     **FEATURE_MASK_FUNCTIONS_FOR_IMAGE,
     **FEATURE_MASK_FUNCTIONS_FOR_TEXT,
+    **FEATURE_MASK_FUNCTIONS_FOR_TIME_SERIES
 }
 
 

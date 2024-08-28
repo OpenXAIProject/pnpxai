@@ -15,6 +15,7 @@ def _suggest_explainer_feature_mask(name: str, explainer: Explainer, modality: M
         modality.suggest_tunable_feature_masks(
             trial=trial,
             key=generate_param_key(key, name, order),
+            order=order
         )
         for order, feature_mask_fn in enumerate(feature_mask_fns)
     ))
@@ -26,6 +27,7 @@ def _suggest_explainer_baseline(name: str, explainer: Explainer, modality: Modal
         modality.suggest_tunable_baselines(
             trial=trial,
             key=generate_param_key(key, name, order),
+            order=order
         )
         for order, baseline_fn in enumerate(baseline_fns)
     ))
@@ -33,7 +35,7 @@ def _suggest_explainer_baseline(name: str, explainer: Explainer, modality: Modal
 
 def suggest_explainer_params(explainer: Explainer, modality: Modality, trial: Trial, key: Optional[str] = None):
     params = {}
-    for name, method_data in explainer.TUNABLES:
+    for name, method_data in explainer.get_tunables().items():
         method_type, method_kwargs = method_data
         if method_type == BaselineFunction:
             params[name] = _suggest_explainer_baseline(
@@ -62,5 +64,4 @@ def suggest_explainer_params(explainer: Explainer, modality: Modality, trial: Tr
         params[name] = method(
             name=generate_param_key(key, name), **method_kwargs
         )
-
     return params
