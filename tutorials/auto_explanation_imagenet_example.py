@@ -53,7 +53,7 @@ results = expr.run_batch(
 
 # user inputs
 explainer_id = 5 # explainer_id to be optimized: KernelShap
-metric_id = 0 # metric_id to be used as objective: AbPC
+metric_id = 0 # metric_id to be used as objective: MuFidelity
 data_id = 0
 
 # optimize: returns optimal explainer id, optimal postprocessor id, (and study)
@@ -61,7 +61,7 @@ optimized, objective, study = expr.optimize(
     data_id=data_id,
     explainer_id=explainer_id,
     metric_id=metric_id,
-    direction='maximize', # larger better
+    direction='minimize', # less is better
     sampler='tpe', # Literal['tpe','random']
     n_trials=50, # by default, 50 for sampler in ['random', 'tpe'], None for ['grid']
     seed=42, # seed for sampler: by default, None

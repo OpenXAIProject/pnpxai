@@ -79,10 +79,10 @@ class Modality(ABC):
             ),
         }
 
-    def suggest_tunable_feature_masks(self, trial: Trial, key: Optional[str] = None):
+    def suggest_tunable_feature_masks(self, trial: Trial, key: Optional[str] = None, order: Optional[int] = None):
         return suggest_tunable_feature_masks(self.FEATURE_MASKS, trial, key)
 
-    def suggest_tunable_baselines(self, trial: Trial, key: Optional[str] = None):
+    def suggest_tunable_baselines(self, trial: Trial, key: Optional[str] = None, order: Optional[int] = None):
         return suggest_tunable_baselines(self.BASELINES, trial, key)
 
 
@@ -128,6 +128,8 @@ class TextModality(Modality):
 
 
 class ImageTextModality(ImageModality, TextModality):
+    FEATURE_MASKS = (ImageModality.FEATURE_MASKS, TextModality.FEATURE_MASKS)
+    BASELINES = (ImageModality.BASELINES, TextModality.BASELINES)
     EXPLAINERS = (
         Gradient,
         GradientXInput,
@@ -156,6 +158,16 @@ class ImageTextModality(ImageModality, TextModality):
             ImageModality.get_default_baseline_fn(self),
             TextModality.get_default_baseline_fn(self, mask_token_id),
         )
+
+    def suggest_tunable_feature_masks(self, trial: Trial, key: Optional[str] = None, order: Optional[int] = None):
+        if order < len(self.FEATURE_MASKS):
+            return suggest_tunable_feature_masks(self.FEATURE_MASKS[order], trial, key)
+        return suggest_tunable_feature_masks(self.FEATURE_MASKS[0], trial, key)
+
+    def suggest_tunable_baselines(self, trial: Trial, key: Optional[str] = None, order: Optional[int] = None):
+        if order < len(self.BASELINES):
+            return suggest_tunable_baselines(self.BASELINES[order], trial, key)
+        return suggest_tunable_baselines(self.BASELINES[0], trial, key)
 
     def get_default_postprocessors(self):
         return [

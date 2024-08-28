@@ -59,9 +59,14 @@ RELEVANCE_POOLING_METHODS = {
     'identity': identity,
 }
 
+ALL_RELEVANCE_POOLING_METHODS = {
+    **RELEVANCE_POOLING_METHODS,
+    'identity': identity,
+}
+
 
 def relevance_pooling(attrs: Tensor, channel_dim: int, method='l2normsq'):
-    return RELEVANCE_POOLING_METHODS[method](attrs, channel_dim)
+    return ALL_RELEVANCE_POOLING_METHODS[method](attrs, channel_dim)
 
 
 def minmax_normalization(attrs: Tensor):
@@ -77,6 +82,11 @@ RELEVANCE_NORMALIZATION_METHODS = {
     'identity': identity,
 }
 
+ALL_RELEVANCE_NORMALIZATION_METHODS = {
+    **RELEVANCE_NORMALIZATION_METHODS,
+    'identity': identity,
+}
+
 
 def normalize_relevance(pooled_attr: Tensor, method='minmax'):
-    return RELEVANCE_NORMALIZATION_METHODS[method](pooled_attr)
+    return ALL_RELEVANCE_NORMALIZATION_METHODS[method](pooled_attr)
