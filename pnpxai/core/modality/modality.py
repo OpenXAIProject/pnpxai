@@ -79,15 +79,15 @@ class Modality(ABC):
             ),
         }
 
-    def suggest_tunable_feature_masks(self, trial: Trial, key: Optional[str] = None):
+    def suggest_tunable_feature_masks(self, trial: Trial, key: Optional[str] = None, order: Optional[int] = None):
         return suggest_tunable_feature_masks(self.FEATURE_MASKS, trial, key)
 
-    def suggest_tunable_baselines(self, trial: Trial, key: Optional[str] = None):
+    def suggest_tunable_baselines(self, trial: Trial, key: Optional[str] = None, order: Optional[int] = None):
         return suggest_tunable_baselines(self.BASELINES, trial, key)
 
 
 class ImageModality(Modality):
-    FEATURE_MASKS = tuple(FEATURE_MASK_FUNCTIONS_FOR_TEXT.keys())
+    FEATURE_MASKS = tuple(FEATURE_MASK_FUNCTIONS_FOR_IMAGE.keys())
     BASELINES = tuple(BASELINE_METHODS_FOR_IMAGE.keys())
 
     def __init__(self, channel_dim: int = 1):
@@ -117,7 +117,7 @@ class TextModality(Modality):
         k for k in RELEVANCE_POOLING_METHODS.keys()
         if k != 'identity'
     )
-    FEATURE_MASKS = tuple(FEATURE_MASK_FUNCTIONS_FOR_IMAGE.keys())
+    FEATURE_MASKS = tuple(FEATURE_MASK_FUNCTIONS_FOR_TEXT.keys())
     BASELINES = tuple(BASELINE_METHODS_FOR_TEXT.keys())
 
     def __init__(self, channel_dim: int = -1):
@@ -128,6 +128,8 @@ class TextModality(Modality):
 
 
 class ImageTextModality(ImageModality, TextModality):
+    FEATURE_MASKS = (ImageModality.FEATURE_MASKS, TextModality.FEATURE_MASKS)
+    BASELINES = (ImageModality.BASELINES, TextModality.BASELINES)
     EXPLAINERS = (
         Gradient,
         GradientXInput,
@@ -157,6 +159,16 @@ class ImageTextModality(ImageModality, TextModality):
             TextModality.get_default_baseline_fn(self, mask_token_id),
         )
 
+    def suggest_tunable_feature_masks(self, trial: Trial, key: Optional[str] = None, order: Optional[int] = None):
+        if order < len(self.FEATURE_MASKS):
+            return suggest_tunable_feature_masks(self.FEATURE_MASKS[order], trial, key)
+        return suggest_tunable_feature_masks(self.FEATURE_MASKS[0], trial, key)
+
+    def suggest_tunable_baselines(self, trial: Trial, key: Optional[str] = None, order: Optional[int] = None):
+        if order < len(self.BASELINES):
+            return suggest_tunable_baselines(self.BASELINES[order], trial, key)
+        return suggest_tunable_baselines(self.BASELINES[0], trial, key)
+
     def get_default_postprocessors(self):
         return [
             tuple(PostProcessor(
@@ -179,4 +191,4 @@ class TimeSeriesModality(Modality):
         super(TimeSeriesModality, self).__init__(channel_dim)
 
     def get_default_feature_mask_fn(self):
-        return FeatureMaskFunction(method='no_mask_general')
+        return FeatureMaskFunction(method='no_mask')
