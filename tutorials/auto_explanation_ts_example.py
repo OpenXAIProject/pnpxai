@@ -85,7 +85,7 @@ expr.manager.get_postprocessor_by_id(0)
 expr.manager.get_metric_by_id(3)  # -> Metric. In this case, AbPC
 
 # user inputs
-explainer_id = 3  # explainer_id to be optimized: KernelShap
+explainer_id = 5  # explainer_id to be optimized: KernelShap
 metric_id = 1  # metric_id to be used as objective: AbPC
 post_processor_id = 0
 data_id = 0

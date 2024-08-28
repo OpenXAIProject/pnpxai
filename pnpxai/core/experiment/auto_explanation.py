@@ -98,7 +98,7 @@ class AutoExplanation(Experiment):
 
     def _generate_default_kwargs_for_explainer(self):
         return {
-            'feature_mask_fn': self.modality.get_default_baseline_fn(),
+            'feature_mask_fn': self.modality.get_default_feature_mask_fn(),
             'baseline_fn': self.modality.get_default_baseline_fn(),
         }
 
@@ -259,6 +259,7 @@ class AutoExplanationForTSClassification(AutoExplanation):
     def _generate_default_kwargs_for_metric(self):
         return {
             'baseline_fn': self.modality.get_default_baseline_fn(),
+            'feature_mask_fn': self.modality.get_default_feature_mask_fn(),
             'channel_dim': self.modality.channel_dim,
             'mask_agg_dim': self.mask_agg_dim,
         }
