@@ -92,6 +92,13 @@ def no_mask_for_text(inputs, **kwargs):
     return seq_masks.to(inputs.device)
 
 
+def no_mask_general(inputs, channel_dim: int = -1, **kwargs):
+    return torch.arange(inputs.size(channel_dim))\
+        .expand_as(inputs)\
+        .long()\
+        .to(inputs.device)
+
+
 FEATURE_MASK_FUNCTIONS_FOR_IMAGE = {
     'felzenszwalb': felzenszwalb_for_tensor,
     'quickshift': quickshift_for_tensor,
@@ -103,9 +110,14 @@ FEATURE_MASK_FUNCTIONS_FOR_TEXT = {
     'no_mask': no_mask_for_text,
 }
 
+FEATURE_MASK_FUNCTIONS_FOR_TIME_SERIES = {
+    'no_mask_general': no_mask_general,
+}
+
 FEATURE_MASK_FUNCTIONS = {
     **FEATURE_MASK_FUNCTIONS_FOR_IMAGE,
     **FEATURE_MASK_FUNCTIONS_FOR_TEXT,
+    **FEATURE_MASK_FUNCTIONS_FOR_TIME_SERIES
 }
 
 

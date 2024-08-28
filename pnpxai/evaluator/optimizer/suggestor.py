@@ -33,7 +33,7 @@ def _suggest_explainer_baseline(name: str, explainer: Explainer, modality: Modal
 
 def suggest_explainer_params(explainer: Explainer, modality: Modality, trial: Trial, key: Optional[str] = None):
     params = {}
-    for name, method_data in explainer.TUNABLES:
+    for name, method_data in explainer.get_tunables().items():
         method_type, method_kwargs = method_data
         if method_type == BaselineFunction:
             params[name] = _suggest_explainer_baseline(
@@ -62,5 +62,4 @@ def suggest_explainer_params(explainer: Explainer, modality: Modality, trial: Tr
         params[name] = method(
             name=generate_param_key(key, name), **method_kwargs
         )
-
     return params
