@@ -17,9 +17,9 @@ cur_path = os.path.dirname(os.path.realpath(__file__))
 batch_size = 64
 
 
-def get_ts_dataset_loader(dsid: str, path: str, batch_size: int = 64):
+def get_ts_dataset_loader(dataset: str, path: str, batch_size: int = 64):
     x_train, y_train, x_valid, y_valid = get_UCR_data(
-        dsid, path, return_split=True
+        dataset, path, return_split=True
     )
     x, y, splits = combine_split_data([x_train, x_valid], [y_train, y_valid])
     dsets = TSDatasets(
@@ -31,7 +31,7 @@ def get_ts_dataset_loader(dsid: str, path: str, batch_size: int = 64):
 
 
 def train_model(loader: TSDataLoaders, model: torch.nn.Module, model_path: str, epochs: int = 15, lr: float = 1e-3):
-    os.makedirs(model_path, exist_ok=True)
+    os.makedirs(os.path.dirname(model_path), exist_ok=True)
 
     learner = Learner(loader, model, metrics=accuracy)
     try:
@@ -50,9 +50,11 @@ def tensor_mapper(x: TSTensor):
     return torch.from_numpy(x.cpu().numpy())
 
 
-loader = get_ts_dataset_loader('ECG200', cur_path, batch_size)
+dsid = "TwoLeadECG"
+loader = get_ts_dataset_loader(dsid, cur_path, batch_size)
 model = InceptionTime(loader.vars, loader.c)
-model = train_model(loader, model, f"{cur_path}/data/models/inceptiontime")
+model = train_model(
+    loader, model, f"{cur_path}/data/models/inceptiontime/{dsid}.pth", epochs=40)
 
 test_data = DataLoader(
     loader.valid.dataset,
@@ -85,7 +87,7 @@ expr.manager.get_postprocessor_by_id(0)
 expr.manager.get_metric_by_id(3)  # -> Metric. In this case, AbPC
 
 # user inputs
-explainer_id = 5  # explainer_id to be optimized: KernelShap
+explainer_id = 4  # explainer_id to be optimized: KernelShap
 metric_id = 1  # metric_id to be used as objective: AbPC
 post_processor_id = 0
 data_id = 0
@@ -166,6 +168,43 @@ def threshold_plot(ax: Axes, predictions, confidences, color_mapper=None):
 
 
 # plots
+uniq_labels = {}
+for idx, label in enumerate(expr.get_labels_flattened()):
+    uniq_labels[label] = idx
+    if len(uniq_labels) == loader.c:
+        break
+
+uniq_labels = dict(sorted(uniq_labels.items(), key=lambda x: x[0]))
+fig, axes = plt.subplots(len(uniq_labels), 2, figsize=(4, 4))
+
+# inputs
+data_ids = list(uniq_labels.values())
+data, _ = expr.manager.get_data(data_ids)
+inputs, labels = [], []
+for datum, label in data:
+    inputs.append(datum)
+    labels.append(label)
+
+inputs = torch.concatenate(inputs).to(device)
+labels = torch.concatenate(labels).to(device)
+
+for idx, (data_id, label) in enumerate(uniq_labels.items()):
+    plot_inputs = inputs[idx, 0, :].tolist()
+    axes[idx, 0].plot(plot_inputs)
+    axes[idx, 0].set_ylabel(f'Label: {label}')
+    attrs = expr.manager.get_explanation_by_id(data_id, explainer_id)
+    attrs = attrs / attrs.abs().max()
+    threshold_plot(axes[idx, 1], plot_inputs, attrs[0, :].tolist())
+
+plt.tight_layout()
+plt.savefig(
+    os.path.join(
+        cur_path,
+        f'opt_{explainer.__class__.__name__}_by_{metric.__class__.__name__}_all.png'
+    ))
+
+
+# plots
 fig, axes = plt.subplots(1, 4, figsize=(16, 4))
 opt_attrs = expr.manager.get_explanation_by_id(  # get the optimal explanation
     data_id=optimized['data_id'],
@@ -193,8 +232,9 @@ for loc, (title, trial) in enumerate(trials.items(), 1):
     attrs = explainer.attribute(inputs, targets)
     postprocessed = postprocessor(attrs)
     axes[loc].set_title(f'{title}:{"{:4f}".format(trial.value)}')
+    plot_atts = postprocessed / postprocessed.abs().max()
     threshold_plot(axes[loc], inputs[0, 0, :].tolist(),
-                   postprocessed[0, 0, :].tolist())
+                   plot_atts[0, 0, :].tolist())
 
 for ax in axes:
     ax.set_xticks([])

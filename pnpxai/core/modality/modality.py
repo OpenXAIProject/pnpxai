@@ -18,8 +18,7 @@ from pnpxai.explainers.utils.baselines import (
     BASELINE_METHODS,
     suggest_tunable_baselines
 )
-from pnpxai.explainers.utils.postprocess.postprocess import PostProcessor
-from pnpxai.explainers.utils.postprocess.methods import RELEVANCE_POOLING_METHODS, RELEVANCE_NORMALIZATION_METHODS
+from pnpxai.explainers.utils.postprocess import PostProcessor, RELEVANCE_POOLING_METHODS, RELEVANCE_NORMALIZATION_METHODS
 from pnpxai.explainers import (
     Gradient,
     GradientXInput,

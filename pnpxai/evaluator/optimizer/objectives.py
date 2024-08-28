@@ -6,7 +6,7 @@ from pnpxai.core._types import TensorOrTupleOfTensors
 from pnpxai.core.modality.modality import Modality
 from pnpxai.explainers.base import Explainer
 from pnpxai.explainers import KernelShap, Lime
-from pnpxai.explainers.utils.postprocess.postprocess import PostProcessor
+from pnpxai.explainers.utils.postprocess import PostProcessor
 from pnpxai.evaluator.metrics.base import Metric
 from pnpxai.evaluator.optimizer.utils import generate_param_key, nest_params
 from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
