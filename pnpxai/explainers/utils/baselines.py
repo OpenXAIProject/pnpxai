@@ -15,10 +15,6 @@ def zero_baseline_function(inputs, **kwargs):
     return torch.zeros_like(inputs)
 
 
-def mean_baseline_function(inputs, target_dim: int = -1, **kwargs):
-    return torch.mean(inputs, dim=target_dim, keepdim=True)
-
-
 def invert_baseline_function(inputs, **kwargs):
     return TF.invert(inputs)
 
@@ -49,8 +45,7 @@ BASELINE_METHODS_FOR_TEXT = {
 }
 
 BASELINE_METHODS_FOR_TIME_SERIES = {
-    'zeros': zero_baseline_function,
-    'mean': mean_baseline_function,
+    'zeros': zero_baseline_function
 }
 
 BASELINE_METHODS = {

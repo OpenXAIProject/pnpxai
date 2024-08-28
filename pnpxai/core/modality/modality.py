@@ -87,7 +87,7 @@ class Modality(ABC):
 
 
 class ImageModality(Modality):
-    FEATURE_MASKS = tuple(FEATURE_MASK_FUNCTIONS_FOR_TEXT.keys())
+    FEATURE_MASKS = tuple(FEATURE_MASK_FUNCTIONS_FOR_IMAGE.keys())
     BASELINES = tuple(BASELINE_METHODS_FOR_IMAGE.keys())
 
     def __init__(self, channel_dim: int = 1):
@@ -117,7 +117,7 @@ class TextModality(Modality):
         k for k in RELEVANCE_POOLING_METHODS.keys()
         if k != 'identity'
     )
-    FEATURE_MASKS = tuple(FEATURE_MASK_FUNCTIONS_FOR_IMAGE.keys())
+    FEATURE_MASKS = tuple(FEATURE_MASK_FUNCTIONS_FOR_TEXT.keys())
     BASELINES = tuple(BASELINE_METHODS_FOR_TEXT.keys())
 
     def __init__(self, channel_dim: int = -1):
@@ -179,4 +179,4 @@ class TimeSeriesModality(Modality):
         super(TimeSeriesModality, self).__init__(channel_dim)
 
     def get_default_feature_mask_fn(self):
-        return FeatureMaskFunction(method='no_mask_general')
+        return FeatureMaskFunction(method='no_mask')
