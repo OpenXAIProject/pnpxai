@@ -107,10 +107,10 @@ opt_attrs = expr.get_explanations_flattened(data_ids=optimized['data_ids'])[
 ]  # get the optimal explanation
 
 # inputs
-inputs, _ = expr.manager.batch_data_by_ids(data_ids=[optimized['data_ids']])
+inputs, _ = expr.manager.batch_data_by_ids(data_ids=optimized['data_ids'])
 inputs = inputs.to(device)
 targets = expr.manager.batch_outputs_by_ids(
-    data_ids=[optimized['data_ids']]).argmax(-1).to(device)
+    data_ids=optimized['data_ids']).argmax(-1).to(device)
 
 axes[0].imshow(denormalize_image(
     inputs[0].detach().cpu(),
