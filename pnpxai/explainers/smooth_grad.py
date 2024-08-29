@@ -86,6 +86,6 @@ class SmoothGrad(ZennitExplainer):
 
     def get_tunables(self) -> Dict[str, Tuple[type, dict]]:
         return {
-            'noise_level': (float, {"low": 1., "high": 1, "step": 1.}),
+            'noise_level': (float, {"low": .05, "high": .95, "step": .05}),
             'n_iter': (int, {"low": 10, "high": 100, "step": 10}),
         }

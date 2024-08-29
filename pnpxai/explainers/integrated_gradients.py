@@ -8,6 +8,7 @@ from captum.attr import LayerIntegratedGradients as CaptumLayerIntegratedGradien
 from pnpxai.core.detector.types import Linear, Convolution, Attention
 from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 from pnpxai.explainers.utils.baselines import BaselineMethodOrFunction, BaselineFunction
+from pnpxai.explainers.utils.function_selectors import BaselineFunctionSelector
 from .base import Explainer
 from .utils import captum_wrap_model_input
 
@@ -63,18 +64,20 @@ class IntegratedGradients(Explainer):
         forward_args, additional_forward_args = self._extract_forward_args(
             inputs)
         forward_args = format_into_tuple(forward_args)
+        baselines = format_into_tuple(self._get_baselines(forward_args))
         attrs = self.explainer.attribute(
             inputs=forward_args,
-            baselines=self._get_baselines(forward_args),
+            baselines=baselines,
             target=targets,
             additional_forward_args=additional_forward_args,
             n_steps=self.n_steps,
         )
-        attrs = format_out_tuple_if_single(attrs)
+        if isinstance(attrs, tuple):
+            attrs = format_out_tuple_if_single(attrs)
         return attrs
 
     def get_tunables(self) -> Dict[str, Tuple[type, dict]]:
         return {
             'n_steps': (int, {'low': 10, 'high': 100, 'step': 10}),
-            'baseline_fn': (BaselineFunction, {}),
+            'baseline_fn': (BaselineFunctionSelector, {}),
         }

@@ -1,4 +1,6 @@
+import copy
 from torch import Tensor
+from pnpxai.explainers.utils.base import UtilFunction
 
 
 def sumpos(attrs: Tensor, channel_dim: int) -> Tensor:
@@ -56,12 +58,17 @@ RELEVANCE_POOLING_METHODS = {
     'posmaxnorm': posmaxnorm,
     'posl2norm': posl2norm,
     'posl2normsq': posl2normsq,
+    # 'identity': identity,
+}
+
+ALL_RELEVANCE_POOLING_METHODS = {
+    **RELEVANCE_POOLING_METHODS,
     'identity': identity,
 }
 
 
 def relevance_pooling(attrs: Tensor, channel_dim: int, method='l2normsq'):
-    return RELEVANCE_POOLING_METHODS[method](attrs, channel_dim)
+    return ALL_RELEVANCE_POOLING_METHODS[method](attrs, channel_dim)
 
 
 def minmax_normalization(attrs: Tensor):
@@ -77,6 +84,60 @@ RELEVANCE_NORMALIZATION_METHODS = {
     'identity': identity,
 }
 
+ALL_RELEVANCE_NORMALIZATION_METHODS = {
+    **RELEVANCE_NORMALIZATION_METHODS,
+    'identity': identity,
+}
+
 
 def normalize_relevance(pooled_attr: Tensor, method='minmax'):
     return RELEVANCE_NORMALIZATION_METHODS[method](pooled_attr)
+
+
+def postprocess_attr(
+    attr: Tensor,
+    channel_dim: int,
+    pooling_method: str = 'l2normsq',
+    normalization_method: str = 'minmax',
+):
+    pooled_attr = relevance_pooling(attr, channel_dim, method=pooling_method)
+    normalized_attr = normalize_relevance(
+        pooled_attr, method=normalization_method)
+
+    return normalized_attr
+
+
+class PostProcessor(UtilFunction):
+    def __init__(
+        self,
+        pooling_method='l2normsq',
+        normalization_method='minmax',
+        channel_dim=-1,
+    ):
+        super().__init__()
+        self.pooling_method = pooling_method
+        self.normalization_method = normalization_method
+        self.channel_dim = channel_dim
+
+    def __repr__(self):
+        return f"PostProcessor(pooling_method={self.pooling_method}, normalization_method={self.normalization_method})"
+
+    def pool_attributions(self, attrs):
+        return relevance_pooling(attrs, channel_dim=self.channel_dim, method=self.pooling_method)
+
+    def normalize_attributions(self, attrs):
+        return normalize_relevance(attrs, method=self.normalization_method)
+
+    def __call__(self, attrs):
+        return postprocess_attr(
+            attrs,
+            channel_dim=self.channel_dim,
+            pooling_method=self.pooling_method,
+            normalization_method=self.normalization_method
+        )
+
+    def get_tunables(self):
+        return {
+            'pooling_method': (list, {'choices': RELEVANCE_POOLING_METHODS.keys()}),
+            'normalization_method': (list, {'choices': RELEVANCE_NORMALIZATION_METHODS.keys()}),
+        }

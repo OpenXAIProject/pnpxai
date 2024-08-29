@@ -4,4 +4,4 @@ from .utils import (
     captum_wrap_model_input,
     _format_to_tuple,
 )
-from .postprocess.postprocess import postprocess_attr
+from .postprocess import postprocess_attr

@@ -27,7 +27,7 @@ from pnpxai.explainers.zennit.rules import LayerNormRule
 from pnpxai.explainers.zennit.base import ZennitExplainer
 from pnpxai.explainers.zennit.layer import StackAndSum
 from pnpxai.explainers.utils import captum_wrap_model_input
-from pnpxai.evaluator.optimizer.utils import generate_param_key
+from pnpxai.explainers.types import ForwardArgumentExtractor, TargetLayerOrListOfTargetLayers
 
 
 class LRPBase(ZennitExplainer):
@@ -35,12 +35,9 @@ class LRPBase(ZennitExplainer):
         self,
         model: Module,
         zennit_composite: Composite,
-        forward_arg_extractor: Optional[Callable[[
-            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
-        additional_forward_arg_extractor: Optional[Callable[[
-            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
-        layer: Optional[Union[Union[str, Module],
-                              Sequence[Union[str, Module]]]] = None,
+        forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
+        additional_forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
+        layer: Optional[TargetLayerOrListOfTargetLayers] = None,
         n_classes: Optional[int] = None,
     ) -> None:
         super().__init__(
@@ -136,12 +133,9 @@ class LRPUniformEpsilon(LRPBase):
         epsilon: Union[float, Callable[[Tensor], Tensor]] = .25,
         stabilizer: Union[float, Callable[[Tensor], Tensor]] = 1e-6,
         zennit_canonizers: Optional[List[Canonizer]] = None,
-        forward_arg_extractor: Optional[Callable[[
-            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
-        additional_forward_arg_extractor: Optional[Callable[[
-            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
-        layer: Optional[Union[str, Module,
-                              Sequence[Union[str, Module]]]] = None,
+        forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
+        additional_forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
+        layer: Optional[TargetLayerOrListOfTargetLayers] = None,
         n_classes: Optional[int] = None
     ) -> None:
         self.epsilon = epsilon
@@ -177,12 +171,9 @@ class LRPEpsilonGammaBox(LRPBase):
         gamma: float = .25,
         stabilizer: Union[float, Callable[[Tensor], Tensor]] = 1e-6,
         zennit_canonizers: Optional[List[Canonizer]] = None,
-        forward_arg_extractor: Optional[Callable[[
-            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
-        additional_forward_arg_extractor: Optional[Callable[[
-            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
-        layer: Optional[Union[str, Module,
-                              Sequence[Union[str, Module]]]] = None,
+        forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
+        additional_forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
+        layer: Optional[TargetLayerOrListOfTargetLayers] = None,
         n_classes: Optional[int] = None,
     ) -> None:
         self.low = low
@@ -219,12 +210,9 @@ class LRPEpsilonPlus(LRPBase):
         epsilon: Union[float, Callable[[Tensor], Tensor]] = 1e-6,
         stabilizer: Union[float, Callable[[Tensor], Tensor]] = 1e-6,
         zennit_canonizers: Optional[List[Canonizer]] = None,
-        forward_arg_extractor: Optional[Callable[[
-            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
-        additional_forward_arg_extractor: Optional[Callable[[
-            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
-        layer: Optional[Union[str, Module,
-                              Sequence[Union[str, Module]]]] = None,
+        forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
+        additional_forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
+        layer: Optional[TargetLayerOrListOfTargetLayers] = None,
         n_classes: Optional[int] = None
     ) -> None:
         self.epsilon = epsilon
@@ -257,12 +245,9 @@ class LRPEpsilonAlpha2Beta1(LRPBase):
         epsilon: Union[float, Callable[[Tensor], Tensor]] = 1e-6,
         stabilizer: Union[float, Callable[[Tensor], Tensor]] = 1e-6,
         zennit_canonizers: Optional[List[Canonizer]] = None,
-        forward_arg_extractor: Optional[Callable[[
-            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
-        additional_forward_arg_extractor: Optional[Callable[[
-            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
-        layer: Optional[Union[str, Module,
-                              Sequence[Union[str, Module]]]] = None,
+        forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
+        additional_forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
+        layer: Optional[TargetLayerOrListOfTargetLayers] = None,
         n_classes: Optional[int] = None
     ) -> None:
         self.epsilon = epsilon

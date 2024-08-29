@@ -34,20 +34,20 @@ class Explainer(ABC):
     TUNABLES = {}
 
     def __init__(
-            self,
-            model: Module,
-            forward_arg_extractor: Optional[Callable[[
-                Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
-            additional_forward_arg_extractor: Optional[Callable[[
-                Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
-            **kwargs
+        self,
+        model: Module,
+        forward_arg_extractor: Optional[Callable[[
+            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
+        additional_forward_arg_extractor: Optional[Callable[[
+            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
+        **kwargs
     ) -> None:
         self.model = model.eval()
         self.forward_arg_extractor = forward_arg_extractor
         self.additional_forward_arg_extractor = additional_forward_arg_extractor
         self.device = next(model.parameters()).device
-        self.feature_mask_fn = None
-        self.baseline_fn = None
+        # self.feature_mask_fn = None
+        # self.baseline_fn = None
 
     def __repr__(self):
         displayed_attrs = ', '.join([
@@ -57,8 +57,8 @@ class Explainer(ABC):
         return f"{self.__class__.__name__}({displayed_attrs})"
 
     def _extract_forward_args(
-            self,
-            inputs: Union[Tensor, Tuple[Tensor]]
+        self,
+        inputs: Union[Tensor, Tuple[Tensor]]
     ) -> Tuple[Union[Tensor, Tuple[Tensor], Type[None]]]:
         forward_args = self.forward_arg_extractor(inputs) \
             if self.forward_arg_extractor else inputs

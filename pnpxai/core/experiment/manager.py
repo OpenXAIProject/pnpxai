@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader, Subset, Dataset
 from pnpxai.core.experiment.cache import ExperimentCache
 from pnpxai.core._types import DataSource
 from pnpxai.explainers.base import Explainer
-from pnpxai.explainers.utils.postprocess.postprocess import PostProcessor
+from pnpxai.explainers.utils.postprocess import PostProcessor
 from pnpxai.evaluator.metrics.base import Metric
 from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 

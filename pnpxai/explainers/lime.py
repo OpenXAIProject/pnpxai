@@ -9,6 +9,10 @@ from pnpxai.core.detector.types import Linear, Convolution, LSTM, RNN, Attention
 from pnpxai.explainers.base import Explainer
 from pnpxai.explainers.utils.baselines import BaselineMethodOrFunction, BaselineFunction
 from pnpxai.explainers.utils.feature_masks import FeatureMaskMethodOrFunction, FeatureMaskFunction
+from pnpxai.explainers.utils.function_selectors import (
+    BaselineFunctionSelector,
+    FeatureMaskFunctionSelector,
+)
 from pnpxai.utils import format_into_tuple
 
 
@@ -61,6 +65,6 @@ class Lime(Explainer):
     def get_tunables(self) -> Dict[str, Tuple[type, Dict]]:
         return {
             'n_samples': (int, {'low': 10, 'high': 100, 'step': 10}),
-            'baseline_fn': (BaselineFunction, {}),
-            'feature_mask_fn': (FeatureMaskFunction, {})
+            'baseline_fn': (BaselineFunctionSelector, {}),
+            'feature_mask_fn': (FeatureMaskFunctionSelector, {})
         }

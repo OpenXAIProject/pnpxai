@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Any, Dict, Type, Union, Tuple
 from optuna import Trial
 
 from pnpxai.evaluator.optimizer.utils import generate_param_key
@@ -6,61 +6,67 @@ from pnpxai.core.modality.modality import Modality
 from pnpxai.explainers.base import Explainer
 from pnpxai.explainers.utils.baselines import BaselineFunction
 from pnpxai.explainers.utils.feature_masks import FeatureMaskFunction
+from pnpxai.explainers.utils.function_selectors import FunctionSelector
+from pnpxai.evaluator.optimizer.utils import generate_param_key
 from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 
 
-def _suggest_explainer_feature_mask(name: str, explainer: Explainer, modality: Modality, trial: Trial, key: Optional[str] = None):
-    feature_mask_fns = format_into_tuple(explainer.load_feature_mask_fn())
-    return format_out_tuple_if_single(tuple(
-        modality.suggest_tunable_feature_masks(
-            trial=trial,
-            key=generate_param_key(key, name, order),
-        )
-        for order, feature_mask_fn in enumerate(feature_mask_fns)
-    ))
+def get_suggest_method(
+    trial: Trial,
+    method_type: Type[Any],
+):
+    return {
+        list: trial.suggest_categorical,
+        int: trial.suggest_int,
+        float: trial.suggest_float,
+    }.get(method_type, None)
 
 
-def _suggest_explainer_baseline(name: str, explainer: Explainer, modality: Modality, trial: Trial, key: Optional[str] = None):
-    baseline_fns = format_into_tuple(explainer.load_baseline_fn())
-    return format_out_tuple_if_single(tuple(
-        modality.suggest_tunable_baselines(
-            trial=trial,
-            key=generate_param_key(key, name, order),
-        )
-        for order, baseline_fn in enumerate(baseline_fns)
-    ))
-
-
-def suggest_explainer_params(explainer: Explainer, modality: Modality, trial: Trial, key: Optional[str] = None):
-    params = {}
-    for name, method_data in explainer.TUNABLES:
-        method_type, method_kwargs = method_data
-        if method_type == BaselineFunction:
-            params[name] = _suggest_explainer_baseline(
-                name=name, explainer=explainer, modality=modality, trial=trial, key=key
+def suggest(
+    trial: Trial,
+    obj: Any,
+    modality: Union[Modality, Tuple[Modality]],
+    key: Optional[str]=None,
+):
+    for param_nm, (method_type, method_kwargs) in obj.get_tunables().items():
+        method = get_suggest_method(trial, method_type)
+        if method is not None:
+            param = method(
+                name=generate_param_key(key, param_nm),
+                **method_kwargs
             )
-            continue
+        elif isinstance(method_type, type(FunctionSelector)):
+            param = []
+            for mod in format_into_tuple(modality):
+                fn_selector = method_type(mod)
+                _param_nm, (_method_type, _method_kwargs) = next(
+                    iter(fn_selector.get_tunables().items())
+                )
+                _param_nm = generate_param_key(
+                    param_nm,
+                    mod.name if len(format_into_tuple(modality)) > 1 else None,
+                    _param_nm,
+                ) # update param_nm
+                method = get_suggest_method(trial, _method_type)
+                fn_nm = method(
+                    name=generate_param_key(key, _param_nm),
+                    **_method_kwargs
+                )
 
-        if method_type == FeatureMaskFunction:
-            params[name] = _suggest_explainer_feature_mask(
-                name=name, explainer=explainer, modality=modality, trial=trial, key=key
-            )
-            continue
-
-        method = {
-            list: trial.suggest_categorical,
-            int: trial.suggest_int,
-            float: trial.suggest_float,
-        }.get(method_type, None)
-
-        if method is None and callable(method_type):
-            params[name] = method_type(
-                trial=trial, key=generate_param_key(key, name), **method_kwargs
-            )
-            continue
-
-        params[name] = method(
-            name=generate_param_key(key, name), **method_kwargs
-        )
-
-    return params
+                # TODO: safe way to assign non-varying fn_kwargs
+                fn_kwargs = {}
+                if fn_nm == 'mean':
+                    fn_kwargs['dim'] = mod.channel_dim
+                if fn_nm == 'token':
+                    fn_kwargs['token_id'] = mod.mask_token_id
+                fn = fn_selector.select(fn_nm, **fn_kwargs)
+                param.append(suggest(
+                    trial, fn, mod,
+                    key=generate_param_key(
+                        key, param_nm,
+                        mod.name if len(format_into_tuple(modality)) > 1 else None,
+                    ),
+                ))
+            param = format_out_tuple_if_single(tuple(param))
+        obj = obj.set_kwargs(**{param_nm: param})
+    return obj

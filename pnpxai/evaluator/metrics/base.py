@@ -10,7 +10,7 @@ from torch import nn
 from pnpxai.core._types import ExplanationType
 from pnpxai.explainers import GradCam
 from pnpxai.explainers.base import Explainer
-from pnpxai.explainers.utils.postprocess.postprocess import PostProcessor
+from pnpxai.explainers.utils.postprocess import PostProcessor
 
 # Ensure compatibility with Python 2/3
 ABC = abc.ABC if sys.version_info >= (3, 4) else abc.ABCMeta(str('ABC'), (), {})

@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 
 from pnpxai.core._types import Model, DataSource
 from pnpxai.core.experiment.experiment import Experiment
-from pnpxai.core.modality.modality import Modality, ImageModality, TextModality, TimeSeriesModality, ImageTextModality
+from pnpxai.core.modality.modality import Modality, ImageModality, TextModality, TimeSeriesModality
 from pnpxai.core.recommender import XaiRecommender
 from pnpxai.explainers.types import TargetLayer
 from pnpxai.evaluator.metrics import PIXEL_FLIPPING_METRICS
@@ -17,6 +17,7 @@ from pnpxai.evaluator.metrics import (
     LeRF,
     AbPC,
 )
+from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 
 
 METRICS_BASELINE_FN_REQUIRED = PIXEL_FLIPPING_METRICS
@@ -94,11 +95,17 @@ class AutoExplanation(Experiment):
         return empty_metrics
 
     def _load_default_postprocessors(self):
-        return self.modality.get_default_postprocessors()
+        modalities = format_into_tuple(self.modality)
+        if len(modalities) == 1:
+            return self.modality.get_default_postprocessors()
+        return list(zip(*tuple(
+            modality.get_default_postprocessors()
+            for modality in modalities
+        )))
 
     def _generate_default_kwargs_for_explainer(self):
         return {
-            'feature_mask_fn': self.modality.get_default_baseline_fn(),
+            'feature_mask_fn': self.modality.get_default_feature_mask_fn(),
             'baseline_fn': self.modality.get_default_baseline_fn(),
         }
 
@@ -154,7 +161,8 @@ class AutoExplanationForTextClassification(AutoExplanation):
         super().__init__(
             model=model,
             data=data,
-            modality=TextModality(channel_dim),
+            modality=TextModality(
+                channel_dim=channel_dim, mask_token_id=mask_token_id),
             input_extractor=input_extractor,
             label_extractor=label_extractor,
             target_extractor=target_extractor,
@@ -167,12 +175,12 @@ class AutoExplanationForTextClassification(AutoExplanation):
             'forward_arg_extractor': self.forward_arg_extractor,
             'additional_forward_arg_extractor': self.additional_forward_arg_extractor,
             'feature_mask_fn': self.modality.get_default_feature_mask_fn(),
-            'baseline_fn': self.modality.get_default_baseline_fn(self.mask_token_id),
+            'baseline_fn': self.modality.get_default_baseline_fn(),
         }
 
     def _generate_default_kwargs_for_metric(self):
         return {
-            'baseline_fn': self.modality.get_default_baseline_fn(self.mask_token_id),
+            'baseline_fn': self.modality.get_default_baseline_fn(),
             'channel_dim': self.modality.channel_dim,
         }
 
@@ -196,11 +204,14 @@ class AutoExplanationForVisualQuestionAnswering(AutoExplanation):
         self.mask_token_id = mask_token_id
         self.forward_arg_extractor = forward_arg_extractor
         self.additional_forward_arg_extractor = additional_forward_arg_extractor
-
         super().__init__(
             model=model,
             data=data,
-            modality=ImageTextModality(channel_dim),
+            modality=(
+                ImageModality(channel_dim=channel_dim[0]),
+                TextModality(channel_dim=channel_dim[1], ),
+            ),
+            # modality=ImageTextModality(channel_dim),
             input_extractor=input_extractor,
             label_extractor=label_extractor,
             target_extractor=target_extractor,
@@ -212,14 +223,20 @@ class AutoExplanationForVisualQuestionAnswering(AutoExplanation):
             'layer': self.layer,
             'forward_arg_extractor': self.forward_arg_extractor,
             'additional_forward_arg_extractor': self.additional_forward_arg_extractor,
-            'feature_mask_fn': self.modality.get_default_feature_mask_fn(),
-            'baseline_fn': self.modality.get_default_baseline_fn(self.mask_token_id)
+            'feature_mask_fn': tuple(
+                modality.get_default_feature_mask_fn() for modality in self.modality
+            ),
+            'baseline_fn': tuple(
+                modality.get_default_baseline_fn() for modality in self.modality
+            ),
         }
 
     def _generate_default_kwargs_for_metric(self):
         return {
-            'baseline_fn': self.modality.get_default_baseline_fn(self.mask_token_id),
-            'channel_dim': self.modality.channel_dim,
+            'baseline_fn': tuple(
+                modality.get_default_baseline_fn() for modality in self.modality
+            ),
+            'channel_dim': tuple(modality.channel_dim for modality in self.modality),
         }
 
 
@@ -259,6 +276,7 @@ class AutoExplanationForTSClassification(AutoExplanation):
     def _generate_default_kwargs_for_metric(self):
         return {
             'baseline_fn': self.modality.get_default_baseline_fn(),
+            'feature_mask_fn': self.modality.get_default_feature_mask_fn(),
             'channel_dim': self.modality.channel_dim,
             'mask_agg_dim': self.mask_agg_dim,
         }
