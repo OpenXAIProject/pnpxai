@@ -212,9 +212,9 @@ opt_attrs = expr.manager.get_explanation_by_id(  # get the optimal explanation
 )
 
 # inputs
-inputs, _ = expr.manager.batch_data_by_ids(data_ids=[optimized['data_ids']])
+inputs, _ = expr.manager.batch_data_by_ids(data_ids=optimized['data_ids'])
 inputs = inputs.to(device)
-targets = expr.manager.batch_outputs_by_ids(data_ids=[optimized['data_ids']])\
+targets = expr.manager.batch_outputs_by_ids(data_ids=optimized['data_ids'])\
     .argmax(-1).to(device)
 
 axes[0].plot(inputs[0, 0, :].tolist())
