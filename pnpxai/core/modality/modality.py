@@ -93,7 +93,6 @@ class TextModality(Modality):
         k for k in RELEVANCE_POOLING_METHODS.keys()
         if k != 'identity'
     )
-
     def __init__(self, channel_dim: int = -1, mask_token_id: int = 0):
         super(TextModality, self).__init__(channel_dim)
         self.mask_token_id = mask_token_id
