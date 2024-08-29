@@ -48,7 +48,7 @@ expr = AutoExplanationForVisualQuestionAnswering(
 # test
 for explainer_id in range(len(expr.manager.explainers)):
     optimized, objective, study = expr.optimize(
-        data_id=0,
+        data_ids=0,
         explainer_id=explainer_id,
         metric_id=1,
         direction='maximize',

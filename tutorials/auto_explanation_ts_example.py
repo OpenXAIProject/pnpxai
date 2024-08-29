@@ -113,7 +113,7 @@ results = expr.run_batch(
 
 # optimize: returns optimal explainer id, optimal postprocessor id, (and study)
 optimized, objective, study = expr.optimize(
-    data_id=data_id,
+    data_ids=data_id,
     explainer_id=explainer_id,
     metric_id=metric_id,
     direction='maximize',  # larger better
@@ -125,7 +125,7 @@ optimized, objective, study = expr.optimize(
 
 # explain and evaluate with optimal explainer and postprocessor
 opt_results = expr.run_batch(
-    data_ids=[optimized['data_id']],
+    data_ids=optimized['data_ids'],
     explainer_id=optimized['explainer_id'],
     postprocessor_id=optimized['postprocessor_id'],
     metric_id=metric_id,  # any metric to evaluate the optimized explanation
@@ -207,14 +207,14 @@ plt.savefig(
 # plots
 fig, axes = plt.subplots(1, 4, figsize=(16, 4))
 opt_attrs = expr.manager.get_explanation_by_id(  # get the optimal explanation
-    data_id=optimized['data_id'],
+    data_id=optimized['data_ids'],
     explainer_id=optimized['explainer_id'],
 )
 
 # inputs
-inputs, _ = expr.manager.batch_data_by_ids(data_ids=[optimized['data_id']])
+inputs, _ = expr.manager.batch_data_by_ids(data_ids=[optimized['data_ids']])
 inputs = inputs.to(device)
-targets = expr.manager.batch_outputs_by_ids(data_ids=[optimized['data_id']])\
+targets = expr.manager.batch_outputs_by_ids(data_ids=[optimized['data_ids']])\
     .argmax(-1).to(device)
 
 axes[0].plot(inputs[0, 0, :].tolist())

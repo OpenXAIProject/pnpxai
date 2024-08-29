@@ -121,7 +121,7 @@ def post_opt(
     data_id=None
 ):
     optimized, objective, study = expr.optimize(
-        data_id=data_id,
+        data_ids=data_id,
         explainer_id=explainer_id,
         metric_id=metric_id,
         direction='maximize',

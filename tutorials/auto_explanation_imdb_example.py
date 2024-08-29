@@ -54,7 +54,7 @@ expr.run_batch(
 # opt
 for explainer_id in range(len(expr.manager.explainers)):
     optimized, objective, study = expr.optimize(
-        data_id=0,
+        data_ids=0,
         explainer_id=0,
         metric_id=1,
     )

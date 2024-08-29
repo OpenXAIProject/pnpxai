@@ -1,4 +1,4 @@
-# Detector <small>[[source](../api/detector)]</small>
+# Detector <small>[[source](api/detector.md)]</small>
 
 `detect_model_architecture` traces a `model: nn.Module`'s graph by using `torch.fx.symbolic_trace` and its output `traced_model: torch.fx.GraphModule` and extracts information to be applied to recommend available explainers. It returns an instance of `ModelArchitectureSummary` which describes layer informations and representative type of architecture.
 
