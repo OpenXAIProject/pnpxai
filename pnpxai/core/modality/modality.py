@@ -29,7 +29,6 @@ from pnpxai.explainers.utils.feature_masks import (
     FEATURE_MASK_FUNCTIONS_FOR_TEXT,
     FEATURE_MASK_FUNCTIONS_FOR_TIME_SERIES,
 )
-# from pnpxai.explainers.utils.function_selectors import BaselineFunctionSelector, FeatureMaskFunctionSelector
 from pnpxai.explainers import (
     Gradient,
     GradientXInput,
@@ -51,10 +50,6 @@ from pnpxai.explainers import (
 class Modality(ABC):
     # Copies the tuple without preserving the reference
     EXPLAINERS = tuple(iter(AVAILABLE_EXPLAINERS))
-    # PP_POOLING_FUNCTIONS = tuple(POOLING_FUNCTIONS.keys())
-    # PP_NORMALIZATION_FUNCTIONS = tuple(
-    #     NORMALIZATION_FUNCTIONS.keys()
-    # )
 
     def __init__(
         self,
@@ -115,17 +110,8 @@ class TextModality(Modality):
         LRPEpsilonAlpha2Beta1,
         KernelShap,
         Lime,
-        # AttentionRollout,
-        # TransformerAttribution
     )
-<<<<<<< Updated upstream
-    PP_RELEVANCE_POOLING_METHODS = tuple(
-        k for k in RELEVANCE_POOLING_METHODS.keys()
-        if k != 'identity'
-    )
-=======
 
->>>>>>> Stashed changes
     def __init__(self, channel_dim: int = -1, mask_token_id: int = 0):
         super(TextModality, self).__init__(channel_dim)
         self.mask_token_id = mask_token_id

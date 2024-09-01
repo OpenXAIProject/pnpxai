@@ -107,22 +107,6 @@ class XaiRecommender:
         explainers = set.intersection(*explainers)
         return list(explainers)
 
-    # def _suggest_metrics(self, explainers: List[Type[Explainer]]):
-    #     """
-    #     Suggests evaluation metrics based on the list of compatible explainers.
-
-    #     Args:
-    #     - methods (List[Type[Explainer]]): List of explainers supported for the given scenario.
-
-    #     Returns:
-    #     - List[Type[EvaluationMetric]]: List of compatible evaluation metrics for the explainers.
-    #     """
-    #     metrics = set.union(*(
-    #         self.explainer_to_metrics_map.data.get(explainer, set())
-    #         for explainer in explainers
-    #     ))
-    #     return list(metrics)
-
     def recommend(self, modality: Union[Modality, Tuple[Modality]], model: Model):
         """
         Recommends explainers and evaluation metrics based on the user's input.

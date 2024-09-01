@@ -73,6 +73,7 @@ expr = AutoExplanationForTSClassification(
     target_labels=False,  # target prediction if False
 )
 
+
 # browse the recommended
 expr.recommended.print_tabular()  # recommendation
 expr.recommended.explainers  # -> List[Type[Explainer]]
@@ -119,25 +120,29 @@ optimized = expr.optimize(
     metric_id=metric_id,
     direction='maximize',  # larger better
     sampler='tpe',  # Literal['tpe','random']
-    # by default, 50 for sampler in ['random', 'tpe'], None for ['grid']
     n_trials=50,
     seed=42,  # seed for sampler: by default, None
 )
 
-'''
-If you want to run expr with combinations of multiple metrics or postprocessors,
-just run `run_batch` with for loop as following.
+print('Best/Explainer:', optimized.explainer) # get the optimized explainer
+print('Best/PostProcessor:', optimized.postprocessor) # get the optimized postprocessor
+print('Best/value:', optimized.study.best_trial.value) # get the optimized value
 
-for metric_id in metric_ids:
-    expr.run_batch(
-        data_ids=[data_id],
-        explainer_id=explainer_id,
-        postprocessor_id=postprocessor_id,
-        metric_id=metric_id,
-    )
+# Every trial in study has its explainer and postprocessor in user attr.
+i = 25
+print(f'{i}th Trial/Explainer', optimized.study.trials[i].user_attrs['explainer']) # get the explainer of i-th trial
+print(f'{i}th Trial/PostProcessor', optimized.study.trials[i].user_attrs['postprocessor']) # get the postprocessor of i-th trial
+print(f'{i}th Trial/value', optimized.study.trials[i].value)
 
-It is free from redundant computation, by caching.
-'''
+# For example, you can use optuna's API to get the explainer and postprocessor of the worst trial
+def get_worst_trial(study):
+    valid_trials = [trial for trial in study.trials if trial.value is not None]
+    return sorted(valid_trials, key=lambda trial: trial.value)[0]
+
+worst_trial = get_worst_trial(optimized.study)
+print('Worst/Explainer:', worst_trial.user_attrs['explainer'])
+print('Worst/PostProcessor', worst_trial.user_attrs['postprocessor'])
+print('Worst/value', worst_trial.value)
 
 
 # ------------------------------------------------------------------------------#
@@ -206,11 +211,6 @@ opt_attrs = expr.explain_batch(
     explainer_id=opt_explainer_id,
 )
 
-# opt_attrs = expr.manager.get_explanation_by_id(  # get the optimal explanation
-#     data_id=data_id,
-#     explainer_id=optimized['explainer_id'],
-# )
-
 # inputs
 inputs, _ = expr.manager.batch_data_by_ids(data_ids=[data_id])
 inputs = inputs.to(device)
@@ -230,7 +230,6 @@ trials = {
 for loc, (title, trial) in enumerate(trials.items(), 1):
     explainer = trial.user_attrs['explainer']
     postprocessor = trial.user_attrs['postprocessor']
-    # explainer, postprocessor = objective.load_from_optuna_params(trial.params)
     attrs = explainer.attribute(inputs, targets)
     postprocessed = postprocessor(attrs)
     axes[loc].set_title(f'{title}:{"{:4f}".format(trial.value)}')

@@ -77,14 +77,3 @@ worst_trial = get_worst_trial(optimized.study)
 print('Worst/Explainer:', worst_trial.user_attrs['explainer'])
 print('Worst/PostProcessor', worst_trial.user_attrs['postprocessor'])
 print('Worst/value', worst_trial.value)
-
-
-# test
-for explainer_id in range(len(expr.manager.explainers)):
-    optimized = expr.optimize(
-        data_id=0,
-        explainer_id=explainer_id,
-        metric_id=1,
-        direction='maximize',
-        sampler='tpe',
-    )

@@ -261,12 +261,6 @@ class PostProcessor(UtilFunction):
 
     def get_tunables(self):
         return {
-<<<<<<< Updated upstream
-            'pooling_method': (list, {'choices': RELEVANCE_POOLING_METHODS.keys()}),
-            'normalization_method': (list, {'choices': RELEVANCE_NORMALIZATION_METHODS.keys()}),
-        }
-=======
             'pooling_fn': (PoolingFunction, {}),
             'normalization_fn': (NormalizationFunction, {}),
         }
->>>>>>> Stashed changes
