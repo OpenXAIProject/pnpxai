@@ -1,4 +1,5 @@
 from typing import Callable, Optional, Tuple, List
+import itertools
 
 from torch.nn.modules import Module
 from torch.utils.data import DataLoader
@@ -98,7 +99,7 @@ class AutoExplanation(Experiment):
         modalities = format_into_tuple(self.modality)
         if len(modalities) == 1:
             return self.modality.get_default_postprocessors()
-        return list(zip(*tuple(
+        return list(itertools.product(*tuple(
             modality.get_default_postprocessors()
             for modality in modalities
         )))

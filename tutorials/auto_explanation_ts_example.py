@@ -12,6 +12,7 @@ from tsai.all import get_UCR_data, combine_split_data, Categorize, TSDatasets, T
 
 # setup
 # device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+torch.set_num_threads(1)
 device = torch.device('cpu')
 cur_path = os.path.dirname(os.path.realpath(__file__))
 batch_size = 64

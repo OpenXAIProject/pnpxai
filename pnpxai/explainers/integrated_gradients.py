@@ -8,7 +8,6 @@ from captum.attr import LayerIntegratedGradients as CaptumLayerIntegratedGradien
 from pnpxai.core.detector.types import Linear, Convolution, Attention
 from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 from pnpxai.explainers.utils.baselines import BaselineMethodOrFunction, BaselineFunction
-from pnpxai.explainers.utils.function_selectors import BaselineFunctionSelector
 from .base import Explainer
 from .utils import captum_wrap_model_input
 
@@ -79,5 +78,5 @@ class IntegratedGradients(Explainer):
     def get_tunables(self) -> Dict[str, Tuple[type, dict]]:
         return {
             'n_steps': (int, {'low': 10, 'high': 100, 'step': 10}),
-            'baseline_fn': (BaselineFunctionSelector, {}),
+            'baseline_fn': (BaselineFunction, {}),
         }

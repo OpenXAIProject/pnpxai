@@ -97,15 +97,15 @@ print('Worst/PostProcessor', worst_trial.user_attrs['postprocessor'])
 print('Worst/value', worst_trial.value)
 
 
-# # test
-# for explainer_id in range(len(expr.manager.explainers)):
-#     # optimize: returns optimal explainer id, optimal postprocessor id, (and study)
-#     optimized = expr.optimize(
-#         data_id=data_id,
-#         explainer_id=explainer_id,
-#         metric_id=metric_id,
-#         direction='maximize', # larger better
-#         sampler='tpe', # Literal['tpe','random']
-#         n_trials=50, # by default, 50 for sampler in ['random', 'tpe'], None for ['grid']
-#         seed=42, # seed for sampler: by default, None
-#     )
+# test
+for explainer_id in range(len(expr.manager.explainers)):
+    explainer_nm = expr.manager.get_explainer_by_id(explainer_id).__class__.__name__
+    optimized = expr.optimize(
+        data_id=data_id,
+        explainer_id=explainer_id,
+        metric_id=metric_id,
+        direction='maximize', # larger better
+        sampler='tpe', # Literal['tpe','random']
+        n_trials=10, # by default, 50 for sampler in ['random', 'tpe'], None for ['grid']
+        seed=42, # seed for sampler: by default, None
+    )

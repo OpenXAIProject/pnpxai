@@ -4,7 +4,7 @@ import torch
 
 
 class UtilFunction(ABC):
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         pass
 
     def copy(self):
@@ -22,4 +22,3 @@ class UtilFunction(ABC):
 
     def get_tunables(self):
         return {}
-

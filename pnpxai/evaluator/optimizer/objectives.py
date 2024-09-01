@@ -52,7 +52,7 @@ class Objective:
                 trial, postprocessor, modality,
                 key=generate_param_key(
                     self.POSTPROCESSOR_KEY,
-                    modality.name if len(format_into_tuple(self.postprocessor)) > 1 else None
+                    modality.__class__.__name__ if len(format_into_tuple(self.postprocessor)) > 1 else None
                 )
             ) for postprocessor, modality in zip(
                 format_into_tuple(self.postprocessor),
@@ -64,6 +64,8 @@ class Objective:
         trials_to_consider = trial.study.get_trials(deepcopy=False, states=states_to_consider)
         for t in reversed(trials_to_consider):
             if trial.params == t.params:
+                trial.set_user_attr('explainer', explainer)
+                trial.set_user_attr('postprocessor', postprocessor)
                 return t.value
 
         # explain and postprocess
@@ -71,9 +73,8 @@ class Objective:
             explainer.attribute(self.inputs, self.targets)
         )
         pass_pooling = isinstance(explainer, (KernelShap, Lime))
-
         postprocessed = tuple(
-            pp.normalize_attributions(attr) if pass_pooling else pp(attr)
+            pp.normalization_fn(attr) if pass_pooling else pp(attr)
             for pp, attr in zip(
                 format_into_tuple(postprocessor),
                 format_into_tuple(attrs),
