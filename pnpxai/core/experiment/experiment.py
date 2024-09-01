@@ -2,7 +2,6 @@ from typing import Any, Callable, Optional, Sequence, Union, List, Dict, Literal
 import time
 import warnings
 import itertools
-import threading
 
 import torch
 from torch import Tensor
@@ -10,8 +9,6 @@ import numpy as np
 import optuna
 from plotly import express as px
 from plotly.graph_objects import Figure
-from sklearn.base import ClassifierMixin as SklearnClassifier
-from sklearn.base import RegressorMixin as SklearnRegressor
 
 from pnpxai.core._types import DataSource, Model
 from pnpxai.core.modality.modality import Modality
@@ -86,8 +83,7 @@ class Experiment(Observable):
     ):
         super(Experiment, self).__init__()
         self.model = model
-        self.model_device = None if self.is_sklearn_model \
-            else next(self.model.parameters()).device
+        self.model_device = next(self.model.parameters()).device
 
         self.manager = ExperimentManager(data=data, cache_device=cache_device)
         for explainer in explainers:
@@ -103,9 +99,6 @@ class Experiment(Observable):
         self.label_extractor = label_extractor \
             if label_extractor is not None \
             else default_target_extractor
-        self.label_extractor = label_extractor \
-            if label_extractor is not None \
-            else default_target_extractor
         self.target_extractor = target_extractor \
             if target_extractor is not None \
             else default_target_extractor
@@ -116,22 +109,14 @@ class Experiment(Observable):
 
         self.reset_errors()
 
-        self._lock = threading.Lock()
-
     def reset_errors(self):
         self._errors: List[BaseException] = []
-
-    @property
-    def is_sklearn_model(self):
-        return isinstance(self.model, SklearnModel)
 
     @property
     def errors(self):
         return self._errors
 
     def to_device(self, x):
-        if self.is_sklearn_model:
-            return x
         return to_device(x, self.model_device)
 
     def run_batch(
@@ -358,7 +343,6 @@ class Experiment(Observable):
 
             for postprocessor, postprocessor_id in zip(postprocessors, postprocessor_ids):
                 for metric, metric_id in zip(metrics, metric_ids):
-                    metric.set_explainer(explainer)
                     metric_name = class_to_string(metric)
                     data, data_ids_eval = self.manager.get_data_to_process_for_metric(
                         explainer_id, postprocessor_id, metric_id, data_ids)
@@ -376,15 +360,6 @@ class Experiment(Observable):
                     self.fire(ExperimentObservableEvent(
                         self.manager, message, explainer, metric))
         return self
-
-    @property
-    def _predict_fn(self):
-        if isinstance(self.model, SklearnClassifier):
-            return self.model.predict_proba
-        elif isinstance(self.model, SklearnRegressor):
-            return self.model.predict
-        else:
-            return self.model
 
     def _predict(self, data: DataSource):
         outputs = [
@@ -559,8 +534,6 @@ class Experiment(Observable):
         """
         data, _ = self.manager.get_data(data_ids)
         data = [self.input_extractor(datum) for datum in data]
-        if self.is_sklearn_model:
-            data = [format_into_array(d) for d in data]
         return self.manager.flatten_if_batched(data, data)
 
     def get_all_inputs_flattened(self) -> Sequence[Tensor]:
@@ -574,8 +547,6 @@ class Experiment(Observable):
         """
         data = self.manager.get_all_data()
         data = [self.input_extractor(datum) for datum in data]
-        if self.is_sklearn_model:
-            data = [format_into_array(d) for d in data]
         return self.manager.flatten_if_batched(data, data)
 
     def get_labels_flattened(self, data_ids: Optional[List[int]]=None) -> Sequence[Tensor]:
@@ -610,7 +581,7 @@ class Experiment(Observable):
 
         This method retrieves flattened model outputs using the manager's get_flat_outputs method.
         """
-        return self.manager.get_flat_outputs(data_ids)
+        return self.manager.get_flat_outputs()
 
     def get_explanations_flattened(self, data_ids: Optional[List[int]]=None) -> Sequence[Sequence[Tensor]]:
         """

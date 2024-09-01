@@ -2,7 +2,7 @@
 import time
 import os
 import gradio as gr
-from pnpxai.core.experiment import AutoExplanation
+from pnpxai.core.experiment import AutoExplanationForImageClassification
 from pnpxai.core.detector import extract_graph_data, symbolic_trace
 import matplotlib.pyplot as plt
 import plotly.graph_objects as go
@@ -467,21 +467,23 @@ class ExplainerCheckbox(Component):
 
 
     def optimize(self):
-        if self.explainer_name in ["Lime", "KernelShap", "IntegratedGradients"]:
-            gr.Info("Lime, KernelShap and IntegratedGradients currently do not support hyperparameter optimization.")
-            return [gr.update()] * 2
+        # if self.explainer_name in ["Lime", "KernelShap", "IntegratedGradients"]:
+        #     gr.Info("Lime, KernelShap and IntegratedGradients currently do not support hyperparameter optimization.")
+        #     return [gr.update()] * 2
         
         data_id = self.gallery.selected_index
-
-        opt_explainer_id, opt_postprocessor_id = self.experiment.optimize(
+        
+        optimized, _, _ = self.experiment.optimize(
             data_id=data_id.value,
             explainer_id=self.default_exp_id,
             metric_id=self.obj_metric,
             direction='maximize',
             sampler=SAMPLE_METHOD,
             n_trials=OPT_N_TRIALS,
-            return_study=False,
         )
+
+        opt_explainer_id = optimized['explainer_id']
+        opt_postprocessor_id = optimized['postprocessor_id']
 
         self.groups.insert_check(self.explainer_name, opt_explainer_id, opt_postprocessor_id)
         self.optimal_exp_id = opt_explainer_id
@@ -620,12 +622,9 @@ experiments = {}
 model, transform = get_torchvision_model('resnet18')
 dataset = get_imagenet_dataset(transform)
 loader = DataLoader(dataset, batch_size=4, shuffle=False)
-experiment1 = AutoExplanation(
+experiment1 = AutoExplanationForImageClassification(
     model=model,
     data=loader,
-    modality='image',
-    question='why',
-    evaluator_enabled=True,
     input_extractor=lambda batch: batch[0],
     label_extractor=lambda batch: batch[-1],
     target_extractor=lambda outputs: outputs.argmax(-1),
@@ -643,12 +642,9 @@ experiments['experiment1'] = {
 model, transform = get_torchvision_model('vit_b_16')
 dataset = get_imagenet_dataset(transform)
 loader = DataLoader(dataset, batch_size=4, shuffle=False)
-experiment2 = AutoExplanation(
+experiment2 = AutoExplanationForImageClassification(
     model=model,
     data=loader,
-    modality='image',
-    question='why',
-    evaluator_enabled=True,
     input_extractor=lambda batch: batch[0],
     label_extractor=lambda batch: batch[-1],
     target_extractor=lambda outputs: outputs.argmax(-1),
