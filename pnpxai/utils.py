@@ -1,7 +1,7 @@
 import random
 from io import TextIOWrapper
 from contextlib import contextmanager
-from typing import Sequence, Callable, Any, Union, Optional
+from typing import Sequence, Callable, Any, Union, Optional, Tuple, TypeVar
 
 import numpy as np
 import torch
@@ -101,7 +101,8 @@ def linear_from_params(weight: Tensor, bias: Optional[Tensor] = None) -> nn.Line
     return layer
 
 
-def format_into_tuple(obj: Any):
+T = TypeVar('T')
+def format_into_tuple(obj: T) -> Tuple[T]:
     if isinstance(obj, Sequence) and not isinstance(obj, str):
         return tuple(obj)
     elif isinstance(obj, type(None)):
@@ -109,5 +110,13 @@ def format_into_tuple(obj: Any):
     return (obj,)
 
 
+def format_out_tuple_if_single(obj: Tuple[T]) -> Union[T, Tuple[T]]:
+    if len(obj) == 1:
+        return obj[0]
+    return obj
+
+
 def format_into_tuple_all(**kwargs):
     return {k: format_into_tuple(v) for k, v in kwargs.items()}
+
+

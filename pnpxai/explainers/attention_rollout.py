@@ -10,6 +10,7 @@ from zennit.composites import layer_map_base, LayerMapComposite
 from zennit.rules import AlphaBeta
 from zennit.types import Linear
 
+from pnpxai.core.detector.types import Attention
 from .attentions.attributions import SavingAttentionAttributor
 from .attentions.rules import CGWAttentionPropagation
 from .attentions.module_converters import default_attention_converters
@@ -19,6 +20,8 @@ from .utils import captum_wrap_model_input
 
 
 class AttentionRolloutBase(ZennitExplainer):
+    SUPPORTED_MODULES = [Attention]
+
     def __init__(
         self,
         model: Module,
@@ -99,6 +102,8 @@ class AttentionRollout(AttentionRolloutBase):
 
 
 class TransformerAttribution(AttentionRolloutBase):
+    SUPPORTED_MODULES = [Attention]
+    
     def __init__(
         self,
         model: Module,

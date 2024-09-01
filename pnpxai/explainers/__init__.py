@@ -1,21 +1,23 @@
-from .grad_cam import GradCam
-from .guided_grad_cam import GuidedGradCam
-from .gradient import Gradient
-from .grad_x_input import GradientXInput
-from .smooth_grad import SmoothGrad
-from .var_grad import VarGrad
-from .integrated_gradients import IntegratedGradients
-from .lrp import (
+from typing import Tuple
+from pnpxai.explainers.base import Explainer
+from pnpxai.explainers.grad_cam import GradCam
+from pnpxai.explainers.guided_grad_cam import GuidedGradCam
+from pnpxai.explainers.gradient import Gradient
+from pnpxai.explainers.grad_x_input import GradientXInput
+from pnpxai.explainers.smooth_grad import SmoothGrad
+from pnpxai.explainers.var_grad import VarGrad
+from pnpxai.explainers.integrated_gradients import IntegratedGradients
+from pnpxai.explainers.lrp import (
     LRPBase,
     LRPUniformEpsilon,
     LRPEpsilonGammaBox,
     LRPEpsilonPlus,
     LRPEpsilonAlpha2Beta1,
 )
-from .kernel_shap import KernelShap
-from .lime import Lime
-
-from .attention_rollout import (
+from pnpxai.explainers.rap import RAP
+from pnpxai.explainers.kernel_shap import KernelShap
+from pnpxai.explainers.lime import Lime
+from pnpxai.explainers.attention_rollout import (
     AttentionRollout,
     TransformerAttribution,
 )
@@ -41,7 +43,7 @@ ATTENTION_SPECIFIC_EXPLAINERS = [
     AttentionRollout,
     TransformerAttribution,
 ]
-AVAILABLE_EXPLAINERS = [
+AVAILABLE_EXPLAINERS: Tuple[Explainer] = (
     GradCam,
     GuidedGradCam,
     Gradient,
@@ -57,7 +59,6 @@ AVAILABLE_EXPLAINERS = [
     Lime,
     AttentionRollout,
     TransformerAttribution,
-]
+)
 
 EXPLAINERS_FOR_TABULAR = []
-

@@ -1,16 +1,18 @@
 from typing import Callable, Optional, List, Tuple, Union, Sequence
 
-import torch
 from torch import Tensor
 from torch.nn.modules import Module
 from captum.attr import InputXGradient as CaptumGradientXInput
 from captum.attr import LayerGradientXActivation as CaptumLayerGradientXInput
 
+from pnpxai.core.detector.types import Linear, Convolution, LSTM, RNN, Attention
 from .base import Explainer
 from .utils import captum_wrap_model_input
 
 
 class GradientXInput(Explainer):
+    SUPPORTED_MODULES = [Linear, Convolution, LSTM, RNN, Attention]
+
     def __init__(
         self,
         model: Module,

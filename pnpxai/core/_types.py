@@ -1,9 +1,10 @@
 from torch.utils.data import Dataset, DataLoader
 from torch import Tensor, nn
-from typing import Union, Sequence, Literal, List, Tuple
+from typing import Union, Sequence, Literal, Tuple
 from enum import Enum
 from xgboost import XGBClassifier, XGBRegressor
 from sklearn.base import ClassifierMixin, RegressorMixin
+
 
 TensorOrTupleOfTensors = Union[Tensor, Tuple[Tensor]]
 TensorSequence = Union[Dataset, Sequence[Tensor]]
@@ -24,8 +25,6 @@ Question = Literal["why"]
 ExplanationType = Literal["attribution"]
 Model = nn.Module  # TODO: List other model types in Union[Type1, Type2, ...]
 Task = Literal["classification"]
-Modality = Literal["image", "tabular", "time_series", "text"]
-ModalityOrListOfModalities = Union[Modality, List[Modality]]
 ExplanationType = Literal["attribution"]
 
 class ConfigKeys(Enum):

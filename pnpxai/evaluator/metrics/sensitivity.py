@@ -4,9 +4,9 @@ from typing import Callable, Optional
 import torch
 from torch import nn
 
+from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 from pnpxai.explainers.base import Explainer
-from pnpxai.explainers.utils import _format_to_tuple
-from .base import Metric
+from pnpxai.evaluator.metrics.base import Metric
 
 
 class Sensitivity(Metric):
@@ -27,35 +27,29 @@ class Sensitivity(Metric):
         targets: torch.Tensor,
         attributions: Optional[torch.Tensor]
     ) -> torch.Tensor:
-        
-        if self.explainer is None:
-            raise ValueError("Explainer is not provided.")
-        inputs = inputs.to(self.device)
-        targets = targets.to(self.device)
         if attributions is None:
             attributions = self.explainer.attribute(inputs, targets)
-
+        attributions = attributions.to(self.device)
         evaluations = []
-        for input, target, attr in zip(inputs, targets, attributions):
+        for inp, target, attr in zip(inputs, targets, attributions):
             # Add random uniform noise which ranges [-epsilon, epsilon]
-            perturbed = torch.stack([input]*self.n_iter)
+            perturbed = torch.stack([inp]*self.n_iter)
             noise = (
                 torch.rand_like(perturbed).to(self.device) * self.epsilon * 2 \
                 - self.epsilon
             )
             perturbed += noise
             # Get perturbed attribution results
-            # perturbed = _format_to_tuple(perturbed)
             perturbed_attr = self.explainer.attribute(
-                inputs=perturbed,
-                targets=target.repeat(self.n_iter)
+                inputs=perturbed.to(self.device),
+                targets=target.repeat(self.n_iter),
             )
             # Get maximum of the difference between the perturbed attribution and the original attribution
-            attr_norm = torch.linalg.norm(attr)
+            attr_norm = torch.linalg.norm(attr).to(self.device)
             attr_diff = attr - perturbed_attr
             sens = max([torch.linalg.norm(diff)/attr_norm for diff in attr_diff])
             evaluations.append(sens)
-        return torch.stack(evaluations).detach()
+        return torch.stack(evaluations).to(self.device)
 
 
 # def pnpxai_sensitivity(
