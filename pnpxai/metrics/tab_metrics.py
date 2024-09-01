@@ -18,13 +18,13 @@ class TorchWrapperModel(nn.Module):
 def sklearn_wrapping(model):
     return TorchWrapperModel(model).eval()
 
-class TabABPC(Metric):
+class PFMetric(Metric):
     def __init__(self, model, **kwargs):
-        self.model = model
         super().__init__(model, **kwargs)
+        self.model = model
         
- 
-    def evaluate(self, 
+    
+    def setup(self, 
                 inputs: Tensor | None, 
                 targets: Tensor | None, 
                 attributions: Tensor | None,
@@ -61,6 +61,99 @@ class TabABPC(Metric):
         else:
             model = self.model
 
+        return inputs, targets, attributions, model
+
+
+class TabMoRF(PFMetric):
+    def __init__(self, model, **kwargs):
+        super().__init__(model, **kwargs)
+        
+    def evaluate(self, 
+                inputs: Tensor | None, 
+                targets: Tensor | None, 
+                attributions: Tensor | None,
+                perturb_func: Callable = None,
+                abs: bool = False,
+                normalise: bool = False,
+                **kwargs
+                ) -> Tensor:
+        
+
+        inputs, targets, attributions, model = self.setup(
+            inputs=inputs,
+            targets=targets,
+            attributions=attributions,
+            perturb_func=perturb_func,
+            abs=abs,
+            normalise=normalise,
+        )
+
+        morf_score = self.metric(
+            model=model,
+            x_batch=inputs,
+            y_batch=targets,
+            a_batch=attributions
+        )
+
+        return np.array(morf_score).sum(axis=1) / (len(morf_score[0]) + 1)
+
+class TabLeRF(PFMetric):
+    def __init__(self, model, **kwargs):
+        super().__init__(model, **kwargs)
+        
+    def evaluate(self, 
+                inputs: Tensor | None, 
+                targets: Tensor | None, 
+                attributions: Tensor | None,
+                perturb_func: Callable = None,
+                abs: bool = False,
+                normalise: bool = False,
+                **kwargs
+                ) -> Tensor:
+        
+
+        inputs, targets, attributions, model = self.setup(
+            inputs=inputs,
+            targets=targets,
+            attributions=attributions,
+            perturb_func=perturb_func,
+            abs=abs,
+            normalise=normalise,
+        )
+
+        lerf_score = self.metric(
+            model=model,
+            x_batch=inputs,
+            y_batch=targets,
+            a_batch=-attributions
+        )
+
+        return np.array(lerf_score).sum(axis=1) / (len(lerf_score[0]) + 1)
+
+class TabABPC(PFMetric):
+    def __init__(self, model, **kwargs):
+        super().__init__(model, **kwargs)
+ 
+    def evaluate(self, 
+                inputs: Tensor | None, 
+                targets: Tensor | None, 
+                attributions: Tensor | None,
+                perturb_func: Callable = None,
+                abs: bool = False,
+                normalise: bool = False,
+                **kwargs
+                ) -> Tensor:
+        
+
+        inputs, targets, attributions, model = self.setup(
+            inputs=inputs,
+            targets=targets,
+            attributions=attributions,
+            perturb_func=perturb_func,
+            abs=abs,
+            normalise=normalise,
+        )
+
         morf_score = self.metric(
             model=model,
             x_batch=inputs,
@@ -74,7 +167,7 @@ class TabABPC(Metric):
             a_batch=-attributions
         )
 
-        abpc = (np.array(lerf_score) - np.array(morf_score)).sum(axis=1)
+        abpc = (np.array(lerf_score) - np.array(morf_score)).sum(axis=1) / (len(morf_score[0]) + 1)
 
         return abpc
 

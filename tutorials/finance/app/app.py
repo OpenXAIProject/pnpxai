@@ -4,6 +4,22 @@ import plotly.graph_objects as go
 
 PLOT_PER_LINE = 2
 N_FEATURES_TO_SHOW = 5
+NAME_MAP = {
+    "TabABPC" : {"cat" : "Correctness", "alias" : "AbPC"},
+    "TabMoRF" : {"cat" : "Correctness", "alias" : "MoRF"},
+    "TabLeRF" : {"cat" : "Correctness", "alias" : "LeRF"},
+    "TabInfidelity" : {"cat" : "Correctness", "alias" : "MuFidelity"},
+    "TabAvgSensitivity" : {"cat" : "Continuity", "alias" : "Sensitivity"},
+    "TabComplexity" : {"cat" : "Compactness", "alias" : "Complexity"},
+}
+ALIAS_MAP = {
+    "AbPC" : "TabABPC",
+    "MoRF" : "TabMoRF",
+    "LeRF" : "TabLeRF",
+    "MuFidelity" : "TabInfidelity",
+    "Sensitivity" : "TabAvgSensitivity",
+    "Complexity" : "TabComplexity",
+}
 
 class App:
     def __init__(self):
@@ -92,6 +108,7 @@ class Database(Component):
 class Experiment(Component):
     def __init__(self, experiment):
         self.experiment = experiment
+        self.experiment.seq = 0
 
     def get_prediction(self, record):
         index = record['data_id']
@@ -103,9 +120,19 @@ class Experiment(Component):
     def get_exp_plot(self, data_index, exp_res):
         return ExpRes(data_index, exp_res).show()
 
-    def handle_click(self, data_id, explainer_names, metric_names):
-        all_explainers, all_explainer_ids = self.experiment.manager.get_explainers()
-        all_metrics, all_metric_ids = self.experiment.manager.get_metrics()
+    def handle_click(self, data_id, explainer_names, *metric_nm_inputs):
+        metric_names = []
+        for metric_nm_input in metric_nm_inputs:
+            metric_names.extend(metric_nm_input)
+        
+        metric_names = [ALIAS_MAP[name] if name in ALIAS_MAP else name for name in metric_names]
+
+        all_explainers = self.experiment.manager.all_explainers
+        all_explainer_ids = list(range(len(all_explainers)))
+        all_metrics = self.experiment.manager.all_metrics
+        all_metric_ids = list(range(len(all_metrics)))
+        # all_explainers, all_explainer_ids = self.experiment.manager.get_explainers()
+        # all_metrics, all_metric_ids = self.experiment.manager.get_metrics()
         all_explainer_names = [exp.__class__.__name__ for exp in all_explainers]
         all_metric_names = [metric.__class__.__name__ for metric in all_metrics]
 
@@ -117,10 +144,18 @@ class Experiment(Component):
             metrics_ids=metric_ids
         )
 
-        record = self.experiment.records[data_id]
+        record = self.experiment.records[0]
         pred = self.get_prediction(record)
         plots = []
-        for exp_res in record['explanations']:
+
+        # Sort the explanations with its AbPC value
+        explanation = record['explanations']
+        for exp in explanation:
+            exp['sorting_value'] = next(filter(lambda x: x['metric_nm'] == 'TabABPC', exp['evaluations']))['value']
+            if exp['sorting_value'] is None:
+                raise ValueError("AbPC value is not found in the evaluations")
+        explanation = sorted(explanation, key=lambda x: x['sorting_value'], reverse=True)
+        for exp_res in explanation:
             plots.append(self.get_exp_plot(data_id, exp_res))
 
         if len(record['explanations']) < len(all_explainers):
@@ -150,12 +185,25 @@ class Experiment(Component):
 
         metrics, _ = self.experiment.manager.get_metrics()
         metrics_names = [metric.__class__.__name__ for metric in metrics]
-        metric_input = gr.CheckboxGroup(label="Evaluators", choices=metrics_names, value=metrics_names)
+
+        correctness_metrics = [NAME_MAP[name]["alias"] for name in metrics_names if name in NAME_MAP and NAME_MAP[name]["cat"] == "Correctness"]
+        continuity_metrics = [NAME_MAP[name]["alias"] for name in metrics_names if name in NAME_MAP and NAME_MAP[name]["cat"] == "Continuity"]
+        compactness_metrics = [NAME_MAP[name]["alias"] for name in metrics_names if name in NAME_MAP and NAME_MAP[name]["cat"] == "Compactness"]
+
+
+        with gr.Accordion(label="Evaluators", open=True):
+            with gr.Row():
+                with gr.Column():
+                    cor_input = gr.CheckboxGroup(label="Correctness", choices=correctness_metrics, value=correctness_metrics)
+                with gr.Column():
+                    con_input = gr.CheckboxGroup(label="Continuity", choices=continuity_metrics, value=continuity_metrics)
+                with gr.Column():
+                    com_input = gr.CheckboxGroup(label="Compactness", choices=compactness_metrics, value=compactness_metrics)
 
         bttn = gr.Button("Explain")
 
         with gr.Row():
-            prediction_result = gr.Label("Prediction result")
+            prediction_result = gr.Textbox(label="Prediction result")
         
         n_rows = len(explainers) // PLOT_PER_LINE
         plots = []
@@ -169,7 +217,9 @@ class Experiment(Component):
             inputs=[
                 data_index, 
                 explainer_input,
-                metric_input,
+                cor_input,
+                con_input,
+                com_input,
             ], 
             outputs=[prediction_result] + plots
         )
@@ -188,7 +238,7 @@ class ExpRes(Component):
         fig = go.Figure(data=[go.Bar(x=index, y=value, name='Attribution')])
 
         evaluations = self.exp_res['evaluations']
-        metric_values = [f"{eval['metric_nm']}: {eval['value']:.2f}" for eval in evaluations]
+        metric_values = [f"{NAME_MAP[eval['metric_nm']]['alias']}: {eval['value']:.2f}" for eval in evaluations]
         metric_text = ', '.join(metric_values)
 
         # Add annotation with metric values
@@ -205,7 +255,7 @@ class ExpRes(Component):
         )
 
         fig.update_layout(
-            title=f"Explanation for data index {self.data_index} using {explainer_nm}",
+            title=f"{explainer_nm}",
             width=700,
             height=400,
             xaxis=dict(title='Index'),
@@ -235,8 +285,7 @@ class FinanceApp(App):
             self.detection_tab.show()
             self.local_exp_tab.show()
 
-
-        demo.launch(**kwargs)
+        return demo
 
 if __name__ == '__main__':
     import pickle
@@ -247,7 +296,6 @@ if __name__ == '__main__':
     from model import TabResNet
 
 
-    raw_data = pd.read_csv("data/baf/preprocess/test.csv", index_col=0)
     with open("data/baf/preprocess/X_test.npy", 'rb') as f:
         preprocessed_data = np.load(f)
 
@@ -287,6 +335,10 @@ if __name__ == '__main__':
     model_nn = torch.nn.Sequential(model_nn, torch.nn.Softmax(dim=1))
     model_nn.eval()
 
+    # Abnormal data indices
+    # [ 3,  5,  6,  7,  8, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 23,
+    #    26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 41, 42, 43,
+    #    45, 46, 49, 50, 51, 55]
 
     experiments = []
 
@@ -318,4 +370,12 @@ if __name__ == '__main__':
     experiments.append(experiment2)
 
     app = FinanceApp(experiments)
-    app.launch()
+
+    with gr.Blocks(
+            title=app.name,
+        ) as demo:
+            app.overview_tab.show()
+            app.detection_tab.show()
+            app.local_exp_tab.show()
+
+    demo.launch(share=True)

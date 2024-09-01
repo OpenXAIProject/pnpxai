@@ -38,6 +38,8 @@ from pnpxai.metrics import (
     Sensitivity,
     Complexity,
     TabABPC,
+    TabMoRF,
+    TabLeRF,
     TabAvgSensitivity,
     TabInfidelity,
     TabComplexity
@@ -133,6 +135,12 @@ DEFAULT_METRIC_MAP = {
     TabABPC: {
         'modalities': ['tabular'],
     },
+    TabMoRF: {
+        'modalities': ['tabular'],
+    },
+    TabLeRF: {
+        'modalities': ['tabular'],
+    },
     TabAvgSensitivity: {
         'modalities': ['tabular'],
     },
@@ -145,7 +153,7 @@ DEFAULT_METRIC_MAP = {
 }
 
 
-AVAILABLE_METRICS = {MuFidelity, Sensitivity, Complexity, TabABPC, TabAvgSensitivity, TabInfidelity, TabComplexity}
+AVAILABLE_METRICS = {MuFidelity, Sensitivity, Complexity, TabABPC, TabMoRF, TabLeRF, TabAvgSensitivity, TabInfidelity, TabComplexity}
 
 CAM_BASED_EXPLAINERS = {GradCam, GuidedGradCam}
 
