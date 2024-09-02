@@ -46,17 +46,6 @@ expr = AutoExplanationForVisualQuestionAnswering(
     additional_forward_arg_extractor=additional_forward_arg_extractor,
 )
 
-<<<<<<< HEAD
-# test
-for explainer_id in range(len(expr.manager.explainers)):
-    optimized, objective, study = expr.optimize(
-        data_ids=0,
-        explainer_id=explainer_id,
-        metric_id=1,
-        direction='maximize',
-        sampler='tpe',
-    )
-=======
 expr.recommended.print_tabular()
 
 optimized = expr.optimize(
@@ -88,4 +77,3 @@ worst_trial = get_worst_trial(optimized.study)
 print('Worst/Explainer:', worst_trial.user_attrs['explainer'])
 print('Worst/PostProcessor', worst_trial.user_attrs['postprocessor'])
 print('Worst/value', worst_trial.value)
->>>>>>> cdad8785814831f676c04118c2d010ec6c28546d
