@@ -318,7 +318,7 @@ class TimeSeriesModality(Modality):
         Returns:
             FeatureMaskFunction: No Mask baseline function.
         """
-        return self.feature_mask_fn_selector.select('no_mask_1d')
+        return self.feature_mask_fn_selector.select('no_mask_2d')
 
     def get_default_postprocessors(self) -> List[PostProcessor]:
         """

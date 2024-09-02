@@ -11,6 +11,8 @@ from pnpxai.explainers.utils import (
     PoolingFunction,
     NormalizationFunction,
 )
+from pnpxai.explainers import Lime, KernelShap
+from pnpxai.explainers.utils.function_selectors import FunctionSelector
 from pnpxai.evaluator.optimizer.utils import generate_param_key
 from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 
@@ -43,6 +45,7 @@ def suggest(
     obj: Any,
     modality: Union[Modality, Tuple[Modality]],
     key: Optional[str] = None,
+    force_params: Optional[Dict[str, Any]] = None,
 ):
     """
     A utility function that suggests parameters for a given object based on an optimization trial. 
@@ -85,38 +88,42 @@ def suggest(
     """
 
     is_multi_modal = len(format_into_tuple(modality)) > 1
+    force_params = force_params or {}
     for param_nm, (method_type, method_kwargs) in obj.get_tunables().items():
-        method = map_suggest_method(trial, method_type)
-        if method is not None:
-            param = method(
-                name=generate_param_key(key, param_nm),
-                **method_kwargs
-            )
-        elif issubclass(method_type, UtilFunction):
-            param = []
-            for mod in format_into_tuple(modality):
-                fn_selector = map_fn_selector(mod, method_type)
-                _param_nm, (_method_type, _method_kwargs) = next(
-                    iter(fn_selector.get_tunables().items())
+        if param_nm in force_params:
+            param = force_params[param_nm]
+        else:
+            method = map_suggest_method(trial, method_type)
+            if method is not None:
+                param = method(
+                    name=generate_param_key(key, param_nm),
+                    **method_kwargs
                 )
-                _param_nm = generate_param_key(
-                    param_nm,
-                    mod.__class__.__name__ if is_multi_modal else None,
-                    _param_nm,
-                )  # update param_nm
-                _method = map_suggest_method(trial, _method_type)
-                fn_nm = _method(
-                    name=generate_param_key(key, _param_nm),
-                    **_method_kwargs
-                )
-                fn = fn_selector.select(fn_nm)
-                param.append(suggest(
-                    trial, fn, mod,
-                    key=generate_param_key(
-                        key, param_nm,
+            elif issubclass(method_type, UtilFunction):
+                param = []
+                for mod in format_into_tuple(modality):
+                    fn_selector = map_fn_selector(mod, method_type)
+                    _param_nm, (_method_type, _method_kwargs) = next(
+                        iter(fn_selector.get_tunables().items())
+                    )
+                    _param_nm = generate_param_key(
+                        param_nm,
                         mod.__class__.__name__ if is_multi_modal else None,
-                    ),
-                ))
-            param = format_out_tuple_if_single(tuple(param))
+                        _param_nm,
+                    )  # update param_nm
+                    _method = map_suggest_method(trial, _method_type)
+                    fn_nm = _method(
+                        name=generate_param_key(key, _param_nm),
+                        **_method_kwargs
+                    )
+                    fn = fn_selector.select(fn_nm)
+                    param.append(suggest(
+                        trial, fn, mod,
+                        key=generate_param_key(
+                            key, param_nm,
+                            mod.__class__.__name__ if is_multi_modal else None,
+                        ),
+                    ))
+                param = format_out_tuple_if_single(tuple(param))
         obj = obj.set_kwargs(**{param_nm: param})
     return obj
