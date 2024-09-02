@@ -1,7 +1,7 @@
 # from .experiment import run_experiment
-from .detector import detect_model_architecture
-from .recommender import XaiRecommender
-from .experiment import (
+from pnpxai.core.detector.detector import detect_model_architecture
+from pnpxai.core.recommender.recommender import XaiRecommender
+from pnpxai.core.experiment import (
     Experiment,
     AutoExplanation,
     AutoExplanationForImageClassification,
