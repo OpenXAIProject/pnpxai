@@ -22,8 +22,10 @@ from pnpxai.evaluator.metrics import (
 METRICS_BASELINE_FN_REQUIRED = PIXEL_FLIPPING_METRICS
 METRICS_CHANNEL_DIM_REQUIRED = PIXEL_FLIPPING_METRICS
 DEFAULT_METRICS = [
-    MuFidelity,
     AbPC,
+    MoRF,
+    LeRF,
+    MuFidelity,
     Sensitivity,
     Complexity,
 ]
