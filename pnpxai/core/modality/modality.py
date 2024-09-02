@@ -1,24 +1,34 @@
-from typing import Union, Tuple, Optional, List
-from abc import ABC
+from typing import Union, Tuple, Optional, List, Sequence, Callable
+from abc import ABC, abstractmethod
+
 from optuna import Trial
 from pnpxai.evaluator.optimizer.utils import generate_param_key
+from pnpxai.explainers.utils.postprocess import (
+    PostProcessor,
+    POOLING_FUNCTIONS,
+    POOLING_FUNCTIONS_FOR_IMAGE,
+    POOLING_FUNCTIONS_FOR_TEXT,
+    POOLING_FUNCTIONS_FOR_TIME_SERIES,
+    NORMALIZATION_FUNCTIONS,
+    NORMALIZATION_FUNCTIONS_FOR_IMAGE,
+    NORMALIZATION_FUNCTIONS_FOR_TEXT,
+    NORMALIZATION_FUNCTIONS_FOR_TIME_SERIES,
+)
+from pnpxai.explainers.utils.function_selectors import FunctionSelector
+from pnpxai.explainers.utils.baselines import (
+    BaselineFunction,
+    BASELINE_FUNCTIONS,
+    BASELINE_FUNCTIONS_FOR_IMAGE,
+    BASELINE_FUNCTIONS_FOR_TEXT,
+    BASELINE_FUNCTIONS_FOR_TIME_SERIES,
+)
 from pnpxai.explainers.utils.feature_masks import (
     FeatureMaskFunction,
     FEATURE_MASK_FUNCTIONS,
     FEATURE_MASK_FUNCTIONS_FOR_IMAGE,
     FEATURE_MASK_FUNCTIONS_FOR_TEXT,
     FEATURE_MASK_FUNCTIONS_FOR_TIME_SERIES,
-    suggest_tunable_feature_masks
 )
-from pnpxai.explainers.utils.baselines import (
-    BaselineFunction,
-    BASELINE_METHODS_FOR_IMAGE,
-    BASELINE_METHODS_FOR_TEXT,
-    BASELINE_METHODS_FOR_TIME_SERIES,
-    BASELINE_METHODS,
-    suggest_tunable_baselines
-)
-from pnpxai.explainers.utils.postprocess import PostProcessor, RELEVANCE_POOLING_METHODS, RELEVANCE_NORMALIZATION_METHODS
 from pnpxai.explainers import (
     Gradient,
     GradientXInput,
@@ -40,60 +50,76 @@ from pnpxai.explainers import (
 class Modality(ABC):
     # Copies the tuple without preserving the reference
     EXPLAINERS = tuple(iter(AVAILABLE_EXPLAINERS))
-    PP_RELEVANCE_POOLING_METHODS = tuple(RELEVANCE_POOLING_METHODS.keys())
-    PP_RELEVANCE_NORMALIZATION_METHODS = tuple(
-        RELEVANCE_NORMALIZATION_METHODS.keys()
-    )
-    FEATURE_MASKS = tuple(FEATURE_MASK_FUNCTIONS.keys())
-    BASELINES = tuple(BASELINE_METHODS.keys())
 
-    def __init__(self, channel_dim: Union[int, Tuple[int]]):
+    def __init__(
+        self,
+        channel_dim: int,
+        baseline_fn_selector: Optional[FunctionSelector] = None,
+        feature_mask_fn_selector: Optional[FunctionSelector] = None,
+        pooling_fn_selector: Optional[FunctionSelector] = None,
+        normalization_fn_selector: Optional[FunctionSelector] = None,
+        **kwargs
+    ):
         self.channel_dim = channel_dim
+        self.baseline_fn_selector = baseline_fn_selector or FunctionSelector(BASELINE_FUNCTIONS)
+        self.feature_mask_fn_selector = feature_mask_fn_selector or FunctionSelector(FEATURE_MASK_FUNCTIONS)
+        self.pooling_fn_selector = pooling_fn_selector or FunctionSelector(POOLING_FUNCTIONS)
+        self.normalization_fn_selector = normalization_fn_selector or FunctionSelector(NORMALIZATION_FUNCTIONS_FOR_IMAGE)
 
-    def get_default_feature_mask_fn(self):
-        return FeatureMaskFunction(method='no_mask')
+    @abstractmethod    
+    def get_default_feature_mask_fn(self) -> Callable:
+        raise NotImplementedError
 
-    def get_default_baseline_fn(self, *args, **kwargs):
-        return BaselineFunction(method='zeros')
+    @abstractmethod
+    def get_default_baseline_fn(self) -> Callable:
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_default_postprocessors(self) -> List[Callable]:
+        raise NotImplementedError
+
+
+class ImageModality(Modality):
+    def __init__(
+        self,
+        channel_dim: int = 1,
+        baseline_fn_selector: Optional[FunctionSelector] = None,
+        feature_mask_fn_selector: Optional[FunctionSelector] = None,
+        pooling_fn_selector: Optional[FunctionSelector] = None,
+        normalization_fn_selector: Optional[FunctionSelector] = None,
+    ):
+        super(ImageModality, self).__init__(
+            channel_dim,
+            baseline_fn_selector=baseline_fn_selector or FunctionSelector(
+                data=BASELINE_FUNCTIONS_FOR_IMAGE,
+                default_kwargs={'dim': channel_dim},
+            ),
+            feature_mask_fn_selector=feature_mask_fn_selector or FunctionSelector(
+                data=FEATURE_MASK_FUNCTIONS_FOR_IMAGE
+            ),
+            pooling_fn_selector=pooling_fn_selector or FunctionSelector(
+                data=POOLING_FUNCTIONS_FOR_IMAGE,
+                default_kwargs={'channel_dim': channel_dim},
+            ),
+            normalization_fn_selector=normalization_fn_selector or FunctionSelector(
+                data=NORMALIZATION_FUNCTIONS_FOR_IMAGE
+            ),
+        )
+
+    def get_default_baseline_fn(self) -> BaselineFunction:
+        return self.baseline_fn_selector.select('zeros')
+
+    def get_default_feature_mask_fn(self) -> FeatureMaskFunction:
+        return self.feature_mask_fn_selector.select('felzenszwalb', scale=250)
 
     def get_default_postprocessors(self) -> List[PostProcessor]:
         return [
             PostProcessor(
-                pooling_method=pm,
-                normalization_method=nm,
-                channel_dim=self.channel_dim
-            ) for pm in self.PP_RELEVANCE_POOLING_METHODS
-            for nm in self.PP_RELEVANCE_NORMALIZATION_METHODS
+                pooling_fn=self.pooling_fn_selector.select(pm),
+                normalization_fn=self.normalization_fn_selector.select(nm),
+            ) for pm in self.pooling_fn_selector.choices
+            for nm in self.normalization_fn_selector.choices
         ]
-
-    def suggest_tunable_post_processors(self, trial: Trial, key: Optional[str] = None):
-        return {
-            'pooling_method': trial.suggest_categorical(
-                generate_param_key(key, 'pooling_method'),
-                choices=self.PP_RELEVANCE_POOLING_METHODS,
-            ),
-            'normalization_method': trial.suggest_categorical(
-                generate_param_key(key, 'normalization_method'),
-                choices=self.PP_RELEVANCE_NORMALIZATION_METHODS,
-            ),
-        }
-
-    def suggest_tunable_feature_masks(self, trial: Trial, key: Optional[str] = None, order: Optional[int] = None):
-        return suggest_tunable_feature_masks(self.FEATURE_MASKS, trial, key)
-
-    def suggest_tunable_baselines(self, trial: Trial, key: Optional[str] = None, order: Optional[int] = None):
-        return suggest_tunable_baselines(self.BASELINES, trial, key)
-
-
-class ImageModality(Modality):
-    FEATURE_MASKS = tuple(FEATURE_MASK_FUNCTIONS_FOR_IMAGE.keys())
-    BASELINES = tuple(BASELINE_METHODS_FOR_IMAGE.keys())
-
-    def __init__(self, channel_dim: int = 1):
-        super(ImageModality, self).__init__(channel_dim)
-
-    def get_default_feature_mask_fn(self):
-        return FeatureMaskFunction(method='felzenszwalb', scale=250)
 
 
 class TextModality(Modality):
@@ -109,85 +135,90 @@ class TextModality(Modality):
         LRPEpsilonAlpha2Beta1,
         KernelShap,
         Lime,
-        AttentionRollout,
-        TransformerAttribution
-    )
-    PP_RELEVANCE_POOLING_METHODS = tuple(
-        k for k in RELEVANCE_POOLING_METHODS.keys()
-        if k != 'identity'
-    )
-    FEATURE_MASKS = tuple(FEATURE_MASK_FUNCTIONS_FOR_TEXT.keys())
-    BASELINES = tuple(BASELINE_METHODS_FOR_TEXT.keys())
-
-    def __init__(self, channel_dim: int = -1):
-        super(TextModality, self).__init__(channel_dim)
-
-    def get_default_baseline_fn(self, mask_token_id: Optional[int] = None):
-        return BaselineFunction(method='mask_token', token_id=mask_token_id)
-
-
-class ImageTextModality(ImageModality, TextModality):
-    FEATURE_MASKS = (ImageModality.FEATURE_MASKS, TextModality.FEATURE_MASKS)
-    BASELINES = (ImageModality.BASELINES, TextModality.BASELINES)
-    EXPLAINERS = (
-        Gradient,
-        GradientXInput,
-        SmoothGrad,
-        VarGrad,
-        IntegratedGradients,
-        LRPUniformEpsilon,
-        LRPEpsilonPlus,
-        LRPEpsilonGammaBox,
-        LRPEpsilonAlpha2Beta1,
-        KernelShap,
-        Lime,
     )
 
-    def __init__(self, channel_dim: Tuple[int] = (1, -1)):
-        super().__init__(channel_dim)
-
-    def get_default_feature_mask_fn(self):
-        return (
-            ImageModality.get_default_feature_mask_fn(self),
-            TextModality.get_default_feature_mask_fn(self),
+    def __init__(
+        self,
+        channel_dim: int = -1,
+        mask_token_id: int = 0,
+        baseline_fn_selector: Optional[FunctionSelector] = None,
+        feature_mask_fn_selector: Optional[FunctionSelector] = None,
+        pooling_fn_selector: Optional[FunctionSelector] = None,
+        normalization_fn_selector: Optional[FunctionSelector] = None,
+    ):
+        super(TextModality, self).__init__(
+            channel_dim,
+            baseline_fn_selector=baseline_fn_selector or FunctionSelector(
+                data=BASELINE_FUNCTIONS_FOR_TEXT,
+                default_kwargs={'token_id': mask_token_id},
+            ),
+            feature_mask_fn_selector=feature_mask_fn_selector or FunctionSelector(
+                data=FEATURE_MASK_FUNCTIONS_FOR_TEXT
+            ),
+            pooling_fn_selector=pooling_fn_selector or FunctionSelector(
+                data=POOLING_FUNCTIONS_FOR_TEXT,
+                default_kwargs={'channel_dim': channel_dim},
+            ),
+            normalization_fn_selector=normalization_fn_selector or FunctionSelector(
+                data=NORMALIZATION_FUNCTIONS_FOR_TEXT,
+            ),
         )
+        self.mask_token_id = mask_token_id
 
-    def get_default_baseline_fn(self, mask_token_id: Optional[int] = None):
-        return (
-            ImageModality.get_default_baseline_fn(self),
-            TextModality.get_default_baseline_fn(self, mask_token_id),
-        )
+    def get_default_baseline_fn(self) -> BaselineFunction:
+        return self.baseline_fn_selector.select('token')
 
-    def suggest_tunable_feature_masks(self, trial: Trial, key: Optional[str] = None, order: Optional[int] = None):
-        if order < len(self.FEATURE_MASKS):
-            return suggest_tunable_feature_masks(self.FEATURE_MASKS[order], trial, key)
-        return suggest_tunable_feature_masks(self.FEATURE_MASKS[0], trial, key)
+    def get_default_feature_mask_fn(self) -> FeatureMaskFunction:
+        return self.feature_mask_fn_selector.select('no_mask_1d')
 
-    def suggest_tunable_baselines(self, trial: Trial, key: Optional[str] = None, order: Optional[int] = None):
-        if order < len(self.BASELINES):
-            return suggest_tunable_baselines(self.BASELINES[order], trial, key)
-        return suggest_tunable_baselines(self.BASELINES[0], trial, key)
-
-    def get_default_postprocessors(self):
+    def get_default_postprocessors(self) -> List[PostProcessor]:
         return [
-            tuple(PostProcessor(
-                pooling_method=pm,
-                normalization_method=nm,
-                channel_dim=d,
-            ) for d in self.channel_dim
-            ) for pm in RELEVANCE_POOLING_METHODS
-            for nm in RELEVANCE_NORMALIZATION_METHODS
+            PostProcessor(
+                pooling_fn=self.pooling_fn_selector.select(pm),
+                normalization_fn=self.normalization_fn_selector.select(nm),
+            ) for pm in self.pooling_fn_selector.choices
+            for nm in self.normalization_fn_selector.choices
         ]
 
 
 class TimeSeriesModality(Modality):
-    PP_RELEVANCE_POOLING_METHODS = ('identity',)
-    PP_RELEVANCE_NORMALIZATION_METHODS = ('identity',)
-    BASELINES = tuple(BASELINE_METHODS_FOR_TIME_SERIES.keys())
-    FEATURE_MASKS = tuple(FEATURE_MASK_FUNCTIONS_FOR_TIME_SERIES.keys())
+    def __init__(
+        self,
+        channel_dim: int = -1,
+        baseline_fn_selector: Optional[FunctionSelector] = None,
+        feature_mask_fn_selector: Optional[FunctionSelector] = None,
+        pooling_fn_selector: Optional[FunctionSelector] = None,
+        normalization_fn_selector: Optional[FunctionSelector] = None,
+    ):
+        super(TimeSeriesModality, self).__init__(
+            channel_dim,
+            baseline_fn_selector=baseline_fn_selector or FunctionSelector(
+                data=BASELINE_FUNCTIONS_FOR_TIME_SERIES, # [zeros, mean]
+                default_kwargs={'dim': channel_dim},
+            ),
+            feature_mask_fn_selector=feature_mask_fn_selector or FunctionSelector(
+                data=FEATURE_MASK_FUNCTIONS_FOR_TIME_SERIES,
+            ),
+            pooling_fn_selector=pooling_fn_selector or FunctionSelector(
+                data=POOLING_FUNCTIONS_FOR_TIME_SERIES, # [identity]
+                default_kwargs={'channel_dim': channel_dim},
+            ),
+            normalization_fn_selector=normalization_fn_selector or FunctionSelector(
+                data=NORMALIZATION_FUNCTIONS_FOR_TIME_SERIES, # [identity]
+            ),
+        )
 
-    def __init__(self, channel_dim: int = -1):
-        super(TimeSeriesModality, self).__init__(channel_dim)
+    def get_default_baseline_fn(self) -> BaselineFunction:
+        return self.baseline_fn_selector.select('zeros')
 
-    def get_default_feature_mask_fn(self):
-        return FeatureMaskFunction(method='no_mask')
+    def get_default_feature_mask_fn(self) -> FeatureMaskFunction:
+        return self.feature_mask_fn_selector.select('no_mask_1d')
+
+    def get_default_postprocessors(self) -> List[PostProcessor]:
+        return [
+            PostProcessor(
+                pooling_fn=self.pooling_fn_selector.select(pm),
+                normalization_fn=self.normalization_fn_selector.select(nm),
+            ) for pm in self.pooling_fn_selector.choices
+            for nm in self.normalization_fn_selector.choices
+        ]

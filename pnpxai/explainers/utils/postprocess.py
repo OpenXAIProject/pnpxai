@@ -1,5 +1,9 @@
+from typing import Optional, Dict, Callable
+
 import copy
 from torch import Tensor
+from pnpxai.explainers.utils.base import UtilFunction
+from pnpxai.explainers.utils.function_selectors import FunctionSelector
 
 
 def sumpos(attrs: Tensor, channel_dim: int) -> Tensor:
@@ -46,111 +50,217 @@ def identity(attrs: Tensor, *args, **kwargs) -> Tensor:
     return attrs
 
 
-RELEVANCE_POOLING_METHODS = {
-    'sumpos': sumpos,
-    'sumabs': sumabs,
-    'l1norm': l1norm,
-    'maxnorm': maxnorm,
-    'l2norm': l2norm,
-    'l2normsq': l2normsq,
-    'possum': possum,
-    'posmaxnorm': posmaxnorm,
-    'posl2norm': posl2norm,
-    'posl2normsq': posl2normsq,
-    'identity': identity,
+class PoolingFunction(UtilFunction):
+    def __init__(self, channel_dim):
+        super().__init__()
+        self.channel_dim = channel_dim
+
+
+class SumPos(PoolingFunction):
+    def __init__(self, channel_dim):
+        super().__init__(channel_dim)
+
+    def __call__(self, attrs: Tensor):
+        return sumpos(attrs, self.channel_dim)
+
+
+class SumAbs(PoolingFunction):
+    def __init__(self, channel_dim):
+        super().__init__(channel_dim)
+
+    def __call__(self, attrs: Tensor):
+        return sumabs(attrs, self.channel_dim)
+
+
+class L1Norm(PoolingFunction):
+    def __init__(self, channel_dim):
+        super().__init__(channel_dim)
+
+    def __call__(self, attrs: Tensor):
+        return l1norm(attrs, self.channel_dim)
+
+
+class MaxNorm(PoolingFunction):
+    def __init__(self, channel_dim):
+        super().__init__(channel_dim)
+
+    def __call__(self, attrs: Tensor):
+        return maxnorm(attrs, self.channel_dim)
+
+
+class L2Norm(PoolingFunction):
+    def __init__(self, channel_dim):
+        super().__init__(channel_dim)
+
+    def __call__(self, attrs: Tensor):
+        return l2norm(attrs, self.channel_dim)
+
+
+class L2NormSquare(PoolingFunction):
+    def __init__(self, channel_dim):
+        super().__init__(channel_dim)
+
+    def __call__(self, attrs: Tensor):
+        return l2normsq(attrs, self.channel_dim)
+
+
+class PosSum(PoolingFunction):
+    def __init__(self, channel_dim):
+        super().__init__(channel_dim)
+
+    def __call__(self, attrs: Tensor):
+        return possum(attrs, self.channel_dim)
+
+
+class PosMaxNorm(PoolingFunction):
+    def __init__(self, channel_dim):
+        super().__init__(channel_dim)
+
+    def __call__(self, attrs: Tensor):
+        return posmaxnorm(attrs, self.channel_dim)
+
+
+class PosL2Norm(PoolingFunction):
+    def __init__(self, channel_dim):
+        super().__init__(channel_dim)
+
+    def __call__(self, attrs: Tensor):
+        return posl2norm(attrs, self.channel_dim)
+
+
+class PosL2NormSquare(PoolingFunction):
+    def __init__(self, channel_dim):
+        super().__init__(channel_dim)
+
+    def __call__(self, attrs: Tensor):
+        return posl2normsq(attrs, self.channel_dim)
+
+
+class Identity(UtilFunction):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def __call__(self, inputs: Tensor):
+        return identity(inputs)
+
+
+POOLING_FUNCTIONS_FOR_IMAGE = {
+    'sumpos': SumPos,
+    'sumabs': SumAbs,
+    'l1norm': L1Norm,
+    'maxnorm': MaxNorm,
+    'l2norm': L2Norm,
+    'l2normsq': L2NormSquare,
+    'possum': PosSum,
+    'posmaxnorm': PosMaxNorm,
+    'posl2norm': PosL2Norm,
+    'posl2normsq': PosL2NormSquare,
 }
 
-ALL_RELEVANCE_POOLING_METHODS = {
-    **RELEVANCE_POOLING_METHODS,
-    'identity': identity,
+POOLING_FUNCTIONS_FOR_TEXT = POOLING_FUNCTIONS_FOR_IMAGE
+
+POOLING_FUNCTIONS_FOR_TIME_SERIES = {'identity': Identity}
+
+POOLING_FUNCTIONS = {
+    **POOLING_FUNCTIONS_FOR_IMAGE,
+    **POOLING_FUNCTIONS_FOR_TEXT,
+    **POOLING_FUNCTIONS_FOR_TIME_SERIES,
 }
 
 
-def relevance_pooling(attrs: Tensor, channel_dim: int, method='l2normsq'):
-    return ALL_RELEVANCE_POOLING_METHODS[method](attrs, channel_dim)
-
-
-def minmax_normalization(attrs: Tensor):
+def minmax(attrs: Tensor):
     agg_dims = tuple(range(1, attrs.ndim))
     attrs_min = attrs.amin(agg_dims, keepdim=True)
     attrs_max = attrs.amax(agg_dims, keepdim=True)
-
     return (attrs - attrs_min) / (attrs_max - attrs_min)
 
 
-RELEVANCE_NORMALIZATION_METHODS = {
-    'minmax': minmax_normalization,
-    'identity': identity,
+class NormalizationFunction(UtilFunction):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+
+class MinMax(NormalizationFunction):
+    def __init__(self):
+        super().__init__()
+
+    def __call__(self, attrs: Tensor):
+        return minmax(attrs)
+
+
+NORMALIZATION_FUNCTIONS_FOR_IMAGE = {
+    'minmax': MinMax,
+    'identity': Identity,
 }
 
-ALL_RELEVANCE_NORMALIZATION_METHODS = {
-    **RELEVANCE_NORMALIZATION_METHODS,
-    'identity': identity,
+NORMALIZATION_FUNCTIONS_FOR_TEXT = NORMALIZATION_FUNCTIONS_FOR_IMAGE
+
+NORMALIZATION_FUNCTIONS_FOR_TIME_SERIES = {
+    'identity': Identity,
+}
+
+NORMALIZATION_FUNCTIONS = {
+    **NORMALIZATION_FUNCTIONS_FOR_IMAGE,
+    **NORMALIZATION_FUNCTIONS_FOR_TEXT,
+    **NORMALIZATION_FUNCTIONS_FOR_TIME_SERIES,
 }
 
 
-def normalize_relevance(pooled_attr: Tensor, method='minmax'):
-    return RELEVANCE_NORMALIZATION_METHODS[method](pooled_attr)
+# def normalize_relevance(pooled_attr: Tensor, method='minmax', *args, **kwargs):
+#     return NORMALIZATION_FUNCTIONS[method](*args, **kwargs)(pooled_attr)
 
 
-def postprocess_attr(
-    attr: Tensor,
-    channel_dim: int,
-    pooling_method: str = 'l2normsq',
-    normalization_method: str = 'minmax',
-):
-    pooled_attr = relevance_pooling(attr, channel_dim, method=pooling_method)
-    normalized_attr = normalize_relevance(
-        pooled_attr, method=normalization_method)
+# def postprocess_attr(
+#     attr: Tensor,
+#     channel_dim: int,
+#     pooling_method: str = 'l2normsq',
+#     normalization_method: str = 'minmax',
+# ):
+#     pooled_attr = relevance_pooling(attr, channel_dim, method=pooling_method)
+#     normalized_attr = normalize_relevance(
+#         pooled_attr, method=normalization_method)
 
-    return normalized_attr
+#     return normalized_attr
 
 
-class PostProcessor:
-    def __init__(
-        self,
-        pooling_method='l2normsq',
-        normalization_method='minmax',
-        channel_dim=-1,
+class PostProcessor(UtilFunction):
+    def __init__(self,
+        pooling_fn: PoolingFunction,
+        normalization_fn: NormalizationFunction,
     ):
-        self.pooling_method = pooling_method
-        self.normalization_method = normalization_method
-        self.channel_dim = channel_dim
+        self.pooling_fn = pooling_fn
+        self.normalization_fn = normalization_fn
 
-    def __repr__(self):
-        return f"PostProcessor(pooling_method={self.pooling_method}, normalization_method={self.normalization_method})"
+    # def __init__(
+    #     self,
+    #     pooling_method='l2normsq',
+    #     normalization_method='minmax',
+    #     channel_dim=-1,
+    # ):
+    #     super().__init__()
+    #     self.pooling_method = pooling_method
+    #     self.normalization_method = normalization_method
+    #     self.channel_dim = channel_dim
 
-    def set_channel_dim(self, channel_dim: int):
-        self.channel_dim = channel_dim
-        return self
-
-    def set_kwargs(self, **kwargs):
-        clone = self.copy()
-        for k, v in kwargs.items():
-            if hasattr(self, k):
-                setattr(clone, k, v)
-        return clone
-
-    def copy(self):
-        return copy.copy(self)
-
-    def pool_attributions(self, attrs):
-        return relevance_pooling(attrs, channel_dim=self.channel_dim, method=self.pooling_method)
-
-    def normalize_attributions(self, attrs):
-        return normalize_relevance(attrs, method=self.normalization_method)
+    @classmethod
+    def from_name(
+        cls,
+        pooling_method: str,
+        normalization_method: str,
+        channel_dim: int,
+    ):
+        return cls(
+            pooling_fn=POOLING_FUNCTIONS[pooling_method](channel_dim),
+            normalization_fn=NORMALIZATION_FUNCTIONS[normalization_method](),
+        )
 
     def __call__(self, attrs):
-        return postprocess_attr(
-            attrs,
-            channel_dim=self.channel_dim,
-            pooling_method=self.pooling_method,
-            normalization_method=self.normalization_method
-        )
+        pooled = self.pooling_fn(attrs)
+        normalized = self.normalization_fn(pooled)
+        return normalized
 
-    def copy(self):
-        return PostProcessor(
-            pooling_method=self.pooling_method,
-            normalization_method=self.normalization_method,
-            channel_dim=self.channel_dim,
-        )
+    def get_tunables(self):
+        return {
+            'pooling_fn': (PoolingFunction, {}),
+            'normalization_fn': (NormalizationFunction, {}),
+        }

@@ -16,6 +16,7 @@ from pnpxai.core.experiment.experiment_metrics_defaults import EVALUATION_METRIC
 from pnpxai.core.experiment.observable import ExperimentObservableEvent
 from pnpxai.core.experiment.manager import ExperimentManager
 from pnpxai.explainers.base import Explainer
+from pnpxai.evaluator.optimizer.types import OptimizationOutput
 from pnpxai.evaluator.optimizer.objectives import Objective
 from pnpxai.evaluator.optimizer.utils import (
     load_sampler,
@@ -29,6 +30,7 @@ from pnpxai.utils import (
     class_to_string, Observable, to_device,
     format_into_tuple, format_out_tuple_if_single,
 )
+
 
 def default_input_extractor(x):
     return x[0]
@@ -106,7 +108,6 @@ class Experiment(Observable):
         self.target_visualizer = target_visualizer
         self.target_labels = target_labels
         self.modality = modality
-
         self.reset_errors()
 
     def reset_errors(self):
@@ -238,8 +239,8 @@ class Experiment(Observable):
         metric_id: int,
         direction: Literal['minimize', 'maximize']='maximize',
         sampler: Literal['grid', 'random', 'tpe']='tpe',
-        n_trials: Optional[int]=None,
-        timeout: Optional[float]=None,
+        n_trials: Optional[int] = None,
+        timeout: Optional[float] = None,
         **kwargs, # sampler kwargs
     ):
         data = self.manager.batch_data_by_ids([data_id])
@@ -268,22 +269,16 @@ class Experiment(Observable):
             objective,
             n_trials=n_trials,
             timeout=timeout,
+            n_jobs=1,
         )
+        opt_explainer = study.best_trial.user_attrs['explainer']
+        opt_postprocessor = study.best_trial.user_attrs['postprocessor']
 
-        # update explainer
-        opt_explainer, opt_postprocessor = objective.load_from_optuna_params(
-            study.best_params.copy()
+        return OptimizationOutput(
+            explainer=opt_explainer,
+            postprocessor=opt_postprocessor,
+            study=study,
         )
-        opt_explainer_id = self.manager.add_explainer(opt_explainer)
-        opt_postprocessor_id = self.manager.add_postprocessor(opt_postprocessor) # TODO: find same postprocessor
-
-        optimized = {
-            'data_id': data_id,
-            'explainer_id': opt_explainer_id,
-            'postprocessor_id': opt_postprocessor_id,
-            'metric_id': metric_id,
-        }
-        return optimized, objective, study
 
     def run(
         self,

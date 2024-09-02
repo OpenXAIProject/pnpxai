@@ -1,22 +1,44 @@
 from abc import abstractmethod
-from typing import Callable, Tuple, List, Sequence, Optional, Union
+from typing import Callable, Tuple, List, Sequence, Optional, Union, Literal
 
 import torch
 from torch import Tensor
 from torch.nn import MultiheadAttention
 from torch.nn.modules import Module
+from captum.attr import LayerAttribution
 from zennit.canonizers import Canonizer
 from zennit.composites import layer_map_base, LayerMapComposite
 from zennit.rules import AlphaBeta
 from zennit.types import Linear
+from optuna.trial import Trial
 
 from pnpxai.core.detector.types import Attention
-from .attentions.attributions import SavingAttentionAttributor
-from .attentions.rules import CGWAttentionPropagation
-from .attentions.module_converters import default_attention_converters
-from .zennit.attribution import Gradient, LayerGradient
-from .zennit.base import ZennitExplainer
-from .utils import captum_wrap_model_input
+from pnpxai.explainers.attentions.attributions import SavingAttentionAttributor
+from pnpxai.explainers.attentions.rules import CGWAttentionPropagation
+from pnpxai.explainers.attentions.module_converters import default_attention_converters
+from pnpxai.explainers.zennit.attribution import Gradient, LayerGradient
+from pnpxai.explainers.zennit.base import ZennitExplainer
+from pnpxai.explainers.utils import captum_wrap_model_input
+from pnpxai.explainers.types import ForwardArgumentExtractor
+from pnpxai.evaluator.optimizer.utils import generate_param_key
+
+
+def rollout_min_head_fusion_function(attn_weights):
+    return attn_weights.min(axis=1).values
+
+def rollout_max_head_fusion_function(attn_weights):
+    return attn_weights.max(axis=1).values
+
+def rollout_mean_head_fusion_function(attn_weights):
+    return attn_weights.mean(axis=1)
+
+def _get_rollout_head_fusion_function(method: Literal['min', 'max', 'mean']):
+    if method == 'min':
+        return rollout_min_head_fusion_function
+    elif method == 'max':
+        return rollout_max_head_fusion_function
+    elif method == 'mean':
+        return rollout_mean_head_fusion_function
 
 
 class AttentionRolloutBase(ZennitExplainer):
@@ -25,9 +47,11 @@ class AttentionRolloutBase(ZennitExplainer):
     def __init__(
         self,
         model: Module,
-        head_fusion_fn: Optional[Callable[[Tensor], Tensor]]=None,
-        forward_arg_extractor: Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]=None,
-        additional_forward_arg_extractor: Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]=None,
+        interpolate_mode: Literal['bilinear']='bilinear',
+        head_fusion_method: Literal['min', 'max', 'mean']='min',
+        discard_ratio: float=0.9,
+        forward_arg_extractor: Optional[ForwardArgumentExtractor]=None,
+        additional_forward_arg_extractor: Optional[ForwardArgumentExtractor]=None,
         n_classes: Optional[int]=None,
     ) -> None:
         super().__init__(
@@ -36,7 +60,13 @@ class AttentionRolloutBase(ZennitExplainer):
             additional_forward_arg_extractor,
             n_classes,
         )
-        self.head_fusion_fn = head_fusion_fn
+        self.interpolate_mode = interpolate_mode
+        self.head_fusion_method = head_fusion_method
+        self.discard_ratio = discard_ratio
+
+    @property
+    def head_fusion_function(self):
+        return _get_rollout_head_fusion_function(self.head_fusion_method)
 
     @abstractmethod
     def collect_attention_map(self, inputs, targets):
@@ -45,6 +75,21 @@ class AttentionRolloutBase(ZennitExplainer):
     @abstractmethod
     def rollout(self, *args):
         raise NotImplementedError
+
+    def _discard(self, fused_attn_map):
+        org_size = fused_attn_map.size() # keep size to recover it after discard
+        flattened = fused_attn_map.flatten(1)
+        bsz, n_tokens = flattened.size()
+        attn_cls = flattened[:, 0] # keep attn scores of cls token to recover them after discard
+        _, indices = flattened.topk(
+            k=int(n_tokens*self.discard_ratio),
+            dim=-1,
+            largest=False,
+        )
+        flattened[torch.arange(bsz)[:, None], indices] = 0. # discard
+        flattened[:, 0] = attn_cls # recover attn scores of cls token
+        discarded = flattened.view(*org_size)
+        return discarded
     
     def attribute(
         self,
@@ -52,32 +97,54 @@ class AttentionRolloutBase(ZennitExplainer):
         targets: Tensor
     ) -> Union[Tensor, Tuple[Tensor]]:
         attn_maps = self.collect_attention_map(inputs, targets)
-        attrs = self.rollout(*attn_maps)
+        with torch.no_grad():
+            rollout = self.rollout(*attn_maps)
+
+        # attn btw cls and patches
+        attrs = rollout[:, 0, 1:]
+        n_patches = attrs.size(-1)        
+        bsz, _, h, w = inputs.size()
+        p_h = int(h / w * n_patches ** .5)
+        p_w = n_patches // p_h
+        attrs = attrs.view(bsz, 1, p_h, p_w)
+
+        # upsampling
+        attrs = LayerAttribution.interpolate(
+            layer_attribution=attrs,
+            interpolate_dims=(h, w),
+            interpolate_mode=self.interpolate_mode,
+        )
         return attrs
+
+    def get_tunables(self):
+        return {
+            'interpolate_mode': (list, {'choices': ['bilinear', 'bicubic']}),
+            'head_fusion_method': (list, {'choices': ['min', 'max', 'mean']}),
+            'discard_ratio': (float, {'low': 0., 'high': .95, 'step': .05}),
+        }
 
 
 class AttentionRollout(AttentionRolloutBase):
     def __init__(
         self,
         model: Module,
-        head_fusion_fn: Optional[Callable[[Tensor], Tensor]]=None,
-        forward_arg_extractor: Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]=None,
-        additional_forward_arg_extractor: Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]=None,
+        interpolate_mode: Literal['bilinear']='bilinear',
+        head_fusion_method: Literal['min', 'max', 'mean']='min',
+        discard_ratio: float=0.9,
+        forward_arg_extractor: Optional[ForwardArgumentExtractor]=None,
+        additional_forward_arg_extractor: Optional[ForwardArgumentExtractor]=None,
         n_classes: Optional[int]=None,
     ) -> None:
-        head_fusion_fn = head_fusion_fn or self.default_head_fusion_fn
         super().__init__(
             model,
-            head_fusion_fn,
+            interpolate_mode,
+            head_fusion_method,
+            discard_ratio,
             forward_arg_extractor,
             additional_forward_arg_extractor,
             n_classes
         )
 
-    @staticmethod
-    def default_head_fusion_fn(attns):
-        return attns.min(dim=1)[0]
-    
     def collect_attention_map(self, inputs, targets):
         # get all attn maps
         with SavingAttentionAttributor(model=self.model) as attributor:
@@ -87,18 +154,19 @@ class AttentionRollout(AttentionRolloutBase):
     def rollout(self, weights_all):
         sz = weights_all[0].size()
         assert all(
-            attn_output_weights.size() == sz
-            for attn_output_weights in weights_all
+            attn_weights.size() == sz
+            for attn_weights in weights_all
         )
         bsz, num_heads, tgt_len, src_len = sz
-        attrs = torch.eye(tgt_len).repeat(bsz, 1, 1).to(self.device)
-        for attn_output_weights in weights_all:
-            fused = self.head_fusion_fn(attn_output_weights)
+        rollout = torch.eye(tgt_len).repeat(bsz, 1, 1).to(self.device)
+        for attn_weights in weights_all:
+            attn_map = self.head_fusion_function(attn_weights)
+            attn_map = self._discard(attn_map)
             identity = torch.eye(tgt_len).repeat(bsz, 1, 1).to(self.device)
-            attr = .5 * fused + .5 * identity
-            attr /= attr.sum(dim=-1, keepdim=True)
-            attrs = torch.matmul(attrs, attr)
-        return attrs    
+            attn_map = .5 * attn_map + .5 * identity
+            attn_map /= attn_map.sum(dim=-1, keepdim=True)
+            rollout = torch.matmul(rollout, attn_map)
+        return rollout
 
 
 class TransformerAttribution(AttentionRolloutBase):
@@ -107,20 +175,23 @@ class TransformerAttribution(AttentionRolloutBase):
     def __init__(
         self,
         model: Module,
+        interpolate_mode: Literal['bilinear']='bilinear',
+        head_fusion_method: Literal['min', 'max', 'mean']='mean',
+        discard_ratio: float=0.9,
         alpha: float=2.,
         beta: float=1.,
         stabilizer: float=1e-6,
-        head_fusion_fn: Optional[Callable[[Tensor], Tensor]]=None,
         zennit_canonizers: Optional[List[Canonizer]]=None,
         layer: Optional[Union[Module, Sequence[Module]]]=None,
-        forward_arg_extractor: Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]=None,
-        additional_forward_arg_extractor: Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]=None,
+        forward_arg_extractor: Optional[ForwardArgumentExtractor]=None,
+        additional_forward_arg_extractor: Optional[ForwardArgumentExtractor]=None,
         n_classes: Optional[int]=None
     ) -> None:
-        head_fusion_fn = head_fusion_fn or self.default_head_fusion_fn
         super().__init__(
             model,
-            head_fusion_fn,
+            interpolate_mode,
+            head_fusion_method,
+            discard_ratio,
             forward_arg_extractor,
             additional_forward_arg_extractor,
             n_classes
@@ -197,15 +268,16 @@ class TransformerAttribution(AttentionRolloutBase):
     def rollout(self, grads, rels):
         bsz, num_heads, tgt_len, src_len = grads[0].shape
         assert tgt_len == src_len, "Must be self-attention"
-        attrs = torch.eye(tgt_len).repeat(bsz, 1, 1).to(self.device)
+        rollout = torch.eye(tgt_len).repeat(bsz, 1, 1).to(self.device)
         for grad, rel in zip(grads, rels):
             grad_x_rel = grad * rel
-            fused = self.head_fusion_fn(grad_x_rel)
+            attn_map = self.head_fusion_function(grad_x_rel)
+            attn_map = self._discard(attn_map)
             identity = torch.eye(tgt_len).repeat(bsz, 1, 1).to(self.device)
-            attr = .5 * fused + .5 * identity
-            attr /= attr.sum(dim=-1, keepdim=True)
-            attrs = torch.matmul(attrs, attr)
-        return attrs
+            attn_map = .5 * attn_map + .5 * identity
+            attn_map /= attn_map.sum(dim=-1, keepdim=True)
+            rollout = torch.matmul(rollout, attn_map)
+        return rollout
 
 
 class GenericAttention(AttentionRolloutBase):
@@ -215,7 +287,7 @@ class GenericAttention(AttentionRolloutBase):
             alpha: float=2.,
             beta: float=1.,
             stabilizer: float=1e-6,
-            head_fusion_fn: Optional[Callable[[Tensor], Tensor]]=None,
+            head_fusion_function: Optional[Callable[[Tensor], Tensor]]=None,
             n_classes: Optional[int]=None
         ) -> None:
         raise NotImplementedError
