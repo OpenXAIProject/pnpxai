@@ -60,6 +60,8 @@ class Experiment(Observable):
         target_visualizer (Optional[Callable[[Any], Any]]): Function to visualize target data (default: None).
 
     Attributes:
+        modality (Modality): Object defining the modality-specific control flow of the experiment.
+        manager (ExperimentManager): Manager object for the experiment.
         all_explainers (Sequence[Explainer]): All explainer objects used in the experiment.
         all_metrics (Sequence[Metric]): All evaluation metrics used in the experiment.
         errors (Sequence[Error]): 
@@ -660,10 +662,6 @@ class Experiment(Observable):
             scores = scores * n_explainers + evaluations[:, idx, :]
 
         return scores.argsort(axis=-2).argsort(axis=-2).tolist()
-
-    # @property
-    # def is_image_task(self):
-    #     return self.modality == 'image'
 
     @property
     def has_explanations(self):
