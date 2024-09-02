@@ -1,12 +1,12 @@
+import warnings
 from typing import Optional, Tuple, Dict, Callable, Any
 from torch import Tensor
 from optuna.trial import Trial, TrialState
 
 from pnpxai.core._types import TensorOrTupleOfTensors
-from pnpxai.core.modality.modality import Modality
-from pnpxai.explainers.base import Explainer
-from pnpxai.explainers import KernelShap, Lime
-from pnpxai.explainers.utils.postprocess import PostProcessor
+from pnpxai.core.modality.modality import Modality, TextModality
+from pnpxai.explainers import Explainer, KernelShap, Lime
+from pnpxai.explainers.utils.postprocess import PostProcessor, Identity
 from pnpxai.evaluator.metrics.base import Metric
 from pnpxai.evaluator.optimizer.utils import generate_param_key, nest_params
 from pnpxai.evaluator.optimizer.suggestor import suggest
@@ -115,17 +115,32 @@ class Objective:
             postprocessor to the model's predictions. Returns `nan` if the postprocessed 
             results contain non-countable values like `nan` or `inf`.
         """
+        # suggest explainer
         explainer = suggest(trial, self.explainer, self.modality, key=self.EXPLAINER_KEY)
-        postprocessor = format_out_tuple_if_single(tuple(suggest(
-                trial, postprocessor, modality,
+
+        # suggest postprocessor
+        modalities = format_into_tuple(self.modality)
+        is_multi_modal = len(modalities) > 1
+        postprocessor = []
+        for pp, modality in zip(
+            format_into_tuple(self.postprocessor),
+            modalities,
+        ):
+            force_params = {}
+            if (
+                isinstance(explainer, (Lime, KernelShap))
+                and isinstance(modality, TextModality)
+            ):
+                force_params['pooling_fn'] = Identity()
+            postprocessor.append(suggest(
+                trial, pp, modality,
                 key=generate_param_key(
                     self.POSTPROCESSOR_KEY,
-                    modality.__class__.__name__ if len(format_into_tuple(self.postprocessor)) > 1 else None
-                )
-            ) for postprocessor, modality in zip(
-                format_into_tuple(self.postprocessor),
-                format_into_tuple(self.modality),
-        )))
+                    modality.__class__.__name__ if is_multi_modal else None
+                ),
+                force_params=force_params,
+            ))
+        postprocessor = format_out_tuple_if_single(tuple(postprocessor))
 
         # Ignore duplicated samples
         states_to_consider = (TrialState.COMPLETE,)
@@ -137,13 +152,9 @@ class Objective:
                 return t.value
 
         # Explain and postprocess
-        attrs = format_into_tuple(
-            explainer.attribute(self.inputs, self.targets)
-        )
-        pass_pooling = isinstance(explainer, (KernelShap, Lime))
+        attrs = explainer.attribute(self.inputs, self.targets)
         postprocessed = tuple(
-            pp.normalization_fn(attr) if pass_pooling else pp(attr)
-            for pp, attr in zip(
+            pp(attr) for pp, attr in zip(
                 format_into_tuple(postprocessor),
                 format_into_tuple(attrs),
             )

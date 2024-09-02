@@ -152,7 +152,7 @@ class Slic(FeatureMaskFunction):
 
     def get_tunables(self):
         return {
-            'n_segments': (float, {'low': 10, 'high': 200, 'step': 10}),
+            'n_segments': (float, {'low': 100, 'high': 500, 'step': 10}),
             'compactness': (float, {'low': 1e-2, 'high': 1e2, 'log': True}),
             'sigma': (float, {'low': 0., 'high': 2., 'step': .1}),
         }
@@ -193,6 +193,17 @@ class NoMask1d(FeatureMaskFunction):
         return seq_masks.to(inputs.device)
 
 
+class NoMask2d(FeatureMaskFunction):
+    def __init__(self):
+        super().__init__()
+
+    def __call__(self, inputs):
+        bsz, channel, seq_len = inputs.size()
+        seq_masks = torch.arange(seq_len).repeat(bsz).view(bsz, channel, seq_len)
+        return seq_masks.to(inputs.device)
+
+
+
 FEATURE_MASK_FUNCTIONS_FOR_IMAGE = {
     'felzenszwalb': Felzenszwalb,
     'quickshift': Quickshift,
@@ -205,7 +216,7 @@ FEATURE_MASK_FUNCTIONS_FOR_TEXT = {
 }
 
 FEATURE_MASK_FUNCTIONS_FOR_TIME_SERIES = {
-    'no_mask_1d': NoMask1d,
+    'no_mask_2d': NoMask2d,
 }
 
 FEATURE_MASK_FUNCTIONS = {

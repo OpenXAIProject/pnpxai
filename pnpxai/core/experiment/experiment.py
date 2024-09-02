@@ -11,11 +11,12 @@ from plotly import express as px
 from plotly.graph_objects import Figure
 
 from pnpxai.core._types import DataSource, Model
-from pnpxai.core.modality.modality import Modality
+from pnpxai.core.modality.modality import Modality, TextModality
 from pnpxai.core.experiment.experiment_metrics_defaults import EVALUATION_METRIC_REVERSE_SORT, EVALUATION_METRIC_SORT_PRIORITY
 from pnpxai.core.experiment.observable import ExperimentObservableEvent
 from pnpxai.core.experiment.manager import ExperimentManager
-from pnpxai.explainers.base import Explainer
+from pnpxai.explainers import Explainer, Lime, KernelShap
+from pnpxai.explainers.utils.postprocess import Identity
 from pnpxai.evaluator.optimizer.types import OptimizationOutput
 from pnpxai.evaluator.optimizer.objectives import Objective
 from pnpxai.evaluator.optimizer.utils import (
@@ -248,14 +249,21 @@ class Experiment(Observable):
         explanations = self.manager.batch_explanations_by_ids(
             data_ids, explainer_id)
         postprocessor = self.manager.get_postprocessor_by_id(postprocessor_id)
+
+        modalities = format_into_tuple(self.modality)
         explanations = format_into_tuple(explanations)
-        postprocessor = format_into_tuple(postprocessor)
-        assert len(explanations) == len(postprocessor)
-        pass_pooling = self.manager.get_explainer_by_id(
-            explainer_id).__class__.__name__ in ['KernelShap', 'Lime']
-        batch = tuple(
-            pp.normalize_attributions(expl) if pass_pooling else pp(expl)
-            for pp, expl in zip(postprocessor, explanations))
+        postprocessors = format_into_tuple(postprocessor)
+
+        batch = []
+        explainer = self.manager.get_explainer_by_id(explainer_id)
+        for mod, attr, pp in zip(modalities, explanations, postprocessors):
+            if (
+                isinstance(explainer, (Lime, KernelShap))
+                and isinstance(mod, TextModality)
+                and not isinstance(pp.pooling_fn, Identity)
+            ):
+                raise ValueError(f'postprocessor {postprocessor_id} does not support explainer {explainer_id}.')
+            batch.append(pp(attr))
         return format_out_tuple_if_single(batch)
 
     def evaluate_batch(
