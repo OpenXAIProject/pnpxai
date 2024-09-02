@@ -13,11 +13,51 @@ from pnpxai.evaluator.optimizer.utils import generate_param_key
 
 
 class FeatureMaskFunction(UtilFunction):
+    """
+    A base class for feature mask functions used in attribution methods. Feature mask functions 
+    generate masks for input features, which are useful in various attribution methods to 
+    highlight or hide certain parts of the input data.
+
+    Methods:
+        __init__():
+            Initializes the `FeatureMaskFunction` instance. This constructor is provided for 
+            completeness and can be overridden by subclasses if needed.
+
+        _skseg_for_tensor(fn, inputs: torch.Tensor, **kwargs) -> torch.Tensor:
+            Applies a segmentation function `fn` to each tensor in `inputs` to generate feature masks. 
+            The function converts the tensor to a NumPy array, applies the segmentation function, 
+            and then converts the result back to a tensor. This method is useful for generating masks 
+            for image or spatial data.
+
+    Notes:
+        - `FeatureMaskFunction` is designed to be subclassed. Concrete feature mask functions 
+          should inherit from this class and implement the actual masking logic.
+        - The `_skseg_for_tensor` method is a static method that handles the process of applying 
+          a segmentation function to tensors. This method is intended to be used within subclasses 
+          that need to generate feature masks.
+        - Ensure that the function `fn` provided is compatible with the shape and type of the input 
+          tensors.
+    """
+    
     def __init__(self):
         pass
 
     @staticmethod
-    def _skseg_for_tensor(fn, inputs: torch.Tensor, **kwargs):
+    def _skseg_for_tensor(fn, inputs: torch.Tensor, **kwargs) -> torch.Tensor:
+        """
+        Applies a segmentation function to each tensor in the input batch to generate feature masks.
+
+        Args:
+            fn (Callable): The segmentation function to apply. This function should accept a 
+                NumPy array and return a mask in some form.
+            inputs (torch.Tensor): A batch of input tensors to process. The tensors are assumed 
+                to have dimensions suitable for segmentation.
+            **kwargs: Additional keyword arguments passed to the segmentation function.
+
+        Returns:
+            torch.Tensor: A tensor of generated feature masks, stacked along the batch dimension. 
+                The result is converted to a long tensor and moved to the same device as the input.
+        """
         feature_mask = [
             torch.tensor(fn(
                 inp.permute(1, 2, 0).detach().cpu().numpy(),

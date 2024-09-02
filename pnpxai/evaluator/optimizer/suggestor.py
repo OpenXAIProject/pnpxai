@@ -11,7 +11,6 @@ from pnpxai.explainers.utils import (
     PoolingFunction,
     NormalizationFunction,
 )
-from pnpxai.explainers.utils.function_selectors import FunctionSelector
 from pnpxai.evaluator.optimizer.utils import generate_param_key
 from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 
@@ -43,8 +42,48 @@ def suggest(
     trial: Trial,
     obj: Any,
     modality: Union[Modality, Tuple[Modality]],
-    key: Optional[str]=None,
+    key: Optional[str] = None,
 ):
+    """
+    A utility function that suggests parameters for a given object based on an optimization trial. 
+    The function recursively tunes the parameters of the object according to the modality (or 
+    modalities) provided.
+
+    Parameters:
+        trial (Trial):
+            The trial object from an optimization framework like Optuna, used to suggest 
+            parameters for tuning.
+        obj (Any):
+            The object whose parameters are being tuned. This object must implement 
+            `get_tunables()` and `set_kwargs()` methods.
+        modality (Union[Modality, Tuple[Modality]]):
+            The modality (e.g., image, text) or tuple of modalities the object is operating on. 
+            If multiple modalities are provided, the function handles multi-modal tuning.
+        key (Optional[str], optional):
+            An optional key to uniquely identify the set of parameters being tuned, 
+            useful for differentiating parameters in multi-modal scenarios. Defaults to None.
+
+    Returns:
+        Any:
+            The object with its parameters set according to the trial suggestions.
+    
+    Notes:
+        - The function uses `map_suggest_method` to map the tuning method based on the method 
+          type provided in the tunables.
+        - It supports multi-modal tuning, where different modalities may require different 
+          parameters to be tuned. 
+        - For utility functions (`UtilFunction`), the function further tunes parameters 
+          based on the selected function from the modality.
+    
+    Example:
+        Assuming `trial` is an instance of `optuna.trial.Trial`, and `explainer: Explainer` is an object 
+        with tunable parameters, you can tune it as follows:
+
+        ```python
+        tuned_explainer = suggest(trial, explainer, modality)
+        ```
+    """
+
     is_multi_modal = len(format_into_tuple(modality)) > 1
     for param_nm, (method_type, method_kwargs) in obj.get_tunables().items():
         method = map_suggest_method(trial, method_type)
@@ -64,21 +103,12 @@ def suggest(
                     param_nm,
                     mod.__class__.__name__ if is_multi_modal else None,
                     _param_nm,
-                ) # update param_nm
+                )  # update param_nm
                 _method = map_suggest_method(trial, _method_type)
                 fn_nm = _method(
                     name=generate_param_key(key, _param_nm),
                     **_method_kwargs
                 )
-
-                # # TODO: safe way to assign non-varying fn_kwargs
-                # fn_kwargs = {}
-                # if fn_nm == 'mean':
-                #     fn_kwargs['dim'] = mod.channel_dim
-                # if fn_nm == 'token':
-                #     fn_kwargs['token_id'] = mod.mask_token_id
-                # if param_nm == 'pooling_fn':
-                #     fn_kwargs['channel_dim'] = mod.channel_dim
                 fn = fn_selector.select(fn_nm)
                 param.append(suggest(
                     trial, fn, mod,

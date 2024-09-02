@@ -51,7 +51,24 @@ def identity(attrs: Tensor, *args, **kwargs) -> Tensor:
 
 
 class PoolingFunction(UtilFunction):
-    def __init__(self, channel_dim):
+    """
+    A base class for pooling functions that aggregate or summarize attribution data across 
+    certain dimensions. Pooling functions are often used to reduce the dimensionality of 
+    attributions and highlight important features.
+
+    Parameters:
+        channel_dim (int):
+            The dimension of the input channels. This dimension is used by the pooling function 
+            to perform aggregation operations correctly.
+
+    Notes:
+        - `PoolingFunction` is intended to be subclassed. Concrete pooling methods should 
+          inherit from this class and implement the actual pooling logic.
+        - The pooling operation should be compatible with the `channel_dim` provided during 
+          initialization.
+    """
+    
+    def __init__(self, channel_dim: int):
         super().__init__()
         self.channel_dim = channel_dim
 
@@ -176,6 +193,18 @@ def minmax(attrs: Tensor):
 
 
 class NormalizationFunction(UtilFunction):
+    """
+    A base class for normalization functions that adjust or scale attribution data. Normalization 
+    functions are typically used to bring the data into a specific range or format for better 
+    interpretation or visualization.
+
+    Notes:
+        - `NormalizationFunction` is designed to be subclassed. Concrete normalization methods 
+          should inherit from this class and implement the actual normalization logic.
+        - Subclasses can override the `__init__` method to accept additional parameters required 
+          for their specific normalization operations.
+    """
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -206,41 +235,41 @@ NORMALIZATION_FUNCTIONS = {
 }
 
 
-# def normalize_relevance(pooled_attr: Tensor, method='minmax', *args, **kwargs):
-#     return NORMALIZATION_FUNCTIONS[method](*args, **kwargs)(pooled_attr)
-
-
-# def postprocess_attr(
-#     attr: Tensor,
-#     channel_dim: int,
-#     pooling_method: str = 'l2normsq',
-#     normalization_method: str = 'minmax',
-# ):
-#     pooled_attr = relevance_pooling(attr, channel_dim, method=pooling_method)
-#     normalized_attr = normalize_relevance(
-#         pooled_attr, method=normalization_method)
-
-#     return normalized_attr
-
-
 class PostProcessor(UtilFunction):
-    def __init__(self,
+    """
+    A class that applies a series of post-processing steps to the output of an attribution method.
+    This includes pooling and normalization functions to refine and transform the attributions.
+
+    Parameters:
+        pooling_fn (PoolingFunction):
+            A function used to perform pooling on the attributions. Pooling typically involves 
+            aggregating or summarizing the attributions over certain dimensions.
+        normalization_fn (NormalizationFunction):
+            A function used to normalize the pooled attributions. Normalization typically involves 
+            scaling or adjusting the attributions to a certain range or format.
+
+    Methods:
+        from_name(pooling_method: str, normalization_method: str, channel_dim: int) -> PostProcessor:
+            Creates a `PostProcessor` instance using the specified method names for pooling and 
+            normalization, and the channel dimension. This is a convenience method for instantiating 
+            `PostProcessor` with predefined methods.
+
+        __call__(attrs):
+            Applies the pooling and normalization functions to the given attributions. The input 
+            attributions are first pooled and then normalized.
+
+        get_tunables() -> Dict[str, Tuple[Type, Dict[str, Any]]]:
+            Returns a dictionary of tunable parameters for the `PostProcessor`. The dictionary 
+            includes the functions for pooling and normalization along with their default parameters.
+    """
+    
+    def __init__(
+        self,
         pooling_fn: PoolingFunction,
         normalization_fn: NormalizationFunction,
     ):
         self.pooling_fn = pooling_fn
         self.normalization_fn = normalization_fn
-
-    # def __init__(
-    #     self,
-    #     pooling_method='l2normsq',
-    #     normalization_method='minmax',
-    #     channel_dim=-1,
-    # ):
-    #     super().__init__()
-    #     self.pooling_method = pooling_method
-    #     self.normalization_method = normalization_method
-    #     self.channel_dim = channel_dim
 
     @classmethod
     def from_name(

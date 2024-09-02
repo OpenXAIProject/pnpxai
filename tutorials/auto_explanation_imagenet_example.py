@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import torch
 import torchvision.transforms.functional as TF
 from torch.utils.data._utils.collate import default_collate
@@ -10,9 +11,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
 
-#------------------------------------------------------------------------------#
-#-------------------------------- basic usage ---------------------------------#
-#------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------#
+# -------------------------------- basic usage ---------------------------------#
+# ------------------------------------------------------------------------------#
 
 # setup
 torch.set_num_threads(1)
@@ -28,21 +29,23 @@ expr = AutoExplanationForImageClassification(
     input_extractor=lambda batch: batch[0].to(device),
     label_extractor=lambda batch: batch[-1].to(device),
     target_extractor=lambda outputs: outputs.argmax(-1).to(device),
-    target_labels=False, # target prediction if False
+    target_labels=False,  # target prediction if False
 )
 
 
 # browse the recommended
-expr.recommended.print_tabular() # recommendation
-expr.recommended.explainers # -> List[Type[Explainer]]
+expr.recommended.print_tabular()  # recommendation
+expr.recommended.explainers  # -> List[Type[Explainer]]
 
 # browse explainers and metrics
-expr.manager.explainers # -> List[Explainer]
-expr.manager.metrics # -> List[Metric]
+expr.manager.explainers  # -> List[Explainer]
+expr.manager.metrics  # -> List[Metric]
 
-expr.manager.get_explainer_by_id(7) # -> Explainer. In this case, LRPEpsilonGammaBox
-expr.manager.get_postprocessor_by_id(0) # -> PostProcessor. In this case, PostProcessor(pooling_method='sumpos', normalization_method='minmax')
-expr.manager.get_metric_by_id(0) # -> Metric. In this case, AbPC
+# -> Explainer. In this case, LRPEpsilonGammaBox
+expr.manager.get_explainer_by_id(7)
+# -> PostProcessor. In this case, PostProcessor(pooling_method='sumpos', normalization_method='minmax')
+expr.manager.get_postprocessor_by_id(0)
+expr.manager.get_metric_by_id(0)  # -> Metric. In this case, AbPC
 
 # explain and evaluate
 
@@ -52,7 +55,6 @@ results = expr.run_batch(
     postprocessor_id=0,
     metric_id=0,
 )
-
 
 
 #------------------------------------------------------------------------------#
@@ -94,3 +96,49 @@ worst_trial = get_worst_trial(optimized.study)
 print('Worst/Explainer:', worst_trial.user_attrs['explainer'])
 print('Worst/PostProcessor', worst_trial.user_attrs['postprocessor'])
 print('Worst/value', worst_trial.value)
+
+
+# # ------------------------------------------------------------------------------#
+# # ------------------------------- visualization --------------------------------#
+# # ------------------------------------------------------------------------------#
+
+# # plots
+# fig, axes = plt.subplots(1, 4, figsize=(16, 4))
+# opt_attrs = expr.get_explanations_flattened(data_ids=optimized['data_ids'])[
+#     optimized['explainer_id']
+# ]  # get the optimal explanation
+
+# # inputs
+# inputs, _ = expr.manager.batch_data_by_ids(data_ids=optimized['data_ids'])
+# inputs = inputs.to(device)
+# targets = expr.manager.batch_outputs_by_ids(
+#     data_ids=optimized['data_ids']).argmax(-1).to(device)
+
+# axes[0].imshow(denormalize_image(
+#     inputs[0].detach().cpu(),
+#     mean=transform.mean,
+#     std=transform.std),
+# )
+
+# trials = [trial for trial in study.trials if trial.value is not None]
+# trials = sorted(trials, key=lambda trial: trial.value)
+# trials = {
+#     'worst': trials[0],  # worst
+#     'med': trials[len(trials)//2],  # med
+#     'best': trials[-1],  # best
+# }
+
+# for loc, (title, trial) in enumerate(trials.items(), 1):
+#     explainer, postprocessor = objective.load_from_optuna_params(trial.params)
+#     attrs = explainer.attribute(inputs, targets)
+#     postprocessed = postprocessor(attrs)
+#     axes[loc].set_title(f'{title}:{"{:4f}".format(trial.value)}')
+#     axes[loc].imshow(postprocessed[0].cpu().detach().numpy(), cmap='YlGn')
+
+# for ax in axes:
+#     ax.set_xticks([])
+#     ax.set_yticks([])
+
+# metric = expr.manager.get_metric_by_id(metric_id)
+# plt.savefig(
+#     f'opt_{explainer.__class__.__name__}_by_{metric.__class__.__name__}.png')

@@ -1,18 +1,33 @@
 import warnings
-from typing import Callable, Optional
+from typing import Optional
 
 import torch
-from torch import nn
 
-from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
+from pnpxai.core._types import Model
 from pnpxai.explainers.base import Explainer
 from pnpxai.evaluator.metrics.base import Metric
 
 
 class Sensitivity(Metric):
+    """
+    Computes the complexity of attributions.
+    
+    Given `attributions`, calculates a fractional contribution distribution `prob_mass`,
+    ``prob_mass[i] = hist[i] / sum(hist)``. where ``hist[i] = histogram(attributions[i])``.
+
+    The complexity is defined by the entropy,
+    ``evaluation = -sum(hist * ln(hist))``
+    
+    
+    Args:
+        model (Model): The model used for evaluation
+        explainer (Optional[Explainer]): The explainer used for evaluation.
+        n_iter (Optional[int]): The number of iterations for perturbation.
+        epsilon (Optional[float]): The magnitude of random uniform noise.
+    """
     def __init__(
         self,
-        model: nn.Module,
+        model: Model,
         explainer: Optional[Explainer] = None,
         n_iter: Optional[int] = 8,
         epsilon: Optional[float] = 0.2,
@@ -29,6 +44,15 @@ class Sensitivity(Metric):
         targets: torch.Tensor,
         attributions: Optional[torch.Tensor],
     ) -> torch.Tensor:
+        """
+        Args:
+            inputs (torch.Tensor): The input data.
+            targets (torch.Tensor): The target labels for the inputs.
+            attributions (Optional[torch.Tensor]): The attributions of the inputs.
+
+        Returns:
+            torch.Tensor: The result of the metric evaluation.
+        """
         if attributions is None:
             attributions = self.explainer.attribute(inputs, targets)
         attributions = attributions.to(self.device)
