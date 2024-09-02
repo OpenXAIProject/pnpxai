@@ -63,6 +63,8 @@ class Experiment(Observable):
         target_labels (bool): True if the target is a label, False otherwise.
 
     Attributes:
+        modality (Modality): Object defining the modality-specific control flow of the experiment.
+        manager (ExperimentManager): Manager object for the experiment.
         all_explainers (Sequence[Explainer]): All explainer objects used in the experiment.
         all_metrics (Sequence[Metric]): All evaluation metrics used in the experiment.
         errors (Sequence[Error]): 
