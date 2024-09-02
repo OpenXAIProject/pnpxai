@@ -63,14 +63,16 @@ class IntegratedGradients(Explainer):
         forward_args, additional_forward_args = self._extract_forward_args(
             inputs)
         forward_args = format_into_tuple(forward_args)
+        baselines = format_into_tuple(self._get_baselines(forward_args))
         attrs = self.explainer.attribute(
             inputs=forward_args,
-            baselines=self._get_baselines(forward_args),
+            baselines=baselines,
             target=targets,
             additional_forward_args=additional_forward_args,
             n_steps=self.n_steps,
         )
-        attrs = format_out_tuple_if_single(attrs)
+        if isinstance(attrs, tuple):
+            attrs = format_out_tuple_if_single(attrs)
         return attrs
 
     def get_tunables(self) -> Dict[str, Tuple[type, dict]]:

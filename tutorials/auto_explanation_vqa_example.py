@@ -9,6 +9,7 @@ from helpers import (
     vilt_collate_fn,
 )
 
+torch.set_num_threads(1)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = get_vilt_model('dandelin/vilt-b32-finetuned-vqa')
 model = model.to(device)
@@ -45,6 +46,7 @@ expr = AutoExplanationForVisualQuestionAnswering(
     additional_forward_arg_extractor=additional_forward_arg_extractor,
 )
 
+<<<<<<< HEAD
 # test
 for explainer_id in range(len(expr.manager.explainers)):
     optimized, objective, study = expr.optimize(
@@ -54,3 +56,36 @@ for explainer_id in range(len(expr.manager.explainers)):
         direction='maximize',
         sampler='tpe',
     )
+=======
+expr.recommended.print_tabular()
+
+optimized = expr.optimize(
+    data_id=0,
+    explainer_id=2,
+    metric_id=1,
+    direction='maximize', # less is better
+    sampler='tpe', # Literal['tpe','random']
+    n_trials=50, # by default, 50 for sampler in ['random', 'tpe'], None for ['grid']
+    seed=42, # seed for sampler: by default, None
+)
+
+print('Best/Explainer:', optimized.explainer) # get the optimized explainer
+print('Best/PostProcessor:', optimized.postprocessor) # get the optimized postprocessor
+print('Best/value:', optimized.study.best_trial.value) # get the optimized value
+
+# Every trial in study has its explainer and postprocessor in user attr.
+i = 25
+print(f'{i}th Trial/Explainer', optimized.study.trials[i].user_attrs['explainer']) # get the explainer of i-th trial
+print(f'{i}th Trial/PostProcessor', optimized.study.trials[i].user_attrs['postprocessor']) # get the postprocessor of i-th trial
+print(f'{i}th Trial/value', optimized.study.trials[i].value)
+
+# For example, you can use optuna's API to get the explainer and postprocessor of the worst trial
+def get_worst_trial(study):
+    valid_trials = [trial for trial in study.trials if trial.value is not None]
+    return sorted(valid_trials, key=lambda trial: trial.value)[0]
+
+worst_trial = get_worst_trial(optimized.study)
+print('Worst/Explainer:', worst_trial.user_attrs['explainer'])
+print('Worst/PostProcessor', worst_trial.user_attrs['postprocessor'])
+print('Worst/value', worst_trial.value)
+>>>>>>> cdad8785814831f676c04118c2d010ec6c28546d

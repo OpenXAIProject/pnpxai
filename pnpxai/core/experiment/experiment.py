@@ -16,6 +16,7 @@ from pnpxai.core.experiment.experiment_metrics_defaults import EVALUATION_METRIC
 from pnpxai.core.experiment.observable import ExperimentObservableEvent
 from pnpxai.core.experiment.manager import ExperimentManager
 from pnpxai.explainers.base import Explainer
+from pnpxai.evaluator.optimizer.types import OptimizationOutput
 from pnpxai.evaluator.optimizer.objectives import Objective
 from pnpxai.evaluator.optimizer.utils import (
     load_sampler,
@@ -110,7 +111,6 @@ class Experiment(Observable):
         self.target_visualizer = target_visualizer
         self.target_labels = target_labels
         self.modality = modality
-
         self.reset_errors()
 
     def reset_errors(self):
@@ -367,23 +367,15 @@ class Experiment(Observable):
             objective,
             n_trials=n_trials,
             timeout=timeout,
+            n_jobs=1,
         )
-
-        # update explainer
-        opt_explainer, opt_postprocessor = objective.load_from_optuna_params(
-            study.best_params.copy()
+        opt_explainer = study.best_trial.user_attrs['explainer']
+        opt_postprocessor = study.best_trial.user_attrs['postprocessor']
+        return OptimizationOutput(
+            explainer=opt_explainer,
+            postprocessor=opt_postprocessor,
+            study=study,
         )
-        opt_explainer_id = self.manager.add_explainer(opt_explainer)
-        opt_postprocessor_id = self.manager.add_postprocessor(
-            opt_postprocessor)  # TODO: find same postprocessor
-
-        optimized = {
-            'data_ids': data_ids,
-            'explainer_id': opt_explainer_id,
-            'postprocessor_id': opt_postprocessor_id,
-            'metric_id': metric_id,
-        }
-        return optimized, objective, study
 
     def run(
         self,

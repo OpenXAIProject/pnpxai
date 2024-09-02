@@ -1,4 +1,5 @@
-from typing import Literal, Dict, Any, Union
+from abc import abstractmethod
+from typing import Literal, Dict, Any, Union, Callable
 
 import optuna
 

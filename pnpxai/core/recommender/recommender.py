@@ -1,4 +1,4 @@
-from typing import List, Type, Dict, Set, Any, Sequence, Tuple
+from typing import List, Type, Dict, Set, Any, Sequence, Tuple, Union
 from dataclasses import dataclass, asdict
 from tabulate import tabulate
 
@@ -26,6 +26,7 @@ from pnpxai.evaluator.metrics import (
     AbPC,
     AVAILABLE_METRICS,
 )
+from pnpxai.utils import format_into_tuple
 
 
 CAM_BASED_EXPLAINERS = {GradCam, GuidedGradCam}
@@ -76,7 +77,7 @@ class XaiRecommender:
 
     def _filter_explainers(
         self,
-        modality: Modality,
+        modality: Union[Modality, Tuple[Modality]],
         arch: Set[ModuleType],
     ) -> List[Type[Explainer]]:
         """
@@ -91,34 +92,22 @@ class XaiRecommender:
         - List[Type[Explainer]]: List of compatible explainers based on the given inputs.
         """
         # question_to_method = QUESTION_TO_EXPLAINERS.get(question, set())
-        modality_to_explainers = set(modality.EXPLAINERS)
-        arch_to_explainers = set.union(*(
-            self.architecture_to_explainers_map.data.get(module_type, set())
-            for module_type in arch
-        ))
-        explainers = set.intersection(
-            modality_to_explainers, arch_to_explainers)
-        if arch.difference({Convolution, Linear}):
-            explainers = explainers.difference(CAM_BASED_EXPLAINERS)
+        explainers = []
+        for mod in format_into_tuple(modality):
+            modality_to_explainers = set(mod.EXPLAINERS)
+            arch_to_explainers = set.union(*(
+                self.architecture_to_explainers_map.data.get(module_type, set())
+                for module_type in arch
+            ))
+            explainers_mod = set.intersection(
+                modality_to_explainers, arch_to_explainers)
+            if arch.difference({Convolution, Linear}):
+                explainers_mod = explainers_mod.difference(CAM_BASED_EXPLAINERS)
+            explainers.append(explainers_mod)
+        explainers = set.intersection(*explainers)
         return list(explainers)
 
-    # def _suggest_metrics(self, explainers: List[Type[Explainer]]):
-    #     """
-    #     Suggests evaluation metrics based on the list of compatible explainers.
-
-    #     Args:
-    #     - methods (List[Type[Explainer]]): List of explainers supported for the given scenario.
-
-    #     Returns:
-    #     - List[Type[EvaluationMetric]]: List of compatible evaluation metrics for the explainers.
-    #     """
-    #     metrics = set.union(*(
-    #         self.explainer_to_metrics_map.data.get(explainer, set())
-    #         for explainer in explainers
-    #     ))
-    #     return list(metrics)
-
-    def recommend(self, modality: Modality, model: Model):
+    def recommend(self, modality: Union[Modality, Tuple[Modality]], model: Model):
         """
         Recommends explainers and evaluation metrics based on the user's input.
 
