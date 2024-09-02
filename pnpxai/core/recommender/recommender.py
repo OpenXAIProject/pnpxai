@@ -16,16 +16,6 @@ from pnpxai.explainers import (
     GuidedGradCam,
     AVAILABLE_EXPLAINERS
 )
-from pnpxai.evaluator.metrics.base import Metric
-from pnpxai.evaluator.metrics import (
-    MuFidelity,
-    Sensitivity,
-    Complexity,
-    MoRF,
-    LeRF,
-    AbPC,
-    AVAILABLE_METRICS,
-)
 from pnpxai.utils import format_into_tuple
 
 
@@ -63,6 +53,11 @@ class RecommendationMap:
 
 
 class XaiRecommender:
+    """
+    Recommender class that suggests explainers and evaluation metrics based on the user's input. The recommender
+    analyzes the model architecture and the selected modality to provide the most suitable explainers and detected architecture.        
+    """
+
     def __init__(self):
         self.architecture_to_explainers_map = self._build_architecture_to_explainers_map()
 
@@ -84,40 +79,40 @@ class XaiRecommender:
         Filters explainers based on the user's question, task, and model architecture.
 
         Args:
-        - question (str): User's question type ('why', 'how', 'why not', 'how to still be this').
-        - task (str): Task type ('image', 'tabular', 'text').
-        - architecture (List[Type]): List of neural network module types (e.g., nn.Linear, nn.Conv2d).
+        - modaltiy (Union[Modality, Tuple[Modality]]): Modality of the input data (e.g., ImageModality, TextModality, TabularModality).
+        - arch (Set[ModuleType]): Set of neural network module types (e.g., nn.Linear, nn.Conv2d).
 
         Returns:
-        - List[Type[Explainer]]: List of compatible explainers based on the given inputs.
+        - List[Set[Type[Explainer]]]: List of compatible explainers based on the given inputs.
         """
         # question_to_method = QUESTION_TO_EXPLAINERS.get(question, set())
         explainers = []
         for mod in format_into_tuple(modality):
             modality_to_explainers = set(mod.EXPLAINERS)
             arch_to_explainers = set.union(*(
-                self.architecture_to_explainers_map.data.get(module_type, set())
+                self.architecture_to_explainers_map.data.get(
+                    module_type, set())
                 for module_type in arch
             ))
             explainers_mod = set.intersection(
                 modality_to_explainers, arch_to_explainers)
             if arch.difference({Convolution, Linear}):
-                explainers_mod = explainers_mod.difference(CAM_BASED_EXPLAINERS)
+                explainers_mod = explainers_mod.difference(
+                    CAM_BASED_EXPLAINERS)
             explainers.append(explainers_mod)
         explainers = set.intersection(*explainers)
         return list(explainers)
 
-    def recommend(self, modality: Union[Modality, Tuple[Modality]], model: Model):
+    def recommend(self, modality: Union[Modality, Tuple[Modality]], model: Model) -> RecommenderOutput:
         """
         Recommends explainers and evaluation metrics based on the user's input.
 
         Args:
-        - question (str): User's question type ('why', 'how', 'why not', 'how to still be this').
-        - task (str): Task type ('image', 'tabular', 'text').
-        - architecture (List[Type]): List of neural network module types (e.g., nn.Linear, nn.Conv2d).
+        - modality (Union[Modality], Tuple[Modality]): Modality of the input data (e.g., ImageModality, TextModality, TabularModality).
+        - model (Model): Neural network module, used for the architecture-based filtering.
 
         Returns:
-        - RecommenderOutput: An object containing recommended explainers and evaluation metrics.
+        - RecommenderOutput: An object containing recommended explainers.
         """
         arch = detect_model_architecture(model)
         explainers = self._filter_explainers(modality, arch)

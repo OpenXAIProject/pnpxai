@@ -1,15 +1,12 @@
-from typing import Union, Tuple, Optional, List, Sequence, Callable
+from typing import Optional, List, Callable
 from abc import ABC, abstractmethod
 
-from optuna import Trial
-from pnpxai.evaluator.optimizer.utils import generate_param_key
 from pnpxai.explainers.utils.postprocess import (
     PostProcessor,
     POOLING_FUNCTIONS,
     POOLING_FUNCTIONS_FOR_IMAGE,
     POOLING_FUNCTIONS_FOR_TEXT,
     POOLING_FUNCTIONS_FOR_TIME_SERIES,
-    NORMALIZATION_FUNCTIONS,
     NORMALIZATION_FUNCTIONS_FOR_IMAGE,
     NORMALIZATION_FUNCTIONS_FOR_TEXT,
     NORMALIZATION_FUNCTIONS_FOR_TIME_SERIES,
@@ -41,13 +38,26 @@ from pnpxai.explainers import (
     LRPEpsilonAlpha2Beta1,
     KernelShap,
     Lime,
-    AttentionRollout,
-    TransformerAttribution,
     AVAILABLE_EXPLAINERS
 )
 
 
 class Modality(ABC):
+    """
+    An abstract class describing modality-specific workflow. The class is used to define both default and available
+    explainers, baselines, feature masks, pooling methods, and normalization methods for the modality.
+
+    Parameters:
+        channel_dim (int): Target sequence dimension.
+        baseline_fn_selector (Optional[FunctionSelector]): Selector of baselines for the modality's explainers. If None selected, all BASELINE_FUNCTIONS will be used.
+        feature_mask_fn_selector (Optional[FunctionSelector]): Selector of feature masks for the modality's explainers. If None selected, all FEATURE_MASK_FUNCTIONS will be used.
+        pooling_fn_selector (Optional[FunctionSelector]): Selector of pooling methods for the modality's explainers. If None selected, all POOLING_FUNCTIONS will be used.
+        normalization_fn_selector (Optional[FunctionSelector]): Selector of normalization methods for the modality's explainers. If None selected, all NORMALIZATION_FUNCTIONS_FOR_IMAGE will be used.
+
+    Attributes:
+        EXPLAINERS (Tuple[Explainer]): Tuple of all available explainers.
+    """
+
     # Copies the tuple without preserving the reference
     EXPLAINERS = tuple(iter(AVAILABLE_EXPLAINERS))
 
@@ -68,18 +78,46 @@ class Modality(ABC):
 
     @abstractmethod    
     def get_default_feature_mask_fn(self) -> Callable:
+        """
+        Defines default baseline function for the modality's explainers.
+
+        Returns:
+            BaselineFunction: Zeros baseline function.
+        """
         raise NotImplementedError
 
     @abstractmethod
     def get_default_baseline_fn(self) -> Callable:
+        """
+        Defines default feature mask function for the modality's explainers.
+
+        Returns:
+            FeatureMaskFunction: No Mask baseline function.
+        """
         raise NotImplementedError
 
     @abstractmethod
     def get_default_postprocessors(self) -> List[Callable]:
+        """
+        Defines default post-processors list for the modality's explainers.
+
+        Returns:
+            List[PostProcessor]: Identity PostProcessors.
+        """
         raise NotImplementedError
 
 
 class ImageModality(Modality):
+    """
+    An extension of Modality class for Time Series with automatic explainers and evaluation metrics recommendation.
+
+    Parameters:
+        channel_dim (int): Target sequence dimension.
+        baseline_fn_selector (Optional[FunctionSelector]): Selector of baselines for the modality's explainers. If None selected, BASELINE_FUNCTIONS_FOR_TIME_SERIES will be used.
+        feature_mask_fn_selector (Optional[FunctionSelector]): Selector of feature masks for the modality's explainers. If None selected, FEATURE_MASK_FUNCTIONS_FOR_TIME_SERIES will be used.
+        pooling_fn_selector (Optional[FunctionSelector]): Selector of pooling methods for the modality's explainers. If None selected, POOLING_FUNCTIONS_FOR_TIME_SERIES will be used.
+        normalization_fn_selector (Optional[FunctionSelector]): Selector of normalization methods for the modality's explainers. If None selected, NORMALIZATION_FUNCTIONS_FOR_TIME_SERIES will be used.
+    """
     def __init__(
         self,
         channel_dim: int = 1,
@@ -107,12 +145,30 @@ class ImageModality(Modality):
         )
 
     def get_default_baseline_fn(self) -> BaselineFunction:
+        """
+        Defines default baseline function for the modality's explainers.
+
+        Returns:
+            BaselineFunction: Zeros baseline function.
+        """
         return self.baseline_fn_selector.select('zeros')
 
     def get_default_feature_mask_fn(self) -> FeatureMaskFunction:
+        """
+        Defines default feature mask function for the modality's explainers.
+
+        Returns:
+            FeatureMaskFunction: Felzenszwalb baseline function.
+        """
         return self.feature_mask_fn_selector.select('felzenszwalb', scale=250)
 
     def get_default_postprocessors(self) -> List[PostProcessor]:
+        """
+        Defines default post-processors list for the modality's explainers.
+
+        Returns:
+            List[PostProcessor]: All available PostProcessors.
+        """
         return [
             PostProcessor(
                 pooling_fn=self.pooling_fn_selector.select(pm),
@@ -123,6 +179,16 @@ class ImageModality(Modality):
 
 
 class TextModality(Modality):
+    """
+    An extension of Modality class for Text with automatic explainers and evaluation metrics recommendation.
+
+    Parameters:
+        channel_dim (int): Target sequence dimension.
+        baseline_fn_selector (Optional[FunctionSelector]): Selector of baselines for the modality's explainers. If None selected, BASELINE_FUNCTIONS_FOR_TEXT will be used.
+        feature_mask_fn_selector (Optional[FunctionSelector]): Selector of feature masks for the modality's explainers. If None selected, FEATURE_MASK_FUNCTIONS_FOR_TEXT will be used.
+        pooling_fn_selector (Optional[FunctionSelector]): Selector of pooling methods for the modality's explainers. If None selected, POOLING_FUNCTIONS_FOR_TEXT will be used.
+        normalization_fn_selector (Optional[FunctionSelector]): Selector of normalization methods for the modality's explainers. If None selected, NORMALIZATION_FUNCTIONS_FOR_TEXT will be used.
+    """
     EXPLAINERS = (
         Gradient,
         GradientXInput,
@@ -166,12 +232,30 @@ class TextModality(Modality):
         self.mask_token_id = mask_token_id
 
     def get_default_baseline_fn(self) -> BaselineFunction:
+        """
+        Defines default baseline function for the modality's explainers.
+
+        Returns:
+            BaselineFunction: Token baseline function.
+        """
         return self.baseline_fn_selector.select('token')
 
     def get_default_feature_mask_fn(self) -> FeatureMaskFunction:
+        """
+        Defines default feature mask function for the modality's explainers.
+
+        Returns:
+            FeatureMaskFunction: No Mask baseline function.
+        """
         return self.feature_mask_fn_selector.select('no_mask_1d')
 
     def get_default_postprocessors(self) -> List[PostProcessor]:
+        """
+        Defines default post-processors list for the modality's explainers.
+
+        Returns:
+            List[PostProcessor]: All PostProcessors.
+        """
         return [
             PostProcessor(
                 pooling_fn=self.pooling_fn_selector.select(pm),
@@ -182,6 +266,16 @@ class TextModality(Modality):
 
 
 class TimeSeriesModality(Modality):
+    """
+    An extension of Modality class for Time Series with automatic explainers and evaluation metrics recommendation.
+
+    Parameters:
+        channel_dim (int): Target sequence dimension.
+        baseline_fn_selector (Optional[FunctionSelector]): Selector of baselines for the modality's explainers. If None selected, BASELINE_FUNCTIONS_FOR_TIME_SERIES will be used.
+        feature_mask_fn_selector (Optional[FunctionSelector]): Selector of feature masks for the modality's explainers. If None selected, FEATURE_MASK_FUNCTIONS_FOR_TIME_SERIES will be used.
+        pooling_fn_selector (Optional[FunctionSelector]): Selector of pooling methods for the modality's explainers. If None selected, POOLING_FUNCTIONS_FOR_TIME_SERIES will be used.
+        normalization_fn_selector (Optional[FunctionSelector]): Selector of normalization methods for the modality's explainers. If None selected, NORMALIZATION_FUNCTIONS_FOR_TIME_SERIES will be used.
+    """
     def __init__(
         self,
         channel_dim: int = -1,
@@ -209,12 +303,30 @@ class TimeSeriesModality(Modality):
         )
 
     def get_default_baseline_fn(self) -> BaselineFunction:
+        """
+        Defines default baseline function for the modality's explainers.
+
+        Returns:
+            BaselineFunction: Zeros baseline function.
+        """
         return self.baseline_fn_selector.select('zeros')
 
     def get_default_feature_mask_fn(self) -> FeatureMaskFunction:
+        """
+        Defines default feature mask function for the modality's explainers.
+
+        Returns:
+            FeatureMaskFunction: No Mask baseline function.
+        """
         return self.feature_mask_fn_selector.select('no_mask_1d')
 
     def get_default_postprocessors(self) -> List[PostProcessor]:
+        """
+        Defines default post-processors list for the modality's explainers.
+
+        Returns:
+            List[PostProcessor]: Identity PostProcessors.
+        """
         return [
             PostProcessor(
                 pooling_fn=self.pooling_fn_selector.select(pm),

@@ -115,7 +115,7 @@ results = expr.run_batch(
 
 # optimize: returns optimal explainer id, optimal postprocessor id, (and study)
 optimized = expr.optimize(
-    data_id=data_id,
+    data_ids=[data_id],
     explainer_id=explainer_id,
     metric_id=metric_id,
     direction='maximize',  # larger better

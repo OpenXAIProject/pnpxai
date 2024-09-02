@@ -1,10 +1,10 @@
-from typing import Callable, Optional
+from typing import Optional
 
 import torch
-from torch import nn
 from torchvision import transforms
 from scipy.stats import spearmanr
 
+from pnpxai.core._types import Model
 from pnpxai.explainers.base import Explainer
 from .base import Metric
 
@@ -22,14 +22,13 @@ class MuFidelity(Metric):
 
     Args:
         model (Model): The model to evaluate.
-        inputs (torch.Tensor): The input data (N x C x H x W).
-        targets (torch.Tensor): The target labels for the inputs (N x 1).
-        attributions (torch.Tensor): The attributions of the inputs.
-        n_perturbations (int): Number of perturbations to generate.
+        explainer (Optional[Explainer]): The explainer to evaluate.
+        n_perturb (int): Number of perturbations to generate.
         noise_scale (int): Scale factor for Gaussian random noise.
         batch_size (int): Batch size for model evaluation.
         grid_size (int): Size of the grid for creating subsets.
         baseline (Union[float, torch.Tensor]): Baseline value for masked subsets.
+        mask_agg_dim (Optional[int]): Dimension to aggregate masks.
         **kwargs: Additional kwargs to compute metric in an evaluator. Not required for single usage.
 
     Reference:
@@ -38,7 +37,7 @@ class MuFidelity(Metric):
 
     def __init__(
         self,
-        model: nn.Module,
+        model: Model,
         explainer: Optional[Explainer] = None,
         n_perturb: int = 150,
         noise_scale: float = 0.2,
@@ -61,6 +60,15 @@ class MuFidelity(Metric):
         targets: torch.Tensor,
         attributions: torch.Tensor,
     ) -> torch.Tensor:
+        """
+        Args:
+            inputs (torch.Tensor): The input data (N x C x H x W).
+            targets (torch.Tensor): The target labels for the inputs (N x 1).
+            attributions (torch.Tensor): The attributions of the inputs.
+
+        Returns:
+            torch.Tensor: The result of the metric evaluation.
+        """
         attributions = attributions.to(self.device)
 
         outputs = self.model(inputs)

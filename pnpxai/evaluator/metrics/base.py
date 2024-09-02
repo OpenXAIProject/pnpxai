@@ -90,9 +90,9 @@ class Metric(ABC):
 
     def evaluate(
         self,
-        inputs: Union[torch.Tensor, None],
-        targets: Union[torch.Tensor, None],
-        attributions: Union[torch.Tensor, None],
+        inputs: Optional[torch.Tensor],
+        targets: Optional[torch.Tensor],
+        attributions: Optional[torch.Tensor],
         **kwargs
     ) -> torch.Tensor:
         """

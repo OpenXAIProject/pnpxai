@@ -11,7 +11,6 @@ from pnpxai.explainers.utils import (
     PoolingFunction,
     NormalizationFunction,
 )
-from pnpxai.explainers.utils.function_selectors import FunctionSelector
 from pnpxai.evaluator.optimizer.utils import generate_param_key
 from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 

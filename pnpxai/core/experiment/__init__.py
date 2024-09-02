@@ -4,6 +4,5 @@ from pnpxai.core.experiment.auto_explanation import (
     AutoExplanationForImageClassification,
     AutoExplanationForTextClassification,
     AutoExplanationForVisualQuestionAnswering,
-    AutoExplanationForTabularClassification,
     AutoExplanationForTSClassification,
 )
