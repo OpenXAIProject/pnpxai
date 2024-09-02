@@ -87,8 +87,7 @@ class Objective:
             Failure might occur when postprocessed result containing non-countable value
             such as nan or inf.
             '''
-            evals = tuple(float('nan') for _ in range(len(postprocessed)))
-            return format_out_tuple_if_single(evals)
+            return float('nan')
 
         postprocessed = format_out_tuple_if_single(postprocessed)
         metric = self.metric.set_explainer(explainer)

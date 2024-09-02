@@ -71,15 +71,15 @@ def suggest(
                     **_method_kwargs
                 )
 
-                # TODO: safe way to assign non-varying fn_kwargs
-                fn_kwargs = {}
-                if fn_nm == 'mean':
-                    fn_kwargs['dim'] = mod.channel_dim
-                if fn_nm == 'token':
-                    fn_kwargs['token_id'] = mod.mask_token_id
-                if param_nm == 'pooling_fn':
-                    fn_kwargs['channel_dim'] = mod.channel_dim
-                fn = fn_selector.select(fn_nm, **fn_kwargs)
+                # # TODO: safe way to assign non-varying fn_kwargs
+                # fn_kwargs = {}
+                # if fn_nm == 'mean':
+                #     fn_kwargs['dim'] = mod.channel_dim
+                # if fn_nm == 'token':
+                #     fn_kwargs['token_id'] = mod.mask_token_id
+                # if param_nm == 'pooling_fn':
+                #     fn_kwargs['channel_dim'] = mod.channel_dim
+                fn = fn_selector.select(fn_nm)
                 param.append(suggest(
                     trial, fn, mod,
                     key=generate_param_key(

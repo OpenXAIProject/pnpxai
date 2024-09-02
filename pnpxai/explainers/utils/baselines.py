@@ -12,12 +12,12 @@ BaselineMethod = Literal['zeros', 'invert', 'gaussian_blur', 'token']
 
 
 class BaselineFunction(UtilFunction):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         pass
 
 
 class TokenBaselineFunction(BaselineFunction):
-    def __init__(self, token_id):
+    def __init__(self, token_id, **kwargs):
         super().__init__()
         self.token_id = token_id
 
@@ -26,7 +26,7 @@ class TokenBaselineFunction(BaselineFunction):
 
 
 class ZeroBaselineFunction(BaselineFunction):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         super().__init__()
 
     def __call__(self, inputs: torch.Tensor):
@@ -34,7 +34,7 @@ class ZeroBaselineFunction(BaselineFunction):
 
 
 class MeanBaselineFunction(BaselineFunction):
-    def __init__(self, dim):
+    def __init__(self, dim, **kwargs):
         super().__init__()
         self.dim = dim
 
@@ -45,7 +45,7 @@ class MeanBaselineFunction(BaselineFunction):
 
 
 class InvertBaselineFunction(BaselineFunction):
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         super().__init__()
 
     def __call__(self, inputs: torch.Tensor):
@@ -59,6 +59,7 @@ class GaussianBlurBaselineFunction(BaselineFunction):
         kernel_size_y: int = 3,
         sigma_x: float = .5,
         sigma_y: float = .5,
+        **kwargs
     ):
         super().__init__()
         self.kernel_size_x = kernel_size_x

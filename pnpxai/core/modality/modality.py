@@ -54,8 +54,17 @@ class Modality(ABC):
     def __init__(
         self,
         channel_dim: int,
+        baseline_fn_selector: Optional[FunctionSelector] = None,
+        feature_mask_fn_selector: Optional[FunctionSelector] = None,
+        pooling_fn_selector: Optional[FunctionSelector] = None,
+        normalization_fn_selector: Optional[FunctionSelector] = None,
+        **kwargs
     ):
         self.channel_dim = channel_dim
+        self.baseline_fn_selector = baseline_fn_selector or FunctionSelector(BASELINE_FUNCTIONS)
+        self.feature_mask_fn_selector = feature_mask_fn_selector or FunctionSelector(FEATURE_MASK_FUNCTIONS)
+        self.pooling_fn_selector = pooling_fn_selector or FunctionSelector(POOLING_FUNCTIONS)
+        self.normalization_fn_selector = normalization_fn_selector or FunctionSelector(NORMALIZATION_FUNCTIONS_FOR_IMAGE)
 
     @abstractmethod    
     def get_default_feature_mask_fn(self) -> Callable:
@@ -74,12 +83,28 @@ class ImageModality(Modality):
     def __init__(
         self,
         channel_dim: int = 1,
+        baseline_fn_selector: Optional[FunctionSelector] = None,
+        feature_mask_fn_selector: Optional[FunctionSelector] = None,
+        pooling_fn_selector: Optional[FunctionSelector] = None,
+        normalization_fn_selector: Optional[FunctionSelector] = None,
     ):
-        super(ImageModality, self).__init__(channel_dim)
-        self.baseline_fn_selector = FunctionSelector(BASELINE_FUNCTIONS_FOR_IMAGE)
-        self.feature_mask_fn_selector = FunctionSelector(FEATURE_MASK_FUNCTIONS_FOR_IMAGE)
-        self.pooling_fn_selector = FunctionSelector(POOLING_FUNCTIONS_FOR_IMAGE)
-        self.normalization_fn_selector = FunctionSelector(NORMALIZATION_FUNCTIONS_FOR_IMAGE)
+        super(ImageModality, self).__init__(
+            channel_dim,
+            baseline_fn_selector=baseline_fn_selector or FunctionSelector(
+                data=BASELINE_FUNCTIONS_FOR_IMAGE,
+                default_kwargs={'dim': channel_dim},
+            ),
+            feature_mask_fn_selector=feature_mask_fn_selector or FunctionSelector(
+                data=FEATURE_MASK_FUNCTIONS_FOR_IMAGE
+            ),
+            pooling_fn_selector=pooling_fn_selector or FunctionSelector(
+                data=POOLING_FUNCTIONS_FOR_IMAGE,
+                default_kwargs={'channel_dim': channel_dim},
+            ),
+            normalization_fn_selector=normalization_fn_selector or FunctionSelector(
+                data=NORMALIZATION_FUNCTIONS_FOR_IMAGE
+            ),
+        )
 
     def get_default_baseline_fn(self) -> BaselineFunction:
         return self.baseline_fn_selector.select('zeros')
@@ -90,7 +115,7 @@ class ImageModality(Modality):
     def get_default_postprocessors(self) -> List[PostProcessor]:
         return [
             PostProcessor(
-                pooling_fn=self.pooling_fn_selector.select(pm, channel_dim=self.channel_dim),
+                pooling_fn=self.pooling_fn_selector.select(pm),
                 normalization_fn=self.normalization_fn_selector.select(nm),
             ) for pm in self.pooling_fn_selector.choices
             for nm in self.normalization_fn_selector.choices
@@ -112,16 +137,36 @@ class TextModality(Modality):
         Lime,
     )
 
-    def __init__(self, channel_dim: int = -1, mask_token_id: int = 0):
-        super(TextModality, self).__init__(channel_dim)
+    def __init__(
+        self,
+        channel_dim: int = -1,
+        mask_token_id: int = 0,
+        baseline_fn_selector: Optional[FunctionSelector] = None,
+        feature_mask_fn_selector: Optional[FunctionSelector] = None,
+        pooling_fn_selector: Optional[FunctionSelector] = None,
+        normalization_fn_selector: Optional[FunctionSelector] = None,
+    ):
+        super(TextModality, self).__init__(
+            channel_dim,
+            baseline_fn_selector=baseline_fn_selector or FunctionSelector(
+                data=BASELINE_FUNCTIONS_FOR_TEXT,
+                default_kwargs={'token_id': mask_token_id},
+            ),
+            feature_mask_fn_selector=feature_mask_fn_selector or FunctionSelector(
+                data=FEATURE_MASK_FUNCTIONS_FOR_TEXT
+            ),
+            pooling_fn_selector=pooling_fn_selector or FunctionSelector(
+                data=POOLING_FUNCTIONS_FOR_TEXT,
+                default_kwargs={'channel_dim': channel_dim},
+            ),
+            normalization_fn_selector=normalization_fn_selector or FunctionSelector(
+                data=NORMALIZATION_FUNCTIONS_FOR_TEXT,
+            ),
+        )
         self.mask_token_id = mask_token_id
-        self.baseline_fn_selector = FunctionSelector(BASELINE_FUNCTIONS_FOR_TEXT)
-        self.feature_mask_fn_selector = FunctionSelector(FEATURE_MASK_FUNCTIONS_FOR_TEXT)
-        self.pooling_fn_selector = FunctionSelector(POOLING_FUNCTIONS_FOR_TEXT)
-        self.normalization_fn_selector = FunctionSelector(NORMALIZATION_FUNCTIONS_FOR_TEXT)
 
-    def get_default_baseline_fn(self, mask_token_id: Optional[int] = None) -> BaselineFunction:
-        return self.baseline_fn_selector.select('token', token_id=self.mask_token_id)
+    def get_default_baseline_fn(self) -> BaselineFunction:
+        return self.baseline_fn_selector.select('token')
 
     def get_default_feature_mask_fn(self) -> FeatureMaskFunction:
         return self.feature_mask_fn_selector.select('no_mask_1d')
@@ -129,7 +174,7 @@ class TextModality(Modality):
     def get_default_postprocessors(self) -> List[PostProcessor]:
         return [
             PostProcessor(
-                pooling_fn=self.pooling_fn_selector.select(pm, channel_dim=self.channel_dim),
+                pooling_fn=self.pooling_fn_selector.select(pm),
                 normalization_fn=self.normalization_fn_selector.select(nm),
             ) for pm in self.pooling_fn_selector.choices
             for nm in self.normalization_fn_selector.choices
@@ -137,12 +182,31 @@ class TextModality(Modality):
 
 
 class TimeSeriesModality(Modality):
-    def __init__(self, channel_dim: int = -1):
-        super(TimeSeriesModality, self).__init__(channel_dim)
-        self.baseline_fn_selector = FunctionSelector(BASELINE_FUNCTIONS_FOR_TIME_SERIES)
-        self.feature_mask_fn_selector = FunctionSelector(FEATURE_MASK_FUNCTIONS_FOR_TIME_SERIES)
-        self.pooling_fn_selector = FunctionSelector(POOLING_FUNCTIONS_FOR_TIME_SERIES)
-        self.normalization_fn_selector = FunctionSelector(NORMALIZATION_FUNCTIONS_FOR_TIME_SERIES)
+    def __init__(
+        self,
+        channel_dim: int = -1,
+        baseline_fn_selector: Optional[FunctionSelector] = None,
+        feature_mask_fn_selector: Optional[FunctionSelector] = None,
+        pooling_fn_selector: Optional[FunctionSelector] = None,
+        normalization_fn_selector: Optional[FunctionSelector] = None,
+    ):
+        super(TimeSeriesModality, self).__init__(
+            channel_dim,
+            baseline_fn_selector=baseline_fn_selector or FunctionSelector(
+                data=BASELINE_FUNCTIONS_FOR_TIME_SERIES, # [zeros, mean]
+                default_kwargs={'dim': channel_dim},
+            ),
+            feature_mask_fn_selector=feature_mask_fn_selector or FunctionSelector(
+                data=FEATURE_MASK_FUNCTIONS_FOR_TIME_SERIES,
+            ),
+            pooling_fn_selector=pooling_fn_selector or FunctionSelector(
+                data=POOLING_FUNCTIONS_FOR_TIME_SERIES, # [identity]
+                default_kwargs={'channel_dim': channel_dim},
+            ),
+            normalization_fn_selector=normalization_fn_selector or FunctionSelector(
+                data=NORMALIZATION_FUNCTIONS_FOR_TIME_SERIES, # [identity]
+            ),
+        )
 
     def get_default_baseline_fn(self) -> BaselineFunction:
         return self.baseline_fn_selector.select('zeros')
@@ -153,7 +217,7 @@ class TimeSeriesModality(Modality):
     def get_default_postprocessors(self) -> List[PostProcessor]:
         return [
             PostProcessor(
-                pooling_fn=self.pooling_fn_selector.select(pm, channel_dim=self.channel_dim),
+                pooling_fn=self.pooling_fn_selector.select(pm),
                 normalization_fn=self.normalization_fn_selector.select(nm),
             ) for pm in self.pooling_fn_selector.choices
             for nm in self.normalization_fn_selector.choices
