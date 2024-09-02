@@ -12,6 +12,18 @@ BaselineMethod = Literal['zeros', 'invert', 'gaussian_blur', 'token']
 
 
 class BaselineFunction(UtilFunction):
+    """
+    A base class for baseline functions used in attribution methods. Baseline functions are 
+    used to define a reference or baseline value against which attributions are compared.
+    This is typically used to understand the effect of different inputs on the model's predictions.
+
+    Notes:
+        - `BaselineFunction` is intended to be subclassed. Concrete baseline functions should 
+          inherit from this class and implement the actual baseline logic.
+        - Subclasses can override the `__init__` method to accept additional parameters required 
+          for their specific baseline operations.
+    """
+    
     def __init__(self, *args, **kwargs):
         pass
 
