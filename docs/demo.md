@@ -1,3 +1,0 @@
-# Demo
-
-Page redirection task
