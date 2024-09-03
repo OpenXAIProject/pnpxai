@@ -680,9 +680,9 @@
 <tbody>
 <tr>
 <td>Correctness</td>
-<td>Evaluates the truth/reliability of the explanation of the prediction model (AI model). In other words, it indicates how truthful the explanation is compared to the behavior of the black box model.</td>
-<td><a href="../api/evaluator/metrics/#pnpxai.evaluator.metrics.mu_fidelity.MuFidelity"><strong>MuFidelity</strong></a></td>
-<td>[2]</td>
+<td>Evaluates the truth/reliability of the explanation of the prediction model (AI model). In other words, it indicates how truthful the explanation is compared to the behavior of the black box model. Moreover, it evaluates the degree to which a prediction model (AI model) is explained.</td>
+<td><a href="../api/evaluator/metrics/#pnpxai.evaluator.metrics.mu_fidelity.MuFidelity"><strong>MuFidelity</strong></a>, <a href="../api/evaluator/metrics/#pnpxai.evaluator.metrics.pixel_flipping.AbPC"><strong>Area between Perturbation Curves</strong></a></td>
+<td>[2], [4]</td>
 </tr>
 <tr>
 <td>Continuity</td>
@@ -696,33 +696,31 @@
 <td><a href="../api/evaluator/metrics/#pnpxai.evaluator.metrics.complexity.Complexity"><strong>Complexity</strong></a></td>
 <td>[2]</td>
 </tr>
-<tr>
-<td>Completeness</td>
-<td>Evaluates the degree to which a prediction model (AI model) is explained. Providing “the whole truth” of a black box model has a high degree of completeness, but a good description must balance compactness and correctness.</td>
-<td><a href="../api/evaluator/metrics/#pnpxai.evaluator.metrics.pixel_flipping.AbPC"><strong>Area between Perturbation Curves</strong></a></td>
-<td>-</td>
-</tr>
 </tbody>
 </table>
 <h2 id="usage">Usage</h2>
 <pre><code class="language-python">import torch
 from torch.utils.data import DataLoader
 
-from pnpxai.explainers import IntegratedGradients
-from pnpxai.evaluator.metrics import Complexity
+from pnpxai.utils import set_seed
+from pnpxai.explainers import LRP, ExplainerWArgs
+from pnpxai.evaluator import Complexity
 
 from helpers import get_imagenet_dataset, get_torchvision_model
 
-# load model, dataset, explainer, and metric
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model, transform = get_torchvision_model('resnet18')
+set_seed(seed=0)
+device = torch.device(&quot;cuda&quot; if torch.cuda.is_available() else &quot;cpu&quot;)
 
-dataset = get_imagenet_dataset(transform, indices=range(1000))
-loader = DataLoader(dataset, batch_size=4, shuffle=False)
+# load model, dataset, and explainer
+model, transform = get_torchvision_model(&quot;resnet18&quot;)
+model = model.to(device)
+explainer = ExplainerWArgs(
+    explainer=LRP(model=model),
+    kwargs={&quot;epsilon&quot;: 1e-6, &quot;n_classes&quot;: 1000},
+)
 
-explainer = IntegratedGradients(model)
-metric = Complexity(model, explainer)
-
+dataset = get_imagenet_dataset(transform=transform, subset_size=8)
+loader = DataLoader(dataset, batch_size=8)
 inputs, targets = next(iter(loader))
 inputs, targets = inputs.to(device), targets.to(device)
 
@@ -730,13 +728,15 @@ inputs, targets = inputs.to(device), targets.to(device)
 attrs = explainer.attribute(inputs, targets)
 
 # test evaluator
-evaluations = metric(inputs, targets, attrs)
+metric = Complexity()
+evaluations = metric(attributions=attrs)
 print(evaluations)
 </code></pre>
 <h2 id="reference">Reference</h2>
 <p>[1] M. Nauta, J. Trienes, S. Pathak, E. Nguyen, M. Peters, Y. Schmitt, J. Schlötterer, M. V. Keulen, C. Seifert. From Anecdotal Evidence to Quantitative Evaluation Methods: A Systematic Review on Evaluating Explainable AI. ACM Comput. Surv. 55(13s): 295:1-295:42 (2023).</p>
 <p>[2] U. Bhatt, A. Weller, and J. M. F. Moura. Evaluating and aggregating feature-based model explanations. In Proceedings of the IJCAI (2020).</p>
 <p>[3] C.-K. Yeh, C.-Y. Hsieh, A.S. Suggala, D.I. Inouye, and P. Ravikumar. On the (in)fidelity and sensitivity of explanations. In Proceedings of the NeurIPS (2019).</p>
+<p>[4] X. Han, Z. Jiang, H. Jin, Z. Liu, N. Zou, Q. Wang, and X. Hu, Retiring $\Delta $ DP: New Distribution-Level Metrics for Demographic Parity. arXiv preprint arXiv:2301.13443 (2023).</p>
 
 
 
