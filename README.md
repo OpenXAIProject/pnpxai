@@ -9,7 +9,7 @@
 ## Features
 
 - [**Detector**](pnpxai/core/detector/): The detector module provides automatic detection of AI models implemented in PyTorch.
-- [**Evaluator**](pnpxai/evaluator/metrics/): The evaluator module provides various ways to evaluate and compare the performance and explainability of AI models, such as [complexity](pnpxai/evaluator/metrics/complexity.py), [fidelity](pnpxai/evaluator/metrics/mu_fidelity.py), [sensitivity](pnpxai/evaluator/metrics/sensitivity.py), and [area between perturbation curves](pnpxai/evaluator/metrics/pixel_flipping.py).
+- [**Evaluator**](pnpxai/evaluator/metrics/): The evaluator module provides various ways to evaluate and compare the performance and explainability of AI models with the categorized evaluation properties of correctness ([fidelity](pnpxai/evaluator/metrics/mu_fidelity.py), [area between perturbation curves](pnpxai/evaluator/metrics/pixel_flipping.py)), continuity ([sensitivity](pnpxai/evaluator/metrics/sensitivity.py)), and compactness ([complexity](pnpxai/evaluator/metrics/complexity.py)).
 - **Explainers**: The explainers module contains a collection of state-of-the-art XAI methods that can generate global or local explanations for any AI model, such as:
 	- Perturbation-based ([SHAP](pnpxai/explainers/kernel_shap.py), [LIME](pnpxai/explainers/lime.py))
 	- Relevance-based ([IG](pnpxai/explainers/integrated_gradients.py), [LRP](pnpxai/explainers/lrp.py), [RAP](pnpxai/explainers/rap), [GuidedBackprop](pnpxai/explainers/guided_backprop.py))

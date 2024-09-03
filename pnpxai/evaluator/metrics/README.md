@@ -5,10 +5,9 @@ The Evaluator module provides several metrics to evaluate the result explainatio
 ## Properties of evaluation
 | Property [1] | Explanation | Corresponding Metrics | Reference |
 | --- | --- | --- | --- |
-| Correctness | Evaluates the truth/reliability of the explanation of the prediction model (AI model). In other words, it indicates how truthful the explanation is compared to the behavior of the black box model. | Mufidelity | [2] |
+| Correctness | Evaluates the truth/reliability of the explanation of the prediction model (AI model). In other words, it indicates how truthful the explanation is compared to the behavior of the black box model. Moreover, it evaluates the degree to which a prediction model (AI model) is explained. | Mufidelity, Area between Perturbation Curves | [2], [4] |
 | Continuity | Continuity assesses how continuous (i.e. smooth) the description is. High-continuity explanation functions ensure that small changes in the input do not lead to large changes in the explanation. | Sensitivity | [3] |
 | Compactness | Evaluates the size/amount of explanation. Ensure that you do not present complex and redundant explanations that are difficult to understand. | Complexity | [2] |
-| Completeness | Evaluates the degree to which a prediction model (AI model) is explained. Providing “the whole truth” of a black box model has a high degree of completeness, but a good description must balance compactness and correctness. | - | - |
 
 
 ## Usage
@@ -55,3 +54,5 @@ print(evaluations)
 [2] U. Bhatt, A. Weller, and J. M. F. Moura. Evaluating and aggregating feature-based model explanations. In Proceedings of the IJCAI (2020).
 
 [3] C.-K. Yeh, C.-Y. Hsieh, A.S. Suggala, D.I. Inouye, and P. Ravikumar. On the (in)fidelity and sensitivity of explanations. In Proceedings of the NeurIPS (2019).
+
+[4] X. Han, Z. Jiang, H. Jin, Z. Liu, N. Zou, Q. Wang, and X. Hu, Retiring $\Delta $ DP: New Distribution-Level Metrics for Demographic Parity. arXiv preprint arXiv:2301.13443 (2023).
