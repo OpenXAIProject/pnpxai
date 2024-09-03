@@ -4,17 +4,16 @@ pnpxai is a Python package that provides a modular and easy-to-use framework for
 
 ## Features
 
-- [**Detector**](detector): The detector module provides automatic detection of AI models implemented in PyTorch.
-- [**Evaluator**](evaluator): The evaluator module provides various ways to evaluate and compare the performance and explainability of AI models, such as [correctness](api/evaluator), and [continuity](api/evaluator).
+- [**Detector**](detector.md): The detector module provides automatic detection of AI models implemented in PyTorch.
+- [**Evaluator**](evaluator.md): The evaluator module provides various ways to evaluate and compare the performance and explainability of AI models, such as [correctness](api/evaluator.md), and [continuity](api/evaluator.md).
 - **Explainers**: The explainers module contains a collection of state-of-the-art XAI methods that can generate global or local explanations for any AI model, such as [SHAP](https://github.com/openxaiproject/pnpxai/explainers/kernel_shap), [LIME](https://github.com/openxaiproject/pnpxai/explainers/lime), [IG](https://github.com/openxaiproject/pnpxai/explainers/integrated_gradients), [LRP](https://github.com/openxaiproject/pnpxai/explainers/lrp), and [RAP](https://github.com/openxaiproject/pnpxai/explainers/rap).
 - [**Recommender**](recommender): The recommender module offers a recommender system that can suggest the most suitable XAI methods for a given model and dataset, based on the user’s preferences and goals.
 - **Visualizer**: The visualizer module enables users to interact with and explore the results of XAI methods in a web-based dashboard, using various charts, graphs, and widgets.
 
 ## Project Core API
 
-* [**Project**](api/core/project.md): module, designed for combining semantically similar experiments for side-to-side comparison
 * [**Experiment**](api/core/experiment.md): module, responsible for data manipulation, model explanation and explanations' evaluation
-* [**Auto Experiment**](api/core/auto_experiment.md): module, responsible for data manipulation, model explanation and explanations' evaluation
+* [**Auto Explanation**](api/core/auto_explanation.md): module, responsible for data manipulation, model explanation and explanations' evaluation
 
 ## Installation
 

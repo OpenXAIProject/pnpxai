@@ -5,12 +5,12 @@ from torch.nn.modules import Module
 from captum.attr import KernelShap as CaptumKernelShap
 
 from pnpxai.core.detector.types import Linear, Convolution, LSTM, RNN, Attention
+from pnpxai.explainers.base import Explainer
 from pnpxai.explainers.types import ForwardArgumentExtractor
 from pnpxai.explainers.utils.baselines import BaselineMethodOrFunction, BaselineFunction
 from pnpxai.explainers.utils.feature_masks import FeatureMaskMethodOrFunction, FeatureMaskFunction
 from pnpxai.evaluator.optimizer.utils import generate_param_key
 from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
-from .base import Explainer
 
 
 class KernelShap(Explainer):

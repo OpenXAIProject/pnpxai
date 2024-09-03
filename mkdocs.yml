@@ -1,14 +1,16 @@
 site_name: PnP XAI Docs
 site_url: https://openxaiproject.github.io/pnpxai/
-theme: material
+theme: 
+  name: material
+  logo: assets/logo.png
+  favicon: assets/favicon.ico
+
+
 
 plugins:
   - mkdocstrings:
       handlers:
         python:
-          setup_commands:
-            - import sys
-            - sys.path.append('../')
           selection:
             inherited_members: true
           rendering:
@@ -23,12 +25,14 @@ nav:
   - Home: index.md
   - API:
     - Core:
-      - Project: api/core/project.md
       - Experiment: api/core/experiment.md
-      - 'Auto Experiment': api/core/auto_experiment.md
-    - Recommender: api/recommender.md
-    - Detector: api/detector.md
-    - Evaluator: api/evaluator.md
+      - 'Auto Explanation': api/core/auto_explanation.md
+      - Modality: api/core/modality.md
+      - Recommender: api/core/recommender.md
+      - Detector: api/core/detector.md
+    - Evaluator:
+      - Metrics: api/evaluator/metrics.md
+      - Optimizer: api/evaluator/optimizer.md
   - Detector: detector.md
   - Recommender: recommender.md
   - Evaluator: evaluator.md

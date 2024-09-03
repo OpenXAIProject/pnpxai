@@ -11,6 +11,7 @@ from helpers import get_imagenet_dataset, get_torchvision_model, denormalize_ima
 
 # setup
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cpu')
 model, transform = get_torchvision_model('vit_b_16')
 model.eval()
 dataset = get_imagenet_dataset(transform, indices=range(1000))
@@ -111,7 +112,7 @@ def post_default_explanation(
     )
 
 
-N_TRIALS = 10
+N_TRIALS = 50
 OPTIM_SEED = 42
 
 def post_opt(
@@ -121,7 +122,7 @@ def post_opt(
     data_id=None
 ):
     optimized, objective, study = expr.optimize(
-        data_id=data_id,
+        data_ids=data_id,
         explainer_id=explainer_id,
         metric_id=metric_id,
         direction='maximize',
@@ -153,6 +154,7 @@ def post_opt(
 
 
 CMAPS = ['Reds', 'YlGn', 'coolwarm', 'viridis', 'jet']
+
 
 #------------------------------------------------------------------------------#
 #----------------------------------- app --------------------------------------#

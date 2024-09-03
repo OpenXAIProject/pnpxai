@@ -26,7 +26,7 @@ class PixelFlipping(Metric):
     Attributes:
         model (Module): The model.
         explainer (Optional[Explainer]=None): The explainer whose explanations are being evaluated.
-        postprocessor (Optional[Union[PostProcessor, Tuple[PostProcessor]]]): Post-processing steps for attributions.
+        channel_dim (int): Target channel dimension.
         n_steps (int): The number of perturbation steps.
         baseline_fn (Optional[BaselineFunction]): Function to generate baseline inputs for perturbation.
         prob_fn (Optional[Callable[[Tensor], Tensor]]): Function to compute probabilities from model outputs.
@@ -171,7 +171,7 @@ class MoRF(PixelFlipping):
     Attributes:
         model (Module): The model.
         explainer (Optional[Explainer]=None): The explainer whose explanations are being evaluated.
-        postprocessor (PostProcessor): Post-processing steps for attributions.
+        channel_dim (int): Target channel dimension.
         n_steps (int): The number of perturbation steps.
         baseline_fn (Optional[BaselineFunction]): Function to generate baseline inputs for perturbation.
         prob_fn (Optional[Callable[[Tensor], Tensor]]): Function to compute probabilities from model outputs.
@@ -238,7 +238,7 @@ class LeRF(PixelFlipping):
     Attributes:
         model (Module): The model.
         explainer (Optional[Explainer]=None): The explainer whose explanations are being evaluated.
-        postprocessor (PostProcessor): Post-processing steps for attributions.
+        channel_dim (int): Target channel dimension.
         n_steps (int): The number of perturbation steps.
         baseline_fn (Optional[BaselineFunction]): Function to generate baseline inputs for perturbation.
         prob_fn (Optional[Callable[[Tensor], Tensor]]): Function to compute probabilities from model outputs.
@@ -306,7 +306,7 @@ class AbPC(PixelFlipping):
     Attributes:
         model (Module): The model.
         explainer (Optional[Explainer]=None): The explainer whose explanations are being evaluated.
-        postprocessor (Optional[Union[PostProcessor, Tuple[PostProcessor]]]=None): Post-processing steps for attributions.
+        channel_dim (int): Target channel dimension.
         n_steps (int): The number of perturbation steps.
         baseline_fn (Optional[BaselineFunction]): Function to generate baseline inputs for perturbation.
         prob_fn (Optional[Callable[[Tensor], Tensor]]): Function to compute probabilities from model outputs.
@@ -350,7 +350,8 @@ class AbPC(PixelFlipping):
             inputs (TensorOrTupleOfTensors): The input tensors to the model.
             targets (Tensor): The target labels for the inputs.
             attributions (TensorOrTupleOfTensors): The attributions for the inputs.
-            attention_mask (Optional[TensorOrTupleOfTensors], optional): Attention masks for the inputs. Default is None.
+            attention_mask (Optional[TensorOrTupleOfTensors], optional): Attention masks for the inputs.
+            return_pf (Optional[bool]): Whether to return the perturbation curves for ascending and descending orders.
 
         Returns:
             TensorOrTupleOfTensors: The mean clamped differences in probabilities at each perturbation step, 

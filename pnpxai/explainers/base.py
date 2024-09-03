@@ -29,25 +29,39 @@ NON_DISPLAYED_ATTRS = [
 
 
 class Explainer(ABC):
+    """
+    Abstract base class for implementing attribution explanations for machine learning models.
+    
+    This class provides methods for extracting forward arguments, loading baseline and feature mask functions, and applying them during attribution.
+    
+    Parameters:
+        model (Module): The PyTorch model for which attribution is to be computed.
+        forward_arg_extractor (Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]): Optional function to extract forward arguments from inputs.
+        additional_forward_arg_extractor (Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]): Optional function to extract additional forward arguments.
+        **kwargs: Additional keyword arguments to pass to the constructor.
+
+    Notes:
+        - Subclasses must implement the `attribute` method to define how attributions are computed.
+        - The `forward_arg_extractor` and `additional_forward_arg_extractor` functions allow for customization in extracting forward arguments from the inputs.
+    """
+    
     EXPLANATION_TYPE: ExplanationType = "attribution"
     SUPPORTED_MODULES = []
     TUNABLES = {}
 
     def __init__(
-            self,
-            model: Module,
-            forward_arg_extractor: Optional[Callable[[
-                Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
-            additional_forward_arg_extractor: Optional[Callable[[
-                Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
-            **kwargs
+        self,
+        model: Module,
+        forward_arg_extractor: Optional[Callable[[
+            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
+        additional_forward_arg_extractor: Optional[Callable[[
+            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
+        **kwargs
     ) -> None:
         self.model = model.eval()
         self.forward_arg_extractor = forward_arg_extractor
         self.additional_forward_arg_extractor = additional_forward_arg_extractor
         self.device = next(model.parameters()).device
-        self.feature_mask_fn = None
-        self.baseline_fn = None
 
     def __repr__(self):
         displayed_attrs = ', '.join([
@@ -57,8 +71,8 @@ class Explainer(ABC):
         return f"{self.__class__.__name__}({displayed_attrs})"
 
     def _extract_forward_args(
-            self,
-            inputs: Union[Tensor, Tuple[Tensor]]
+        self,
+        inputs: Union[Tensor, Tuple[Tensor]]
     ) -> Tuple[Union[Tensor, Tuple[Tensor], Type[None]]]:
         forward_args = self.forward_arg_extractor(inputs) \
             if self.forward_arg_extractor else inputs
@@ -133,7 +147,23 @@ class Explainer(ABC):
             inputs: Union[Tensor, Tuple[Tensor]],
             targets: Tensor,
     ) -> Union[Tensor, Tuple[Tensor]]:
+        """
+        Computes attributions for the given inputs and targets.
+
+        Args:
+            inputs (Union[Tensor, Tuple[Tensor]]): The inputs for the model.
+            targets (Tensor): The target labels.
+
+        Returns:
+            Union[Tensor, Tuple[Tensor]]: The computed attributions.
+        """
         raise NotImplementedError
 
     def get_tunables(self) -> Dict[str, Tuple[type, dict]]:
+        """
+        Returns a dictionary of tunable parameters for the explainer.
+
+        Returns:
+            Dict[str, Tuple[type, dict]]: Dictionary of tunable parameters.
+        """
         return {}

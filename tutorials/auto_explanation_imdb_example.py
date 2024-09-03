@@ -1,7 +1,9 @@
 import functools
 import torch
+import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 from pnpxai import AutoExplanationForTextClassification
+from pnpxai.explainers.utils.postprocess import minmax
 from helpers import (
     get_imdb_dataset,
     get_bert_model,
@@ -9,9 +11,13 @@ from helpers import (
     bert_collate_fn,
 )
 
+# ------------------------------------------------------------------------------#
+# -------------------------------- basic usage ---------------------------------#
+# ------------------------------------------------------------------------------#
 
 # setup
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# device = torch.device('cpu')
 model = get_bert_model(model_name='fabriceyhc/bert-base-uncased-imdb', num_labels=2)
 model.to(device)
 
@@ -19,7 +25,7 @@ dataset = get_imdb_dataset(split='test')
 tokenizer = get_bert_tokenizer(model_name='fabriceyhc/bert-base-uncased-imdb')
 loader = DataLoader(
     dataset,
-    batch_size=8,
+    batch_size=1,
     shuffle=False,
     collate_fn=functools.partial(bert_collate_fn, tokenizer=tokenizer),
 )
@@ -43,18 +49,89 @@ expr = AutoExplanationForTextClassification(
     additional_forward_arg_extractor=additional_forward_arg_extractor,
 )
 
-# run
-expr.run_batch(
-    data_ids=[0, 42],
+
+# explain and evaluate
+results = expr.run_batch(
+    data_ids=range(4),
     explainer_id=0,
     postprocessor_id=0,
     metric_id=1,
 )
 
-# opt
-for explainer_id in range(len(expr.manager.explainers)):
-    optimized, objective, study = expr.optimize(
-        data_id=0,
-        explainer_id=0,
-        metric_id=1,
-    )
+# import pdb; pdb.set_trace()
+
+#------------------------------------------------------------------------------#
+#------------------------------- optimization ---------------------------------#
+#------------------------------------------------------------------------------#
+
+data_id = 3176
+explainer_id = 2 # KernelShap
+metric_id = 1 # ABPC
+
+optimized = expr.optimize(
+    data_ids=data_id,
+    explainer_id=explainer_id,
+    metric_id=metric_id,
+    direction='maximize', # less is better
+    sampler='random', # Literal['tpe','random']
+    n_trials=50, # by default, 50 for sampler in ['random', 'tpe'], None for ['grid']
+    seed=42, # seed for sampler: by default, None
+)
+
+print('Best/Explainer:', optimized.explainer) # get the optimized explainer
+print('Best/PostProcessor:', optimized.postprocessor) # get the optimized postprocessor
+print('Best/value:', optimized.study.best_trial.value) # get the optimized value
+
+# Every trial in study has its explainer and postprocessor in user attr.
+i = 25
+print(f'{i}th Trial/Explainer', optimized.study.trials[i].user_attrs['explainer']) # get the explainer of i-th trial
+print(f'{i}th Trial/PostProcessor', optimized.study.trials[i].user_attrs['postprocessor']) # get the postprocessor of i-th trial
+print(f'{i}th Trial/value', optimized.study.trials[i].value)
+
+# For example, you can use optuna's API to get the explainer and postprocessor of the worst trial
+def get_worst_trial(study):
+    valid_trials = [trial for trial in study.trials if trial.value is not None]
+    return sorted(valid_trials, key=lambda trial: trial.value)[0]
+
+worst_trial = get_worst_trial(optimized.study)
+print('Worst/Explainer:', worst_trial.user_attrs['explainer'])
+print('Worst/PostProcessor', worst_trial.user_attrs['postprocessor'])
+print('Worst/value', worst_trial.value)
+
+
+# ------------------------------------------------------------------------------#
+# ------------------------------- visualization --------------------------------#
+# ------------------------------------------------------------------------------#
+
+data = expr.manager.batch_data_by_ids([data_id])
+inputs = expr.input_extractor(data)
+labels = expr.label_extractor(data)
+
+# prepare trials to visualize
+sorted_trials = sorted(
+    [trial for trial in optimized.study.trials if trial.value is not None],
+    key=lambda trial: trial.value,
+)
+trials_to_vis = {
+    'Worst': sorted_trials[0],
+    'Median': sorted_trials[len(sorted_trials)//2],
+    'Best': sorted_trials[-1],
+}
+
+ylabs = [tokenizer.decode(token) for token in inputs[0].squeeze()]
+xlabs = trials_to_vis.keys()
+data = []
+for trial in trials_to_vis.values():
+    attrs = trial.user_attrs['explainer'].attribute(inputs, labels)
+    postprocessed = trial.user_attrs['postprocessor'](attrs)
+    data.append(minmax(postprocessed))
+data = torch.cat(data).transpose(1, 0).detach().cpu().numpy()
+
+fig, ax = plt.subplots(figsize=(7, 7), layout='constrained')
+hm = ax.imshow(data, cmap='YlGn')
+fig.colorbar(hm, ax=ax, location='bottom')
+ax.set_xticks(range(len(xlabs)), labels=xlabs)
+ax.set_yticks(range(len(ylabs)), labels=ylabs)
+ax.set_aspect(len(xlabs)/len(ylabs))
+ax.set_title(expr.manager.get_explainer_by_id(explainer_id).__class__.__name__)
+fig.savefig('auto_explanation_imdb_example.png')
