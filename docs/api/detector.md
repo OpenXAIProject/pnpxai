@@ -1,1 +1,0 @@
-::: pnpxai.detector.detector

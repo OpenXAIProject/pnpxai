@@ -87,7 +87,7 @@ class RelativeAttributePropagation():
 
         return self._results['output']
 
-    def _get_init_relprop_stack(self, rel: Sequence[Tensor]) -> OrderedDict[fx.Node, None]:
+    def _get_init_relprop_stack(self, rel: Sequence[Tensor]) -> Dict[fx.Node, None]:
         tail = self._trace.graph._root
         while tail.op != 'output':
             tail = tail.next
