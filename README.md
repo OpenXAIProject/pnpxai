@@ -9,10 +9,10 @@
 ## Features
 
 - [**Detector**](pnpxai/core/detector/): The detector module provides automatic detection of AI models implemented in PyTorch.
-- [**Evaluator**](pnpxai/core/evaluator/metrics/): The evaluator module provides various ways to evaluate and compare the performance and explainability of AI models, such as [complexity](pnpxai/core/evaluator/metrics/complexity.py), [fidelity](pnpxai/core/evaluator/metrics/mu_fidelity.py), [sensitivity](pnpxai/core/evaluator/metrics/sensitivity.py), and [area between perturbation curves](pnpxai/core/evaluator/metrics/pixel_flipping.py).
+- [**Evaluator**](pnpxai/evaluator/metrics/): The evaluator module provides various ways to evaluate and compare the performance and explainability of AI models, such as [complexity](pnpxai/evaluator/metrics/complexity.py), [fidelity](pnpxai/evaluator/metrics/mu_fidelity.py), [sensitivity](pnpxai/evaluator/metrics/sensitivity.py), and [area between perturbation curves](pnpxai/evaluator/metrics/pixel_flipping.py).
 - **Explainers**: The explainers module contains a collection of state-of-the-art XAI methods that can generate global or local explanations for any AI model, such as:
 	- Perturbation-based ([SHAP](pnpxai/explainers/kernel_shap.py), [LIME](pnpxai/explainers/lime.py))
-	- Relevance-based ([IG](pnpxai/explainers/integrated_gradients.py), [LRP](pnpxai/explainers/lrp.py), and [RAP](pnpxai/explainers/rap), [GuidedBackprop](pnpxai/explainers/guided_backprop.py))
+	- Relevance-based ([IG](pnpxai/explainers/integrated_gradients.py), [LRP](pnpxai/explainers/lrp.py), [RAP](pnpxai/explainers/rap), [GuidedBackprop](pnpxai/explainers/guided_backprop.py))
 	- CAM-based ([GradCAM](pnpxai/explainers/grad_cam.py), [Guided GradCAM](pnpxai/explainers/guided_grad_cam.py))
 	- Gradient-based ([SmoothGrad](pnpxai/explainers/smooth_grad.py), [VarGrad](pnpxai/explainers/var_grad.py), [FullGrad](pnpxai/explainers/full_grad.py), [Gradient &times; Input](pnpxai/explainers/grad_x_input.py))
 - [**Recommender**](pnpxai/core/recommender): The recommender module offers a recommender system that can suggest the most suitable XAI methods for a given model and dataset, based on the user’s preferences and goals.
