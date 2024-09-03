@@ -4,6 +4,8 @@ theme:
   name: material
   logo: assets/logo.png
   favicon: assets/favicon.ico
+  features:
+    - navigation.expand
 
 
 
@@ -36,3 +38,4 @@ nav:
   - Detector: detector.md
   - Recommender: recommender.md
   - Evaluator: evaluator.md
+  - Optimizer: optimizer.md

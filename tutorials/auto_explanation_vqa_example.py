@@ -49,7 +49,7 @@ expr = AutoExplanationForVisualQuestionAnswering(
 expr.recommended.print_tabular()
 
 optimized = expr.optimize(
-    data_id=0,
+    data_ids=0,
     explainer_id=2,
     metric_id=1,
     direction='maximize', # less is better
