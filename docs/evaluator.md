@@ -5,10 +5,9 @@ The Evaluator module provides several metrics to evaluate the result explainatio
 ## Properties of evaluation
 | Property [1] | Explanation | Corresponding Metrics | Reference |
 | --- | --- | --- | --- |
-| Correctness | Evaluates the truth/reliability of the explanation of the prediction model (AI model). In other words, it indicates how truthful the explanation is compared to the behavior of the black box model. | [**MuFidelity**](api/evaluator/metrics.md/#pnpxai.evaluator.metrics.mu_fidelity.MuFidelity) | [2] |
+| Correctness | Evaluates the truth/reliability of the explanation of the prediction model (AI model). In other words, it indicates how truthful the explanation is compared to the behavior of the black box model. Moreover, it evaluates the degree to which a prediction model (AI model) is explained. | [**MuFidelity**](api/evaluator/metrics.md/#pnpxai.evaluator.metrics.mu_fidelity.MuFidelity), [**Area between Perturbation Curves**](api/evaluator/metrics.md#pnpxai.evaluator.metrics.pixel_flipping.AbPC) | [2], [4] |
 | Continuity | Continuity assesses how continuous (i.e. smooth) the description is. High-continuity explanation functions ensure that small changes in the input do not lead to large changes in the explanation. | [**Sensitivity**](api/evaluator/metrics.md/#pnpxai.evaluator.metrics.sensitivity.Sensitivity) | [3] |
 | Compactness | Evaluates the size/amount of explanation. Ensure that you do not present complex and redundant explanations that are difficult to understand. | [**Complexity**](api/evaluator/metrics.md/#pnpxai.evaluator.metrics.complexity.Complexity) | [2] |
-| Completeness | Evaluates the degree to which a prediction model (AI model) is explained. Providing “the whole truth” of a black box model has a high degree of completeness, but a good description must balance compactness and correctness. | [**Area between Perturbation Curves**](api/evaluator/metrics.md#pnpxai.evaluator.metrics.pixel_flipping.AbPC) | - |
 
 
 ## Usage
@@ -17,21 +16,25 @@ The Evaluator module provides several metrics to evaluate the result explainatio
 import torch
 from torch.utils.data import DataLoader
 
-from pnpxai.explainers import IntegratedGradients
-from pnpxai.evaluator.metrics import Complexity
+from pnpxai.utils import set_seed
+from pnpxai.explainers import LRP, ExplainerWArgs
+from pnpxai.evaluator import Complexity
 
 from helpers import get_imagenet_dataset, get_torchvision_model
 
-# load model, dataset, explainer, and metric
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-model, transform = get_torchvision_model('resnet18')
+set_seed(seed=0)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-dataset = get_imagenet_dataset(transform, indices=range(1000))
-loader = DataLoader(dataset, batch_size=4, shuffle=False)
+# load model, dataset, and explainer
+model, transform = get_torchvision_model("resnet18")
+model = model.to(device)
+explainer = ExplainerWArgs(
+    explainer=LRP(model=model),
+    kwargs={"epsilon": 1e-6, "n_classes": 1000},
+)
 
-explainer = IntegratedGradients(model)
-metric = Complexity(model, explainer)
-
+dataset = get_imagenet_dataset(transform=transform, subset_size=8)
+loader = DataLoader(dataset, batch_size=8)
 inputs, targets = next(iter(loader))
 inputs, targets = inputs.to(device), targets.to(device)
 
@@ -39,7 +42,8 @@ inputs, targets = inputs.to(device), targets.to(device)
 attrs = explainer.attribute(inputs, targets)
 
 # test evaluator
-evaluations = metric(inputs, targets, attrs)
+metric = Complexity()
+evaluations = metric(attributions=attrs)
 print(evaluations)
 ```
 
@@ -50,3 +54,5 @@ print(evaluations)
 [2] U. Bhatt, A. Weller, and J. M. F. Moura. Evaluating and aggregating feature-based model explanations. In Proceedings of the IJCAI (2020).
 
 [3] C.-K. Yeh, C.-Y. Hsieh, A.S. Suggala, D.I. Inouye, and P. Ravikumar. On the (in)fidelity and sensitivity of explanations. In Proceedings of the NeurIPS (2019).
+
+[4] X. Han, Z. Jiang, H. Jin, Z. Liu, N. Zou, Q. Wang, and X. Hu, Retiring $\Delta $ DP: New Distribution-Level Metrics for Demographic Parity. arXiv preprint arXiv:2301.13443 (2023).
