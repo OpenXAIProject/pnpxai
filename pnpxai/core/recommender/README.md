@@ -1,4 +1,4 @@
-# Recommender <small>[[source](api/core/recommender.md)]</small>
+# Recommender
 
 The Recommender module in `pnpxai` assists you in selecting the most suitable explanation methods for your specific Explainable AI (XAI) needs. It considers factors like modality and neural network architecture.
 
