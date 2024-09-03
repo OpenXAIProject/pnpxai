@@ -1,4 +1,4 @@
-# Optimizer <small>[[source](api/evaluator/optimizer.md)]</small>
+# Optimizer
 
 This module is designed to optimize experiment hyperparameters. The optimization procedure can be invoked by ```python experiment.optimize(...)``` method call.
 
@@ -6,7 +6,7 @@ Optimization procedure is based on [`optuna`](https://optuna.org/) package.
 
 The optimization method requires initialization of an `Experiment`, where `modality`, model, explainer, and metrics are specified. To leverage chaching procedure, defined in experiment, the method invocation requires ids of the aforementioned parameters to be passed instead of instances themselves. Therefore, the method call is as follows:
 
-Complete backbone of initialization code can be represented as follows:
+## Usage
 
 ```python
 import torch

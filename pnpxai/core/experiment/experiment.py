@@ -79,8 +79,8 @@ class Experiment(Observable):
         data: DataSource,
         modality: Modality,
         explainers: Sequence[Explainer],
-        postprocessors: Optional[Sequence[Callable]] = None,
-        metrics: Optional[Sequence[Metric]] = None,
+        postprocessors: Sequence[Callable],
+        metrics: Sequence[Metric],
         input_extractor: Optional[Callable[[Any], Any]] = None,
         label_extractor: Optional[Callable[[Any], Any]] = None,
         target_extractor: Optional[Callable[[Any], Any]] = None,
@@ -423,9 +423,9 @@ class Experiment(Observable):
         self.manager.save_outputs(outputs, data, data_ids_pred)
 
         # explain
-        explainers, _ = self.manager.get_explainers(explainer_ids)
-        postprocessors, _ = self.manager.get_postprocessors(postprocessor_ids)
-        metrics, _ = self.manager.get_metrics(metric_ids)
+        explainers, explainer_ids = self.manager.get_explainers(explainer_ids)
+        postprocessors, postprocessor_ids = self.manager.get_postprocessors(postprocessor_ids)
+        metrics, metric_ids = self.manager.get_metrics(metric_ids)
 
         for explainer, explainer_id in zip(explainers, explainer_ids):
             explainer_name = class_to_string(explainer)
