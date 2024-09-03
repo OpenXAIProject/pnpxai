@@ -220,7 +220,9 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" >
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1" >
         
           
           <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
@@ -640,6 +642,26 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../optimizer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Optimizer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -829,7 +851,7 @@ like Optuna to evaluate different configurations of explainers and postprocessor
           <tr class="doc-section-item">
             <td><code>explainer</code></td>
             <td>
-                  <code><span title="pnpxai.explainers.base.Explainer">Explainer</span></code>
+                  <code><span title="pnpxai.explainers.Explainer">Explainer</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -1064,7 +1086,18 @@ like Optuna to evaluate different configurations of explainers and postprocessor
 <span class="normal">162</span>
 <span class="normal">163</span>
 <span class="normal">164</span>
-<span class="normal">165</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Objective</span><span class="p">:</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Objective</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class that encapsulates the logic for evaluating a model&#39;s performance using a </span>
 <span class="sd">    specified explainer, postprocessor, and metric within a given modality. The `Objective` </span>
@@ -1166,17 +1199,32 @@ like Optuna to evaluate different configurations of explainers and postprocessor
 <span class="sd">            postprocessor to the model&#39;s predictions. Returns `nan` if the postprocessed </span>
 <span class="sd">            results contain non-countable values like `nan` or `inf`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># suggest explainer</span>
         <span class="n">explainer</span> <span class="o">=</span> <span class="n">suggest</span><span class="p">(</span><span class="n">trial</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">explainer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">modality</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">EXPLAINER_KEY</span><span class="p">)</span>
-        <span class="n">postprocessor</span> <span class="o">=</span> <span class="n">format_out_tuple_if_single</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">suggest</span><span class="p">(</span>
-                <span class="n">trial</span><span class="p">,</span> <span class="n">postprocessor</span><span class="p">,</span> <span class="n">modality</span><span class="p">,</span>
+
+        <span class="c1"># suggest postprocessor</span>
+        <span class="n">modalities</span> <span class="o">=</span> <span class="n">format_into_tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modality</span><span class="p">)</span>
+        <span class="n">is_multi_modal</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">modalities</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
+        <span class="n">postprocessor</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">pp</span><span class="p">,</span> <span class="n">modality</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+            <span class="n">format_into_tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">postprocessor</span><span class="p">),</span>
+            <span class="n">modalities</span><span class="p">,</span>
+        <span class="p">):</span>
+            <span class="n">force_params</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="nb">isinstance</span><span class="p">(</span><span class="n">explainer</span><span class="p">,</span> <span class="p">(</span><span class="n">Lime</span><span class="p">,</span> <span class="n">KernelShap</span><span class="p">))</span>
+                <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">modality</span><span class="p">,</span> <span class="n">TextModality</span><span class="p">)</span>
+            <span class="p">):</span>
+                <span class="n">force_params</span><span class="p">[</span><span class="s1">&#39;pooling_fn&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Identity</span><span class="p">()</span>
+            <span class="n">postprocessor</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">suggest</span><span class="p">(</span>
+                <span class="n">trial</span><span class="p">,</span> <span class="n">pp</span><span class="p">,</span> <span class="n">modality</span><span class="p">,</span>
                 <span class="n">key</span><span class="o">=</span><span class="n">generate_param_key</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">POSTPROCESSOR_KEY</span><span class="p">,</span>
-                    <span class="n">modality</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">format_into_tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">postprocessor</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span>
-                <span class="p">)</span>
-            <span class="p">)</span> <span class="k">for</span> <span class="n">postprocessor</span><span class="p">,</span> <span class="n">modality</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
-                <span class="n">format_into_tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">postprocessor</span><span class="p">),</span>
-                <span class="n">format_into_tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modality</span><span class="p">),</span>
-        <span class="p">)))</span>
+                    <span class="n">modality</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">if</span> <span class="n">is_multi_modal</span> <span class="k">else</span> <span class="kc">None</span>
+                <span class="p">),</span>
+                <span class="n">force_params</span><span class="o">=</span><span class="n">force_params</span><span class="p">,</span>
+            <span class="p">))</span>
+        <span class="n">postprocessor</span> <span class="o">=</span> <span class="n">format_out_tuple_if_single</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">postprocessor</span><span class="p">))</span>
 
         <span class="c1"># Ignore duplicated samples</span>
         <span class="n">states_to_consider</span> <span class="o">=</span> <span class="p">(</span><span class="n">TrialState</span><span class="o">.</span><span class="n">COMPLETE</span><span class="p">,)</span>
@@ -1188,13 +1236,9 @@ like Optuna to evaluate different configurations of explainers and postprocessor
                 <span class="k">return</span> <span class="n">t</span><span class="o">.</span><span class="n">value</span>
 
         <span class="c1"># Explain and postprocess</span>
-        <span class="n">attrs</span> <span class="o">=</span> <span class="n">format_into_tuple</span><span class="p">(</span>
-            <span class="n">explainer</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span>
-        <span class="p">)</span>
-        <span class="n">pass_pooling</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">explainer</span><span class="p">,</span> <span class="p">(</span><span class="n">KernelShap</span><span class="p">,</span> <span class="n">Lime</span><span class="p">))</span>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="n">explainer</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span>
         <span class="n">postprocessed</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-            <span class="n">pp</span><span class="o">.</span><span class="n">normalization_fn</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span> <span class="k">if</span> <span class="n">pass_pooling</span> <span class="k">else</span> <span class="n">pp</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">pp</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+            <span class="n">pp</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span> <span class="k">for</span> <span class="n">pp</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
                 <span class="n">format_into_tuple</span><span class="p">(</span><span class="n">postprocessor</span><span class="p">),</span>
                 <span class="n">format_into_tuple</span><span class="p">(</span><span class="n">attrs</span><span class="p">),</span>
             <span class="p">)</span>
@@ -1382,7 +1426,18 @@ results using the specified metric.</p>
 <span class="normal">162</span>
 <span class="normal">163</span>
 <span class="normal">164</span>
-<span class="normal">165</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trial</span><span class="p">:</span> <span class="n">Trial</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">trial</span><span class="p">:</span> <span class="n">Trial</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Executes the objective function within an optimization trial. This method is </span>
 <span class="sd">    responsible for selecting the explainer and postprocessor based on the trial </span>
@@ -1398,17 +1453,32 @@ results using the specified metric.</p>
 <span class="sd">        postprocessor to the model&#39;s predictions. Returns `nan` if the postprocessed </span>
 <span class="sd">        results contain non-countable values like `nan` or `inf`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># suggest explainer</span>
     <span class="n">explainer</span> <span class="o">=</span> <span class="n">suggest</span><span class="p">(</span><span class="n">trial</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">explainer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">modality</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">EXPLAINER_KEY</span><span class="p">)</span>
-    <span class="n">postprocessor</span> <span class="o">=</span> <span class="n">format_out_tuple_if_single</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">suggest</span><span class="p">(</span>
-            <span class="n">trial</span><span class="p">,</span> <span class="n">postprocessor</span><span class="p">,</span> <span class="n">modality</span><span class="p">,</span>
+
+    <span class="c1"># suggest postprocessor</span>
+    <span class="n">modalities</span> <span class="o">=</span> <span class="n">format_into_tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modality</span><span class="p">)</span>
+    <span class="n">is_multi_modal</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">modalities</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span>
+    <span class="n">postprocessor</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">pp</span><span class="p">,</span> <span class="n">modality</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+        <span class="n">format_into_tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">postprocessor</span><span class="p">),</span>
+        <span class="n">modalities</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">force_params</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">explainer</span><span class="p">,</span> <span class="p">(</span><span class="n">Lime</span><span class="p">,</span> <span class="n">KernelShap</span><span class="p">))</span>
+            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">modality</span><span class="p">,</span> <span class="n">TextModality</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="n">force_params</span><span class="p">[</span><span class="s1">&#39;pooling_fn&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Identity</span><span class="p">()</span>
+        <span class="n">postprocessor</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">suggest</span><span class="p">(</span>
+            <span class="n">trial</span><span class="p">,</span> <span class="n">pp</span><span class="p">,</span> <span class="n">modality</span><span class="p">,</span>
             <span class="n">key</span><span class="o">=</span><span class="n">generate_param_key</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">POSTPROCESSOR_KEY</span><span class="p">,</span>
-                <span class="n">modality</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">format_into_tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">postprocessor</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="kc">None</span>
-            <span class="p">)</span>
-        <span class="p">)</span> <span class="k">for</span> <span class="n">postprocessor</span><span class="p">,</span> <span class="n">modality</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
-            <span class="n">format_into_tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">postprocessor</span><span class="p">),</span>
-            <span class="n">format_into_tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">modality</span><span class="p">),</span>
-    <span class="p">)))</span>
+                <span class="n">modality</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">if</span> <span class="n">is_multi_modal</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">),</span>
+            <span class="n">force_params</span><span class="o">=</span><span class="n">force_params</span><span class="p">,</span>
+        <span class="p">))</span>
+    <span class="n">postprocessor</span> <span class="o">=</span> <span class="n">format_out_tuple_if_single</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">postprocessor</span><span class="p">))</span>
 
     <span class="c1"># Ignore duplicated samples</span>
     <span class="n">states_to_consider</span> <span class="o">=</span> <span class="p">(</span><span class="n">TrialState</span><span class="o">.</span><span class="n">COMPLETE</span><span class="p">,)</span>
@@ -1420,13 +1490,9 @@ results using the specified metric.</p>
             <span class="k">return</span> <span class="n">t</span><span class="o">.</span><span class="n">value</span>
 
     <span class="c1"># Explain and postprocess</span>
-    <span class="n">attrs</span> <span class="o">=</span> <span class="n">format_into_tuple</span><span class="p">(</span>
-        <span class="n">explainer</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span>
-    <span class="p">)</span>
-    <span class="n">pass_pooling</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">explainer</span><span class="p">,</span> <span class="p">(</span><span class="n">KernelShap</span><span class="p">,</span> <span class="n">Lime</span><span class="p">))</span>
+    <span class="n">attrs</span> <span class="o">=</span> <span class="n">explainer</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span>
     <span class="n">postprocessed</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
-        <span class="n">pp</span><span class="o">.</span><span class="n">normalization_fn</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span> <span class="k">if</span> <span class="n">pass_pooling</span> <span class="k">else</span> <span class="n">pp</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">pp</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
+        <span class="n">pp</span><span class="p">(</span><span class="n">attr</span><span class="p">)</span> <span class="k">for</span> <span class="n">pp</span><span class="p">,</span> <span class="n">attr</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span>
             <span class="n">format_into_tuple</span><span class="p">(</span><span class="n">postprocessor</span><span class="p">),</span>
             <span class="n">format_into_tuple</span><span class="p">(</span><span class="n">attrs</span><span class="p">),</span>
         <span class="p">)</span>
@@ -1803,7 +1869,7 @@ results using the specified metric.</p>
 
 
 <h2 id="pnpxai.evaluator.optimizer.suggestor.suggest" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">suggest</span><span class="p">(</span><span class="n">trial</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">modality</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">suggest</span><span class="p">(</span><span class="n">trial</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">modality</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">force_params</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 </h2>
 
@@ -1933,7 +1999,17 @@ with tunable parameters, you can tune it as follows:</p>
 </details>
             <details class="quote">
               <summary>Source code in <code>pnpxai/evaluator/optimizer/suggestor.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 41</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 31</span>
+<span class="normal"> 32</span>
+<span class="normal"> 33</span>
+<span class="normal"> 34</span>
+<span class="normal"> 35</span>
+<span class="normal"> 36</span>
+<span class="normal"> 37</span>
+<span class="normal"> 38</span>
+<span class="normal"> 39</span>
+<span class="normal"> 40</span>
+<span class="normal"> 41</span>
 <span class="normal"> 42</span>
 <span class="normal"> 43</span>
 <span class="normal"> 44</span>
@@ -2009,16 +2085,12 @@ with tunable parameters, you can tune it as follows:</p>
 <span class="normal">114</span>
 <span class="normal">115</span>
 <span class="normal">116</span>
-<span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span>
-<span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">suggest</span><span class="p">(</span>
+<span class="normal">117</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">suggest</span><span class="p">(</span>
     <span class="n">trial</span><span class="p">:</span> <span class="n">Trial</span><span class="p">,</span>
     <span class="n">obj</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="n">modality</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Modality</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Modality</span><span class="p">]],</span>
     <span class="n">key</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">force_params</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A utility function that suggests parameters for a given object based on an optimization trial. </span>
@@ -2061,39 +2133,43 @@ with tunable parameters, you can tune it as follows:</p>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">is_multi_modal</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">format_into_tuple</span><span class="p">(</span><span class="n">modality</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span>
+    <span class="n">force_params</span> <span class="o">=</span> <span class="n">force_params</span> <span class="ow">or</span> <span class="p">{}</span>
     <span class="k">for</span> <span class="n">param_nm</span><span class="p">,</span> <span class="p">(</span><span class="n">method_type</span><span class="p">,</span> <span class="n">method_kwargs</span><span class="p">)</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="n">get_tunables</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="n">method</span> <span class="o">=</span> <span class="n">map_suggest_method</span><span class="p">(</span><span class="n">trial</span><span class="p">,</span> <span class="n">method_type</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">method</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">param</span> <span class="o">=</span> <span class="n">method</span><span class="p">(</span>
-                <span class="n">name</span><span class="o">=</span><span class="n">generate_param_key</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">param_nm</span><span class="p">),</span>
-                <span class="o">**</span><span class="n">method_kwargs</span>
-            <span class="p">)</span>
-        <span class="k">elif</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">method_type</span><span class="p">,</span> <span class="n">UtilFunction</span><span class="p">):</span>
-            <span class="n">param</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">mod</span> <span class="ow">in</span> <span class="n">format_into_tuple</span><span class="p">(</span><span class="n">modality</span><span class="p">):</span>
-                <span class="n">fn_selector</span> <span class="o">=</span> <span class="n">map_fn_selector</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="n">method_type</span><span class="p">)</span>
-                <span class="n">_param_nm</span><span class="p">,</span> <span class="p">(</span><span class="n">_method_type</span><span class="p">,</span> <span class="n">_method_kwargs</span><span class="p">)</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
-                    <span class="nb">iter</span><span class="p">(</span><span class="n">fn_selector</span><span class="o">.</span><span class="n">get_tunables</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+        <span class="k">if</span> <span class="n">param_nm</span> <span class="ow">in</span> <span class="n">force_params</span><span class="p">:</span>
+            <span class="n">param</span> <span class="o">=</span> <span class="n">force_params</span><span class="p">[</span><span class="n">param_nm</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="n">map_suggest_method</span><span class="p">(</span><span class="n">trial</span><span class="p">,</span> <span class="n">method_type</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">method</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">param</span> <span class="o">=</span> <span class="n">method</span><span class="p">(</span>
+                    <span class="n">name</span><span class="o">=</span><span class="n">generate_param_key</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">param_nm</span><span class="p">),</span>
+                    <span class="o">**</span><span class="n">method_kwargs</span>
                 <span class="p">)</span>
-                <span class="n">_param_nm</span> <span class="o">=</span> <span class="n">generate_param_key</span><span class="p">(</span>
-                    <span class="n">param_nm</span><span class="p">,</span>
-                    <span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">if</span> <span class="n">is_multi_modal</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-                    <span class="n">_param_nm</span><span class="p">,</span>
-                <span class="p">)</span>  <span class="c1"># update param_nm</span>
-                <span class="n">_method</span> <span class="o">=</span> <span class="n">map_suggest_method</span><span class="p">(</span><span class="n">trial</span><span class="p">,</span> <span class="n">_method_type</span><span class="p">)</span>
-                <span class="n">fn_nm</span> <span class="o">=</span> <span class="n">_method</span><span class="p">(</span>
-                    <span class="n">name</span><span class="o">=</span><span class="n">generate_param_key</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">_param_nm</span><span class="p">),</span>
-                    <span class="o">**</span><span class="n">_method_kwargs</span>
-                <span class="p">)</span>
-                <span class="n">fn</span> <span class="o">=</span> <span class="n">fn_selector</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">fn_nm</span><span class="p">)</span>
-                <span class="n">param</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">suggest</span><span class="p">(</span>
-                    <span class="n">trial</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">mod</span><span class="p">,</span>
-                    <span class="n">key</span><span class="o">=</span><span class="n">generate_param_key</span><span class="p">(</span>
-                        <span class="n">key</span><span class="p">,</span> <span class="n">param_nm</span><span class="p">,</span>
+            <span class="k">elif</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">method_type</span><span class="p">,</span> <span class="n">UtilFunction</span><span class="p">):</span>
+                <span class="n">param</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">mod</span> <span class="ow">in</span> <span class="n">format_into_tuple</span><span class="p">(</span><span class="n">modality</span><span class="p">):</span>
+                    <span class="n">fn_selector</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">map_fn_selector</span><span class="p">(</span><span class="n">method_type</span><span class="p">)</span>
+                    <span class="n">_param_nm</span><span class="p">,</span> <span class="p">(</span><span class="n">_method_type</span><span class="p">,</span> <span class="n">_method_kwargs</span><span class="p">)</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span>
+                        <span class="nb">iter</span><span class="p">(</span><span class="n">fn_selector</span><span class="o">.</span><span class="n">get_tunables</span><span class="p">()</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+                    <span class="p">)</span>
+                    <span class="n">_param_nm</span> <span class="o">=</span> <span class="n">generate_param_key</span><span class="p">(</span>
+                        <span class="n">param_nm</span><span class="p">,</span>
                         <span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">if</span> <span class="n">is_multi_modal</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-                    <span class="p">),</span>
-                <span class="p">))</span>
-            <span class="n">param</span> <span class="o">=</span> <span class="n">format_out_tuple_if_single</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">param</span><span class="p">))</span>
+                        <span class="n">_param_nm</span><span class="p">,</span>
+                    <span class="p">)</span>  <span class="c1"># update param_nm</span>
+                    <span class="n">_method</span> <span class="o">=</span> <span class="n">map_suggest_method</span><span class="p">(</span><span class="n">trial</span><span class="p">,</span> <span class="n">_method_type</span><span class="p">)</span>
+                    <span class="n">fn_nm</span> <span class="o">=</span> <span class="n">_method</span><span class="p">(</span>
+                        <span class="n">name</span><span class="o">=</span><span class="n">generate_param_key</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">_param_nm</span><span class="p">),</span>
+                        <span class="o">**</span><span class="n">_method_kwargs</span>
+                    <span class="p">)</span>
+                    <span class="n">fn</span> <span class="o">=</span> <span class="n">fn_selector</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">fn_nm</span><span class="p">)</span>
+                    <span class="n">param</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">suggest</span><span class="p">(</span>
+                        <span class="n">trial</span><span class="p">,</span> <span class="n">fn</span><span class="p">,</span> <span class="n">mod</span><span class="p">,</span>
+                        <span class="n">key</span><span class="o">=</span><span class="n">generate_param_key</span><span class="p">(</span>
+                            <span class="n">key</span><span class="p">,</span> <span class="n">param_nm</span><span class="p">,</span>
+                            <span class="n">mod</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">if</span> <span class="n">is_multi_modal</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="p">),</span>
+                    <span class="p">))</span>
+                <span class="n">param</span> <span class="o">=</span> <span class="n">format_out_tuple_if_single</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">param</span><span class="p">))</span>
         <span class="n">obj</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">set_kwargs</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">param_nm</span><span class="p">:</span> <span class="n">param</span><span class="p">})</span>
     <span class="k">return</span> <span class="n">obj</span>
 </code></pre></div></td></tr></table></div>
@@ -2322,7 +2398,7 @@ contains information about the optimization trials and results.</p>
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../../..", "features": [], "search": "../../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.expand"], "search": "../../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
       <script src="../../../assets/javascripts/bundle.af256bd8.min.js"></script>

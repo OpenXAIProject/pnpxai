@@ -8,13 +8,11 @@
       
       
       
-        <link rel="canonical" href="https://openxaiproject.github.io/pnpxai/evaluator/">
+        <link rel="canonical" href="https://openxaiproject.github.io/pnpxai/optimizer/">
       
       
-        <link rel="prev" href="../recommender/">
+        <link rel="prev" href="../evaluator/">
       
-      
-        <link rel="next" href="../optimizer/">
       
       
       <link rel="icon" href="../assets/favicon.ico">
@@ -22,7 +20,7 @@
     
     
       
-        <title>Evaluator - PnP XAI Docs</title>
+        <title>Optimizer - PnP XAI Docs</title>
       
     
     
@@ -66,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#evaluator-source" class="md-skip">
+        <a href="#optimizer-source" class="md-skip">
           Skip to content
         </a>
       
@@ -101,7 +99,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Evaluator
+              Optimizer
             
           </span>
         </div>
@@ -494,6 +492,26 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../evaluator/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Evaluator
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -510,32 +528,12 @@
         
   
   <span class="md-ellipsis">
-    Evaluator
-  </span>
-  
-
-      </a>
-      
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../optimizer/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
     Optimizer
   </span>
   
 
       </a>
+      
     </li>
   
 
@@ -573,15 +571,72 @@
                   
 
 
-<h1 id="evaluator-source">Evaluator <small>[<a href="../api/evaluator/metrics/">source</a>]</small></h1>
-<p>This module combines multiple evalulation metrics:</p>
-<ul>
-<li><a href="api/evaluator/metrics/#pnpxai.evaluator.metrics.complexity.Complexity"><strong>Complexity</strong></a>: Complexity metric</li>
-<li><a href="api/evaluator/metrics/#pnpxai.evaluator.metrics.complexity.MuFidelity"><strong>MuFidelity</strong></a>: MuFidelity metric</li>
-<li><a href="api/evaluator/metrics/#pnpxai.evaluator.metrics.complexity.Sensitivity"><strong>Sensitivity</strong></a>: Sensitivity metric</li>
-<li><a href="api/evaluator#pnpxai.evaluator.metrics.complexity.AbPC"><strong>Area between Perturbation Curves</strong></a>: AbPC metric</li>
-</ul>
-<p>Each metric is designed to address specific features of an explainer. Therefore, final ranking of the relative quality of explainers' is computed by combining several metrics.</p>
+<h1 id="optimizer-source">Optimizer <small>[<a href="../api/evaluator/optimizer/">source</a>]</small></h1>
+<p>This module is designed to optimize experiment hyperparameters. The optimization procedure can be invoked by <code>python experiment.optimize(...)</code> method call.</p>
+<p>Optimization procedure is based on <a href="https://optuna.org/"><code>optuna</code></a> package.</p>
+<p>The optimization method requires initialization of an <code>Experiment</code>, where <code>modality</code>, model, explainer, and metrics are specified. To leverage chaching procedure, defined in experiment, the method invocation requires ids of the aforementioned parameters to be passed instead of instances themselves. Therefore, the method call is as follows:</p>
+<p>Complete backbone of initialization code can be represented as follows:</p>
+<pre><code class="language-python">import torch
+from torcu.utils.data import DataLoader
+
+from pnpxai import Experiment
+from pnpxai.core.modality import ImageModality
+from pnpxai.explainers import LRPEpsilonPlus
+from pnpxai.evaluator.metrics import MuFidelity
+
+# Bring your model
+model = ...
+
+# Prepare your data
+dataset = ...
+loader = DataLoader(dataset, batch_size=...)
+def input_extractor(x):
+    ...
+def label_extractor(x):
+    ...
+def target_extractor(x):
+    ...
+
+# Auto-explanation
+explainer = LRPEpsilonPlus(model)
+metric = MuFidelity(model, explainer)
+
+experiment = Experiment(
+    explainers=[explainer],
+    metrics=[metric],
+    input_extractor=input_extractor,
+    label_extractor=label_extractor,
+    target_extractor=target_extractor,
+)
+</code></pre>
+<p>When manually defining custom explainers, it is necessary to implement <code>get_tunables</code> method to enable optimization procedure in the <code>Experiment</code> module. This method is expected to provide a dictionary with hyperparameter names as keys, and options as values. An example of a custom explainer is presented below:</p>
+<pre><code class="language-python">class CustomExplainer(Explainer):
+    SUPPORTED_MODULES = [...]
+
+    def __init__(
+        self,
+        model: Module,
+    ) -&gt; None:
+        super(CustomExplainer, self).__init__(model)
+        self.hp1 = ...
+        self.hp2 = ...
+
+
+    def attribute(
+        self,
+        inputs: Tensor,
+        targets: Optional[Tensor] = None,
+    ) -&gt; Union[Tensor, Tuple[Tensor]]:
+        attrs = ...
+        return attrs
+
+    def get_tunables(self) -&gt; Dict[str, Tuple[type, Dict]]:
+        return {
+            'hp1': (int, {'low': 10, 'high': 50, 'step': 10}),
+            'hp2': (BaselineFunction, {}),
+        }
+</code></pre>
+<p>Here <code>get_tunables</code> method suggests an optimization module to optimize the <code>hp1</code>, and <code>hp2</code> attributes following <code>suggest_int</code> method, defined in <code>optuna</code> package, and <code>BaselineFunction</code>, specified by <code>Modality.map_fn_selector</code>.</p>
 
 
 

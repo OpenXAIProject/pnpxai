@@ -183,7 +183,9 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
         
           
           <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
@@ -218,7 +220,9 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" >
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1" >
         
           
           <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
@@ -366,7 +370,9 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" >
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_2" >
         
           
           <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
@@ -562,6 +568,26 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../optimizer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Optimizer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -621,18 +647,18 @@
                   
 
 
-<h1 id="detector-source">Detector <small>[<a href="api/detector.md">source</a>]</small></h1>
-<p><code>detect_model_architecture</code> traces a <code>model: nn.Module</code>'s graph by using <code>torch.fx.symbolic_trace</code> and its output <code>traced_model: torch.fx.GraphModule</code> and extracts information to be applied to recommend available explainers. It returns an instance of <code>ModelArchitectureSummary</code> which describes layer informations and representative type of architecture.</p>
+<h1 id="detector-source">Detector <small>[<a href="../api/core/detector/">source</a>]</small></h1>
+<p><code>detect_model_architecture</code> traces a <code>model: torch.nn.Module</code>'s graph by using <code>torch.fx.symbolic_trace</code> and <code>model.named_modules()</code> to extract information to be applied to recommend available explainers. It returns a <code>Set[torch.nn.Module]</code> which describes layer informations and representative type of architecture.</p>
 <h2 id="basic-usage">Basic Usage</h2>
 <pre><code class="language-python">import torchvision
 from pnpxai.detector import detect_model_architecture
 
 model = torchvision.models.get_model(&quot;resnet18&quot;).eval()
-ma = detect_model_architecture(model)
-print(ma.representative)
+detected_modules = detect_model_architecture(model)
+print(detected_modules)
 </code></pre>
 <h2 id="notes">Notes</h2>
-<p>Since <code>detect_model_architecture</code> is fully depending on <code>torch.fx.symbolic_trace</code>, the detected model architecture omits dynamic control flows and non-torch functions in <code>model.forward</code>, as <a href="#https://pytorch.org/docs/stable/fx.html#limitations-of-symbolic-tracing">the official document of torch.fx</a> describing. On the contrary, we can say that all operations in static control flow, torch function or python-builtin function are fully detected. If your <code>model.forward</code> has dynamic control flows or non-torch functions, please change them to static flows or torch functions in order to let the following procedures of <code>pnpxai</code> work in the proper way with your model.</p>
+<p>Since <code>detect_model_architecture</code> is fully depending on <code>torch.fx.symbolic_trace</code> and <code>(torch.nn.Module()).named_modules()</code>, the detected model architecture omits dynamic control flows and non-torch functions in <code>model.forward</code>, as <a href="#https://pytorch.org/docs/stable/fx.html#limitations-of-symbolic-tracing">the official document of torch.fx</a> describing. On the contrary, we can say that all operations in static control flow, torch function or python-builtin function are fully detected. If your <code>model.forward</code> has dynamic control flows or non-torch functions, please change them to static flows or torch functions in order to let the following procedures of <code>pnpxai</code> work in the proper way with your model.</p>
 
 
 
@@ -679,7 +705,7 @@ print(ma.representative)
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.expand"], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
       <script src="../assets/javascripts/bundle.af256bd8.min.js"></script>

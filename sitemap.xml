@@ -2,57 +2,62 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/</loc>
-         <lastmod>2024-09-02</lastmod>
+         <lastmod>2024-09-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/detector/</loc>
-         <lastmod>2024-09-02</lastmod>
+         <lastmod>2024-09-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/evaluator/</loc>
-         <lastmod>2024-09-02</lastmod>
+         <lastmod>2024-09-03</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://openxaiproject.github.io/pnpxai/optimizer/</loc>
+         <lastmod>2024-09-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/recommender/</loc>
-         <lastmod>2024-09-02</lastmod>
+         <lastmod>2024-09-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/core/auto_explanation/</loc>
-         <lastmod>2024-09-02</lastmod>
+         <lastmod>2024-09-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/core/detector/</loc>
-         <lastmod>2024-09-02</lastmod>
+         <lastmod>2024-09-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/core/experiment/</loc>
-         <lastmod>2024-09-02</lastmod>
+         <lastmod>2024-09-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/core/modality/</loc>
-         <lastmod>2024-09-02</lastmod>
+         <lastmod>2024-09-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/core/recommender/</loc>
-         <lastmod>2024-09-02</lastmod>
+         <lastmod>2024-09-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/evaluator/metrics/</loc>
-         <lastmod>2024-09-02</lastmod>
+         <lastmod>2024-09-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/evaluator/optimizer/</loc>
-         <lastmod>2024-09-02</lastmod>
+         <lastmod>2024-09-03</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>

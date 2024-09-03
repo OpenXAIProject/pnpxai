@@ -183,7 +183,9 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
         
           
           <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
@@ -218,7 +220,9 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" >
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1" >
         
           
           <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
@@ -366,7 +370,9 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" >
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_2" >
         
           
           <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
@@ -543,15 +549,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#customization" class="md-nav__link">
-    <span class="md-ellipsis">
-      Customization
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -572,6 +569,26 @@
   
   <span class="md-ellipsis">
     Evaluator
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../optimizer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Optimizer
   </span>
   
 
@@ -633,15 +650,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#customization" class="md-nav__link">
-    <span class="md-ellipsis">
-      Customization
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -657,12 +665,12 @@
                   
 
 
-<h1 id="recommender-source">Recommender <small>[<a href="../api/recommender">source</a>]</small></h1>
-<p>The Recommender module in <code>pnpxai</code> assists you in selecting the most suitable explanation method and evaluation metric for your specific Explainable AI (XAI) needs. It considers various factors like question types, tasks, neural network architectures, and your desired evaluation criteria.</p>
+<h1 id="recommender-source">Recommender <small>[<a href="../api/core/recommender/">source</a>]</small></h1>
+<p>The Recommender module in <code>pnpxai</code> assists you in selecting the most suitable explanation methods for your specific Explainable AI (XAI) needs. It considers factors like modality and neural network architecture.</p>
+<p>By analyzing all the available explainers, the recommender module extracts the ones fitting the best to user-specified modality and a model.</p>
 <h2 id="key-features">Key Features</h2>
 <ul>
 <li><strong>Automated Method Selection:</strong> Leverages the provided table to intelligently recommend applicable methods based on your inputs.</li>
-<li><strong>Customizable:</strong> Offers flexibility to tailor the selection process by refining the table or implementing your own filters.</li>
 <li><strong>Comprehensive Coverage:</strong> Supports a wide range of explanation methods and metrics for diverse XAI use cases.</li>
 <li><strong>Easy Integration:</strong> Seamlessly integrates into your <code>pnpxai</code> workflows for streamlined explainer development.</li>
 </ul>
@@ -672,108 +680,109 @@
 <thead>
 <tr>
 <th>Method</th>
-<th>Questions</th>
-<th>Tasks</th>
+<th>Data Modalities</th>
 <th>Architectures</th>
-<th>Metrics</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Grad-CAM</td>
-<td>Why</td>
-<td>Image</td>
-<td>Convolution</td>
-<td>Correctness, Continuity</td>
-</tr>
-<tr>
 <td>LIME</td>
-<td>Why</td>
-<td>Image, Tabular Data, Text</td>
+<td>V, L, SD, TS</td>
 <td>Linear, Convolution, Recurrent, Transformer, Decision Trees</td>
-<td>Correctness, Continuity</td>
 </tr>
 <tr>
-<td>SHAP</td>
-<td>Why</td>
-<td>Image, Tabular Data, Text</td>
+<td>KernelSHAP</td>
+<td>V, L, SD, TS</td>
+<td>Linear, Convolution, Recurrent, Transformer, Decision Trees</td>
+</tr>
+<tr>
+<td>Gradient</td>
+<td>V, L, TS</td>
 <td>Linear, Convolution, Recurrent, Transformer</td>
-<td>Correctness, Continuity</td>
+</tr>
+<tr>
+<td>Gradient &times; Input</td>
+<td>V, L, TS</td>
+<td>Linear, Convolution, Recurrent, Transformer</td>
+</tr>
+<tr>
+<td>Grad-CAM</td>
+<td>V, TS</td>
+<td>Convolution</td>
+</tr>
+<tr>
+<td>Guided Grad-CAM</td>
+<td>V, TS</td>
+<td>Convolution</td>
+</tr>
+<tr>
+<td>FullGrad</td>
+<td>V</td>
+<td>Linear, Convolution, Recurrent, Transformer</td>
+</tr>
+<tr>
+<td>SmoothGrad</td>
+<td>V, L, TS</td>
+<td>Linear, Convolution, Recurrent, Transformer</td>
+</tr>
+<tr>
+<td>VarGrad</td>
+<td>V, L, TS</td>
+<td>Linear, Convolution, Recurrent, Transformer</td>
 </tr>
 <tr>
 <td>IG</td>
-<td>Why</td>
-<td>Image, Text</td>
+<td>V, L, TS</td>
 <td>Linear, Convolution, Recurrent, Transformer</td>
-<td>Correctness, Continuity</td>
 </tr>
 <tr>
 <td>LRP</td>
-<td>Why</td>
-<td>Image, Text</td>
+<td>V, L, TS</td>
 <td>Linear, Convolution, Recurrent, Transformer</td>
-<td>Correctness, Continuity</td>
 </tr>
 <tr>
-<td>PDP</td>
-<td>How</td>
-<td>Tabular Data</td>
-<td>Decision Trees</td>
-<td>None</td>
-</tr>
-<tr>
-<td>CEM</td>
-<td>Why not</td>
-<td>Image, Tabular Data, Text</td>
+<td>RAP</td>
+<td>V, L, TS</td>
 <td>Linear, Convolution, Recurrent, Transformer</td>
-<td>Completeness</td>
 </tr>
 <tr>
-<td>TCAV</td>
-<td>Why</td>
-<td>Image</td>
-<td>Linear, Convolution, Recurrent, Transformer</td>
-<td>Correctness</td>
+<td>AttentionRollout</td>
+<td>V, L</td>
+<td>Transformer</td>
 </tr>
 <tr>
-<td>Anchors</td>
-<td>Why, How to still be this</td>
-<td>Tabular Data</td>
-<td>Linear, Convolution, Recurrent, Transformer, Decision Trees</td>
-<td>Completeness, Compactness</td>
+<td>TransformerAttribution</td>
+<td>V, L</td>
+<td>Transformer</td>
 </tr>
 </tbody>
 </table>
+<p><small>
+* Supported data modalities are: Vision (V), Language (L), Structured Data (SD), and Time Series (TS)
+</small></p>
 <h2 id="usage">Usage</h2>
 <ol>
 <li>
 <p><strong>Import:</strong> Begin by importing the <code>XaiRecommender</code> module in your Python code:</p>
 <p><code>python
-from pnpxai.recommender import XaiRecommender</code></p>
+from pnpxai.core import XaiRecommender
+from pnpxai.core.modality import ImageModality</code></p>
 </li>
 <li>
 <p><strong>Create an Instance:</strong> Construct a <code>XaiRecommender</code> object:</p>
 <p><code>python
-recommender = XaiRecommender()</code></p>
+model = ...
+recommender = XaiRecommender()
+modality = ImageModality()</code></p>
 </li>
 <li>
 <p><strong>Get Recommendations:</strong> Retrieve recommended methods and metrics by calling <code>XaiRecommender</code> object with your desired parameters:</p>
 <p><code>python
-recommender_output = recommender(question, task, model_architecture)
-print("Recommended methods: ", recommender_output.explainers)
-print("Recommended metrics: ", recommender_output.evaluation_metrics)</code></p>
+recommender_output = recommender(modality, model)
+print("Recommended Explainers: ", recommender_output.explainers)
+print("Detected Architectures: ", recommender_output.detected_architectures)</code></p>
 </li>
 </ol>
-<h2 id="customization">Customization</h2>
-<p>You can customize the recommendation process by modifying the provided table to reflect your specific requirements or domain knowledge.</p>
-<p>The table consists of four Python dictionaries:</p>
-<ul>
-<li><code>QUESTION_TO_EXPLAINERS</code>: Maps question types ("why", "how", etc.) to supported explanation methods.</li>
-<li><code>TASK_TO_EXPLAINERS</code>: Maps task types (e.g., "image", "tabular") to compatible methods.</li>
-<li><code>ARCHITECTURE_TO_EXPLAINERS</code>: Links neural network architectures (e.g., "cnn", "transformer") to suitable explainers.</li>
-<li><code>EXPLAINER_TO_METRICS</code>: Associates explanation methods with relevant evaluation metrics (e.g., "Sensitivity", "Complexity").</li>
-</ul>
-<p>By carefully revising these dictionaries, you can guide the Recommender to prioritize methods that align with your specific use case and evaluation criteria.</p>
 
 
 
@@ -820,7 +829,7 @@ print("Recommended metrics: ", recommender_output.evaluation_metrics)</code></p>
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.expand"], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
       <script src="../assets/javascripts/bundle.af256bd8.min.js"></script>

@@ -233,6 +233,30 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Getting Started">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#auto-explanation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Auto Explanation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#manual-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Manual Setup
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -257,7 +281,9 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
         
           
           <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
@@ -292,7 +318,9 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_1" >
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_1" >
         
           
           <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
@@ -440,7 +468,9 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" >
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_2" >
         
           
           <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
@@ -578,6 +608,26 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="optimizer/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Optimizer
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -638,6 +688,30 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Getting Started">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#auto-explanation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Auto Explanation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#manual-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      Manual Setup
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -660,10 +734,16 @@
 <h2 id="features">Features</h2>
 <ul>
 <li><a href="detector/"><strong>Detector</strong></a>: The detector module provides automatic detection of AI models implemented in PyTorch.</li>
-<li><a href="evaluator/"><strong>Evaluator</strong></a>: The evaluator module provides various ways to evaluate and compare the performance and explainability of AI models, such as <a href="api/evaluator.md">correctness</a>, and <a href="api/evaluator.md">continuity</a>.</li>
-<li><strong>Explainers</strong>: The explainers module contains a collection of state-of-the-art XAI methods that can generate global or local explanations for any AI model, such as <a href="https://github.com/openxaiproject/pnpxai/explainers/kernel_shap">SHAP</a>, <a href="https://github.com/openxaiproject/pnpxai/explainers/lime">LIME</a>, <a href="https://github.com/openxaiproject/pnpxai/explainers/integrated_gradients">IG</a>, <a href="https://github.com/openxaiproject/pnpxai/explainers/lrp">LRP</a>, and <a href="https://github.com/openxaiproject/pnpxai/explainers/rap">RAP</a>.</li>
-<li><a href="recommender"><strong>Recommender</strong></a>: The recommender module offers a recommender system that can suggest the most suitable XAI methods for a given model and dataset, based on the user’s preferences and goals.</li>
-<li><strong>Visualizer</strong>: The visualizer module enables users to interact with and explore the results of XAI methods in a web-based dashboard, using various charts, graphs, and widgets.</li>
+<li><a href="evaluator/"><strong>Evaluator</strong></a>: The evaluator module provides various ways to evaluate and compare the performance and explainability of AI models, such as <a href="api/evaluator/metrics/#pnpxai.evaluator.metrics.complexity.Complexity">complexity</a>, <a href="api/evaluator/metrics/#pnpxai.evaluator.metrics.mu_fidelity.MuFidelity">fidelity</a>, <a href="api/evaluator/metrics/#pnpxai.evaluator.metrics.sensitivity.Sensitivity">sensitivity</a>, and <a href="api/evaluator/metrics/#pnpxai.evaluator.metrics.pixel_flipping.AbPC">area between perturbation curves</a>.</li>
+<li><strong>Explainers</strong>: The explainers module contains a collection of state-of-the-art XAI methods that can generate global or local explanations for any AI model, such as:<ul>
+<li>Perturbation-based (<a href="https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/kernel_shap.py">SHAP</a>, <a href="https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/lime.py">LIME</a>)</li>
+<li>Relevance-based (<a href="https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/integrated_gradients.py">IG</a>, <a href="https://github.com/openxaiproject/pnpxai/explainers/lrp">LRP</a>, and <a href="https://github.com/openxaiproject/pnpxai/explainers/rap">RAP</a>, <a href="https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/guided_backprop.py">GuidedBackprop</a>)</li>
+<li>CAM-based (<a href="https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/grad_cam.py">GradCAM</a>, <a href="https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/guided_grad_cam.py">Guided GradCAM</a>)</li>
+<li>Gradient-based (<a href="https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/smooth_grad.py">SmoothGrad</a>, <a href="https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/var_grad.py">VarGrad</a>, <a href="https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/full_grad.py">FullGrad</a>, <a href="https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/grad_x_input.py">Gradient &times; Input</a>)</li>
+</ul>
+</li>
+<li><a href="recommender/"><strong>Recommender</strong></a>: The recommender module offers a recommender system that can suggest the most suitable XAI methods for a given model and dataset, based on the user’s preferences and goals.</li>
+<li><a href="optimizer/"><strong>Optimizer</strong></a>: The optimizer module is finds the best hyperparameter options, given a user-specified metric.</li>
 </ul>
 <h2 id="project-core-api">Project Core API</h2>
 <ul>
@@ -676,11 +756,14 @@
 pip install -e .
 </code></pre>
 <h2 id="getting-started">Getting Started</h2>
-<p>To use <code>pnpxai</code>, you need to import the package and its modules in your Python script. Proper functionality of the system requires initial setup of model, test data, and the <code>pnpxai.Project</code>.</p>
+<h3 id="auto-explanation">Auto Explanation</h3>
+<p>To use <code>pnpxai</code>, you need to import the package and its modules in your Python script. Proper functionality of the system requires initial setup of model, test data, and the <code>pnpxai.AutoExplanationForImageClassification</code>.</p>
+<p>The explanation module can be specified according to a modality, which fits best for the user's task. Specifically, <code>pnpxai</code> offers <a href="api/core/auto_explanation/#pnpxai.core.experiment.auto_explanation.AutoExplanationForImageClassification"><code>AutoExplanationForImageClassification</code></a>, <a href="api/core/auto_explanation/#pnpxai.core.experiment.auto_explanation.AutoExplanationForTextClassification"><code>AutoExplanationForTextClassification</code></a>, <a href="api/core/auto_explanation/#pnpxai.core.experiment.auto_explanation.AutoExplanationForTSClassification"><code>AutoExplanationForTSClassification</code></a>,
+<a href="api/core/auto_explanation/#pnpxai.core.experiment.auto_explanation.AutoExplanationForVisualQuestionAnswering"><code>AutoExplanationForVisualQuestionAnswering</code></a>, which can be utilized for image, test, time series, and a combination of image and text modalities respectively.</p>
 <pre><code class="language-python">import torch
 from torcu.utils.data import DataLoader
 
-from pnpxai import Project
+from pnpxai import AutoExplanationForImageClassification
 
 # Bring your model
 model = ...
@@ -689,17 +772,37 @@ model = ...
 dataset = ...
 loader = DataLoader(dataset, batch_size=...)
 </code></pre>
-<p>In addition to regular experiment setup, the library requires <code>input_extractor</code>, and <code>target_extractor</code> , which are used for passing the test data into the model. The example below shows naive implementation, which assumes that every iteration of <code>loader</code> returns a tuple of input, and target.</p>
+<p>In addition to regular experiment setup, the library requires <code>input_extractor</code>, <code>target_extractor</code>, and <code>label_extractor</code>, which are used for passing the test data into the model. The example below shows naive implementation, which assumes that every iteration of <code>loader</code> returns a tuple of input, and target.</p>
 <pre><code class="language-python">device = torch.device(&quot;cuda&quot; if torch.cuda.is_available() else &quot;cpu&quot;)
+
 def input_extractor(x): return x[0].to(device)
-def target_extractor(x): return x[1].to(device)
+def label_extractor(x): return x[1].to(device)
+def target_extractor(outputs): outputs.argmax(-1).to(device)
 </code></pre>
-<p>Final setup step is initialization of <code>Project</code> with aforementioned values, and the start of visualization server. Here, you can specify the your project <code>task</code> (”image” by default), and <code>question</code> (”why” by default). Additionally, <code>pnpxai.Project</code> allows passing custom visualization for both inputs and targets</p>
+<p>Final setup step is initialization of <code>AutoExplanationForImageClassification</code> with aforementioned values, and the start of optimization process. To start optimization process, it is required to choose desired data ids, as well as, explainer, and metric from the list of suggested ones.</p>
+<pre><code class="language-python">experiment = AutoExplanationForImageClassification(
+    model,
+    loader,
+    input_extractor=input_extractor,
+    label_extractor=label_extractor,
+    target_extractor=target_extractor,
+    target_labels=False,
+)
+optimized = experiment.optimize(
+    data_ids=range(16),
+    explainer_id=2,
+    metric_id=1,
+    direction='maximize', # less is better
+    sampler='tpe', # Literal['tpe','random']
+    n_trials=50, # by default, 50 for sampler in ['random', 'tpe'], None for ['grid']
+    seed=42, # seed for sampler: by default, None
+)
+</code></pre>
 <p>Complete backbone of initialization code can be represented as follows:</p>
 <pre><code class="language-python">import torch
 from torcu.utils.data import DataLoader
 
-from pnpxai import Project
+from pnpxai import AutoExplanationForImageClassification
 
 # Bring your model
 model = ...
@@ -713,25 +816,34 @@ def target_extractor(x):
     ...
 
 # Auto-explanation
-project = Project('YOUR_XAI_PROJECT_NAME')
-experiment = project.create_auto_experiment(
+experiment = AutoExplanationForImageClassification(
     model,
     loader,
-    name='YOUR_XAI_EXPERIMENT_NAME',
-    task='image',
-    question='why',
     input_extractor=input_extractor,
+    label_extractor=label_extractor,
     target_extractor=target_extractor,
+    target_labels=False,
 )
-project.get_server().serve()
+optimized = experiment.optimize(
+    data_ids=range(16),
+    explainer_id=2,
+    metric_id=1,
+    direction='maximize', # less is better
+    sampler='tpe', # Literal['tpe','random']
+    n_trials=50, # by default, 50 for sampler in ['random', 'tpe'], None for ['grid']
+    seed=42, # seed for sampler: by default, None
+)
 </code></pre>
-<p><code>project.create_auto_experiment(...)</code> method is guided by <code>pnpxai.recommender.XaiRecommender</code> to select the most applicable explainers, and metrics for experiment. However, <code>pnpxai</code> additionally provides API to manually define explainers and metrics to use.</p>
+<h3 id="manual-setup">Manual Setup</h3>
+<p><code>AutoExplanationForImageClassification</code> class is guided by <a href="recommender/"><code>pnpxai.XaiRecommender</code></a> to select the most applicable explainers, and metrics for experiment. However, <code>pnpxai</code> additionally provides API to manually define explainers and metrics to use.</p>
+<p>Here, users are asked to manually define modalities, in order to enable modality-dependent control flow. The <code>pnpxai</code> package comes with a set of predefined modalities, namely <a href="api/core/modality/#pnpxai.core.modality.modality.ImageModality"><code>ImageModality</code></a>, <a href="api/core/modality/#pnpxai.core.modality.modality.TextModality"><code>TextModality</code></a>, <a href="api/core/modality/#pnpxai.core.modality.modality.TimeSeriesModality"><code>TimeSeriesModality</code></a>. However, API also enables extension possiblity with the help of a <a href="api/core/modality/#pnpxai.core.modality.modality.Modality"><code>Modality</code></a> base class.</p>
 <pre><code class="language-python">import torch
 from torcu.utils.data import DataLoader
 
-from pnpxai import Project
-from pnpxai.explainers import LRP
-from pnpxai.evaluator import LRP
+from pnpxai import Experiment
+from pnpxai.core.modality import ImageModality
+from pnpxai.explainers import LRPEpsilonPlus
+from pnpxai.evaluator.metrics import MuFidelity
 
 # Bring your model
 model = ...
@@ -741,23 +853,22 @@ dataset = ...
 loader = DataLoader(dataset, batch_size=...)
 def input_extractor(x):
     ...
+def label_extractor(x):
+    ...
 def target_extractor(x):
     ...
 
 # Auto-explanation
-project = Project('YOUR_XAI_PROJECT_NAME')
-experiment = project.create_experiment(
-    model,
-    loader,
-    name='YOUR_XAI_EXPERIMENT_NAME',
-    explainers=[LRP(model)],
-    metrics=[MuFidelity()],
-    task='image',
-    question='why',
+explainer = LRPEpsilonPlus(model)
+metric = MuFidelity(model, explainer)
+
+experiment = Experiment(
+    explainers=[explainer],
+    metrics=[metric],
     input_extractor=input_extractor,
-  target_extractor=target_extractor,
+    label_extractor=label_extractor,
+    target_extractor=target_extractor,
 )
-project.get_server().serve()
 </code></pre>
 
 
@@ -805,7 +916,7 @@ project.get_server().serve()
     </div>
     
     
-    <script id="__config" type="application/json">{"base": ".", "features": [], "search": "assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": ".", "features": ["navigation.expand"], "search": "assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
       <script src="assets/javascripts/bundle.af256bd8.min.js"></script>
