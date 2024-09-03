@@ -28,18 +28,6 @@ def map_suggest_method(
     }.get(method_type, None)
 
 
-def map_fn_selector(
-    modality: Modality,
-    method_type: Type[Any],
-):
-    return {
-        BaselineFunction: modality.baseline_fn_selector,
-        FeatureMaskFunction: modality.feature_mask_fn_selector,
-        PoolingFunction: modality.pooling_fn_selector,
-        NormalizationFunction: modality.normalization_fn_selector,
-    }.get(method_type, None)
-
-
 def suggest(
     trial: Trial,
     obj: Any,
@@ -102,7 +90,7 @@ def suggest(
             elif issubclass(method_type, UtilFunction):
                 param = []
                 for mod in format_into_tuple(modality):
-                    fn_selector = map_fn_selector(mod, method_type)
+                    fn_selector = mod.map_fn_selector(method_type)
                     _param_nm, (_method_type, _method_kwargs) = next(
                         iter(fn_selector.get_tunables().items())
                     )

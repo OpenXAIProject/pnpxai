@@ -1,6 +1,7 @@
-from typing import Optional, List, Callable
+from typing import Optional, List, Callable, Type, Any, Dict
 from abc import ABC, abstractmethod
 
+from pnpxai.explainers.utils import UtilFunction
 from pnpxai.explainers.utils.postprocess import (
     PostProcessor,
     POOLING_FUNCTIONS,
@@ -10,6 +11,8 @@ from pnpxai.explainers.utils.postprocess import (
     NORMALIZATION_FUNCTIONS_FOR_IMAGE,
     NORMALIZATION_FUNCTIONS_FOR_TEXT,
     NORMALIZATION_FUNCTIONS_FOR_TIME_SERIES,
+    PoolingFunction,
+    NormalizationFunction
 )
 from pnpxai.explainers.utils.function_selectors import FunctionSelector
 from pnpxai.explainers.utils.baselines import (
@@ -105,6 +108,20 @@ class Modality(ABC):
             List[PostProcessor]: Identity PostProcessors.
         """
         raise NotImplementedError
+    
+    def map_fn_selector(self, method_type: Type[Any]) -> Dict[Type[UtilFunction], callable]:
+        """
+        Selects custom optimizable hyperparameter functions.
+
+        Returns:
+            Dict[Type[UtilFunction], callable]: Identity PostProcessors.
+        """
+        return {
+            BaselineFunction: self.baseline_fn_selector,
+            FeatureMaskFunction: self.feature_mask_fn_selector,
+            PoolingFunction: self.pooling_fn_selector,
+            NormalizationFunction: self.normalization_fn_selector,
+        }.get(method_type, None)
 
 
 class ImageModality(Modality):
