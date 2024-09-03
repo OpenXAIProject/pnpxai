@@ -1040,7 +1040,7 @@
               </div>
             </td>
             <td>
-                  <code>None</code>
+                <em>required</em>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -1054,7 +1054,7 @@
               </div>
             </td>
             <td>
-                  <code>None</code>
+                <em>required</em>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -2084,8 +2084,8 @@
         <span class="n">data</span><span class="p">:</span> <span class="n">DataSource</span><span class="p">,</span>
         <span class="n">modality</span><span class="p">:</span> <span class="n">Modality</span><span class="p">,</span>
         <span class="n">explainers</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Explainer</span><span class="p">],</span>
-        <span class="n">postprocessors</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">metrics</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Metric</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">postprocessors</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Callable</span><span class="p">],</span>
+        <span class="n">metrics</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Metric</span><span class="p">],</span>
         <span class="n">input_extractor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">label_extractor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">target_extractor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">],</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -2428,9 +2428,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">save_outputs</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">data_ids_pred</span><span class="p">)</span>
 
         <span class="c1"># explain</span>
-        <span class="n">explainers</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_explainers</span><span class="p">(</span><span class="n">explainer_ids</span><span class="p">)</span>
-        <span class="n">postprocessors</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_postprocessors</span><span class="p">(</span><span class="n">postprocessor_ids</span><span class="p">)</span>
-        <span class="n">metrics</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_metrics</span><span class="p">(</span><span class="n">metric_ids</span><span class="p">)</span>
+        <span class="n">explainers</span><span class="p">,</span> <span class="n">explainer_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_explainers</span><span class="p">(</span><span class="n">explainer_ids</span><span class="p">)</span>
+        <span class="n">postprocessors</span><span class="p">,</span> <span class="n">postprocessor_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_postprocessors</span><span class="p">(</span><span class="n">postprocessor_ids</span><span class="p">)</span>
+        <span class="n">metrics</span><span class="p">,</span> <span class="n">metric_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_metrics</span><span class="p">(</span><span class="n">metric_ids</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">explainer</span><span class="p">,</span> <span class="n">explainer_id</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">explainers</span><span class="p">,</span> <span class="n">explainer_ids</span><span class="p">):</span>
             <span class="n">explainer_name</span> <span class="o">=</span> <span class="n">class_to_string</span><span class="p">(</span><span class="n">explainer</span><span class="p">)</span>
@@ -4890,9 +4890,9 @@ If not provided, the method processes all available data, explainers, postproces
     <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">save_outputs</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">data_ids_pred</span><span class="p">)</span>
 
     <span class="c1"># explain</span>
-    <span class="n">explainers</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_explainers</span><span class="p">(</span><span class="n">explainer_ids</span><span class="p">)</span>
-    <span class="n">postprocessors</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_postprocessors</span><span class="p">(</span><span class="n">postprocessor_ids</span><span class="p">)</span>
-    <span class="n">metrics</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_metrics</span><span class="p">(</span><span class="n">metric_ids</span><span class="p">)</span>
+    <span class="n">explainers</span><span class="p">,</span> <span class="n">explainer_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_explainers</span><span class="p">(</span><span class="n">explainer_ids</span><span class="p">)</span>
+    <span class="n">postprocessors</span><span class="p">,</span> <span class="n">postprocessor_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_postprocessors</span><span class="p">(</span><span class="n">postprocessor_ids</span><span class="p">)</span>
+    <span class="n">metrics</span><span class="p">,</span> <span class="n">metric_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_metrics</span><span class="p">(</span><span class="n">metric_ids</span><span class="p">)</span>
 
     <span class="k">for</span> <span class="n">explainer</span><span class="p">,</span> <span class="n">explainer_id</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">explainers</span><span class="p">,</span> <span class="n">explainer_ids</span><span class="p">):</span>
         <span class="n">explainer_name</span> <span class="o">=</span> <span class="n">class_to_string</span><span class="p">(</span><span class="n">explainer</span><span class="p">)</span>

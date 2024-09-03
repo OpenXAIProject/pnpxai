@@ -729,15 +729,20 @@
                   
 
 
-<h1 id="pnpxai-plug-and-play-explainable-ai">pnpxai: Plug-and-Play Explainable AI</h1>
-<p>pnpxai is a Python package that provides a modular and easy-to-use framework for explainable artificial intelligence (XAI). It allows users to apply various XAI methods to their own models and datasets, and visualize the results in an interactive and intuitive way.</p>
+<h1 id="pnpxai-plug-and-play-explainable-ai">PnPXAI: Plug-and-Play Explainable AI</h1>
+<hr>
+<div align='center'>
+    <img src="assets/pnpxai_logo_horizontal.png">
+</div>
+
+<p><code>PnPXAI</code> is a Python package that provides a modular and easy-to-use framework for explainable artificial intelligence (XAI). It allows users to apply various XAI methods to their own models and datasets, and visualize the results in an interactive and intuitive way.</p>
 <h2 id="features">Features</h2>
 <ul>
 <li><a href="detector/"><strong>Detector</strong></a>: The detector module provides automatic detection of AI models implemented in PyTorch.</li>
 <li><a href="evaluator/"><strong>Evaluator</strong></a>: The evaluator module provides various ways to evaluate and compare the performance and explainability of AI models, such as <a href="api/evaluator/metrics/#pnpxai.evaluator.metrics.complexity.Complexity">complexity</a>, <a href="api/evaluator/metrics/#pnpxai.evaluator.metrics.mu_fidelity.MuFidelity">fidelity</a>, <a href="api/evaluator/metrics/#pnpxai.evaluator.metrics.sensitivity.Sensitivity">sensitivity</a>, and <a href="api/evaluator/metrics/#pnpxai.evaluator.metrics.pixel_flipping.AbPC">area between perturbation curves</a>.</li>
 <li><strong>Explainers</strong>: The explainers module contains a collection of state-of-the-art XAI methods that can generate global or local explanations for any AI model, such as:<ul>
 <li>Perturbation-based (<a href="https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/kernel_shap.py">SHAP</a>, <a href="https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/lime.py">LIME</a>)</li>
-<li>Relevance-based (<a href="https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/integrated_gradients.py">IG</a>, <a href="https://github.com/openxaiproject/pnpxai/explainers/lrp">LRP</a>, and <a href="https://github.com/openxaiproject/pnpxai/explainers/rap">RAP</a>, <a href="https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/guided_backprop.py">GuidedBackprop</a>)</li>
+<li>Relevance-based (<a href="https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/integrated_gradients.py">IG</a>, <a href="https://github.com/openxaiproject/pnpxai/explainers/lrp.py">LRP</a>, and <a href="https://github.com/openxaiproject/pnpxai/explainers/rap">RAP</a>, <a href="https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/guided_backprop.py">GuidedBackprop</a>)</li>
 <li>CAM-based (<a href="https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/grad_cam.py">GradCAM</a>, <a href="https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/guided_grad_cam.py">Guided GradCAM</a>)</li>
 <li>Gradient-based (<a href="https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/smooth_grad.py">SmoothGrad</a>, <a href="https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/var_grad.py">VarGrad</a>, <a href="https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/full_grad.py">FullGrad</a>, <a href="https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/grad_x_input.py">Gradient &times; Input</a>)</li>
 </ul>
@@ -844,6 +849,7 @@ from pnpxai import Experiment
 from pnpxai.core.modality import ImageModality
 from pnpxai.explainers import LRPEpsilonPlus
 from pnpxai.evaluator.metrics import MuFidelity
+from pnpxai.explainers.utils.postprocess import Identity
 
 # Bring your model
 model = ...
@@ -861,13 +867,19 @@ def target_extractor(x):
 # Auto-explanation
 explainer = LRPEpsilonPlus(model)
 metric = MuFidelity(model, explainer)
+postprocessor = Identity()
+modality = ImageModality()
 
 experiment = Experiment(
+    model=model,
+    data=loader,
+    modality=ImageModality(),
     explainers=[explainer],
+    postprocessors=[Identity()],
     metrics=[metric],
-    input_extractor=input_extractor,
-    label_extractor=label_extractor,
-    target_extractor=target_extractor,
+    input_extractor=lambda x: x[0].to(device),
+    label_extractor=lambda x: x[-1].to(device),
+    target_extractor=lambda outputs: outputs.argmax(-1).to(device)
 )
 </code></pre>
 
