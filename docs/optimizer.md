@@ -16,6 +16,7 @@ from pnpxai import Experiment
 from pnpxai.core.modality import ImageModality
 from pnpxai.explainers import LRPEpsilonPlus
 from pnpxai.evaluator.metrics import MuFidelity
+from pnpxai.explainers.utils.postprocess import Identity
 
 # Bring your model
 model = ...
@@ -33,13 +34,28 @@ def target_extractor(x):
 # Auto-explanation
 explainer = LRPEpsilonPlus(model)
 metric = MuFidelity(model, explainer)
+postprocessor = Identity()
+modality = ImageModality()
 
 experiment = Experiment(
-	explainers=[explainer],
-  	metrics=[metric],
-	input_extractor=input_extractor,
-	label_extractor=label_extractor,
-  	target_extractor=target_extractor,
+    model=model,
+    data=loader,
+    modality=ImageModality(),
+    explainers=[explainer],
+    postprocessors=[Identity()],
+    metrics=[metric],
+    input_extractor=lambda x: x[0].to(device),
+    label_extractor=lambda x: x[-1].to(device),
+    target_extractor=lambda outputs: outputs.argmax(-1).to(device)
+)
+experiment.optimize(
+    data_ids=0,
+    explainer_id=0,
+    metric_id=0,
+    direction='maximize',
+    sampler='random',
+    n_trials=50,
+    seed=42,
 )
 ```
 

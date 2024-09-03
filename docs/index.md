@@ -1,6 +1,10 @@
-# pnpxai: Plug-and-Play Explainable AI
+# PnPXAI: Plug-and-Play Explainable AI
+<hr>
+<div align='center'>
+    <img src="assets/pnpxai_logo_horizontal.png">
+</div>
 
-pnpxai is a Python package that provides a modular and easy-to-use framework for explainable artificial intelligence (XAI). It allows users to apply various XAI methods to their own models and datasets, and visualize the results in an interactive and intuitive way.
+`PnPXAI` is a Python package that provides a modular and easy-to-use framework for explainable artificial intelligence (XAI). It allows users to apply various XAI methods to their own models and datasets, and visualize the results in an interactive and intuitive way.
 
 ## Features
 
@@ -8,7 +12,7 @@ pnpxai is a Python package that provides a modular and easy-to-use framework for
 - [**Evaluator**](evaluator.md): The evaluator module provides various ways to evaluate and compare the performance and explainability of AI models, such as [complexity](api/evaluator/metrics.md#pnpxai.evaluator.metrics.complexity.Complexity), [fidelity](api/evaluator/metrics.md/#pnpxai.evaluator.metrics.mu_fidelity.MuFidelity), [sensitivity](api/evaluator/metrics.md#pnpxai.evaluator.metrics.sensitivity.Sensitivity), and [area between perturbation curves](api/evaluator/metrics/#pnpxai.evaluator.metrics.pixel_flipping.AbPC).
 - **Explainers**: The explainers module contains a collection of state-of-the-art XAI methods that can generate global or local explanations for any AI model, such as:
 	- Perturbation-based ([SHAP](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/kernel_shap.py), [LIME](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/lime.py))
-	- Relevance-based ([IG](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/integrated_gradients.py), [LRP](https://github.com/openxaiproject/pnpxai/explainers/lrp), and [RAP](https://github.com/openxaiproject/pnpxai/explainers/rap), [GuidedBackprop](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/guided_backprop.py))
+	- Relevance-based ([IG](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/integrated_gradients.py), [LRP](https://github.com/openxaiproject/pnpxai/explainers/lrp.py), and [RAP](https://github.com/openxaiproject/pnpxai/explainers/rap), [GuidedBackprop](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/guided_backprop.py))
 	- CAM-based ([GradCAM](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/grad_cam.py), [Guided GradCAM](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/guided_grad_cam.py))
 	- Gradient-based ([SmoothGrad](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/smooth_grad.py), [VarGrad](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/var_grad.py), [FullGrad](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/full_grad.py), [Gradient &times; Input](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/grad_x_input.py))
 - [**Recommender**](recommender.md): The recommender module offers a recommender system that can suggest the most suitable XAI methods for a given model and dataset, based on the user’s preferences and goals.
@@ -135,6 +139,7 @@ from pnpxai import Experiment
 from pnpxai.core.modality import ImageModality
 from pnpxai.explainers import LRPEpsilonPlus
 from pnpxai.evaluator.metrics import MuFidelity
+from pnpxai.explainers.utils.postprocess import Identity
 
 # Bring your model
 model = ...
@@ -152,12 +157,18 @@ def target_extractor(x):
 # Auto-explanation
 explainer = LRPEpsilonPlus(model)
 metric = MuFidelity(model, explainer)
+postprocessor = Identity()
+modality = ImageModality()
 
 experiment = Experiment(
-	explainers=[explainer],
-  	metrics=[metric],
-	input_extractor=input_extractor,
-	label_extractor=label_extractor,
-  	target_extractor=target_extractor,
+    model=model,
+    data=loader,
+    modality=ImageModality(),
+    explainers=[explainer],
+    postprocessors=[Identity()],
+    metrics=[metric],
+    input_extractor=lambda x: x[0].to(device),
+    label_extractor=lambda x: x[-1].to(device),
+    target_extractor=lambda outputs: outputs.argmax(-1).to(device)
 )
 ```

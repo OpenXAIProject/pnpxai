@@ -1,7 +1,5 @@
 from typing import Any, List, Optional, Sequence, Union, Type, Tuple, Callable
 
-import itertools
-
 import torch
 from torch import Tensor
 from torch.utils.data import DataLoader, Subset, Dataset
@@ -12,10 +10,6 @@ from pnpxai.explainers.base import Explainer
 from pnpxai.explainers.utils.postprocess import PostProcessor
 from pnpxai.evaluator.metrics.base import Metric
 from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
-
-
-def _index_combinations(*indices):
-    return itertools.product(*indices)
 
 
 class ExperimentManager:
@@ -295,6 +289,7 @@ class ExperimentManager:
         return self._get_data_by_ids(data_ids), data_ids
 
     def get_data_to_predict(self, data_ids: List[int]) -> Tuple[DataSource, List[int]]:
+        data_ids = data_ids or self._data_ids
         data_ids = [
             idx for idx in data_ids if self._cache.get_output(idx) is None
         ]
