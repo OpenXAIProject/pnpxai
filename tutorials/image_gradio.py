@@ -1,3 +1,7 @@
+# TODO:
+# 1. Favicon link : Github Documentation
+# 2. Only LRP
+# 3. Huggingface loading -> after module import system checking
 # python image_gradio.py >> ./logs/image_gradio.log 2>&1
 import time
 import os
@@ -16,6 +20,7 @@ N_FEATURES_TO_SHOW = 5
 OPT_N_TRIALS = 10
 OBJECTIVE_METRIC = "AbPC"
 SAMPLE_METHOD = "tpe"
+DEFAULT_EXPLAINER = ["GradientXInput", "IntegratedGradients", "LRPEpsilonPlus"]
 
 class App:
     def __init__(self):
@@ -388,7 +393,12 @@ class ExplainerCheckboxGroup(Component):
 
         self.info = []
         for exp, exp_id in zip(explainers, exp_ids):
-            self.info.append({'nm': exp.__class__.__name__, 'id': exp_id, 'pp_id' : 0, 'mode': 'default', 'checked': True})
+            exp_nm = exp.__class__.__name__
+            if exp_nm in DEFAULT_EXPLAINER:
+                checked = True
+            else:
+                checked = False
+            self.info.append({'nm': exp_nm, 'id': exp_id, 'pp_id' : 0, 'mode': 'default', 'checked': checked})
 
     def update_check(self, exp_id, val=None):
         for info in self.info:
@@ -504,7 +514,8 @@ class ExplainerCheckbox(Component):
 
     def show(self):
         with gr.Accordion(self.explainer_name, open=False):
-            self.default_check = gr.Checkbox(label="Default Parameter", value=True, interactive=True)
+            checked = next(filter(lambda x: x['nm'] == self.explainer_name, self.groups.info))['checked']
+            self.default_check = gr.Checkbox(label="Default Parameter", value=checked, interactive=True)
             self.opt_check = gr.Checkbox(label="Optimized Parameter (Not Optimal)", interactive=False)
 
             self.default_check.select(self.default_on_select)
@@ -587,7 +598,9 @@ class ImageClsApp(App):
     def title(self):
         return """
         <div style="text-align: center;">
+        <a href="https://openxaiproject.github.io/pnpxai/">
             <img src="/file=data/static/XAI-Top-PnP.svg" width="100" height="100">
+        </a>
             <h1> Plug and Play XAI Platform for Image Classification </h1>
         </div>
         """

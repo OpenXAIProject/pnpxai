@@ -15,6 +15,8 @@ from pnpxai.evaluator.metrics import (
     Sensitivity,
     Complexity,
     AbPC,
+    MoRF,
+    LeRF,
 )
 from pnpxai.utils import format_into_tuple
 
