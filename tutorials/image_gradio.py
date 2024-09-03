@@ -1,8 +1,7 @@
 # TODO:
-# 1. Favicon link : Github Documentation
-# 2. Only LRP
 # 3. Huggingface loading -> after module import system checking
 # python image_gradio.py >> ./logs/image_gradio.log 2>&1
+# tmux attach -t gd && python image_gradio.py >> ./logs/image_gradio.log 2>&1 && tmux detach
 import time
 import os
 import gradio as gr
@@ -417,7 +416,9 @@ class ExplainerCheckboxGroup(Component):
     def update_gallery_change(self):
         checkboxes = []
         bttns = []
-        checkboxes += [gr.Checkbox(label="Default Parameter", value=True, interactive=True)] * len(self.explainer_objs)
+        for exp in self.explainer_objs:
+            val = exp.explainer_name in DEFAULT_EXPLAINER
+            checkboxes.append(gr.Checkbox(label="Default Parameter", value=val, interactive=True))
         checkboxes += [gr.Checkbox(label="Optimized Parameter (Not Optimal)", value=False, interactive=False)] * len(self.explainer_objs)
         bttns += [gr.Button(value="Optimize", size="sm", variant="primary")] * len(self.explainer_objs)
 
