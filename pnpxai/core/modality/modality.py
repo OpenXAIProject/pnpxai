@@ -126,7 +126,7 @@ class Modality(ABC):
 
 class ImageModality(Modality):
     """
-    An extension of Modality class for Time Series with automatic explainers and evaluation metrics recommendation.
+    An extension of Modality class for Image domain with automatic explainers and evaluation metrics recommendation.
 
     Parameters:
         channel_dim (int): Target sequence dimension.
@@ -197,7 +197,7 @@ class ImageModality(Modality):
 
 class TextModality(Modality):
     """
-    An extension of Modality class for Text with automatic explainers and evaluation metrics recommendation.
+    An extension of Modality class for Text domain with automatic explainers and evaluation metrics recommendation.
 
     Parameters:
         channel_dim (int): Target sequence dimension.
@@ -284,7 +284,7 @@ class TextModality(Modality):
 
 class TimeSeriesModality(Modality):
     """
-    An extension of Modality class for Time Series with automatic explainers and evaluation metrics recommendation.
+    An extension of Modality class for Time Series domain with automatic explainers and evaluation metrics recommendation.
 
     Parameters:
         channel_dim (int): Target sequence dimension.
