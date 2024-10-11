@@ -168,7 +168,6 @@ class Visualizer:
     ):
         outputs = defaultdict(dict)
         # Convert data_id from range to actual data_id
-        print(data_id)
         data_id = self.experiment.manager.get_data()[1][data_id]
         for explainer_id in explainer_ids:
             for metric_id in metric_ids:
