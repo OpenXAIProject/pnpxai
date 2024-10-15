@@ -1,12 +1,13 @@
-from typing import Callable, Optional, Union, Tuple, Dict, Any
+from typing import Callable, Optional, Union, Tuple, Dict, Any, Type
 
 import torch
 import torch.nn.functional as F
 from torch.nn.modules import Module
 
-from pnpxai.explainers.types import Tensor, TensorOrTupleOfTensors
+from pnpxai.explainers.types import Tensor, TensorOrTupleOfTensors, ForwardArgumentExtractor
 from pnpxai.explainers.base import Explainer
 from pnpxai.explainers import GradCam
+from pnpxai.explainers.utils.baselines import ZeroBaselineFunction
 from pnpxai.utils import format_into_tuple, format_into_tuple_all
 from pnpxai.explainers.utils.postprocess import PostProcessor
 from pnpxai.evaluator.metrics.base import Metric
@@ -31,6 +32,8 @@ class PixelFlipping(Metric):
         baseline_fn (Optional[BaselineFunction]): Function to generate baseline inputs for perturbation.
         prob_fn (Optional[Callable[[Tensor], Tensor]]): Function to compute probabilities from model outputs.
         pred_fn (Optional[Callable[[Tensor], Tensor]]): Function to compute predictions from model outputs.
+        forward_arg_extractor (Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]): Optional function to extract forward arguments from inputs.
+        additional_forward_arg_extractor (Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]): Optional function to extract additional forward arguments.
     
     Methods:
         evaluate(inputs, targets, attributions, attention_mask=None, descending=True):
@@ -46,13 +49,17 @@ class PixelFlipping(Metric):
         baseline_fn: Optional[BaselineFunction]=None,
         prob_fn: Optional[Callable[[Tensor], Tensor]]=lambda outputs: outputs.softmax(-1),
         pred_fn: Optional[Callable[[Tensor], Tensor]]=lambda outputs: outputs.argmax(-1),
+        forward_arg_extractor: Optional[ForwardArgumentExtractor]=None,
+        additional_forward_arg_extractor: Optional[ForwardArgumentExtractor]=None,
     ):
         super().__init__(model, explainer)
         self.channel_dim = channel_dim
         self.n_steps = n_steps
-        self.baseline_fn = baseline_fn
+        self.baseline_fn = baseline_fn or ZeroBaselineFunction()
         self.prob_fn = prob_fn
         self.pred_fn = pred_fn
+        self.forward_arg_extractor = forward_arg_extractor
+        self.additional_forward_arg_extractor = additional_forward_arg_extractor
 
     @torch.no_grad()
     def evaluate(
@@ -77,7 +84,7 @@ class PixelFlipping(Metric):
             Union[Dict[str, Tensor], Tuple[Dict[str, Tensor]]]: A dictionary or tuple of dictionaries containing
                 the probabilities and predictions at each perturbation step.
         """
-        forward_args, additional_forward_args = self.explainer._extract_forward_args(inputs)
+        forward_args, additional_forward_args = self._extract_forward_args(inputs)
         formatted: Dict[str, Tuple[Any]] = format_into_tuple_all(
             forward_args=forward_args,
             additional_forward_args=additional_forward_args,
@@ -158,6 +165,19 @@ class PixelFlipping(Metric):
             return results[0]
         return tuple(results)
 
+    def _extract_forward_args(
+        self,
+        inputs: TensorOrTupleOfTensors,
+    ) -> Tuple[Union[TensorOrTupleOfTensors, Type[None]]]:
+        if isinstance(self.explainer, Explainer):
+            return self.explainer._extract_forward_args(inputs)
+        forward_args = self.forward_arg_extractor(inputs) \
+            if self.forward_arg_extractor else inputs
+        additional_forward_args = self.additional_forward_arg_extractor(inputs) \
+            if self.additional_forward_arg_extractor else None
+        return forward_args, additional_forward_args
+
+
 
 class MoRF(PixelFlipping):
     """
@@ -176,6 +196,8 @@ class MoRF(PixelFlipping):
         baseline_fn (Optional[BaselineFunction]): Function to generate baseline inputs for perturbation.
         prob_fn (Optional[Callable[[Tensor], Tensor]]): Function to compute probabilities from model outputs.
         pred_fn (Optional[Callable[[Tensor], Tensor]]): Function to compute predictions from model outputs.
+        forward_arg_extractor (Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]): Optional function to extract forward arguments from inputs.
+        additional_forward_arg_extractor (Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]): Optional function to extract additional forward arguments.
     
     Methods:
         evaluate(inputs, targets, attributions, attention_mask=None):
@@ -191,6 +213,8 @@ class MoRF(PixelFlipping):
         baseline_fn: Optional[BaselineFunction]=None,
         prob_fn: Optional[Callable[[Tensor], Tensor]]=lambda outputs: outputs.softmax(-1),
         pred_fn: Optional[Callable[[Tensor], Tensor]]=lambda outputs: outputs.argmax(-1),
+        forward_arg_extractor: Optional[ForwardArgumentExtractor]=None,
+        additional_forward_arg_extractor: Optional[ForwardArgumentExtractor]=None,
     ):
         super().__init__(
             model, explainer, channel_dim, n_steps,
@@ -243,6 +267,8 @@ class LeRF(PixelFlipping):
         baseline_fn (Optional[BaselineFunction]): Function to generate baseline inputs for perturbation.
         prob_fn (Optional[Callable[[Tensor], Tensor]]): Function to compute probabilities from model outputs.
         pred_fn (Optional[Callable[[Tensor], Tensor]]): Function to compute predictions from model outputs.
+        forward_arg_extractor (Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]): Optional function to extract forward arguments from inputs.
+        additional_forward_arg_extractor (Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]): Optional function to extract additional forward arguments.
     
     Methods:
         evaluate(inputs, targets, attributions, attention_mask=None):
@@ -258,6 +284,8 @@ class LeRF(PixelFlipping):
         baseline_fn: Optional[BaselineFunction]=None,
         prob_fn: Optional[Callable[[Tensor], Tensor]]=lambda outputs: outputs.softmax(-1),
         pred_fn: Optional[Callable[[Tensor], Tensor]]=lambda outputs: outputs.argmax(-1),
+        forward_arg_extractor: Optional[ForwardArgumentExtractor]=None,
+        additional_forward_arg_extractor: Optional[ForwardArgumentExtractor]=None,
     ):
         super().__init__(
             model, explainer, channel_dim, n_steps,
@@ -311,6 +339,8 @@ class AbPC(PixelFlipping):
         baseline_fn (Optional[BaselineFunction]): Function to generate baseline inputs for perturbation.
         prob_fn (Optional[Callable[[Tensor], Tensor]]): Function to compute probabilities from model outputs.
         pred_fn (Optional[Callable[[Tensor], Tensor]]): Function to compute predictions from model outputs.
+        forward_arg_extractor (Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]): Optional function to extract forward arguments from inputs.
+        additional_forward_arg_extractor (Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]): Optional function to extract additional forward arguments.
         lb (float): The lower bound for clamping the probability differences.
     
     Methods:
@@ -327,6 +357,8 @@ class AbPC(PixelFlipping):
         baseline_fn: Optional[BaselineFunction]=None,
         prob_fn: Optional[Callable[[Tensor], Tensor]]=lambda outputs: outputs.softmax(-1),
         pred_fn: Optional[Callable[[Tensor], Tensor]]=lambda outputs: outputs.argmax(-1),
+        forward_arg_extractor: Optional[ForwardArgumentExtractor]=None,
+        additional_forward_arg_extractor: Optional[ForwardArgumentExtractor]=None,
         lb: float=-1.,
     ):
         super().__init__(
