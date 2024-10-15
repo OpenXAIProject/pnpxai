@@ -9,7 +9,7 @@ from skimage.segmentation import (
 )
 from optuna.trial import Trial
 from pnpxai.explainers.utils.base import UtilFunction
-from pnpxai.evaluator.optimizer.utils import generate_param_key
+from pnpxai.utils import generate_param_key
 
 
 class FeatureMaskFunction(UtilFunction):

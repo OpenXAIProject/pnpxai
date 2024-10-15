@@ -9,8 +9,7 @@ from pnpxai.explainers.base import Explainer
 from pnpxai.explainers.types import ForwardArgumentExtractor
 from pnpxai.explainers.utils.baselines import BaselineMethodOrFunction, BaselineFunction
 from pnpxai.explainers.utils.feature_masks import FeatureMaskMethodOrFunction, FeatureMaskFunction
-from pnpxai.evaluator.optimizer.utils import generate_param_key
-from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
+from pnpxai.utils import format_into_tuple, format_out_tuple_if_single, generate_param_key
 
 
 class KernelShap(Explainer):
