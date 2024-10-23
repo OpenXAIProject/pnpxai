@@ -219,6 +219,8 @@ class MoRF(PixelFlipping):
         super().__init__(
             model, explainer, channel_dim, n_steps,
             baseline_fn, prob_fn, pred_fn,
+            forward_arg_extractor,
+            additional_forward_arg_extractor,
         )
 
     def evaluate(
@@ -290,6 +292,8 @@ class LeRF(PixelFlipping):
         super().__init__(
             model, explainer, channel_dim, n_steps,
             baseline_fn, prob_fn, pred_fn,
+            forward_arg_extractor,
+            additional_forward_arg_extractor,
         )
 
     def evaluate(
@@ -364,6 +368,8 @@ class AbPC(PixelFlipping):
         super().__init__(
             model, explainer, channel_dim, n_steps,
             baseline_fn, prob_fn, pred_fn,
+            forward_arg_extractor,
+            additional_forward_arg_extractor,
         )
         self.lb = lb
 
