@@ -9,9 +9,11 @@ from torch import Tensor
 from torch.nn.modules import Module
 
 from pnpxai.core._types import ExplanationType
+from pnpxai.explainers.types import ForwardArgumentExtractor
 from pnpxai.explainers.utils.baselines import BaselineFunction
 from pnpxai.explainers.utils.feature_masks import FeatureMaskFunction
 from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
+
 
 # Ensure compatibility with Python 2/3
 ABC = abc.ABC if sys.version_info >= (
@@ -52,10 +54,8 @@ class Explainer(ABC):
     def __init__(
         self,
         model: Module,
-        forward_arg_extractor: Optional[Callable[[
-            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
-        additional_forward_arg_extractor: Optional[Callable[[
-            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
+        forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
+        additional_forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
         **kwargs
     ) -> None:
         self.model = model.eval()

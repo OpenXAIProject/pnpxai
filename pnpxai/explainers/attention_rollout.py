@@ -20,8 +20,7 @@ from pnpxai.explainers.zennit.attribution import Gradient, LayerGradient
 from pnpxai.explainers.zennit.base import ZennitExplainer
 from pnpxai.explainers.utils import captum_wrap_model_input
 from pnpxai.explainers.types import ForwardArgumentExtractor
-from pnpxai.evaluator.optimizer.utils import generate_param_key
-
+from pnpxai.utils import generate_param_key
 
 def rollout_min_head_fusion_function(attn_weights):
     return attn_weights.min(axis=1).values

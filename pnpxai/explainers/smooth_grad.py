@@ -9,8 +9,7 @@ from pnpxai.explainers.zennit.attribution import SmoothGradient as SmoothGradAtt
 from pnpxai.explainers.zennit.attribution import LayerSmoothGradient as LayerSmoothGradAttributor
 from pnpxai.explainers.zennit.base import ZennitExplainer
 from pnpxai.explainers.utils import captum_wrap_model_input, _format_to_tuple
-from pnpxai.evaluator.optimizer.utils import generate_param_key
-
+from pnpxai.utils import generate_param_key
 
 class SmoothGrad(ZennitExplainer):
     SUPPORTED_MODULES = [Linear, Convolution, LSTM, RNN, Attention]

@@ -13,8 +13,7 @@ from pnpxai.explainers.utils import (
 )
 from pnpxai.explainers import Lime, KernelShap
 from pnpxai.explainers.utils.function_selectors import FunctionSelector
-from pnpxai.evaluator.optimizer.utils import generate_param_key
-from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
+from pnpxai.utils import format_into_tuple, format_out_tuple_if_single, generate_param_key
 
 
 def map_suggest_method(

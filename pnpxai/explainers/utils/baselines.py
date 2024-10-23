@@ -5,8 +5,7 @@ import torch
 import torchvision.transforms.functional as TF
 from optuna.trial import Trial
 from pnpxai.explainers.utils.base import UtilFunction
-from pnpxai.evaluator.optimizer.utils import generate_param_key
-
+from pnpxai.utils import generate_param_key
 
 BaselineMethod = Literal['zeros', 'invert', 'gaussian_blur', 'token']
 
