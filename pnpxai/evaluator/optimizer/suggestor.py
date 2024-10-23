@@ -1,7 +1,6 @@
 from typing import Optional, Any, Dict, Type, Union, Tuple
 from optuna import Trial
 
-from pnpxai.evaluator.optimizer.utils import generate_param_key
 from pnpxai.core.modality.modality import Modality
 from pnpxai.explainers.base import Explainer
 from pnpxai.explainers.utils import (
