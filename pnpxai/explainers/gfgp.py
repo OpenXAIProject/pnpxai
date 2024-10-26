@@ -3,6 +3,8 @@ from .blended_diffusion_custom.guided_diffusion.guided_diffusion.script_util imp
     create_model_and_diffusion,
 )
 import os
+import requests
+from tqdm import tqdm
 import numpy as np
 from PIL import Image
 import matplotlib.pyplot as plt
@@ -16,11 +18,28 @@ def normalize_np(img):
     img /= np.max(img)
     return img
 
+def download(url, filename):
+    response = requests.get(url, stream=True)
+    total_size = int(response.headers.get('content-length', 0))
+    
+    with open(filename, 'wb') as file, tqdm(
+        desc=filename,
+        total=total_size,
+        unit='iB',
+        unit_scale=True,
+        unit_divisor=1024,
+    ) as progress_bar:
+        for data in response.iter_content(chunk_size=1024):
+            size = file.write(data)
+            progress_bar.update(size)
+
 class Gfgp(Explainer):
     def __init__(self,
-                 model,
+                 model, # classification model to be explained
                  transforms,
-                 diffusion_ckpt_path,
+                 
+                 model_config=None,
+                 diffusion_ckpt_path=None,
                  forward_arg_extractor = None,
                  additional_forward_arg_extractor = None,
     ):
@@ -29,31 +48,41 @@ class Gfgp(Explainer):
         self.device = torch.device('cuda')
         self.transforms = transforms
         
-        self.model_config = {'image_size': 256, # 256
-            'num_channels' : 256, 
-            'num_res_blocks': 2,
-            'resblock_updown': True,
-            'num_heads': 4,
-            'num_heads_upsample': -1,
-            'num_head_channels': 64,
-            'attention_resolutions' : '32, 16, 8',
-            'channel_mult': '',
-            'dropout': 0.0,
-            'class_cond': False,
-            'use_checkpoint': False,
-            'use_scale_shift_norm': True,
-            'use_fp16': True, # True,
-            'use_new_attention_order': False,
-            'learn_sigma': True,
-            'diffusion_steps': 1000,
-            'noise_schedule': 'linear',
-            'timestep_respacing': "1000", 
-            'use_kl': False,
-            'predict_xstart': False,
-            'rescale_timesteps': True,
-            'rescale_learned_sigmas': False
-        }
+        if model_config is not None:
+            self.model_config = model_config
+        else:
+            self.model_config = {'image_size': 256, # 256
+                'num_channels' : 256, 
+                'num_res_blocks': 2,
+                'resblock_updown': True,
+                'num_heads': 4,
+                'num_heads_upsample': -1,
+                'num_head_channels': 64,
+                'attention_resolutions' : '32, 16, 8',
+                'channel_mult': '',
+                'dropout': 0.0,
+                'class_cond': False,
+                'use_checkpoint': False,
+                'use_scale_shift_norm': True,
+                'use_fp16': True, # True,
+                'use_new_attention_order': False,
+                'learn_sigma': True,
+                'diffusion_steps': 1000,
+                'noise_schedule': 'linear',
+                'timestep_respacing': "1000", 
+                'use_kl': False,
+                'predict_xstart': False,
+                'rescale_timesteps': True,
+                'rescale_learned_sigmas': False
+            }
         self.diffusion_model, self.diffusion = create_model_and_diffusion(**self.model_config)
+        if diffusion_ckpt_path is None:
+            print("No checkpoint path for diffusion model was specified.\n Using default diffusion model from OpenAI's guided-diffusion repository at\n https://openaipublic.blob.core.windows.net/diffusion/jul-2021/256x256_diffusion_uncond.pt")
+            url = "https://openaipublic.blob.core.windows.net/diffusion/jul-2021/256x256_diffusion_uncond.pt"
+            filename = "256x256_diffusion_uncond.pt"
+            download(url, filename)
+            diffusion_ckpt_path = "256x256_diffusion_uncond.pt"
+        
         self.diffusion_model.load_state_dict(torch.load(diffusion_ckpt_path, map_location="cpu"))
         self.diffusion_model.requires_grad_(False).eval().to(self.device)
         if self.model_config["use_fp16"]:

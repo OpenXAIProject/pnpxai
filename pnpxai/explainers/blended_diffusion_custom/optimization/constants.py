@@ -1,2 +1,0 @@
-ASSETS_DIR_NAME = "assets"
-RANKED_RESULTS_DIR = "ranked"
