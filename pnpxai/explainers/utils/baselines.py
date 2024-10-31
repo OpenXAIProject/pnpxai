@@ -22,10 +22,16 @@ class BaselineFunction(UtilFunction):
           inherit from this class and implement the actual baseline logic.
         - Subclasses can override the `__init__` method to accept additional parameters required 
           for their specific baseline operations.
-    """
-    
+    """    
     def __init__(self, *args, **kwargs):
         pass
+
+    @classmethod
+    def from_method(cls, method, **kwargs):
+        baseline_fn = BASELINE_FUNCTIONS.get(method, None)
+        if baseline_fn is None:
+            raise ValueError
+        return baseline_fn(**kwargs)
 
 
 class TokenBaselineFunction(BaselineFunction):

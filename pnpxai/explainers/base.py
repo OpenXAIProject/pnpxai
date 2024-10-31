@@ -92,12 +92,12 @@ class Explainer(ABC):
     def load_baseline_fn(self) -> Union[BaselineFunction, Tuple[BaselineFunction]]:
         if self.baseline_fn is None:
             return ()
-
-        baseline_fns = tuple(
-            BaselineFunction(method=baseline_fn)
-            if isinstance(baseline_fn, str) else baseline_fn
-            for baseline_fn in format_into_tuple(self.baseline_fn)
-        )
+        baseline_fns = []
+        for baseline_fn in format_into_tuple(self.baseline_fn):
+            if isinstance(baseline_fn, str):
+                baseline_fn = BaselineFunction.from_method(method=baseline_fn)
+            baseline_fns.append(baseline_fn)
+        baseline_fns = tuple(baseline_fns)
         return format_out_tuple_if_single(baseline_fns)
 
     def _get_baselines(self, forward_args) -> Union[Tensor, Tuple[Tensor]]:
@@ -113,6 +113,14 @@ class Explainer(ABC):
     def load_feature_mask_fn(self) -> Union[FeatureMaskFunction, Tuple[FeatureMaskFunction]]:
         if self.feature_mask_fn is None:
             return ()
+
+        feature_mask_fns = []
+        for feature_mask_fn in format_into_tuple(self.feature_mask_fn):
+            if isinstance(feature_mask_fn, str):
+                feature_mask_fn = FeatureMaskFunction.from_method(method=feature_mask_fn)
+            feature_mask_fns.append(feature_mask_fn)
+        feature_mask_fns = tuple(feature_mask_fns)
+        return format_out_tuple_if_single(feature_mask_fns)
 
         feature_mask_fns = tuple(
             FeatureMaskFunction(method=feature_mask_fn)

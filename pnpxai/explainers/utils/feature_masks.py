@@ -42,6 +42,13 @@ class FeatureMaskFunction(UtilFunction):
     def __init__(self):
         pass
 
+    @classmethod
+    def from_method(cls, method, **kwargs):
+        feature_mask_fn = FEATURE_MASK_FUNCTIONS.get(method, None)
+        if feature_mask_fn is None:
+            raise ValueError
+        return feature_mask_fn(**kwargs)
+
     @staticmethod
     def _skseg_for_tensor(fn, inputs: torch.Tensor, **kwargs) -> torch.Tensor:
         """
