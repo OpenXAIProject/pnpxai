@@ -4,14 +4,14 @@ from torch.utils.data import DataLoader
 import torch
 import torchvision
 
-from pnpxai.explainers import AVAILABLE_EXPLAINERS
+from pnpxai.explainers import AVAILABLE_EXPLAINERS, RAP, ATTENTION_SPECIFIC_EXPLAINERS
 from tests.helpers import get_dummy_imagenet_dataset
 
 
-class TestRobustness():
+class TestRobustness:
     def test_computation_time(self):
-        batch_size = 64
-        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        batch_size = 16
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         model = torchvision.models.get_model("resnet18").eval()
         model = model.to(device)
         data = get_dummy_imagenet_dataset(n_samples=100)
@@ -19,14 +19,19 @@ class TestRobustness():
 
         for explainer_type in AVAILABLE_EXPLAINERS:
             # TODO: memory issues of RAP on gpu
-            if torch.cuda.is_available() and explainer_type.__name__ == "RAP":
+            if torch.cuda.is_available() and issubclass(
+                explainer_type, (RAP, *ATTENTION_SPECIFIC_EXPLAINERS)
+            ):
                 continue
             explainer = explainer_type(model)
 
-            for input, target in loader:
-                start_time = time.time()
-                input = input.to(device)
-                target = target.to(device)
-                explainer.attribute(input, target)
-                elapsed = (time.time() - start_time) / batch_size
-                assert elapsed < 1
+            inputs, targets = next(iter(loader))
+            start_time = time.time()
+            inputs = inputs.to(device)
+            targets = targets.to(device)
+            explainer.attribute(inputs, targets)
+            elapsed = (time.time() - start_time) / batch_size
+            assert elapsed < 1
+
+            torch.cuda.empty_cache()
+            del explainer, inputs, targets

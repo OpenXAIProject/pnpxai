@@ -1,7 +1,6 @@
 from abc import abstractmethod
 import pytest
 import torch
-from pnpxai.explainers import Explainer
 from pnpxai.evaluator.metrics import Complexity, MuFidelity, Sensitivity
 from tests.helpers import ToyCNN, ToyExplainer, get_test_input_image
 

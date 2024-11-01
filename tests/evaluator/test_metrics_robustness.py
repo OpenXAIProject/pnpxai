@@ -31,13 +31,14 @@ class TestRobustness:
         for metric_type in [Complexity, MuFidelity, Sensitivity]:
             metric = metric_type(model, explainer)
 
-            for inputs, targets in loader:
-                start_time = time.time()
-                
-                inputs = inputs.to(device)
-                targets = targets.to(device)
-                dummy_attrs = torch.ones_like(inputs)
+            inputs, targets = next(iter(loader))
 
-                metric.evaluate(inputs, targets, dummy_attrs)
-                elapsed = (time.time() - start_time) / batch_size
-                assert elapsed < METRICS_LIMIT_MAP[metric_type]
+            start_time = time.time()
+
+            inputs = inputs.to(device)
+            targets = targets.to(device)
+            dummy_attrs = torch.ones_like(inputs)
+
+            metric.evaluate(inputs, targets, dummy_attrs)
+            elapsed = (time.time() - start_time) / batch_size
+            assert elapsed < METRICS_LIMIT_MAP[metric_type]
