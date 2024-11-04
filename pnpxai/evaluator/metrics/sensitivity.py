@@ -40,7 +40,7 @@ class Sensitivity(Metric):
         self,
         inputs: torch.Tensor,
         targets: torch.Tensor,
-        attributions: Optional[torch.Tensor],
+        attributions: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         """
         Args:

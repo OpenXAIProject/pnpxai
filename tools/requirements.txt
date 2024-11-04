@@ -13,9 +13,6 @@ shap
 lime
 timm
 xgboost
-flask
-flask-cors
-flask-restx
 optuna
 
 # for text explainers

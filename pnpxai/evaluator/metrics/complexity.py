@@ -13,14 +13,14 @@ from .base import Metric
 class Complexity(Metric):
     """
     Computes the complexity of attributions.
-    
+
     Given `attributions`, calculates a fractional contribution distribution `prob_mass`,
     ``prob_mass[i] = hist[i] / sum(hist)``. where ``hist[i] = histogram(attributions[i])``.
 
     The complexity is defined by the entropy,
     ``evaluation = -sum(hist * ln(hist))``
-    
-    
+
+
     Args:
         model (Model): The model used for evaluation
         explainer (Optional[Explainer]): The explainer used for evaluation.
@@ -29,19 +29,17 @@ class Complexity(Metric):
     Reference:
         U. Bhatt, A. Weller, and J. M. F. Moura. Evaluating and aggregating feature-based model attributions. In Proceedings of the IJCAI (2020).
     """
+
     def __init__(
-        self,
-        model: Model,
-        explainer: Optional[Explainer]=None,
-        n_bins: int = 10
+        self, model: Model, explainer: Optional[Explainer] = None, n_bins: int = 10
     ):
         super().__init__(model, explainer)
         self.n_bins = n_bins
-    
+
     def evaluate(
         self,
-        inputs: Optional[torch.Tensor] = None,
-        targets: Optional[torch.Tensor] = None,
+        inputs: torch.Tensor,
+        targets: torch.Tensor,
         attributions: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         """
@@ -55,6 +53,8 @@ class Complexity(Metric):
         Returns:
             Tensor: A tensor of the complexity evaluations.
         """
+        attributions = self._get_attributions(inputs, targets, attributions)
+
         assert attributions.ndim in [3, 4], "Must have 2D or 3D attributions"
         if attributions.ndim == 4:
             attributions = rgb_to_grayscale(attributions)
