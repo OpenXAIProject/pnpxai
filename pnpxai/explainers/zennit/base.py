@@ -3,6 +3,8 @@ from typing import Callable, Optional, Tuple, Union
 from torch import Tensor
 from torch.nn import Module
 
+from pnpxai.explainers.base import Explainer
+from pnpxai.utils import format_into_tuple
 from ..base import Explainer
 
 
@@ -27,12 +29,13 @@ class ZennitExplainer(Explainer):
 def set_n_classes_before(func):
     def wrapper(*args, **kwargs):
         self = args[0]
+        inputs = kwargs.get('inputs', None)
+        if inputs is None:
+            inputs = args[1]
+        if isinstance(inputs, Tensor):
+            inputs = format_into_tuple(inputs)
         if self.n_classes is None:
-            inputs = kwargs.get("inputs") or args[1]
-            if isinstance(inputs, Tensor):
-                inputs = (inputs,)
-            if self.n_classes is None:
-                outputs = self.model(*inputs)
-                self.n_classes = outputs.shape[-1]
+            outputs = self.model(*inputs)
+            self.n_classes = outputs.shape[-1]
         return func(*args, **kwargs)
     return wrapper
