@@ -12,17 +12,8 @@ from pnpxai.explainers.types import ForwardArgumentExtractor
 from pnpxai.explainers.utils.baselines import BaselineMethodOrFunction, BaselineFunction
 from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 
-'''
-[GH] packages: shap v.s. captum
 
-shap package 활용시 (장) 별도 수정 없이 빠르게 구현 가능하나, (단) HPO구현 어려움
-captum package 활용시 (장) HPO 등 설명 이후 태스크에 대한 구현 용이, (단) 구현에 시간 좀 걸림
-
-p.s. shap package의 backgound data는 captum의 baseline_fn을 통해 구현할 수 있음
-'''
-
-
-class DeepLiftShapByShap(Explainer):
+class DeepLiftShap(Explainer):
     def __init__(
         self,
         model: Module,
@@ -38,24 +29,4 @@ class DeepLiftShapByShap(Explainer):
         shap_values = shap_values.permute(*permute_dims)
         attrs = shap_values[torch.arange(inputs.size(0)), :, targets.cpu()] # select values for the targeted labels
         attrs = attrs.to(inputs.device).to(inputs.dtype) # match device and dtype to inputs
-        return attrs
-
-
-class DeepLiftShapByCaptum(Explainer):
-    def __init__(
-        self,
-        model: Module,
-        baseline_fn: Callable,
-    ):
-        super().__init__(model)
-        self.baseline_fn = baseline_fn
-
-    def attribute(self, inputs: Tensor, targets: Tensor) -> Tensor:
-        _explainer = captum.attr.DeepLiftShap(model=self.model)
-        baselines = self.baseline_fn(inputs)
-        attrs = explainer.attribute(
-            inputs=inputs,
-            baselines=baselines,
-            target=targets,
-        )
         return attrs

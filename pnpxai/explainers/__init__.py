@@ -16,7 +16,7 @@ from pnpxai.explainers.lrp import (
 )
 from pnpxai.explainers.rap import RAP
 from pnpxai.explainers.kernel_shap import KernelShap
-from pnpxai.explainers.deep_lift_shap import DeepLiftShapByShap as DeepLiftShap
+from pnpxai.explainers.deep_lift_shap import DeepLiftShap
 from pnpxai.explainers.lime import Lime
 from pnpxai.explainers.attention_rollout import (
     AttentionRollout,
