@@ -115,8 +115,8 @@ class VisualizerInterface:
     def _set_input_id(self, evt: gr.SelectData):
         return evt.index
 
-    def launch(self):
-        self.blocks.launch()
+    def launch(self, share=False):
+        self.blocks.launch(share=share)
 
 
 class Visualizer:
@@ -179,5 +179,5 @@ class Visualizer:
                 )
         return outputs
 
-    def launch(self):
-        self._vi.launch()
+    def launch(self, share=False):
+        self._vi.launch(share=share)
