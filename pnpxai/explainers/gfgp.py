@@ -1,16 +1,24 @@
 from .base import Explainer
-from .blended_diffusion_custom.guided_diffusion.guided_diffusion.script_util import (
-    create_model_and_diffusion,
-)
+# from .blended_diffusion_custom.guided_diffusion.guided_diffusion.script_util import (
+#     create_model_and_diffusion,
+# )
 import os
 import requests
-from tqdm import tqdm
 import numpy as np
 from PIL import Image
+from tqdm import tqdm
+from pathlib import Path
 import matplotlib.pyplot as plt
 
 import torch
 import torchvision.transforms as T
+
+from huggingface_hub import snapshot_download
+repo_dir = snapshot_download("devilops/openai-guided-diffusion")
+repo_path = Path(repo_dir)
+import sys
+sys.path.append(str(repo_path))
+from guided_diffusion.script_util import create_model_and_diffusion
 
 def normalize_np(img):
     """ Normalize img in arbitrary range to [0, 1] """
@@ -82,8 +90,10 @@ class Gfgp(Explainer):
             filename = "256x256_diffusion_uncond.pt"
             download(url, filename)
             diffusion_ckpt_path = "256x256_diffusion_uncond.pt"
+            # diffusion_ckpt_path = repo_path / "diffusion_ckpts" / "256x256_diffusion_uncond.pt"
         
-        self.diffusion_model.load_state_dict(torch.load(diffusion_ckpt_path, map_location="cpu"))
+        msg = self.diffusion_model.load_state_dict(torch.load(diffusion_ckpt_path, map_location="cpu"))
+        print(f"Loading diffusion model...\n{msg}")
         self.diffusion_model.requires_grad_(False).eval().to(self.device)
         if self.model_config["use_fp16"]:
             self.diffusion_model.convert_to_fp16()
