@@ -1,5 +1,5 @@
 #%%
-import os; os.environ['CUDA_VISIBLE_DEVICES']='1'
+import os#; os.environ['CUDA_VISIBLE_DEVICES']='1'
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
