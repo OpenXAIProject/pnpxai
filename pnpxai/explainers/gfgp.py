@@ -14,11 +14,11 @@ import torch
 import torchvision.transforms as T
 
 from huggingface_hub import snapshot_download
-repo_dir = snapshot_download("devilops/openai-guided-diffusion")
+repo_dir = snapshot_download("devilops/blended-diffusion-custom")
 repo_path = Path(repo_dir)
 import sys
 sys.path.append(str(repo_path))
-from guided_diffusion.script_util import create_model_and_diffusion
+from guided_diffusion.guided_diffusion.script_util import create_model_and_diffusion
 
 def normalize_np(img):
     """ Normalize img in arbitrary range to [0, 1] """
