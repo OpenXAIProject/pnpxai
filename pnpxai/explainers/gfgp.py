@@ -85,12 +85,12 @@ class Gfgp(Explainer):
             }
         self.diffusion_model, self.diffusion = create_model_and_diffusion(**self.model_config)
         if diffusion_ckpt_path is None:
-            print("No checkpoint path for diffusion model was specified.\n Using default diffusion model from OpenAI's guided-diffusion repository at\n https://openaipublic.blob.core.windows.net/diffusion/jul-2021/256x256_diffusion_uncond.pt")
-            url = "https://openaipublic.blob.core.windows.net/diffusion/jul-2021/256x256_diffusion_uncond.pt"
-            filename = "256x256_diffusion_uncond.pt"
-            download(url, filename)
-            diffusion_ckpt_path = "256x256_diffusion_uncond.pt"
-            # diffusion_ckpt_path = repo_path / "diffusion_ckpts" / "256x256_diffusion_uncond.pt"
+            # print("No checkpoint path for diffusion model was specified.\n Using default diffusion model from OpenAI's guided-diffusion repository at\n https://openaipublic.blob.core.windows.net/diffusion/jul-2021/256x256_diffusion_uncond.pt")
+            # url = "https://openaipublic.blob.core.windows.net/diffusion/jul-2021/256x256_diffusion_uncond.pt"
+            # filename = "256x256_diffusion_uncond.pt"
+            # download(url, filename)
+            # diffusion_ckpt_path = "256x256_diffusion_uncond.pt"
+            diffusion_ckpt_path = repo_path / "diffusion_ckpts" / "256x256_diffusion_uncond.pt"
         
         msg = self.diffusion_model.load_state_dict(torch.load(diffusion_ckpt_path, map_location="cpu"))
         print(f"Loading diffusion model...\n{msg}")
