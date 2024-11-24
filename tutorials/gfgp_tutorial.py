@@ -1,5 +1,5 @@
 #%%
-import os
+import os; os.environ['CUDA_VISIBLE_DEVICES']='1'
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
@@ -45,7 +45,7 @@ inputs = expr.input_extractor(data)
 labels = expr.label_extractor(data)
 
 
-diffusion_ckpt_path = '../pnpxai/explainers/diffusion_ckpts/openai-guided-diffusion/256x256_diffusion_uncond.pt'
+diffusion_ckpt_path = '../pnpxai/explainers/diffusion_ckpts/256x256_diffusion_uncond.pt'
 explainer = Gfgp(model=model, transforms=transform, diffusion_ckpt_path=diffusion_ckpt_path)
 modality = ImageModality(channel_dim=1)
 default_kwargs = {"feature_mask_fn": modality.get_default_feature_mask_fn(),
@@ -69,3 +69,5 @@ im = pps[0].detach().cpu().numpy()
 ax.imshow(im, cmap='twilight')
 plt.show()
 fig.savefig('gfgp.jpg', bbox_inches='tight', pad_inches=0)
+
+# %%
