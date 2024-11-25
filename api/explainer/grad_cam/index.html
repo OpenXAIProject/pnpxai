@@ -1099,11 +1099,11 @@
                 <code>interpolate_mode</code>
             </td>
             <td>
-                  <code>str</code>
+                  <code>Optional[str]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The interpolation mode used by the explainer. Available methods are: "bilinear" and "bicubic"</p>
+                <p>The interpolation mode used by the explainer. Available methods are: <code>"bilinear"</code> and <code>"bicubic"</code></p>
               </div>
             </td>
             <td>
@@ -1206,7 +1206,7 @@
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        model (Module): The PyTorch model for which attribution is to be computed.</span>
-<span class="sd">        interpolate_mode (str): The interpolation mode used by the explainer. Available methods are: &quot;bilinear&quot; and &quot;bicubic&quot;</span>
+<span class="sd">        interpolate_mode (Optional[str]): The interpolation mode used by the explainer. Available methods are: `&quot;bilinear&quot;` and `&quot;bicubic&quot;`</span>
 <span class="sd">        **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer</span>
 
 <span class="sd">    Reference:</span>
