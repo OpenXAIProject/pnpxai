@@ -8,13 +8,13 @@
       
       
       
-        <link rel="canonical" href="https://openxaiproject.github.io/pnpxai/detector/">
+        <link rel="canonical" href="https://openxaiproject.github.io/pnpxai/explainer/">
       
       
-        <link rel="prev" href="../api/explainer/attn_rollout/">
+        <link rel="prev" href="../detector/">
       
       
-        <link rel="next" href="../explainer/">
+        <link rel="next" href="../recommender/">
       
       
       <link rel="icon" href="../assets/favicon.ico">
@@ -22,7 +22,7 @@
     
     
       
-        <title>Detector - PnP XAI Docs</title>
+        <title>Explainer - PnP XAI Docs</title>
       
     
     
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#detector-source" class="md-skip">
+        <a href="#explainer-source" class="md-skip">
           Skip to content
         </a>
       
@@ -101,7 +101,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Detector
+              Explainer
             
           </span>
         </div>
@@ -764,6 +764,26 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../detector/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Detector
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -780,7 +800,7 @@
           
   
   <span class="md-ellipsis">
-    Detector
+    Explainer
   </span>
   
 
@@ -791,7 +811,7 @@
         
   
   <span class="md-ellipsis">
-    Detector
+    Explainer
   </span>
   
 
@@ -813,18 +833,18 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#basic-usage" class="md-nav__link">
+  <a href="#list-of-available-explainers" class="md-nav__link">
     <span class="md-ellipsis">
-      Basic Usage
+      List of available explainers:
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#notes" class="md-nav__link">
+  <a href="#usage" class="md-nav__link">
     <span class="md-ellipsis">
-      Notes
+      Usage
     </span>
   </a>
   
@@ -834,26 +854,6 @@
   
 </nav>
       
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../explainer/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Explainer
-  </span>
-  
-
-      </a>
     </li>
   
 
@@ -945,18 +945,18 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#basic-usage" class="md-nav__link">
+  <a href="#list-of-available-explainers" class="md-nav__link">
     <span class="md-ellipsis">
-      Basic Usage
+      List of available explainers:
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#notes" class="md-nav__link">
+  <a href="#usage" class="md-nav__link">
     <span class="md-ellipsis">
-      Notes
+      Usage
     </span>
   </a>
   
@@ -977,18 +977,127 @@
                   
 
 
-<h1 id="detector-source">Detector <small>[<a href="../api/core/detector/">source</a>]</small></h1>
-<p><code>detect_model_architecture</code> traces a <code>model: torch.nn.Module</code>'s graph by using <code>torch.fx.symbolic_trace</code> and <code>model.named_modules()</code> to extract information to be applied to recommend available explainers. It returns a <code>Set[torch.nn.Module]</code> which describes layer informations and representative type of architecture.</p>
-<h2 id="basic-usage">Basic Usage</h2>
-<pre><code class="language-python">import torchvision
-from pnpxai.detector import detect_model_architecture
+<h1 id="explainer-source">Explainer <small>[<a href="../api/explainer/base/">source</a>]</small></h1>
+<p>The Explainer module serves as a basis for all explainers implemented within the framework. When it is necessary to implement a custom explainer, the base class needs to be extended to enable the support of the framework's functionality. The method accumulates crucial attributes and methods, making it visible to the <a href="../recommender/">Recommender</a>, and <a href="../optimizer/">Optimizer</a> modules.</p>
+<h2 id="list-of-available-explainers">List of available explainers:</h2>
+<table>
+<thead>
+<tr>
+<th>Explainer</th>
+<th>Supported Modules</th>
+<th>Target Modalities</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../api/explainer/grad_cam/">GradCam</a></td>
+<td>Convolution</td>
+<td>Vision, Time Series</td>
+</tr>
+<tr>
+<td><a href="../api/explainer/guided_grad_cam/">GuidedGradCam</a></td>
+<td>Convolution</td>
+<td>Vision, Time Series</td>
+</tr>
+<tr>
+<td><a href="../api/explainer/gradient/">Gradient</a></td>
+<td>Linear, Convolution, Recurrent, Transformer</td>
+<td>Vision, Language, Time Series</td>
+</tr>
+<tr>
+<td><a href="../api/explainer/grad_x_input/">GradientXInput</a></td>
+<td>Linear, Convolution, Recurrent, Transformer</td>
+<td>Vision, Language, Time Series</td>
+</tr>
+<tr>
+<td><a href="../api/explainer/smooth_grad/">SmoothGrad</a></td>
+<td>Linear, Convolution, Recurrent, Transformer</td>
+<td>Vision, Language, Time Series</td>
+</tr>
+<tr>
+<td><a href="../api/explainer/var_grad/">VarGrad</a></td>
+<td>Linear, Convolution, Recurrent, Transformer</td>
+<td>Vision, Language, Time Series</td>
+</tr>
+<tr>
+<td><a href="../api/explainer/ig/">IntegratedGradients</a></td>
+<td>Linear, Convolution, Recurrent, Transformer</td>
+<td>Vision, Language, Time Series</td>
+</tr>
+<tr>
+<td><a href="../api/explainer/lrp/">LRPUniformEpsilon</a></td>
+<td>Linear, Convolution, Recurrent, Transformer</td>
+<td>Vision, Language, Time Series</td>
+</tr>
+<tr>
+<td><a href="../api/explainer/lrp/">LRPEpsilonPlus</a></td>
+<td>Linear, Convolution, Recurrent, Transformer</td>
+<td>Vision, Language, Time Series</td>
+</tr>
+<tr>
+<td><a href="../api/explainer/lrp/">LRPEpsilonGammaBox</a></td>
+<td>Linear, Convolution, Recurrent, Transformer</td>
+<td>Vision, Language, Time Series</td>
+</tr>
+<tr>
+<td><a href="../api/explainer/lrp/">LRPEpsilonAlpha2Beta1</a></td>
+<td>Linear, Convolution, Recurrent, Transformer</td>
+<td>Vision, Language, Time Series</td>
+</tr>
+<tr>
+<td><a href="../api/explainer/rap/">RAP</a></td>
+<td>Linear, Convolution, Recurrent, Transformer</td>
+<td>Vision, Language, Time Series</td>
+</tr>
+<tr>
+<td><a href="../api/explainer/kernel_shap/">KernelShap</a></td>
+<td>Linear, Convolution, Recurrent, Transformer, Decision Trees</td>
+<td>Vision, Language, Structured Data, Time Series</td>
+</tr>
+<tr>
+<td><a href="../api/explainer/lime/">Lime</a></td>
+<td>Linear, Convolution, Recurrent, Transformer, Decision Trees</td>
+<td>Vision, Language, Structured Data, Time Series</td>
+</tr>
+<tr>
+<td><a href="../api/explainer/attn_rollout/">AttentionRollout</a></td>
+<td>Transformer</td>
+<td>Vision, Language</td>
+</tr>
+<tr>
+<td><a href="../api/explainer/attn_rollout/">TransformerAttribution</a></td>
+<td>Transformer</td>
+<td>Vision, Language</td>
+</tr>
+</tbody>
+</table>
+<h2 id="usage">Usage</h2>
+<pre><code class="language-python">import torch
+from torch.utils.data import DataLoader
 
-model = torchvision.models.get_model(&quot;resnet18&quot;).eval()
-detected_modules = detect_model_architecture(model)
-print(detected_modules)
+from pnpxai.utils import set_seed
+from pnpxai.explainers import LRPUniformEpsilon
+
+from helpers import get_imagenet_dataset, get_torchvision_model
+
+set_seed(seed=0)
+device = torch.device(&quot;cuda&quot; if torch.cuda.is_available() else &quot;cpu&quot;)
+
+# load model, dataset, and explainer
+model, transform = get_torchvision_model(&quot;resnet18&quot;)
+model = model.to(device)
+explainer = LRPUniformEpsilon(model=model, epsilon=1e-6, n_classes=1000)
+
+dataset = get_imagenet_dataset(transform=transform, subset_size=8)
+loader = DataLoader(dataset, batch_size=8)
+inputs, targets = next(iter(loader))
+inputs, targets = inputs.to(device), targets.to(device)
+
+# make explanation
+attrs = explainer.attribute(inputs, targets)
+
+print(attrs)
 </code></pre>
-<h2 id="notes">Notes</h2>
-<p>Since <code>detect_model_architecture</code> is fully depending on <code>torch.fx.symbolic_trace</code> and <code>(torch.nn.Module()).named_modules()</code>, the detected model architecture omits dynamic control flows and non-torch functions in <code>model.forward</code>, as <a href="#https://pytorch.org/docs/stable/fx.html#limitations-of-symbolic-tracing">the official document of torch.fx</a> describing. On the contrary, we can say that all operations in static control flow, torch function or python-builtin function are fully detected. If your <code>model.forward</code> has dynamic control flows or non-torch functions, please change them to static flows or torch functions in order to let the following procedures of <code>pnpxai</code> work in the proper way with your model.</p>
 
 
 

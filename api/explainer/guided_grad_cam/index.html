@@ -8,25 +8,25 @@
       
       
       
-        <link rel="canonical" href="https://openxaiproject.github.io/pnpxai/detector/">
+        <link rel="canonical" href="https://openxaiproject.github.io/pnpxai/api/explainer/guided_grad_cam/">
       
       
-        <link rel="prev" href="../api/explainer/attn_rollout/">
+        <link rel="prev" href="../grad_cam/">
       
       
-        <link rel="next" href="../explainer/">
+        <link rel="next" href="../gradient/">
       
       
-      <link rel="icon" href="../assets/favicon.ico">
+      <link rel="icon" href="../../../assets/favicon.ico">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.45">
     
     
       
-        <title>Detector - PnP XAI Docs</title>
+        <title>GuidedGradCam - PnP XAI Docs</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.0253249f.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.0253249f.min.css">
       
       
 
@@ -45,9 +45,9 @@
       
     
     
-      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -66,7 +66,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#detector-source" class="md-skip">
+        <a href="#pnpxai.explainers.guided_grad_cam" class="md-skip">
           Skip to content
         </a>
       
@@ -82,9 +82,9 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="PnP XAI Docs" class="md-header__button md-logo" aria-label="PnP XAI Docs" data-md-component="logo">
+    <a href="../../.." title="PnP XAI Docs" class="md-header__button md-logo" aria-label="PnP XAI Docs" data-md-component="logo">
       
-  <img src="../assets/logo.png" alt="logo">
+  <img src="../../../assets/logo.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -101,7 +101,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Detector
+              GuidedGradCam
             
           </span>
         </div>
@@ -139,9 +139,9 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="PnP XAI Docs" class="md-nav__button md-logo" aria-label="PnP XAI Docs" data-md-component="logo">
+    <a href="../../.." title="PnP XAI Docs" class="md-nav__button md-logo" aria-label="PnP XAI Docs" data-md-component="logo">
       
-  <img src="../assets/logo.png" alt="logo">
+  <img src="../../../assets/logo.png" alt="logo">
 
     </a>
     PnP XAI Docs
@@ -156,7 +156,7 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
+      <a href="../../.." class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -173,17 +173,19 @@
       
   
   
+    
   
   
+  
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
         
           
           <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
@@ -197,7 +199,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             API
@@ -246,7 +248,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/core/experiment/" class="md-nav__link">
+      <a href="../../core/experiment/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -267,7 +269,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/core/auto_explanation/" class="md-nav__link">
+      <a href="../../core/auto_explanation/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -288,7 +290,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/core/modality/" class="md-nav__link">
+      <a href="../../core/modality/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -309,7 +311,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/core/recommender/" class="md-nav__link">
+      <a href="../../core/recommender/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -330,7 +332,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/core/detector/" class="md-nav__link">
+      <a href="../../core/detector/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -394,7 +396,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/evaluator/metrics/" class="md-nav__link">
+      <a href="../../evaluator/metrics/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -415,7 +417,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/evaluator/optimizer/" class="md-nav__link">
+      <a href="../../evaluator/optimizer/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -441,17 +443,19 @@
                 
   
   
+    
   
   
+  
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_3" checked>
         
           
           <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
@@ -465,7 +469,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_3_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2_3">
             <span class="md-nav__icon md-icon"></span>
             Explainer
@@ -479,7 +483,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/explainer/base/" class="md-nav__link">
+      <a href="../base/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -500,7 +504,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/explainer/grad_cam/" class="md-nav__link">
+      <a href="../grad_cam/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -518,10 +522,28 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../api/explainer/guided_grad_cam/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    GuidedGradCam
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -530,6 +552,33 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#pnpxai.explainers.guided_grad_cam" class="md-nav__link">
+    <span class="md-ellipsis">
+      guided_grad_cam
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -542,7 +591,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/explainer/gradient/" class="md-nav__link">
+      <a href="../gradient/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -563,7 +612,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/explainer/grad_x_input/" class="md-nav__link">
+      <a href="../grad_x_input/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -584,7 +633,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/explainer/smooth_grad/" class="md-nav__link">
+      <a href="../smooth_grad/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -605,7 +654,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/explainer/var_grad/" class="md-nav__link">
+      <a href="../var_grad/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -626,7 +675,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/explainer/ig/" class="md-nav__link">
+      <a href="../ig/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -647,7 +696,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/explainer/lrp/" class="md-nav__link">
+      <a href="../lrp/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -668,7 +717,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/explainer/rap/" class="md-nav__link">
+      <a href="../rap/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -689,7 +738,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/explainer/kernel_shap/" class="md-nav__link">
+      <a href="../kernel_shap/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -710,7 +759,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/explainer/lime/" class="md-nav__link">
+      <a href="../lime/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -731,7 +780,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/explainer/attn_rollout/" class="md-nav__link">
+      <a href="../attn_rollout/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -764,30 +813,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    Detector
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../../detector/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -796,44 +825,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#basic-usage" class="md-nav__link">
-    <span class="md-ellipsis">
-      Basic Usage
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#notes" class="md-nav__link">
-    <span class="md-ellipsis">
-      Notes
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -845,7 +836,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../explainer/" class="md-nav__link">
+      <a href="../../../explainer/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -865,7 +856,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../recommender/" class="md-nav__link">
+      <a href="../../../recommender/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -885,7 +876,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../evaluator/" class="md-nav__link">
+      <a href="../../../evaluator/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -905,7 +896,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../optimizer/" class="md-nav__link">
+      <a href="../../../optimizer/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -935,8 +926,6 @@
   
   
   
-    
-  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -945,18 +934,9 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#basic-usage" class="md-nav__link">
+  <a href="#pnpxai.explainers.guided_grad_cam" class="md-nav__link">
     <span class="md-ellipsis">
-      Basic Usage
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#notes" class="md-nav__link">
-    <span class="md-ellipsis">
-      Notes
+      guided_grad_cam
     </span>
   </a>
   
@@ -977,18 +957,39 @@
                   
 
 
-<h1 id="detector-source">Detector <small>[<a href="../api/core/detector/">source</a>]</small></h1>
-<p><code>detect_model_architecture</code> traces a <code>model: torch.nn.Module</code>'s graph by using <code>torch.fx.symbolic_trace</code> and <code>model.named_modules()</code> to extract information to be applied to recommend available explainers. It returns a <code>Set[torch.nn.Module]</code> which describes layer informations and representative type of architecture.</p>
-<h2 id="basic-usage">Basic Usage</h2>
-<pre><code class="language-python">import torchvision
-from pnpxai.detector import detect_model_architecture
+  <h1>GuidedGradCam</h1>
 
-model = torchvision.models.get_model(&quot;resnet18&quot;).eval()
-detected_modules = detect_model_architecture(model)
-print(detected_modules)
-</code></pre>
-<h2 id="notes">Notes</h2>
-<p>Since <code>detect_model_architecture</code> is fully depending on <code>torch.fx.symbolic_trace</code> and <code>(torch.nn.Module()).named_modules()</code>, the detected model architecture omits dynamic control flows and non-torch functions in <code>model.forward</code>, as <a href="#https://pytorch.org/docs/stable/fx.html#limitations-of-symbolic-tracing">the official document of torch.fx</a> describing. On the contrary, we can say that all operations in static control flow, torch function or python-builtin function are fully detected. If your <code>model.forward</code> has dynamic control flows or non-torch functions, please change them to static flows or torch functions in order to let the following procedures of <code>pnpxai</code> work in the proper way with your model.</p>
+<div class="doc doc-object doc-module">
+
+
+
+<a id="pnpxai.explainers.guided_grad_cam"></a>
+    <div class="doc doc-contents first">
+
+
+
+
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
 
 
 
@@ -1035,10 +1036,10 @@ print(detected_modules)
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": [], "search": "../../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.83f73b43.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.83f73b43.min.js"></script>
       
     
   </body>
