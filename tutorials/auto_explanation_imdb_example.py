@@ -5,11 +5,11 @@ from torch.utils.data import DataLoader
 from pnpxai import AutoExplanationForTextClassification
 from pnpxai.explainers.utils.postprocess import minmax
 from helpers import (
-    get_imdb_dataset,
     get_bert_model,
     get_bert_tokenizer,
-    bert_collate_fn,
 )
+
+from datasets import load_dataset
 
 # ------------------------------------------------------------------------------#
 # -------------------------------- basic usage ---------------------------------#
@@ -21,13 +21,24 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = get_bert_model(model_name='fabriceyhc/bert-base-uncased-imdb', num_labels=2)
 model.to(device)
 
-dataset = get_imdb_dataset(split='test')
+dataset = load_dataset("stanfordnlp/imdb")['test']
 tokenizer = get_bert_tokenizer(model_name='fabriceyhc/bert-base-uncased-imdb')
+
+def collate_fn(batch):
+    texts = tokenizer(
+        [d['text'] for d in batch],
+        padding=True,
+        truncation=True,
+        return_tensors='pt',
+    )
+    labels = torch.tensor([d['label'] for d in batch])
+    return tuple(texts.values()), labels
+
 loader = DataLoader(
     dataset,
     batch_size=1,
     shuffle=False,
-    collate_fn=functools.partial(bert_collate_fn, tokenizer=tokenizer),
+    collate_fn=collate_fn,
 )
 input_extractor = lambda batch: tuple(inp.to(device) for inp in batch[0])
 forward_arg_extractor = lambda inputs: inputs[0]
