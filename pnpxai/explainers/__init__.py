@@ -55,6 +55,7 @@ AVAILABLE_EXPLAINERS: Tuple[Explainer] = (
     LRPEpsilonPlus,
     LRPEpsilonGammaBox,
     LRPEpsilonAlpha2Beta1,
+    RAP,
     KernelShap,
     Lime,
     AttentionRollout,
