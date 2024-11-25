@@ -1065,6 +1065,7 @@
 
 
         <p>GradCAM explainer.</p>
+<p>Supported Modules: <code>Convolution</code></p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1200,9 +1201,15 @@
 <span class="normal">68</span>
 <span class="normal">69</span>
 <span class="normal">70</span>
-<span class="normal">71</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">GradCam</span><span class="p">(</span><span class="n">Explainer</span><span class="p">):</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">GradCam</span><span class="p">(</span><span class="n">Explainer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    GradCAM explainer.</span>
+
+<span class="sd">    Supported Modules: `Convolution`</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        model (Module): The PyTorch model for which attribution is to be computed.</span>
@@ -1223,12 +1230,14 @@
 
     <span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">targets</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes attributions for the given inputs and targets.</span>
+
 <span class="sd">        Args:</span>
 <span class="sd">            inputs (torch.Tensor): The input data.</span>
 <span class="sd">            targets (torch.Tensor): The target labels for the inputs.</span>
 
 <span class="sd">        Returns:</span>
-<span class="sd">            torch.Tensor: The result of the metric evaluation.</span>
+<span class="sd">            torch.Tensor: The result of the explanation.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">forward_args</span><span class="p">,</span> <span class="n">additional_forward_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_forward_args</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="n">forward_args</span> <span class="o">=</span> <span class="n">format_into_tuple</span><span class="p">(</span><span class="n">forward_args</span><span class="p">)</span>
@@ -1256,7 +1265,7 @@
 <span class="sd">            Provides Tunable parameters for the optimizer</span>
 
 <span class="sd">            Tunable parameters:</span>
-<span class="sd">                interpolate_mode (str): Value can be selected of &quot;bilinear&quot; and &quot;bicubic&quot;</span>
+<span class="sd">                `interpolate_mode` (str): Value can be selected of `&quot;bilinear&quot;` and `&quot;bicubic&quot;`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s2">&quot;interpolate_mode&quot;</span><span class="p">:</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;choices&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;bilinear&quot;</span><span class="p">,</span> <span class="s2">&quot;bicubic&quot;</span><span class="p">]}),</span>
@@ -1287,6 +1296,7 @@
 
     <div class="doc doc-contents ">
 
+        <p>Computes attributions for the given inputs and targets.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1351,7 +1361,7 @@
             </td>
             <td>
               <div class="doc-md-description">
-                <p>torch.Tensor: The result of the metric evaluation.</p>
+                <p>torch.Tensor: The result of the explanation.</p>
               </div>
             </td>
           </tr>
@@ -1360,9 +1370,7 @@
 
             <details class="quote">
               <summary>Source code in <code>pnpxai/explainers/grad_cam.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">34</span>
 <span class="normal">35</span>
 <span class="normal">36</span>
 <span class="normal">37</span>
@@ -1388,14 +1396,20 @@
 <span class="normal">57</span>
 <span class="normal">58</span>
 <span class="normal">59</span>
-<span class="normal">60</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">targets</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span> <span class="n">targets</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes attributions for the given inputs and targets.</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        inputs (torch.Tensor): The input data.</span>
 <span class="sd">        targets (torch.Tensor): The target labels for the inputs.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        torch.Tensor: The result of the metric evaluation.</span>
+<span class="sd">        torch.Tensor: The result of the explanation.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">forward_args</span><span class="p">,</span> <span class="n">additional_forward_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_forward_args</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
     <span class="n">forward_args</span> <span class="o">=</span> <span class="n">format_into_tuple</span><span class="p">(</span><span class="n">forward_args</span><span class="p">)</span>
@@ -1439,25 +1453,25 @@
 
 <details class="tunable-parameters" open>
   <summary>Tunable parameters</summary>
-  <p>interpolate_mode (str): Value can be selected of "bilinear" and "bicubic"</p>
+  <p><code>interpolate_mode</code> (str): Value can be selected of <code>"bilinear"</code> and <code>"bicubic"</code></p>
 </details>
             <details class="quote">
               <summary>Source code in <code>pnpxai/explainers/grad_cam.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">62</span>
-<span class="normal">63</span>
-<span class="normal">64</span>
-<span class="normal">65</span>
-<span class="normal">66</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">66</span>
 <span class="normal">67</span>
 <span class="normal">68</span>
 <span class="normal">69</span>
 <span class="normal">70</span>
-<span class="normal">71</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_tunables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]:</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_tunables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Provides Tunable parameters for the optimizer</span>
 
 <span class="sd">        Tunable parameters:</span>
-<span class="sd">            interpolate_mode (str): Value can be selected of &quot;bilinear&quot; and &quot;bicubic&quot;</span>
+<span class="sd">            `interpolate_mode` (str): Value can be selected of `&quot;bilinear&quot;` and `&quot;bicubic&quot;`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="s2">&quot;interpolate_mode&quot;</span><span class="p">:</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;choices&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;bilinear&quot;</span><span class="p">,</span> <span class="s2">&quot;bicubic&quot;</span><span class="p">]}),</span>

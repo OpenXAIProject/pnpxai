@@ -649,6 +649,15 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#pnpxai.explainers.smooth_grad.SmoothGrad.attribute" class="md-nav__link">
+    <span class="md-ellipsis">
+      attribute
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pnpxai.explainers.smooth_grad.SmoothGrad.get_tunables" class="md-nav__link">
     <span class="md-ellipsis">
       get_tunables
@@ -977,6 +986,15 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#pnpxai.explainers.smooth_grad.SmoothGrad.attribute" class="md-nav__link">
+    <span class="md-ellipsis">
+      attribute
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pnpxai.explainers.smooth_grad.SmoothGrad.get_tunables" class="md-nav__link">
     <span class="md-ellipsis">
       get_tunables
@@ -1046,7 +1064,8 @@
               Bases: <code><span title="pnpxai.explainers.zennit.base.ZennitExplainer">ZennitExplainer</span></code></p>
 
 
-        <p>.</p>
+        <p>SmoothGrad explainer.</p>
+<p>Supported Modules: <code>Linear</code>, <code>Convolution</code>, <code>LSTM</code>, <code>RNN</code>, <code>Attention</code></p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1065,11 +1084,11 @@
                 <code>model</code>
             </td>
             <td>
-                  <code>Model</code>
+                  <code><span title="torch.nn.modules.Module">Module</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The machine learning model to be analyzed.</p>
+                <p>The PyTorch model for which attribution is to be computed.</p>
               </div>
             </td>
             <td>
@@ -1078,110 +1097,77 @@
           </tr>
           <tr class="doc-section-item">
             <td>
-                <code>data</code>
+                <code>noise_level</code>
             </td>
             <td>
-                  <code>DataSource</code>
+                  <code>float</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>The data source used for the experiment.</p>
+                <p>The added noise level.</p>
               </div>
             </td>
             <td>
-                <em>required</em>
+                  <code>0.1</code>
             </td>
           </tr>
           <tr class="doc-section-item">
             <td>
-                <code>modality</code>
+                <code>n_iter</code>
             </td>
             <td>
-                  <code>Modality</code>
+                  <code>int</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>An object to specify modality-specific workflow.</p>
+                <p>The Number of iterations the algorithm makes</p>
               </div>
             </td>
             <td>
-                <em>required</em>
+                  <code>20</code>
             </td>
           </tr>
           <tr class="doc-section-item">
             <td>
-                <code>input_extractor</code>
+                <code>layer</code>
             </td>
             <td>
-                  <code><span title="typing.Optional">Optional</span>[<span title="typing.Callable">Callable</span>]</code>
+                  <code><span title="typing.Optional">Optional</span>[<span title="typing.Union">Union</span>[<span title="typing.Union">Union</span>[str, <span title="torch.nn.modules.Module">Module</span>], <span title="typing.Sequence">Sequence</span>[<span title="typing.Union">Union</span>[str, <span title="torch.nn.modules.Module">Module</span>]]]]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Custom function to extract input features.</p>
+                <p>The target module to be explained</p>
               </div>
             </td>
             <td>
-                <em>required</em>
+                  <code>None</code>
             </td>
           </tr>
           <tr class="doc-section-item">
             <td>
-                <code>label_extractor</code>
+                <code>n_classes</code>
             </td>
             <td>
-                  <code><span title="typing.Optional">Optional</span>[<span title="typing.Callable">Callable</span>]</code>
+                  <code><span title="typing.Optional">Optional</span>[int]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Custom function to extract labels features.</p>
+                <p>Number of classes</p>
               </div>
             </td>
             <td>
-                <em>required</em>
+                  <code>None</code>
             </td>
           </tr>
           <tr class="doc-section-item">
             <td>
-                <code>target_extractor</code>
+                <code>**kwargs</code>
             </td>
             <td>
-                  <code><span title="typing.Optional">Optional</span>[<span title="typing.Callable">Callable</span>]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Custom function to extract target features.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>input_visualizer</code>
-            </td>
-            <td>
-                  <code><span title="typing.Optional">Optional</span>[<span title="typing.Callable">Callable</span>]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Custom function for visualizing input features.</p>
-              </div>
-            </td>
-            <td>
-                <em>required</em>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                <code>target_labels</code>
-            </td>
-            <td>
-                  <code><span title="typing.Optional">Optional</span>[bool]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Whether to use target labels.</p>
+                <p>Keyword arguments that are forwarded to the base implementation of the Explainer</p>
               </div>
             </td>
             <td>
@@ -1192,30 +1178,10 @@
     </table>
 
 
-<p><span class="doc-section-title">Attributes:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td><code><span title="pnpxai.explainers.smooth_grad.SmoothGrad.recommended">recommended</span></code></td>
-            <td>
-                  <code>RecommenderOutput</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>A data object, containing recommended explainers.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
+<details class="reference" open>
+  <summary>Reference</summary>
+  <p>Ramprasaath R. Selvaraju, Michael Cogswell, Abhishek Das, Ramakrishna Vedantam, Devi Parikh, Dhruv Batra. Grad-CAM: Visual Explanations from Deep Networks via Gradient-based Localization.</p>
+</details>
 
 
 
@@ -1323,22 +1289,32 @@
 <span class="normal">111</span>
 <span class="normal">112</span>
 <span class="normal">113</span>
-<span class="normal">114</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SmoothGrad</span><span class="p">(</span><span class="n">ZennitExplainer</span><span class="p">):</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SmoothGrad</span><span class="p">(</span><span class="n">ZennitExplainer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    .</span>
+<span class="sd">    SmoothGrad explainer.</span>
+
+<span class="sd">    Supported Modules: `Linear`, `Convolution`, `LSTM`, `RNN`, `Attention`</span>
 
 <span class="sd">    Parameters:</span>
-<span class="sd">        model (Model): The machine learning model to be analyzed.</span>
-<span class="sd">        data (DataSource): The data source used for the experiment.</span>
-<span class="sd">        modality (Modality): An object to specify modality-specific workflow.</span>
-<span class="sd">        input_extractor (Optional[Callable], optional): Custom function to extract input features.</span>
-<span class="sd">        label_extractor (Optional[Callable], optional): Custom function to extract labels features.</span>
-<span class="sd">        target_extractor (Optional[Callable], optional): Custom function to extract target features.</span>
-<span class="sd">        input_visualizer (Optional[Callable], optional): Custom function for visualizing input features.</span>
-<span class="sd">        target_labels (Optional[bool]): Whether to use target labels.</span>
+<span class="sd">        model (Module): The PyTorch model for which attribution is to be computed.</span>
+<span class="sd">        noise_level (float): The added noise level.</span>
+<span class="sd">        n_iter (int): The Number of iterations the algorithm makes</span>
+<span class="sd">        layer (Optional[Union[Union[str, Module], Sequence[Union[str, Module]]]]): The target module to be explained</span>
+<span class="sd">        n_classes (Optional[int]): Number of classes</span>
+<span class="sd">        **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer</span>
 
-<span class="sd">    Attributes:</span>
-<span class="sd">        recommended (RecommenderOutput): A data object, containing recommended explainers.</span>
+<span class="sd">    Reference:</span>
+<span class="sd">        Ramprasaath R. Selvaraju, Michael Cogswell, Abhishek Das, Ramakrishna Vedantam, Devi Parikh, Dhruv Batra. Grad-CAM: Visual Explanations from Deep Networks via Gradient-based Localization.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">SUPPORTED_MODULES</span> <span class="o">=</span> <span class="p">[</span><span class="n">Linear</span><span class="p">,</span> <span class="n">Convolution</span><span class="p">,</span> <span class="n">LSTM</span><span class="p">,</span> <span class="n">RNN</span><span class="p">,</span> <span class="n">Attention</span><span class="p">]</span>
@@ -1348,7 +1324,6 @@
         <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
         <span class="n">noise_level</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">.1</span><span class="p">,</span>
         <span class="n">n_iter</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">20</span><span class="p">,</span>
-        <span class="n">square</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
         <span class="n">forward_arg_extractor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span>
             <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]],</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">additional_forward_arg_extractor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">[[</span>
@@ -1401,6 +1376,16 @@
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]],</span>
         <span class="n">targets</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes attributions for the given inputs and targets.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            inputs (torch.Tensor): The input data.</span>
+<span class="sd">            targets (torch.Tensor): The target labels for the inputs.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Union[torch.Tensor, Tuple[torch.Tensor]]: The result of the explanation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">forward_args</span><span class="p">,</span> <span class="n">additional_forward_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_forward_args</span><span class="p">(</span>
             <span class="n">inputs</span><span class="p">)</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">attributor</span><span class="p">()</span> <span class="k">as</span> <span class="n">attributor</span><span class="p">:</span>
@@ -1414,11 +1399,12 @@
 
     <span class="k">def</span> <span class="nf">get_tunables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Provides a dictionary of tunable parameters for the optimization module.</span>
+<span class="sd">            Provides Tunable parameters for the optimizer</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">            Dict[str, Tuple[type, dict]]: A dictionary of tunable parameters, </span>
-<span class="sd">            including noise level and the number of iterations.</span>
+<span class="sd">            Tunable parameters:</span>
+<span class="sd">                `noise_level` (float): Value can be selected in the range of `range(0, 0.95, 0.05)`</span>
+
+<span class="sd">                `n_iter` (int): Value can be selected in the range of `range(10, 100, 10)`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s1">&#39;noise_level&#39;</span><span class="p">:</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;low&quot;</span><span class="p">:</span> <span class="mf">.05</span><span class="p">,</span> <span class="s2">&quot;high&quot;</span><span class="p">:</span> <span class="mf">.95</span><span class="p">,</span> <span class="s2">&quot;step&quot;</span><span class="p">:</span> <span class="mf">.05</span><span class="p">}),</span>
@@ -1442,15 +1428,62 @@
 <div class="doc doc-object doc-function">
 
 
-<h3 id="pnpxai.explainers.smooth_grad.SmoothGrad.get_tunables" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">get_tunables</span><span class="p">()</span></code>
+<h3 id="pnpxai.explainers.smooth_grad.SmoothGrad.attribute" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">attribute</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span></code>
 
 </h3>
 
 
     <div class="doc doc-contents ">
 
-        <p>Provides a dictionary of tunable parameters for the optimization module.</p>
+        <p>Computes attributions for the given inputs and targets.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>inputs</code>
+            </td>
+            <td>
+                  <code><span title="torch.Tensor">Tensor</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The input data.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>targets</code>
+            </td>
+            <td>
+                  <code><span title="torch.Tensor">Tensor</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The target labels for the inputs.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -1464,21 +1497,11 @@
       <tbody>
           <tr class="doc-section-item">
             <td>
-                  <code><span title="typing.Dict">Dict</span>[str, <span title="typing.Tuple">Tuple</span>[type, dict]]</code>
+                  <code><span title="typing.Union">Union</span>[<span title="torch.Tensor">Tensor</span>, <span title="typing.Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>]]</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Dict[str, Tuple[type, dict]]: A dictionary of tunable parameters, </p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td>
-                  <code><span title="typing.Dict">Dict</span>[str, <span title="typing.Tuple">Tuple</span>[type, dict]]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>including noise level and the number of iterations.</p>
+                <p>Union[torch.Tensor, Tuple[torch.Tensor]]: The result of the explanation.</p>
               </div>
             </td>
           </tr>
@@ -1487,24 +1510,102 @@
 
             <details class="quote">
               <summary>Source code in <code>pnpxai/explainers/smooth_grad.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">103</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
 <span class="normal">104</span>
 <span class="normal">105</span>
 <span class="normal">106</span>
 <span class="normal">107</span>
 <span class="normal">108</span>
 <span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span>
-<span class="normal">114</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_tunables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]:</span>
+<span class="normal">110</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]],</span>
+    <span class="n">targets</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Provides a dictionary of tunable parameters for the optimization module.</span>
+<span class="sd">    Computes attributions for the given inputs and targets.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        inputs (torch.Tensor): The input data.</span>
+<span class="sd">        targets (torch.Tensor): The target labels for the inputs.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        Dict[str, Tuple[type, dict]]: A dictionary of tunable parameters, </span>
-<span class="sd">        including noise level and the number of iterations.</span>
+<span class="sd">        Union[torch.Tensor, Tuple[torch.Tensor]]: The result of the explanation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">forward_args</span><span class="p">,</span> <span class="n">additional_forward_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_forward_args</span><span class="p">(</span>
+        <span class="n">inputs</span><span class="p">)</span>
+    <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">attributor</span><span class="p">()</span> <span class="k">as</span> <span class="n">attributor</span><span class="p">:</span>
+        <span class="n">grads</span> <span class="o">=</span> <span class="n">format_into_tuple</span><span class="p">(</span><span class="n">attributor</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span>
+            <span class="n">forward_args</span><span class="p">,</span>
+            <span class="n">targets</span><span class="p">,</span>
+            <span class="n">additional_forward_args</span><span class="p">,</span>
+            <span class="n">return_squared</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">))</span>
+    <span class="k">return</span> <span class="n">format_out_tuple_if_single</span><span class="p">(</span><span class="n">grads</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="pnpxai.explainers.smooth_grad.SmoothGrad.get_tunables" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_tunables</span><span class="p">()</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Provides Tunable parameters for the optimizer</p>
+
+
+<details class="tunable-parameters" open>
+  <summary>Tunable parameters</summary>
+  <p><code>noise_level</code> (float): Value can be selected in the range of <code>range(0, 0.95, 0.05)</code></p>
+<p><code>n_iter</code> (int): Value can be selected in the range of <code>range(10, 100, 10)</code></p>
+</details>
+            <details class="quote">
+              <summary>Source code in <code>pnpxai/explainers/smooth_grad.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_tunables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Provides Tunable parameters for the optimizer</span>
+
+<span class="sd">        Tunable parameters:</span>
+<span class="sd">            `noise_level` (float): Value can be selected in the range of `range(0, 0.95, 0.05)`</span>
+
+<span class="sd">            `n_iter` (int): Value can be selected in the range of `range(10, 100, 10)`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="s1">&#39;noise_level&#39;</span><span class="p">:</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;low&quot;</span><span class="p">:</span> <span class="mf">.05</span><span class="p">,</span> <span class="s2">&quot;high&quot;</span><span class="p">:</span> <span class="mf">.95</span><span class="p">,</span> <span class="s2">&quot;step&quot;</span><span class="p">:</span> <span class="mf">.05</span><span class="p">}),</span>

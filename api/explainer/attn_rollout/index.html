@@ -786,9 +786,51 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#pnpxai.explainers.attention_rollout.AttentionRollout" class="md-nav__link">
+    <span class="md-ellipsis">
+      AttentionRollout
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#pnpxai.explainers.attention_rollout.AttentionRolloutBase" class="md-nav__link">
     <span class="md-ellipsis">
       AttentionRolloutBase
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AttentionRolloutBase">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.explainers.attention_rollout.AttentionRolloutBase.attribute" class="md-nav__link">
+    <span class="md-ellipsis">
+      attribute
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.explainers.attention_rollout.AttentionRolloutBase.get_tunables" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_tunables
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pnpxai.explainers.attention_rollout.TransformerAttribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      TransformerAttribution
     </span>
   </a>
   
@@ -952,9 +994,51 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#pnpxai.explainers.attention_rollout.AttentionRollout" class="md-nav__link">
+    <span class="md-ellipsis">
+      AttentionRollout
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#pnpxai.explainers.attention_rollout.AttentionRolloutBase" class="md-nav__link">
     <span class="md-ellipsis">
       AttentionRolloutBase
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AttentionRolloutBase">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.explainers.attention_rollout.AttentionRolloutBase.attribute" class="md-nav__link">
+    <span class="md-ellipsis">
+      attribute
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.explainers.attention_rollout.AttentionRolloutBase.get_tunables" class="md-nav__link">
+    <span class="md-ellipsis">
+      get_tunables
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pnpxai.explainers.attention_rollout.TransformerAttribution" class="md-nav__link">
+    <span class="md-ellipsis">
+      TransformerAttribution
     </span>
   </a>
   
@@ -1004,6 +1088,323 @@
 
 
 
+<h2 id="pnpxai.explainers.attention_rollout.AttentionRollout" class="doc doc-heading">
+            <code>AttentionRollout</code>
+
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-internal" title="pnpxai.explainers.attention_rollout.AttentionRolloutBase" href="#pnpxai.explainers.attention_rollout.AttentionRolloutBase">AttentionRolloutBase</a></code></p>
+
+
+        <p>Implementation of <code>AttentionRollout</code> explainer.</p>
+<p>Supported Modules: <code>Attention</code></p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>model</code>
+            </td>
+            <td>
+                  <code><span title="torch.nn.modules.Module">Module</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The PyTorch model for which attribution is to be computed.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>interpolate_mode</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[str]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The interpolation mode used by the explainer. Available methods are: "bilinear" and "bicubic"</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;bilinear&#39;</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>head_fusion_method</code>
+            </td>
+            <td>
+                  <code><span title="typing.Literal">Literal</span>[&#39;min&#39;, &#39;max&#39;, &#39;mean&#39;]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>(Optional[str]): Method to apply to head fusion. Available methods are: <code>"min"</code>, <code>"max"</code>, <code>"mean"</code></p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;min&#39;</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>discard_ratio</code>
+            </td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>(Optional[float]): Describes ration of attention values to discard.</p>
+              </div>
+            </td>
+            <td>
+                  <code>0.9</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>forward_arg_extractor</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="typing.Callable">Callable</span>[[<span title="typing.Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>]], <span title="typing.Union">Union</span>[<span title="torch.Tensor">Tensor</span>, <span title="typing.Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>]]]]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional function to extract forward arguments from inputs.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>additional_forward_arg_extractor</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="typing.Callable">Callable</span>[[<span title="typing.Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>]], <span title="typing.Union">Union</span>[<span title="torch.Tensor">Tensor</span>, <span title="typing.Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>]]]]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional function to extract additional forward arguments.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>n_classes</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[int]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>(Optional[int]): Number of classes</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>**kwargs</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Keyword arguments that are forwarded to the base implementation of the Explainer</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<details class="reference" open>
+  <summary>Reference</summary>
+  <p>Samira Abnar, Willem Zuidema. Quantifying Attention Flow in Transformers.</p>
+</details>
+
+
+
+
+
+              <details class="quote">
+                <summary>Source code in <code>pnpxai/explainers/attention_rollout.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">AttentionRollout</span><span class="p">(</span><span class="n">AttentionRolloutBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Implementation of `AttentionRollout` explainer.</span>
+
+<span class="sd">    Supported Modules: `Attention`</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        model (Module): The PyTorch model for which attribution is to be computed.</span>
+<span class="sd">        interpolate_mode (Optional[str]): The interpolation mode used by the explainer. Available methods are: &quot;bilinear&quot; and &quot;bicubic&quot;</span>
+<span class="sd">        head_fusion_method: (Optional[str]): Method to apply to head fusion. Available methods are: `&quot;min&quot;`, `&quot;max&quot;`, `&quot;mean&quot;`</span>
+<span class="sd">        discard_ratio: (Optional[float]): Describes ration of attention values to discard.</span>
+<span class="sd">        forward_arg_extractor (Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]): Optional function to extract forward arguments from inputs.</span>
+<span class="sd">        additional_forward_arg_extractor (Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]): Optional function to extract additional forward arguments.</span>
+<span class="sd">        n_classes: (Optional[int]): Number of classes</span>
+<span class="sd">        **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer</span>
+
+<span class="sd">    Reference:</span>
+<span class="sd">        Samira Abnar, Willem Zuidema. Quantifying Attention Flow in Transformers.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
+        <span class="n">interpolate_mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;bilinear&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;bilinear&#39;</span><span class="p">,</span>
+        <span class="n">head_fusion_method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="s1">&#39;max&#39;</span><span class="p">,</span> <span class="s1">&#39;mean&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;min&#39;</span><span class="p">,</span>
+        <span class="n">discard_ratio</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+        <span class="n">forward_arg_extractor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ForwardArgumentExtractor</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_arg_extractor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ForwardArgumentExtractor</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">n_classes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">model</span><span class="p">,</span>
+            <span class="n">interpolate_mode</span><span class="p">,</span>
+            <span class="n">head_fusion_method</span><span class="p">,</span>
+            <span class="n">discard_ratio</span><span class="p">,</span>
+            <span class="n">forward_arg_extractor</span><span class="p">,</span>
+            <span class="n">additional_forward_arg_extractor</span><span class="p">,</span>
+            <span class="n">n_classes</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">collect_attention_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">):</span>
+        <span class="c1"># get all attn maps</span>
+        <span class="k">with</span> <span class="n">SavingAttentionAttributor</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span> <span class="k">as</span> <span class="n">attributor</span><span class="p">:</span>
+            <span class="n">weights_all</span> <span class="o">=</span> <span class="n">attributor</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">weights_all</span><span class="p">,)</span>
+
+    <span class="k">def</span> <span class="nf">rollout</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">weights_all</span><span class="p">):</span>
+        <span class="n">sz</span> <span class="o">=</span> <span class="n">weights_all</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span>
+            <span class="n">attn_weights</span><span class="o">.</span><span class="n">size</span><span class="p">()</span> <span class="o">==</span> <span class="n">sz</span>
+            <span class="k">for</span> <span class="n">attn_weights</span> <span class="ow">in</span> <span class="n">weights_all</span>
+        <span class="p">)</span>
+        <span class="n">bsz</span><span class="p">,</span> <span class="n">num_heads</span><span class="p">,</span> <span class="n">tgt_len</span><span class="p">,</span> <span class="n">src_len</span> <span class="o">=</span> <span class="n">sz</span>
+        <span class="n">rollout</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">tgt_len</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">bsz</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">attn_weights</span> <span class="ow">in</span> <span class="n">weights_all</span><span class="p">:</span>
+            <span class="n">attn_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">head_fusion_function</span><span class="p">(</span><span class="n">attn_weights</span><span class="p">)</span>
+            <span class="n">attn_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_discard</span><span class="p">(</span><span class="n">attn_map</span><span class="p">)</span>
+            <span class="n">identity</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">tgt_len</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">bsz</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">attn_map</span> <span class="o">=</span> <span class="mf">.5</span> <span class="o">*</span> <span class="n">attn_map</span> <span class="o">+</span> <span class="mf">.5</span> <span class="o">*</span> <span class="n">identity</span>
+            <span class="n">attn_map</span> <span class="o">/=</span> <span class="n">attn_map</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">rollout</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">rollout</span><span class="p">,</span> <span class="n">attn_map</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">rollout</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
 <h2 id="pnpxai.explainers.attention_rollout.AttentionRolloutBase" class="doc doc-heading">
             <code>AttentionRolloutBase</code>
 
@@ -1016,7 +1417,8 @@
               Bases: <code><span title="pnpxai.explainers.zennit.base.ZennitExplainer">ZennitExplainer</span></code></p>
 
 
-        <p>AttentionRolloutBase explainer.</p>
+        <p>Base class for <code>AttentionRollout</code> and <code>TransformerAttribution</code> explainers.</p>
+<p>Supported Modules: <code>Attention</code></p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1269,9 +1671,34 @@
 <span class="normal">136</span>
 <span class="normal">137</span>
 <span class="normal">138</span>
-<span class="normal">139</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">AttentionRolloutBase</span><span class="p">(</span><span class="n">ZennitExplainer</span><span class="p">):</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">AttentionRolloutBase</span><span class="p">(</span><span class="n">ZennitExplainer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    AttentionRolloutBase explainer.</span>
+<span class="sd">    Base class for `AttentionRollout` and `TransformerAttribution` explainers.</span>
+
+<span class="sd">    Supported Modules: `Attention`</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        model (Module): The PyTorch model for which attribution is to be computed.</span>
@@ -1341,6 +1768,17 @@
         <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]],</span>
         <span class="n">targets</span><span class="p">:</span> <span class="n">Tensor</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Computes attributions for the given inputs and targets.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            inputs (torch.Tensor): The input data.</span>
+<span class="sd">            targets (torch.Tensor): The target labels for the inputs.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            torch.Tensor: The result of the explanation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">attn_maps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">collect_attention_map</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
         <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
             <span class="n">rollout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rollout</span><span class="p">(</span><span class="o">*</span><span class="n">attn_maps</span><span class="p">)</span>
@@ -1362,11 +1800,691 @@
         <span class="k">return</span> <span class="n">attrs</span>
 
     <span class="k">def</span> <span class="nf">get_tunables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Provides Tunable parameters for the optimizer</span>
+
+<span class="sd">            Tunable parameters:</span>
+<span class="sd">                `interpolate_mode` (str): Value can be selected of `&quot;bilinear&quot;` and `&quot;bicubic&quot;`</span>
+
+<span class="sd">                `head_fusion_method` (str): Value can be selected of `&quot;min&quot;`, `&quot;max&quot;`, and `&quot;mean&quot;`</span>
+
+<span class="sd">                `discard_ratio` (float): Value can be selected in the range of `range(0, 0.95, 0.05)`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s1">&#39;interpolate_mode&#39;</span><span class="p">:</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;choices&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;bilinear&#39;</span><span class="p">,</span> <span class="s1">&#39;bicubic&#39;</span><span class="p">]}),</span>
             <span class="s1">&#39;head_fusion_method&#39;</span><span class="p">:</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;choices&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="s1">&#39;max&#39;</span><span class="p">,</span> <span class="s1">&#39;mean&#39;</span><span class="p">]}),</span>
             <span class="s1">&#39;discard_ratio&#39;</span><span class="p">:</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;low&#39;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">,</span> <span class="s1">&#39;high&#39;</span><span class="p">:</span> <span class="mf">.95</span><span class="p">,</span> <span class="s1">&#39;step&#39;</span><span class="p">:</span> <span class="mf">.05</span><span class="p">}),</span>
         <span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="pnpxai.explainers.attention_rollout.AttentionRolloutBase.attribute" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">attribute</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Computes attributions for the given inputs and targets.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>inputs</code>
+            </td>
+            <td>
+                  <code><span title="torch.Tensor">Tensor</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The input data.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>targets</code>
+            </td>
+            <td>
+                  <code><span title="torch.Tensor">Tensor</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The target labels for the inputs.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="typing.Union">Union</span>[<span title="torch.Tensor">Tensor</span>, <span title="typing.Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>]]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>torch.Tensor: The result of the explanation.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+            <details class="quote">
+              <summary>Source code in <code>pnpxai/explainers/attention_rollout.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]],</span>
+    <span class="n">targets</span><span class="p">:</span> <span class="n">Tensor</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes attributions for the given inputs and targets.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        inputs (torch.Tensor): The input data.</span>
+<span class="sd">        targets (torch.Tensor): The target labels for the inputs.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        torch.Tensor: The result of the explanation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">attn_maps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">collect_attention_map</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+        <span class="n">rollout</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rollout</span><span class="p">(</span><span class="o">*</span><span class="n">attn_maps</span><span class="p">)</span>
+
+    <span class="c1"># attn btw cls and patches</span>
+    <span class="n">attrs</span> <span class="o">=</span> <span class="n">rollout</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">:]</span>
+    <span class="n">n_patches</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>        
+    <span class="n">bsz</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+    <span class="n">p_h</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">h</span> <span class="o">/</span> <span class="n">w</span> <span class="o">*</span> <span class="n">n_patches</span> <span class="o">**</span> <span class="mf">.5</span><span class="p">)</span>
+    <span class="n">p_w</span> <span class="o">=</span> <span class="n">n_patches</span> <span class="o">//</span> <span class="n">p_h</span>
+    <span class="n">attrs</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">bsz</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">p_h</span><span class="p">,</span> <span class="n">p_w</span><span class="p">)</span>
+
+    <span class="c1"># upsampling</span>
+    <span class="n">attrs</span> <span class="o">=</span> <span class="n">LayerAttribution</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span>
+        <span class="n">layer_attribution</span><span class="o">=</span><span class="n">attrs</span><span class="p">,</span>
+        <span class="n">interpolate_dims</span><span class="o">=</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">),</span>
+        <span class="n">interpolate_mode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">interpolate_mode</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">attrs</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="pnpxai.explainers.attention_rollout.AttentionRolloutBase.get_tunables" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">get_tunables</span><span class="p">()</span></code>
+
+</h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Provides Tunable parameters for the optimizer</p>
+
+
+<details class="tunable-parameters" open>
+  <summary>Tunable parameters</summary>
+  <p><code>interpolate_mode</code> (str): Value can be selected of <code>"bilinear"</code> and <code>"bicubic"</code></p>
+<p><code>head_fusion_method</code> (str): Value can be selected of <code>"min"</code>, <code>"max"</code>, and <code>"mean"</code></p>
+<p><code>discard_ratio</code> (float): Value can be selected in the range of <code>range(0, 0.95, 0.05)</code></p>
+</details>
+            <details class="quote">
+              <summary>Source code in <code>pnpxai/explainers/attention_rollout.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_tunables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Provides Tunable parameters for the optimizer</span>
+
+<span class="sd">        Tunable parameters:</span>
+<span class="sd">            `interpolate_mode` (str): Value can be selected of `&quot;bilinear&quot;` and `&quot;bicubic&quot;`</span>
+
+<span class="sd">            `head_fusion_method` (str): Value can be selected of `&quot;min&quot;`, `&quot;max&quot;`, and `&quot;mean&quot;`</span>
+
+<span class="sd">            `discard_ratio` (float): Value can be selected in the range of `range(0, 0.95, 0.05)`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s1">&#39;interpolate_mode&#39;</span><span class="p">:</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;choices&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;bilinear&#39;</span><span class="p">,</span> <span class="s1">&#39;bicubic&#39;</span><span class="p">]}),</span>
+        <span class="s1">&#39;head_fusion_method&#39;</span><span class="p">:</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;choices&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="s1">&#39;max&#39;</span><span class="p">,</span> <span class="s1">&#39;mean&#39;</span><span class="p">]}),</span>
+        <span class="s1">&#39;discard_ratio&#39;</span><span class="p">:</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;low&#39;</span><span class="p">:</span> <span class="mf">0.</span><span class="p">,</span> <span class="s1">&#39;high&#39;</span><span class="p">:</span> <span class="mf">.95</span><span class="p">,</span> <span class="s1">&#39;step&#39;</span><span class="p">:</span> <span class="mf">.05</span><span class="p">}),</span>
+    <span class="p">}</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="pnpxai.explainers.attention_rollout.TransformerAttribution" class="doc doc-heading">
+            <code>TransformerAttribution</code>
+
+
+</h2>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><a class="autorefs autorefs-internal" title="pnpxai.explainers.attention_rollout.AttentionRolloutBase" href="#pnpxai.explainers.attention_rollout.AttentionRolloutBase">AttentionRolloutBase</a></code></p>
+
+
+        <p>Implementation of <code>TransformerAttribution</code> explainer.</p>
+<p>Supported Modules: <code>Attention</code></p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>model</code>
+            </td>
+            <td>
+                  <code><span title="torch.nn.modules.Module">Module</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The PyTorch model for which attribution is to be computed.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>interpolate_mode</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[str]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The interpolation mode used by the explainer. Available methods are: "bilinear" and "bicubic"</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;bilinear&#39;</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>head_fusion_method</code>
+            </td>
+            <td>
+                  <code><span title="typing.Literal">Literal</span>[&#39;min&#39;, &#39;max&#39;, &#39;mean&#39;]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>(Optional[str]): Method to apply to head fusion. Available methods are: <code>"min"</code>, <code>"max"</code>, <code>"mean"</code></p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;mean&#39;</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>discard_ratio</code>
+            </td>
+            <td>
+                  <code>float</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>(Optional[float]): Describes ration of attention values to discard.</p>
+              </div>
+            </td>
+            <td>
+                  <code>0.9</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>forward_arg_extractor</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="typing.Callable">Callable</span>[[<span title="typing.Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>]], <span title="typing.Union">Union</span>[<span title="torch.Tensor">Tensor</span>, <span title="typing.Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>]]]]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional function to extract forward arguments from inputs.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>additional_forward_arg_extractor</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="typing.Callable">Callable</span>[[<span title="typing.Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>]], <span title="typing.Union">Union</span>[<span title="torch.Tensor">Tensor</span>, <span title="typing.Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>]]]]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional function to extract additional forward arguments.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>n_classes</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[int]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>(Optional[int]): Number of classes</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>**kwargs</code>
+            </td>
+            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Keyword arguments that are forwarded to the base implementation of the Explainer</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<details class="reference" open>
+  <summary>Reference</summary>
+  <p>Chefer H., Gur S., and Wolf L. Self-Attention Attribution: Transformer interpretability beyond attention visualization.</p>
+</details>
+
+
+
+
+
+              <details class="quote">
+                <summary>Source code in <code>pnpxai/explainers/attention_rollout.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span>
+<span class="normal">306</span>
+<span class="normal">307</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span>
+<span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span>
+<span class="normal">315</span>
+<span class="normal">316</span>
+<span class="normal">317</span>
+<span class="normal">318</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span>
+<span class="normal">323</span>
+<span class="normal">324</span>
+<span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span>
+<span class="normal">330</span>
+<span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span>
+<span class="normal">348</span>
+<span class="normal">349</span>
+<span class="normal">350</span>
+<span class="normal">351</span>
+<span class="normal">352</span>
+<span class="normal">353</span>
+<span class="normal">354</span>
+<span class="normal">355</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">TransformerAttribution</span><span class="p">(</span><span class="n">AttentionRolloutBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Implementation of `TransformerAttribution` explainer.</span>
+
+<span class="sd">    Supported Modules: `Attention`</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        model (Module): The PyTorch model for which attribution is to be computed.</span>
+<span class="sd">        interpolate_mode (Optional[str]): The interpolation mode used by the explainer. Available methods are: &quot;bilinear&quot; and &quot;bicubic&quot;</span>
+<span class="sd">        head_fusion_method: (Optional[str]): Method to apply to head fusion. Available methods are: `&quot;min&quot;`, `&quot;max&quot;`, `&quot;mean&quot;`</span>
+<span class="sd">        discard_ratio: (Optional[float]): Describes ration of attention values to discard.</span>
+<span class="sd">        forward_arg_extractor (Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]): Optional function to extract forward arguments from inputs.</span>
+<span class="sd">        additional_forward_arg_extractor (Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]): Optional function to extract additional forward arguments.</span>
+<span class="sd">        n_classes: (Optional[int]): Number of classes</span>
+<span class="sd">        **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer</span>
+
+<span class="sd">    Reference:</span>
+<span class="sd">        Chefer H., Gur S., and Wolf L. Self-Attention Attribution: Transformer interpretability beyond attention visualization.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">SUPPORTED_MODULES</span> <span class="o">=</span> <span class="p">[</span><span class="n">Attention</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">:</span> <span class="n">Module</span><span class="p">,</span>
+        <span class="n">interpolate_mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;bilinear&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;bilinear&#39;</span><span class="p">,</span>
+        <span class="n">head_fusion_method</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;min&#39;</span><span class="p">,</span> <span class="s1">&#39;max&#39;</span><span class="p">,</span> <span class="s1">&#39;mean&#39;</span><span class="p">]</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span>
+        <span class="n">discard_ratio</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="mf">0.9</span><span class="p">,</span>
+        <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="mf">2.</span><span class="p">,</span>
+        <span class="n">beta</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
+        <span class="n">stabilizer</span><span class="p">:</span> <span class="nb">float</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span>
+        <span class="n">zennit_canonizers</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Canonizer</span><span class="p">]]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">layer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Module</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Module</span><span class="p">]]]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">forward_arg_extractor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ForwardArgumentExtractor</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">additional_forward_arg_extractor</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ForwardArgumentExtractor</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">n_classes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">model</span><span class="p">,</span>
+            <span class="n">interpolate_mode</span><span class="p">,</span>
+            <span class="n">head_fusion_method</span><span class="p">,</span>
+            <span class="n">discard_ratio</span><span class="p">,</span>
+            <span class="n">forward_arg_extractor</span><span class="p">,</span>
+            <span class="n">additional_forward_arg_extractor</span><span class="p">,</span>
+            <span class="n">n_classes</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span> <span class="o">=</span> <span class="n">alpha</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">beta</span> <span class="o">=</span> <span class="n">beta</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stabilizer</span> <span class="o">=</span> <span class="n">stabilizer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">zennit_canonizers</span> <span class="o">=</span> <span class="n">zennit_canonizers</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">layer</span> <span class="o">=</span> <span class="n">layer</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">default_head_fusion_fn</span><span class="p">(</span><span class="n">attns</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">attns</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">zennit_composite</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">layer_map</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">(</span><span class="n">MultiheadAttention</span><span class="p">,</span> <span class="n">CGWAttentionPropagation</span><span class="p">(</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span>
+                <span class="n">beta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span>
+                <span class="n">stabilizer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stabilizer</span><span class="p">,</span>
+                <span class="n">save_attn_output_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)),</span>
+            <span class="p">(</span><span class="n">Linear</span><span class="p">,</span> <span class="n">AlphaBeta</span><span class="p">(</span>
+                <span class="n">alpha</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="p">,</span>
+                <span class="n">beta</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="p">,</span>
+                <span class="n">stabilizer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stabilizer</span><span class="p">,</span>
+            <span class="p">)),</span>
+        <span class="p">]</span> <span class="o">+</span> <span class="n">layer_map_base</span><span class="p">(</span><span class="n">stabilizer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stabilizer</span><span class="p">)</span>
+        <span class="n">canonizers</span> <span class="o">=</span> <span class="n">default_attention_converters</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">zennit_canonizers</span>
+        <span class="k">return</span> <span class="n">LayerMapComposite</span><span class="p">(</span><span class="n">layer_map</span><span class="o">=</span><span class="n">layer_map</span><span class="p">,</span> <span class="n">canonizers</span><span class="o">=</span><span class="n">canonizers</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_layer_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">LayerGradient</span><span class="p">:</span>
+        <span class="n">wrapped_model</span> <span class="o">=</span> <span class="n">captum_wrap_model_input</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+        <span class="n">layers</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">wrapped_model</span><span class="o">.</span><span class="n">input_maps</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+            <span class="k">else</span> <span class="n">layer</span> <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer</span>
+        <span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer</span>
+        <span class="k">return</span> <span class="n">LayerGradient</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">wrapped_model</span><span class="p">,</span>
+            <span class="n">layer</span><span class="o">=</span><span class="n">layers</span><span class="p">,</span>
+            <span class="n">composite</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">zennit_composite</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Gradient</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Gradient</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+            <span class="n">composite</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">zennit_composite</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">attributor</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">layer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_gradient</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layer_gradient</span>
+
+    <span class="k">def</span> <span class="nf">collect_attention_map</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">):</span>
+        <span class="n">forward_args</span><span class="p">,</span> <span class="n">additional_forward_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_forward_args</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">attributor</span> <span class="k">as</span> <span class="n">attributor</span><span class="p">:</span>
+            <span class="n">attributor</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span>
+                <span class="n">forward_args</span><span class="o">=</span><span class="n">forward_args</span><span class="p">,</span>
+                <span class="n">targets</span><span class="o">=</span><span class="n">targets</span><span class="p">,</span>
+                <span class="n">additional_forward_args</span><span class="o">=</span><span class="n">additional_forward_args</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">grads</span><span class="p">,</span> <span class="n">rels</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">hook_ref</span> <span class="ow">in</span> <span class="n">attributor</span><span class="o">.</span><span class="n">composite</span><span class="o">.</span><span class="n">hook_refs</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">hook_ref</span><span class="p">,</span> <span class="n">CGWAttentionPropagation</span><span class="p">):</span>
+                    <span class="n">grads</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hook_ref</span><span class="o">.</span><span class="n">stored_tensors</span><span class="p">[</span><span class="s2">&quot;attn_grads&quot;</span><span class="p">])</span>
+                    <span class="n">rels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hook_ref</span><span class="o">.</span><span class="n">stored_tensors</span><span class="p">[</span><span class="s2">&quot;attn_rels&quot;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">grads</span><span class="p">,</span> <span class="n">rels</span>
+
+    <span class="k">def</span> <span class="nf">rollout</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grads</span><span class="p">,</span> <span class="n">rels</span><span class="p">):</span>
+        <span class="n">bsz</span><span class="p">,</span> <span class="n">num_heads</span><span class="p">,</span> <span class="n">tgt_len</span><span class="p">,</span> <span class="n">src_len</span> <span class="o">=</span> <span class="n">grads</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">assert</span> <span class="n">tgt_len</span> <span class="o">==</span> <span class="n">src_len</span><span class="p">,</span> <span class="s2">&quot;Must be self-attention&quot;</span>
+        <span class="n">rollout</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">tgt_len</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">bsz</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">grad</span><span class="p">,</span> <span class="n">rel</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">grads</span><span class="p">,</span> <span class="n">rels</span><span class="p">):</span>
+            <span class="n">grad_x_rel</span> <span class="o">=</span> <span class="n">grad</span> <span class="o">*</span> <span class="n">rel</span>
+            <span class="n">attn_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">head_fusion_function</span><span class="p">(</span><span class="n">grad_x_rel</span><span class="p">)</span>
+            <span class="n">attn_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_discard</span><span class="p">(</span><span class="n">attn_map</span><span class="p">)</span>
+            <span class="n">identity</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">tgt_len</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">bsz</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">attn_map</span> <span class="o">=</span> <span class="mf">.5</span> <span class="o">*</span> <span class="n">attn_map</span> <span class="o">+</span> <span class="mf">.5</span> <span class="o">*</span> <span class="n">identity</span>
+            <span class="n">attn_map</span> <span class="o">/=</span> <span class="n">attn_map</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">rollout</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">rollout</span><span class="p">,</span> <span class="n">attn_map</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">rollout</span>
 </code></pre></div></td></tr></table></div>
               </details>
 
