@@ -1399,12 +1399,12 @@
 
     <span class="k">def</span> <span class="nf">get_tunables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            Provides Tunable parameters for the optimizer</span>
+<span class="sd">        Provides Tunable parameters for the optimizer</span>
 
-<span class="sd">            Tunable parameters:</span>
-<span class="sd">                `noise_level` (float): Value can be selected in the range of `range(0, 0.95, 0.05)`</span>
+<span class="sd">        Tunable parameters:</span>
+<span class="sd">            `noise_level` (float): Value can be selected in the range of `range(0, 0.95, 0.05)`</span>
 
-<span class="sd">                `n_iter` (int): Value can be selected in the range of `range(10, 100, 10)`</span>
+<span class="sd">            `n_iter` (int): Value can be selected in the range of `range(10, 100, 10)`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s1">&#39;noise_level&#39;</span><span class="p">:</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;low&quot;</span><span class="p">:</span> <span class="mf">.05</span><span class="p">,</span> <span class="s2">&quot;high&quot;</span><span class="p">:</span> <span class="mf">.95</span><span class="p">,</span> <span class="s2">&quot;step&quot;</span><span class="p">:</span> <span class="mf">.05</span><span class="p">}),</span>
@@ -1600,12 +1600,12 @@
 <span class="normal">123</span>
 <span class="normal">124</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_tunables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Provides Tunable parameters for the optimizer</span>
+<span class="sd">    Provides Tunable parameters for the optimizer</span>
 
-<span class="sd">        Tunable parameters:</span>
-<span class="sd">            `noise_level` (float): Value can be selected in the range of `range(0, 0.95, 0.05)`</span>
+<span class="sd">    Tunable parameters:</span>
+<span class="sd">        `noise_level` (float): Value can be selected in the range of `range(0, 0.95, 0.05)`</span>
 
-<span class="sd">            `n_iter` (int): Value can be selected in the range of `range(10, 100, 10)`</span>
+<span class="sd">        `n_iter` (int): Value can be selected in the range of `range(10, 100, 10)`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="s1">&#39;noise_level&#39;</span><span class="p">:</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;low&quot;</span><span class="p">:</span> <span class="mf">.05</span><span class="p">,</span> <span class="s2">&quot;high&quot;</span><span class="p">:</span> <span class="mf">.95</span><span class="p">,</span> <span class="s2">&quot;step&quot;</span><span class="p">:</span> <span class="mf">.05</span><span class="p">}),</span>

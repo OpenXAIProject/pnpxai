@@ -1801,14 +1801,14 @@
 
     <span class="k">def</span> <span class="nf">get_tunables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">            Provides Tunable parameters for the optimizer</span>
+<span class="sd">        Provides Tunable parameters for the optimizer</span>
 
-<span class="sd">            Tunable parameters:</span>
-<span class="sd">                `interpolate_mode` (str): Value can be selected of `&quot;bilinear&quot;` and `&quot;bicubic&quot;`</span>
+<span class="sd">        Tunable parameters:</span>
+<span class="sd">            `interpolate_mode` (str): Value can be selected of `&quot;bilinear&quot;` and `&quot;bicubic&quot;`</span>
 
-<span class="sd">                `head_fusion_method` (str): Value can be selected of `&quot;min&quot;`, `&quot;max&quot;`, and `&quot;mean&quot;`</span>
+<span class="sd">            `head_fusion_method` (str): Value can be selected of `&quot;min&quot;`, `&quot;max&quot;`, and `&quot;mean&quot;`</span>
 
-<span class="sd">                `discard_ratio` (float): Value can be selected in the range of `range(0, 0.95, 0.05)`</span>
+<span class="sd">            `discard_ratio` (float): Value can be selected in the range of `range(0, 0.95, 0.05)`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s1">&#39;interpolate_mode&#39;</span><span class="p">:</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;choices&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;bilinear&#39;</span><span class="p">,</span> <span class="s1">&#39;bicubic&#39;</span><span class="p">]}),</span>
@@ -2029,14 +2029,14 @@
 <span class="normal">161</span>
 <span class="normal">162</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_tunables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Provides Tunable parameters for the optimizer</span>
+<span class="sd">    Provides Tunable parameters for the optimizer</span>
 
-<span class="sd">        Tunable parameters:</span>
-<span class="sd">            `interpolate_mode` (str): Value can be selected of `&quot;bilinear&quot;` and `&quot;bicubic&quot;`</span>
+<span class="sd">    Tunable parameters:</span>
+<span class="sd">        `interpolate_mode` (str): Value can be selected of `&quot;bilinear&quot;` and `&quot;bicubic&quot;`</span>
 
-<span class="sd">            `head_fusion_method` (str): Value can be selected of `&quot;min&quot;`, `&quot;max&quot;`, and `&quot;mean&quot;`</span>
+<span class="sd">        `head_fusion_method` (str): Value can be selected of `&quot;min&quot;`, `&quot;max&quot;`, and `&quot;mean&quot;`</span>
 
-<span class="sd">            `discard_ratio` (float): Value can be selected in the range of `range(0, 0.95, 0.05)`</span>
+<span class="sd">        `discard_ratio` (float): Value can be selected in the range of `range(0, 0.95, 0.05)`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="p">{</span>
         <span class="s1">&#39;interpolate_mode&#39;</span><span class="p">:</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;choices&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;bilinear&#39;</span><span class="p">,</span> <span class="s1">&#39;bicubic&#39;</span><span class="p">]}),</span>
