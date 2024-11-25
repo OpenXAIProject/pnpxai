@@ -10,6 +10,20 @@ from pnpxai.utils import format_into_tuple
 
 
 class GuidedGradCam(Explainer):
+    """
+    GuidedGradCam explainer.
+
+    Supported Modules: `Convolution`
+
+    Parameters:
+        model (Module): The PyTorch model for which attribution is to be computed.
+        interpolate_mode (Optional[str]): The interpolation mode used by the explainer. Available methods are: `"bilinear"` and `"bicubic"`
+        **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer
+
+    Reference:
+        Ramprasaath R. Selvaraju, Michael Cogswell, Abhishek Das, Ramakrishna Vedantam, Devi Parikh, Dhruv Batra. Grad-CAM: Visual Explanations from Deep Networks via Gradient-based Localization.
+    """
+
     SUPPORTED_MODULES = [Convolution]
 
     def __init__(
@@ -21,6 +35,16 @@ class GuidedGradCam(Explainer):
         self.interpolate_mode = interpolate_mode
 
     def attribute(self, inputs: Tensor, targets: Tensor) -> Tensor:
+        """
+        Computes attributions for the given inputs and targets.
+
+        Args:
+            inputs (torch.Tensor): The input data.
+            targets (torch.Tensor): The target labels for the inputs.
+
+        Returns:
+            torch.Tensor: The result of the explanation.
+        """
         forward_args, additional_forward_args = self._extract_forward_args(
             inputs)
         forward_args = format_into_tuple(forward_args)
@@ -37,6 +61,12 @@ class GuidedGradCam(Explainer):
         return attrs
 
     def get_tunables(self) -> Dict[str, Tuple[type, dict]]:
+        """
+        Provides Tunable parameters for the optimizer
+
+        Tunable parameters:
+            `interpolate_mode` (str): Value can be selected of `"bilinear"` and `"bicubic"`
+        """
         return {
             'interpolate_mode': (list, {'choices': ['nearest', 'area']}),
         }
