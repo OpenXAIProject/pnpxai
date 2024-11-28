@@ -18,15 +18,19 @@ class DeepLiftShap(Explainer):
         self,
         model: Module,
         background_data: Tensor,
+        dtype: Optional[torch.dtype] = None,
     ):
         super().__init__(model)
         self.background_data = background_data
+        self.dtype = dtype or torch.float64
 
     def attribute(self, inputs: Tensor, targets: Tensor) -> Tensor:
         _explainer = shap.DeepExplainer(self.model, self.background_data)
-        shap_values = torch.tensor(_explainer.shap_values(inputs))
-        permute_dims = list(range(1, shap_values.dim())) + [0]
-        shap_values = shap_values.permute(*permute_dims)
-        attrs = shap_values[torch.arange(inputs.size(0)), :, targets.cpu()] # select values for the targeted labels
-        attrs = attrs.to(inputs.device).to(inputs.dtype) # match device and dtype to inputs
-        return attrs
+        shap_values = _explainer.shap_values(inputs)
+        for i in range(len(shap_values)):
+            shap_values[i] = shap_values[i][0]
+        return torch.tensor(
+            shap_values[targets.cpu().item()],
+            dtype=self.dtype,
+            device=self.device,
+        )
