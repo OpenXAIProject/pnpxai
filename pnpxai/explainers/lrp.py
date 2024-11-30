@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple, Callable, Sequence, Union, Optional
+from typing import Dict, List, Tuple, Callable, Sequence, Union, Optional, Any
 
 import _operator
 import warnings
@@ -112,7 +112,8 @@ class LRPBase(ZennitExplainer):
         inputs: Union[Tensor, Tuple[Tensor]],
         targets: Tensor
     ) -> Union[Tensor, Tuple[Tensor]]:
-        model = _replace_add_function_with_sum_module(self.model)
+        # model = _replace_add_function_with_sum_module(self.model)
+        model = self.model
         forward_args, additional_forward_args = self._extract_forward_args(
             inputs)
         with self.explainer(model=model) as attributor:
@@ -133,6 +134,7 @@ class LRPUniformEpsilon(LRPBase):
         epsilon: Union[float, Callable[[Tensor], Tensor]] = .25,
         stabilizer: Union[float, Callable[[Tensor], Tensor]] = 1e-6,
         zennit_canonizers: Optional[List[Canonizer]] = None,
+        additional_layer_map: Optional[List[Tuple[str, Any]]]=None,
         forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
         additional_forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
         layer: Optional[TargetLayerOrListOfTargetLayers] = None,
@@ -143,7 +145,7 @@ class LRPUniformEpsilon(LRPBase):
         self.zennit_canonizers = zennit_canonizers
 
         zennit_composite = _get_uniform_epsilon_composite(
-            epsilon, stabilizer, zennit_canonizers)
+            epsilon, stabilizer, zennit_canonizers, additional_layer_map)
         super().__init__(
             model,
             zennit_composite,
@@ -171,6 +173,7 @@ class LRPEpsilonGammaBox(LRPBase):
         gamma: float = .25,
         stabilizer: Union[float, Callable[[Tensor], Tensor]] = 1e-6,
         zennit_canonizers: Optional[List[Canonizer]] = None,
+        additional_layer_map: Optional[List[Tuple[str, Any]]]=None,
         forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
         additional_forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
         layer: Optional[TargetLayerOrListOfTargetLayers] = None,
@@ -184,7 +187,7 @@ class LRPEpsilonGammaBox(LRPBase):
         self.zennit_canonizers = zennit_canonizers
 
         zennit_composite = _get_epsilon_gamma_box_composite(
-            low, high, epsilon, gamma, stabilizer, zennit_canonizers)
+            low, high, epsilon, gamma, stabilizer, zennit_canonizers, additional_layer_map)
         super().__init__(
             model,
             zennit_composite,
@@ -210,6 +213,7 @@ class LRPEpsilonPlus(LRPBase):
         epsilon: Union[float, Callable[[Tensor], Tensor]] = 1e-6,
         stabilizer: Union[float, Callable[[Tensor], Tensor]] = 1e-6,
         zennit_canonizers: Optional[List[Canonizer]] = None,
+        additional_layer_map: Optional[List[Tuple[str, Any]]]=None,
         forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
         additional_forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
         layer: Optional[TargetLayerOrListOfTargetLayers] = None,
@@ -220,7 +224,7 @@ class LRPEpsilonPlus(LRPBase):
         self.zennit_canonizers = zennit_canonizers
 
         zennit_composite = _get_epsilon_plus_composite(
-            epsilon, stabilizer, zennit_canonizers)
+            epsilon, stabilizer, zennit_canonizers, additional_layer_map)
         super().__init__(
             model,
             zennit_composite,
@@ -245,6 +249,7 @@ class LRPEpsilonAlpha2Beta1(LRPBase):
         epsilon: Union[float, Callable[[Tensor], Tensor]] = 1e-6,
         stabilizer: Union[float, Callable[[Tensor], Tensor]] = 1e-6,
         zennit_canonizers: Optional[List[Canonizer]] = None,
+        additional_layer_map: Optional[List[Tuple[str, Any]]]=None,
         forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
         additional_forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
         layer: Optional[TargetLayerOrListOfTargetLayers] = None,
@@ -255,7 +260,7 @@ class LRPEpsilonAlpha2Beta1(LRPBase):
         self.zennit_canonizers = zennit_canonizers
 
         zennit_composite = _get_epsilon_alpha2_beta1_composite(
-            epsilon, stabilizer, zennit_canonizers)
+            epsilon, stabilizer, zennit_canonizers, additional_layer_map)
         super().__init__(
             model,
             zennit_composite,
@@ -271,19 +276,19 @@ class LRPEpsilonAlpha2Beta1(LRPBase):
         }
 
 
-def _get_uniform_epsilon_composite(epsilon, stabilizer, zennit_canonizers):
+def _get_uniform_epsilon_composite(epsilon, stabilizer, zennit_canonizers, additional_layer_map):
     zennit_canonizers = zennit_canonizers or []
     canonizers = canonizers_base() + default_attention_converters + zennit_canonizers
     layer_map = (
         [(Linear, Epsilon(epsilon=epsilon))]
         + transformer_layer_map(stabilizer=stabilizer)
         + layer_map_base(stabilizer=stabilizer)
-    )
+    ) + additional_layer_map
     composite = LayerMapComposite(layer_map=layer_map, canonizers=canonizers)
     return composite
 
 
-def _get_epsilon_gamma_box_composite(low, high, epsilon, gamma, stabilizer, zennit_canonizers):
+def _get_epsilon_gamma_box_composite(low, high, epsilon, gamma, stabilizer, zennit_canonizers, additional_layer_map):
     zennit_canonizers = zennit_canonizers or []
     canonizers = canonizers_base() + default_attention_converters + zennit_canonizers
     composite = EpsilonGammaBox(
@@ -292,31 +297,33 @@ def _get_epsilon_gamma_box_composite(low, high, epsilon, gamma, stabilizer, zenn
         epsilon=epsilon,
         gamma=gamma,
         stabilizer=stabilizer,
-        layer_map=transformer_layer_map(stabilizer=stabilizer),
+        layer_map=transformer_layer_map(stabilizer=stabilizer)+additional_layer_map,
         canonizers=canonizers,
     )
     return composite
 
 
-def _get_epsilon_plus_composite(epsilon, stabilizer, zennit_canonizers):
+def _get_epsilon_plus_composite(epsilon, stabilizer, zennit_canonizers, additional_layer_map):
+    additional_layer_map = additional_layer_map or []
     zennit_canonizers = zennit_canonizers or []
     canonizers = canonizers_base() + default_attention_converters + zennit_canonizers
     composite = EpsilonPlus(
         epsilon=epsilon,
         stabilizer=stabilizer,
-        layer_map=transformer_layer_map(stabilizer=stabilizer),
+        layer_map=transformer_layer_map(stabilizer=stabilizer)+additional_layer_map,
         canonizers=canonizers,
     )
     return composite
 
 
-def _get_epsilon_alpha2_beta1_composite(epsilon, stabilizer, zennit_canonizers):
+def _get_epsilon_alpha2_beta1_composite(epsilon, stabilizer, zennit_canonizers, additional_layer_map):
+    additional_layer_map = additional_layer_map or []
     zennit_canonizers = zennit_canonizers or []
     canonizers = canonizers_base() + default_attention_converters + zennit_canonizers
     composite = EpsilonAlpha2Beta1(
         epsilon=epsilon,
         stabilizer=stabilizer,
-        layer_map=transformer_layer_map(stabilizer=stabilizer),
+        layer_map=transformer_layer_map(stabilizer=stabilizer)+additional_layer_map,
         canonizers=canonizers,
     )
     return composite
