@@ -72,7 +72,7 @@ class Sensitivity(Metric):
             )
             # Get maximum of the difference between the perturbed attribution and the original attribution
             attr_norm = torch.linalg.norm(attr).to(self.device)
-            attr_diff = attr - perturbed_attr
+            attr_diff = attr.to(self.device) - perturbed_attr.to(self.device)
             sens = max([torch.linalg.norm(diff)/attr_norm for diff in attr_diff])
             evaluations.append(sens)
         return torch.stack(evaluations).to(self.device)

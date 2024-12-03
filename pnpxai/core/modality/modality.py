@@ -186,6 +186,7 @@ class ImageModality(Modality):
         Returns:
             List[PostProcessor]: All available PostProcessors.
         """
+        import ipdb; ipdb.set_trace()
         return [
             PostProcessor(
                 pooling_fn=self.pooling_fn_selector.select(pm),

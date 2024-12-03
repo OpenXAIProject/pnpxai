@@ -9,16 +9,12 @@ from PIL import Image
 from tqdm import tqdm
 from pathlib import Path
 import matplotlib.pyplot as plt
+from scipy.special import softmax
 
 import torch
 import torchvision.transforms as T
 
-from huggingface_hub import snapshot_download
-repo_dir = snapshot_download("devilops/blended-diffusion-custom")
-repo_path = Path(repo_dir)
-import sys
-sys.path.append(str(repo_path))
-from guided_diffusion.guided_diffusion.script_util import create_model_and_diffusion
+
 
 def normalize_np(img):
     """ Normalize img in arbitrary range to [0, 1] """
@@ -45,6 +41,8 @@ class Gfgp(Explainer):
     def __init__(self,
                  model, # classification model to be explained
                  transforms,
+                 timesteps=[300],
+                 n_perturbations=100,
                  
                  model_config=None,
                  diffusion_ckpt_path=None,
@@ -83,15 +81,22 @@ class Gfgp(Explainer):
                 'rescale_timesteps': True,
                 'rescale_learned_sigmas': False
             }
-        self.diffusion_model, self.diffusion = create_model_and_diffusion(**self.model_config)
         if diffusion_ckpt_path is None:
             # print("No checkpoint path for diffusion model was specified.\n Using default diffusion model from OpenAI's guided-diffusion repository at\n https://openaipublic.blob.core.windows.net/diffusion/jul-2021/256x256_diffusion_uncond.pt")
             # url = "https://openaipublic.blob.core.windows.net/diffusion/jul-2021/256x256_diffusion_uncond.pt"
             # filename = "256x256_diffusion_uncond.pt"
             # download(url, filename)
             # diffusion_ckpt_path = "256x256_diffusion_uncond.pt"
+            
+            from huggingface_hub import snapshot_download
+            repo_dir = snapshot_download("devilops/blended-diffusion-custom")
+            repo_path = Path(repo_dir)
+            import sys
+            sys.path.append(str(repo_path))
+            from guided_diffusion.guided_diffusion.script_util import create_model_and_diffusion
             diffusion_ckpt_path = repo_path / "diffusion_ckpts" / "256x256_diffusion_uncond.pt"
-        
+            
+        self.diffusion_model, self.diffusion = create_model_and_diffusion(**self.model_config)
         msg = self.diffusion_model.load_state_dict(torch.load(diffusion_ckpt_path, map_location="cpu"))
         print(f"Loading diffusion model...\n{msg}")
         self.diffusion_model.requires_grad_(False).eval().to(self.device)
@@ -101,11 +106,11 @@ class Gfgp(Explainer):
         self.model.to(self.device)
         
         self.index = 300
-        self.n_perturbations = 100
+        self.timesteps = timesteps
+        self.n_perturbations = n_perturbations
         
         
     def tweedie_perturb(self, x, target_category, index=300, n_perturbations=100):
-        
         """
         Generate perturbations using diffusion
         The perturbations are Tweedie-denoised estimates of noised versions of input image x.
@@ -138,42 +143,82 @@ class Gfgp(Explainer):
             im = self.transforms(im)
             pred = self.model(im.unsqueeze(0).to(self.device))
             pred = pred.squeeze().detach().cpu().numpy()
-            fx0t = pred[target_category]
+            # fx0t = pred[target_category]
             
             x0t = T.Resize((224,224))(x0t)
             x0t = x0t.squeeze().detach().cpu().numpy()
             
             x0ts.append(x0t)
-            fx0ts.append(fx0t)
+            fx0ts.append(pred)
         
         x0ts = np.array(x0ts)
         fx0ts = np.array(fx0ts)
             
         return x0ts, fx0ts
     
-    def get_gfgp(self, x0ts, fx0ts):
-        x0ts, fx0ts = x0ts.copy(), fx0ts.copy()
+    # def get_gfgp(self, fx, x0ts, fx0ts, category_ind):
+    #     x0ts, fx0ts = x0ts.copy(), fx0ts.copy()
         
-        E_x0t = np.mean(x0ts, axis=0)
-        xx = E_x0t - x0ts
-        xx = normalize_np(xx)
+    #     E_x0t = np.mean(x0ts, axis=0)
+    #     xx = E_x0t - x0ts
+    #     xx = normalize_np(xx)
         
-        E_fx0t = np.mean(fx0ts)
-        ff = E_fx0t - fx0ts
+    #     E_fx0t = np.mean(fx0ts)
+    #     ff = E_fx0t - fx0ts
         
-        ffxx = ff[:, None, None, None] * xx
+    #     ffxx = ff[:, None, None, None] * xx
         
-        gfgp = np.mean(ffxx, axis=0)
-        gfgp -= gfgp.mean()
+    #     gfgp = np.mean(ffxx, axis=0)
+    #     gfgp -= gfgp.mean()
+        
+    #     return gfgp
+    
+    def get_gfgp(self, fx, xps, fxps, category_ind):
+        xps, fxps = xps.copy(), fxps.copy()
+        
+        xp_bar = np.mean(xps, axis=0)
+        f_bar = np.mean(fxps, axis=0)
+        
+        ec = np.zeros_like(fx)
+        ec[:, category_ind] = 1
+        
+        xx_k = []
+        px = softmax(fx.squeeze())
+        
+        ecmp = (ec - px).squeeze()
+        fmfbar = fxps - f_bar[np.newaxis, ...]
+        xmxbar = xps - xp_bar[np.newaxis, ...]
+        
+        weight = fmfbar @ ecmp
+        
+        gfgp = np.sum(xmxbar * weight[:, np.newaxis, np.newaxis, np.newaxis], axis=0)
         
         return gfgp
+    
+    # def attribute(self, inputs, targets):
+        
+    #     gfgps = []
+    #     for i, (x, y) in enumerate(zip(inputs, targets)):
+    #         x0ts, fx0ts = self.tweedie_perturb(x, y, self.index, self.n_perturbations)
+    #         gfgp = self.get_gfgp(x0ts, fx0ts)
+    #         gfgps.append(gfgp)
+    #     gfgps = np.array(gfgps)
+    #     gfgps = torch.Tensor(gfgps)
+        
+    #     return gfgps
     
     def attribute(self, inputs, targets):
         
         gfgps = []
         for i, (x, y) in enumerate(zip(inputs, targets)):
-            x0ts, fx0ts = self.tweedie_perturb(x, y, self.index, self.n_perturbations)
-            gfgp = self.get_gfgp(x0ts, fx0ts)
+            gfgp_t = []
+            for timestep in tqdm(self.timesteps):
+                fx = self.model(x.unsqueeze(0)).detach().cpu().numpy()
+                x0ts, fx0ts = self.tweedie_perturb(x, y, timestep, self.n_perturbations)
+                gfgp = self.get_gfgp(fx, x0ts, fx0ts, y.item())
+                gfgp_t.append(gfgp)
+            
+            gfgp = np.array(gfgp_t).mean(axis=0)
             gfgps.append(gfgp)
         gfgps = np.array(gfgps)
         gfgps = torch.Tensor(gfgps)

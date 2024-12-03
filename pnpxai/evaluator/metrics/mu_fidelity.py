@@ -74,17 +74,17 @@ class MuFidelity(Metric):
         outputs = self.model(inputs)
         n_classes = outputs.shape[-1]
         predictions = (
-            outputs * torch.eye(n_classes).to(self.device)[targets]
+            outputs.to(self.device) * torch.eye(n_classes).to(self.device)[targets.to(self.device)]
         ).sum(dim=-1).detach()
 
         # input, target, attr, pred
         evaluations = []
         zipped = zip(inputs, targets, attributions, predictions)
         for input, target, attr, pred in zipped:
-            repeated = torch.stack([input]*self.n_perturb)
+            repeated = torch.stack([input]*self.n_perturb).to(self.device)
             # Add Gaussian random noise
             std, mean = torch.std_mean(repeated)
-            noise = torch.randn_like(repeated).to(self.device) * std + mean
+            noise = torch.randn_like(repeated).to(self.device) * std.to(self.device) + mean.to(self.device)
             perturbed = self.noise_scale * noise + repeated
             perturbed = torch.minimum(repeated, perturbed)
             perturbed = torch.maximum(repeated-1, perturbed)
@@ -106,6 +106,7 @@ class MuFidelity(Metric):
             # Use the masks to set the selected subsets to baseline state
             masked = perturbed * subset_mask + \
                 (1.0 - subset_mask) * self.baseline
+            masked = masked.to(self.device)
 
             masked_output = _forward_batch(self.model, masked, self.batch_size)
             pred_diff = pred - masked_output[:, target]
@@ -124,11 +125,12 @@ class MuFidelity(Metric):
 def _forward_batch(model, inputs, batch_size) -> torch.Tensor:
     training_mode = model.training
     model.eval()
+    device = next(model.parameters()).device
     outputs = []
     indices = list(range(len(inputs)))
     while indices:
         curr_indices, indices = indices[:batch_size], indices[batch_size:]
-        outputs.append(model(inputs[curr_indices]))
+        outputs.append(model(inputs[curr_indices].to(device)))
     model.training = training_mode
     return torch.cat(outputs).detach()
 
