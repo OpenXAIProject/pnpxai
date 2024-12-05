@@ -51,6 +51,7 @@ class GradientXInput(Explainer):
         inputs: Union[Tensor, Tuple[Tensor]],
         targets: Tensor
     ) -> Union[Tensor, Tuple[Tensor]]:
+        
         forward_args, additional_forward_args = self._extract_forward_args(inputs)
         attrs = self.explainer.attribute(
             inputs=forward_args,
