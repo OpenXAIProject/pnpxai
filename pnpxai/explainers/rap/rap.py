@@ -11,6 +11,8 @@ from pnpxai.utils import flatten, map_recursive
 
 
 class RelativeAttributePropagation():
+
+    
     def __init__(self, model: nn.Module):
         self._trace = fx.symbolic_trace(model)
         self._trace.eval()
