@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple, Callable, Sequence, Union, Optional, Any
+from typing import Dict, List, Tuple, Callable, Sequence, Union, Optional
 
 import _operator
 import warnings
@@ -31,6 +31,19 @@ from pnpxai.explainers.types import ForwardArgumentExtractor, TargetLayerOrListO
 
 
 class LRPBase(ZennitExplainer):
+    """
+    Base class for `LRPUniformEpsilon`, `LRPEpsilonGammaBox`, `LRPEpsilonPlus`, and `LRPEpsilonAlpha2Beta1` explainers.
+
+    Parameters:
+        model (Module): The PyTorch model for which attribution is to be computed.
+        zennit_composite (Composite): The Composite object applies canonizers and register hooks to modules. One Composite instance may only be applied to a single module at a time.
+        layer (Optional[Union[Union[str, Module], Sequence[Union[str, Module]]]]): The target module to be explained
+        n_classes (Optional[int]): Number of classes
+        **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer
+
+    Reference:
+        Bach S., Binder A., Montavon G., Klauschen F., M¨uller K.-R., and Samek. On pixel-wise explanations for non-linear classifier decisions by layer-wise relevance propagation.
+    """
     def __init__(
         self,
         model: Module,
@@ -112,8 +125,17 @@ class LRPBase(ZennitExplainer):
         inputs: Union[Tensor, Tuple[Tensor]],
         targets: Tensor
     ) -> Union[Tensor, Tuple[Tensor]]:
-        # model = _replace_add_function_with_sum_module(self.model)
-        model = self.model
+        """
+        Computes attributions for the given inputs and targets.
+
+        Args:
+            inputs (torch.Tensor): The input data.
+            targets (torch.Tensor): The target labels for the inputs.
+
+        Returns:
+            torch.Tensor: The result of the explanation.
+        """
+        model = _replace_add_function_with_sum_module(self.model)
         forward_args, additional_forward_args = self._extract_forward_args(
             inputs)
         with self.explainer(model=model) as attributor:
@@ -126,6 +148,21 @@ class LRPBase(ZennitExplainer):
 
 
 class LRPUniformEpsilon(LRPBase):
+    """
+    LRPUniformEpsilon explainer.
+
+    Supported Modules: `Linear`, `Convolution`, `LSTM`, `RNN`, `Attention`
+
+    Parameters:
+        model (Module): The PyTorch model for which attribution is to be computed.
+        epsilon (Union[float, Callable[[Tensor], Tensor]]): The epsilon value.
+        stabilizer (Union[float, Callable[[Tensor], Tensor]]): The stabilizer value
+        zennit_canonizers (Optional[List[Canonizer]]): An optional list of canonizers. Canonizers modify modules temporarily such that certain attribution rules can properly be applied.
+        layer (Optional[Union[Union[str, Module], Sequence[Union[str, Module]]]]): The target module to be explained
+        n_classes (Optional[int]): Number of classes
+        **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer
+    """
+
     SUPPORTED_MODULES = [Linear, Convolution, LSTM, RNN, Attention]
 
     def __init__(
@@ -134,7 +171,6 @@ class LRPUniformEpsilon(LRPBase):
         epsilon: Union[float, Callable[[Tensor], Tensor]] = .25,
         stabilizer: Union[float, Callable[[Tensor], Tensor]] = 1e-6,
         zennit_canonizers: Optional[List[Canonizer]] = None,
-        additional_layer_map: Optional[List[Tuple[str, Any]]]=None,
         forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
         additional_forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
         layer: Optional[TargetLayerOrListOfTargetLayers] = None,
@@ -145,7 +181,7 @@ class LRPUniformEpsilon(LRPBase):
         self.zennit_canonizers = zennit_canonizers
 
         zennit_composite = _get_uniform_epsilon_composite(
-            epsilon, stabilizer, zennit_canonizers, additional_layer_map)
+            epsilon, stabilizer, zennit_canonizers)
         super().__init__(
             model,
             zennit_composite,
@@ -156,12 +192,36 @@ class LRPUniformEpsilon(LRPBase):
         )
 
     def get_tunables(self) -> Dict[str, Tuple[type, dict]]:
+        """
+            Provides Tunable parameters for the optimizer
+
+            Tunable parameters:
+                `epsilon` (float): Value can be selected in the range of `range(1e-6, 1)`
+        """
         return {
             'epsilon': (float, {"low": 1e-6, "high": 1, "log": True}),
         }
 
 
 class LRPEpsilonGammaBox(LRPBase):
+    """
+    LRPEpsilonGammaBox explainer.
+
+    Supported Modules: `Convolution`
+
+    Parameters:
+        model (Module): The PyTorch model for which attribution is to be computed.
+        low (float): The lowest possible value for computing gamma box
+        high (float): The highest possible value for computing gamma box
+        gamma (float): The gamma value for computing gamma box
+        epsilon (Union[float, Callable[[Tensor], Tensor]]): The epsilon value.
+        stabilizer (Union[float, Callable[[Tensor], Tensor]]): The stabilizer value
+        zennit_canonizers (Optional[List[Canonizer]]): An optional list of canonizers. Canonizers modify modules temporarily such that certain attribution rules can properly be applied.
+        layer (Optional[Union[Union[str, Module], Sequence[Union[str, Module]]]]): The target module to be explained
+        n_classes (Optional[int]): Number of classes
+        **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer
+    """
+
     SUPPORTED_MODULES = [Convolution]
 
     def __init__(
@@ -173,7 +233,6 @@ class LRPEpsilonGammaBox(LRPBase):
         gamma: float = .25,
         stabilizer: Union[float, Callable[[Tensor], Tensor]] = 1e-6,
         zennit_canonizers: Optional[List[Canonizer]] = None,
-        additional_layer_map: Optional[List[Tuple[str, Any]]]=None,
         forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
         additional_forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
         layer: Optional[TargetLayerOrListOfTargetLayers] = None,
@@ -187,7 +246,7 @@ class LRPEpsilonGammaBox(LRPBase):
         self.zennit_canonizers = zennit_canonizers
 
         zennit_composite = _get_epsilon_gamma_box_composite(
-            low, high, epsilon, gamma, stabilizer, zennit_canonizers, additional_layer_map)
+            low, high, epsilon, gamma, stabilizer, zennit_canonizers)
         super().__init__(
             model,
             zennit_composite,
@@ -198,6 +257,14 @@ class LRPEpsilonGammaBox(LRPBase):
         )
 
     def get_tunables(self) -> Dict[str, Tuple[type, dict]]:
+        """
+            Provides Tunable parameters for the optimizer
+
+            Tunable parameters:
+                `epsilon` (float): Value can be selected in the range of `range(1e-6, 1)`
+
+                `gamma` (float): Value can be selected in the range of `range(1e-6, 1)`
+        """
         return {
             'epsilon': (float, {"low": 1e-6, "high": 1, "log": True}),
             'gamma': (float, {"low": 1e-6, "high": 1, "log": True}),
@@ -205,6 +272,21 @@ class LRPEpsilonGammaBox(LRPBase):
 
 
 class LRPEpsilonPlus(LRPBase):
+    """
+    LRPEpsilonPlus explainer.
+
+    Supported Modules: `Convolution`
+
+    Parameters:
+        model (Module): The PyTorch model for which attribution is to be computed.
+        epsilon (Union[float, Callable[[Tensor], Tensor]]): The epsilon value.
+        stabilizer (Union[float, Callable[[Tensor], Tensor]]): The stabilizer value
+        zennit_canonizers (Optional[List[Canonizer]]): An optional list of canonizers. Canonizers modify modules temporarily such that certain attribution rules can properly be applied.
+        layer (Optional[Union[Union[str, Module], Sequence[Union[str, Module]]]]): The target module to be explained
+        n_classes (Optional[int]): Number of classes
+        **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer
+    """
+
     SUPPORTED_MODULES = [Convolution]
 
     def __init__(
@@ -213,7 +295,6 @@ class LRPEpsilonPlus(LRPBase):
         epsilon: Union[float, Callable[[Tensor], Tensor]] = 1e-6,
         stabilizer: Union[float, Callable[[Tensor], Tensor]] = 1e-6,
         zennit_canonizers: Optional[List[Canonizer]] = None,
-        additional_layer_map: Optional[List[Tuple[str, Any]]]=None,
         forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
         additional_forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
         layer: Optional[TargetLayerOrListOfTargetLayers] = None,
@@ -224,7 +305,7 @@ class LRPEpsilonPlus(LRPBase):
         self.zennit_canonizers = zennit_canonizers
 
         zennit_composite = _get_epsilon_plus_composite(
-            epsilon, stabilizer, zennit_canonizers, additional_layer_map)
+            epsilon, stabilizer, zennit_canonizers)
         super().__init__(
             model,
             zennit_composite,
@@ -235,12 +316,33 @@ class LRPEpsilonPlus(LRPBase):
         )
 
     def get_tunables(self) -> Dict[str, Tuple[type, dict]]:
+        """
+            Provides Tunable parameters for the optimizer
+
+            Tunable parameters:
+                `epsilon` (float): Value can be selected in the range of `range(1e-6, 1)`
+        """
         return {
             'epsilon': (float, {"low": 1e-6, "high": 1, "log": True}),
         }
 
 
 class LRPEpsilonAlpha2Beta1(LRPBase):
+    """
+    LRPEpsilonAlpha2Beta1 explainer.
+
+    Supported Modules: `Convolution`
+
+    Parameters:
+        model (Module): The PyTorch model for which attribution is to be computed.
+        epsilon (Union[float, Callable[[Tensor], Tensor]]): The epsilon value.
+        stabilizer (Union[float, Callable[[Tensor], Tensor]]): The stabilizer value
+        zennit_canonizers (Optional[List[Canonizer]]): An optional list of canonizers. Canonizers modify modules temporarily such that certain attribution rules can properly be applied.
+        layer (Optional[Union[Union[str, Module], Sequence[Union[str, Module]]]]): The target module to be explained
+        n_classes (Optional[int]): Number of classes
+        **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer
+    """
+
     SUPPORTED_MODULES = [Convolution]
 
     def __init__(
@@ -249,7 +351,6 @@ class LRPEpsilonAlpha2Beta1(LRPBase):
         epsilon: Union[float, Callable[[Tensor], Tensor]] = 1e-6,
         stabilizer: Union[float, Callable[[Tensor], Tensor]] = 1e-6,
         zennit_canonizers: Optional[List[Canonizer]] = None,
-        additional_layer_map: Optional[List[Tuple[str, Any]]]=None,
         forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
         additional_forward_arg_extractor: Optional[ForwardArgumentExtractor] = None,
         layer: Optional[TargetLayerOrListOfTargetLayers] = None,
@@ -260,7 +361,7 @@ class LRPEpsilonAlpha2Beta1(LRPBase):
         self.zennit_canonizers = zennit_canonizers
 
         zennit_composite = _get_epsilon_alpha2_beta1_composite(
-            epsilon, stabilizer, zennit_canonizers, additional_layer_map)
+            epsilon, stabilizer, zennit_canonizers)
         super().__init__(
             model,
             zennit_composite,
@@ -271,24 +372,30 @@ class LRPEpsilonAlpha2Beta1(LRPBase):
         )
 
     def get_tunables(self) -> Dict[str, Tuple[type, dict]]:
+        """
+            Provides Tunable parameters for the optimizer
+
+            Tunable parameters:
+                `epsilon` (float): Value can be selected in the range of `range(1e-6, 1)`
+        """
         return {
             'epsilon': (float, {"low": 1e-6, "high": 1, "log": True}),
         }
 
 
-def _get_uniform_epsilon_composite(epsilon, stabilizer, zennit_canonizers, additional_layer_map):
+def _get_uniform_epsilon_composite(epsilon, stabilizer, zennit_canonizers):
     zennit_canonizers = zennit_canonizers or []
     canonizers = canonizers_base() + default_attention_converters + zennit_canonizers
     layer_map = (
         [(Linear, Epsilon(epsilon=epsilon))]
         + transformer_layer_map(stabilizer=stabilizer)
         + layer_map_base(stabilizer=stabilizer)
-    ) + additional_layer_map
+    )
     composite = LayerMapComposite(layer_map=layer_map, canonizers=canonizers)
     return composite
 
 
-def _get_epsilon_gamma_box_composite(low, high, epsilon, gamma, stabilizer, zennit_canonizers, additional_layer_map):
+def _get_epsilon_gamma_box_composite(low, high, epsilon, gamma, stabilizer, zennit_canonizers):
     zennit_canonizers = zennit_canonizers or []
     canonizers = canonizers_base() + default_attention_converters + zennit_canonizers
     composite = EpsilonGammaBox(
@@ -297,33 +404,31 @@ def _get_epsilon_gamma_box_composite(low, high, epsilon, gamma, stabilizer, zenn
         epsilon=epsilon,
         gamma=gamma,
         stabilizer=stabilizer,
-        layer_map=transformer_layer_map(stabilizer=stabilizer)+additional_layer_map,
+        layer_map=transformer_layer_map(stabilizer=stabilizer),
         canonizers=canonizers,
     )
     return composite
 
 
-def _get_epsilon_plus_composite(epsilon, stabilizer, zennit_canonizers, additional_layer_map):
-    additional_layer_map = additional_layer_map or []
+def _get_epsilon_plus_composite(epsilon, stabilizer, zennit_canonizers):
     zennit_canonizers = zennit_canonizers or []
     canonizers = canonizers_base() + default_attention_converters + zennit_canonizers
     composite = EpsilonPlus(
         epsilon=epsilon,
         stabilizer=stabilizer,
-        layer_map=transformer_layer_map(stabilizer=stabilizer)+additional_layer_map,
+        layer_map=transformer_layer_map(stabilizer=stabilizer),
         canonizers=canonizers,
     )
     return composite
 
 
-def _get_epsilon_alpha2_beta1_composite(epsilon, stabilizer, zennit_canonizers, additional_layer_map):
-    additional_layer_map = additional_layer_map or []
+def _get_epsilon_alpha2_beta1_composite(epsilon, stabilizer, zennit_canonizers):
     zennit_canonizers = zennit_canonizers or []
     canonizers = canonizers_base() + default_attention_converters + zennit_canonizers
     composite = EpsilonAlpha2Beta1(
         epsilon=epsilon,
         stabilizer=stabilizer,
-        layer_map=transformer_layer_map(stabilizer=stabilizer)+additional_layer_map,
+        layer_map=transformer_layer_map(stabilizer=stabilizer),
         canonizers=canonizers,
     )
     return composite

@@ -13,6 +13,23 @@ from .utils import captum_wrap_model_input
 
 
 class IntegratedGradients(Explainer):
+    """
+    IntegratedGradients explainer.
+
+    Supported Modules: `Linear`, `Convolution`, `Attention`
+
+    Parameters:
+        model (Module): The PyTorch model for which attribution is to be computed.
+        baseline_fn (Union[BaselineMethodOrFunction, Tuple[BaselineMethodOrFunction]]): The baseline function, accepting the attribution input, and returning the baseline accordingly.
+        n_steps (int): The Number of steps the algorithm makes
+        layer (Optional[Union[Union[str, Module], Sequence[Union[str, Module]]]]): The target module to be explained
+        n_classes (Optional[int]): Number of classes
+        **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer
+
+    Reference:
+        Mukund Sundararajan, Ankur Taly, Qiqi Yan. Axiomatic Attribution for Deep Networks.
+    """
+
     SUPPORTED_MODULES = [Linear, Convolution, Attention]
 
     def __init__(
@@ -60,6 +77,16 @@ class IntegratedGradients(Explainer):
         inputs: Union[Tensor, Tuple[Tensor]],
         targets: Tensor
     ) -> Union[Tensor, Tuple[Tensor]]:
+        """
+        Computes attributions for the given inputs and targets.
+
+        Args:
+            inputs (torch.Tensor): The input data.
+            targets (torch.Tensor): The target labels for the inputs.
+
+        Returns:
+            Union[torch.Tensor, Tuple[torch.Tensor]]: The result of the explanation.
+        """
         forward_args, additional_forward_args = self._extract_forward_args(
             inputs)
         forward_args = format_into_tuple(forward_args)
@@ -76,6 +103,14 @@ class IntegratedGradients(Explainer):
         return attrs
 
     def get_tunables(self) -> Dict[str, Tuple[type, dict]]:
+        """
+        Provides Tunable parameters for the optimizer
+
+        Tunable parameters:
+            `noise_level` (float): Value can be selected in the range of `range(10, 100, 10)`
+
+            `baseline_fn` (callable): BaselineFunction selects suitable values in accordance with the modality
+        """
         return {
             'n_steps': (int, {'low': 10, 'high': 100, 'step': 10}),
             'baseline_fn': (BaselineFunction, {}),

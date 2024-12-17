@@ -13,6 +13,23 @@ from pnpxai.utils import format_into_tuple
 
 
 class Lime(Explainer):
+    """
+    Lime explainer.
+
+    Supported Modules: `Linear`, `Convolution`, `LSTM`, `RNN`, `Attention`
+
+    Parameters:
+        model (Module): The PyTorch model for which attribution is to be computed.
+        n_samples (int): Number of samples
+        baseline_fn (Union[BaselineMethodOrFunction, Tuple[BaselineMethodOrFunction]]): The baseline function, accepting the attribution input, and returning the baseline accordingly.
+        feature_mask_fn (Union[FeatureMaskMethodOrFunction, Tuple[FeatureMaskMethodOrFunction]): The feature mask function, accepting the attribution input, and returning the feature mask accordingly.
+        perturb_fn (Optional[Callable[[Tensor], Tensor]]): The perturbation function, accepting the attribution input, and returning the perturbed value.
+        **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer
+
+    Reference:
+        Marco Tulio Ribeiro, Sameer Singh, Carlos Guestrin. "Why Should I Trust You?": Explaining the Predictions of Any Classifier.
+    """
+
     SUPPORTED_MODULES = [Linear, Convolution, LSTM, RNN, Attention]
 
     def __init__(
@@ -40,6 +57,16 @@ class Lime(Explainer):
             inputs: Tensor,
             targets: Optional[Tensor] = None,
     ) -> Union[Tensor, Tuple[Tensor]]:
+        """
+        Computes attributions for the given inputs and targets.
+
+        Args:
+            inputs (torch.Tensor): The input data.
+            targets (torch.Tensor): The target labels for the inputs.
+
+        Returns:
+            Union[torch.Tensor, Tuple[torch.Tensor]]: The result of the explanation.
+        """
         forward_args, additional_forward_args = self._extract_forward_args(
             inputs)
         forward_args = format_into_tuple(forward_args)
@@ -59,6 +86,16 @@ class Lime(Explainer):
 
     
     def get_tunables(self) -> Dict[str, Tuple[type, Dict]]:
+        """
+        Provides Tunable parameters for the optimizer
+
+        Tunable parameters:
+            `n_samples` (int): Value can be selected in the range of `range(10, 100, 10)`
+
+            `baseline_fn` (callable): BaselineFunction selects suitable values in accordance with the modality
+
+            `feature_mask_fn` (callable): FeatureMaskFunction selects suitable values in accordance with the modality
+        """
         return {
             'n_samples': (int, {'low': 10, 'high': 100, 'step': 10}),
             'baseline_fn': (BaselineFunction, {}),
