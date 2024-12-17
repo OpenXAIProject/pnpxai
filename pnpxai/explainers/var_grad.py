@@ -25,6 +25,8 @@ class VarGrad(SmoothGrad):
 		noise_level (float): The noise level added during attribution.
 		n_iter (int): The number of iterations, the input is modified.
 		layer (Optional[Union[Union[str, Module], Sequence[Union[str, Module]]]]): The target module to be explained.
+        forward_arg_extractor: A function that extracts forward arguments from the input batch(s) where the attribution scores are assigned.
+        additional_forward_arg_extractor: A secondary function that extract additional forward arguments from the input batch(s).		
         **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer
 
     Reference:

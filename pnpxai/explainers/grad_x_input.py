@@ -19,6 +19,8 @@ class GradientXInput(Explainer):
     Parameters:
         model (Module): The PyTorch model for which attribution is to be computed.
         layer (Optional[Union[Union[str, Module], Sequence[Union[str, Module]]]]): The target module to be explained
+        forward_arg_extractor: A function that extracts forward arguments from the input batch(s) where the attribution scores are assigned.
+        additional_forward_arg_extractor: A secondary function that extract additional forward arguments from the input batch(s).
         **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer
 
     Reference:

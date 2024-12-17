@@ -53,6 +53,8 @@ class AttentionRolloutBase(ZennitExplainer):
         forward_arg_extractor (Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]): Optional function to extract forward arguments from inputs.
         additional_forward_arg_extractor (Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]): Optional function to extract additional forward arguments.
         n_classes: (Optional[int]): Number of classes
+        forward_arg_extractor: A function that extracts forward arguments from the input batch(s) where the attribution scores are assigned.
+        additional_forward_arg_extractor: A secondary function that extract additional forward arguments from the input batch(s).
         **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer
 
     Reference:

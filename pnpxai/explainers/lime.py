@@ -24,6 +24,8 @@ class Lime(Explainer):
         baseline_fn (Union[BaselineMethodOrFunction, Tuple[BaselineMethodOrFunction]]): The baseline function, accepting the attribution input, and returning the baseline accordingly.
         feature_mask_fn (Union[FeatureMaskMethodOrFunction, Tuple[FeatureMaskMethodOrFunction]): The feature mask function, accepting the attribution input, and returning the feature mask accordingly.
         perturb_fn (Optional[Callable[[Tensor], Tensor]]): The perturbation function, accepting the attribution input, and returning the perturbed value.
+        forward_arg_extractor: A function that extracts forward arguments from the input batch(s) where the attribution scores are assigned.
+        additional_forward_arg_extractor: A secondary function that extract additional forward arguments from the input batch(s).
         **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer
 
     Reference:

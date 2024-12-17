@@ -20,12 +20,13 @@ class Gradient(ZennitExplainer):
         model (Module): The PyTorch model for which attribution is to be computed.
 		layer (Optional[Union[Union[str, Module], Sequence[Union[str, Module]]]]): The target module to be explained.
 		n_classes (int): The number of classes.
+        forward_arg_extractor: A function that extracts forward arguments from the input batch(s) where the attribution scores are assigned.
+        additional_forward_arg_extractor: A secondary function that extract additional forward arguments from the input batch(s).
         **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer
 
     Reference:
         Gabriel Erion, Joseph D. Janizek, Pascal Sturmfels, Scott Lundberg, Su-In Lee. Improving performance of deep learning models with axiomatic attribution priors and expected gradients.
     """
-
     SUPPORTED_MODULES = [Linear, Convolution, LSTM, RNN, Attention]
 
     def __init__(

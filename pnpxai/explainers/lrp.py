@@ -39,6 +39,8 @@ class LRPBase(ZennitExplainer):
         zennit_composite (Composite): The Composite object applies canonizers and register hooks to modules. One Composite instance may only be applied to a single module at a time.
         layer (Optional[Union[Union[str, Module], Sequence[Union[str, Module]]]]): The target module to be explained
         n_classes (Optional[int]): Number of classes
+        forward_arg_extractor: A function that extracts forward arguments from the input batch(s) where the attribution scores are assigned.
+        additional_forward_arg_extractor: A secondary function that extract additional forward arguments from the input batch(s).        
         **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer
 
     Reference:
