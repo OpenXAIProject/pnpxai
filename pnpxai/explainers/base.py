@@ -21,7 +21,7 @@ ABC = abc.ABC if sys.version_info >= (3, 4) else abc.ABCMeta(str("ABC"), (), {})
 NON_DISPLAYED_ATTRS = [
     "model",
     "forward_arg_extractor",
-    "additional_forward_args",
+    "additional_forward_arg_extractor",
     "device",
     "n_classes",
     "zennit_composite",
@@ -62,14 +62,12 @@ class Explainer(ABC):
         self.device = next(model.parameters()).device
 
     def __repr__(self):
-        displayed_attrs = ", ".join(
-            [
-                f"{k}={v}"
-                for k, v in self.__dict__.items()
-                if k not in NON_DISPLAYED_ATTRS and v is not None
-            ]
+        kwargs_repr = ', '.join(
+            '{}={}'.format(key, value)
+            for key, value in self.__dict__.items()
+            if key not in NON_DISPLAYED_ATTRS and value is not None
         )
-        return f"{self.__class__.__name__}({displayed_attrs})"
+        return "{}({})".format(self.__class__.__name__, kwargs_repr)
 
     def _extract_forward_args(
         self, inputs: Union[Tensor, Tuple[Tensor]]

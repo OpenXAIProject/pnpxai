@@ -9,10 +9,27 @@ from pnpxai.explainers.base import Explainer
 from pnpxai.explainers.types import ForwardArgumentExtractor
 from pnpxai.explainers.utils.baselines import BaselineMethodOrFunction, BaselineFunction
 from pnpxai.explainers.utils.feature_masks import FeatureMaskMethodOrFunction, FeatureMaskFunction
-from pnpxai.utils import format_into_tuple, format_out_tuple_if_single, generate_param_key
+from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 
 
 class KernelShap(Explainer):
+    """
+    KernelSHAP explainer.
+
+    Supported Modules: `Linear`, `Convolution`, `LSTM`, `RNN`, `Attention`
+
+    Parameters:
+        model (Module): The PyTorch model for which attribution is to be computed.
+        n_samples (int): Number of samples
+        baseline_fn (Union[BaselineMethodOrFunction, Tuple[BaselineMethodOrFunction]]): The baseline function, accepting the attribution input, and returning the baseline accordingly.
+        feature_mask_fn (Union[FeatureMaskMethodOrFunction, Tuple[FeatureMaskMethodOrFunction]): The feature mask function, accepting the attribution input, and returning the feature mask accordingly.
+        mask_token_id (Optional[int]): The token id of the mask, used for modalities, utilizing tokenization
+        **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer
+
+    Reference:
+        Scott M. Lundberg, Su-In Lee. A Unified Approach to Interpreting Model Predictions.
+    """
+
     SUPPORTED_MODULES = [Linear, Convolution, LSTM, RNN, Attention]
 
     def __init__(
@@ -42,6 +59,16 @@ class KernelShap(Explainer):
         inputs: Tensor,
         targets: Optional[Tensor] = None,
     ) -> Union[Tensor, Tuple[Tensor]]:
+        """
+        Computes attributions for the given inputs and targets.
+
+        Args:
+            inputs (torch.Tensor): The input data.
+            targets (torch.Tensor): The target labels for the inputs.
+
+        Returns:
+            Union[torch.Tensor, Tuple[torch.Tensor]]: The result of the explanation.
+        """
         forward_args, additional_forward_args = self._extract_forward_args(
             inputs)
         forward_args = format_into_tuple(forward_args)
@@ -58,6 +85,16 @@ class KernelShap(Explainer):
         return attrs
 
     def get_tunables(self) -> Dict[str, Tuple[type, Dict]]:
+        """
+        Provides Tunable parameters for the optimizer
+
+        Tunable parameters:
+            `n_samples` (int): Value can be selected in the range of `range(10, 50, 10)`
+
+            `baseline_fn` (callable): BaselineFunction selects suitable values in accordance with the modality
+
+            `feature_mask_fn` (callable): FeatureMaskFunction selects suitable values in accordance with the modality
+        """
         return {
             'n_samples': (int, {'low': 10, 'high': 50, 'step': 10}),
             'baseline_fn': (BaselineFunction, {}),

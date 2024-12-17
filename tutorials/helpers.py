@@ -12,7 +12,6 @@ import torch
 import torchvision
 from torch import Tensor
 from torch.utils.data import Dataset, Subset, DataLoader
-from torchtext.datasets import IMDB
 from transformers import BertTokenizer, BertForSequenceClassification
 from transformers import ViltForQuestionAnswering, ViltProcessor
 
@@ -70,8 +69,8 @@ def get_imagenet_dataset(
 class IMDBDataset(Dataset):
     def __init__(self, split='test'):
         super().__init__()
-        data_iter = IMDB(split=split)
-        self.annotations = [(line, label-1) for label, line in tqdm(data_iter)]
+        # data_iter = IMDB(split=split)
+        # self.annotations = [(line, label-1) for label, line in tqdm(data_iter)]
 
     def __len__(self):
         return len(self.annotations)
