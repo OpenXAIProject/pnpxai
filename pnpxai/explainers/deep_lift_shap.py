@@ -4,6 +4,7 @@ import torch
 import shap
 import captum
 from torch import Tensor
+from pnpxai.core.detector.types import Convolution
 from pnpxai.explainers.base import Explainer
 from torch.nn.modules import Module
 from captum.attr import DeepLiftShap as CaptumDeepLiftShap
@@ -14,6 +15,20 @@ from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 
 
 class DeepLiftShap(Explainer):
+    """
+    DeepLiftShap explainer.
+
+    Supported Modules: `Convolution`
+
+    Parameters:
+        model (Module): The PyTorch model for which attribution is to be computed.
+        background_data: The background dataset used to train the surrogate model.
+
+    Reference:
+        Scott M. Lundberg, Su-In Lee, A Unified Approach to Interpreting Model Predictions
+    """
+    SUPPORTED_MODULES = [Convolution]
+
     def __init__(
         self,
         model: Module,
@@ -25,6 +40,16 @@ class DeepLiftShap(Explainer):
         self.dtype = dtype or torch.float64
 
     def attribute(self, inputs: Tensor, targets: Tensor) -> Tensor:
+        """
+        Computes attributions for the given inputs and targets.
+
+        Args:
+            inputs (torch.Tensor): The input data.
+            targets (torch.Tensor): The target labels for the inputs.
+
+        Returns:
+            torch.Tensor: The result of the explanation.
+        """
         _explainer = shap.DeepExplainer(self.model, self.background_data)
         shap_values = _explainer.shap_values(inputs)
         for i in range(len(shap_values)):
