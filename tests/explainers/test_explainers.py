@@ -13,6 +13,7 @@ from pnpxai.explainers import (
     LRPEpsilonPlus,
     LRPUniformEpsilon,
     RAP,
+    Gfgp
 )
 from tests.helpers import ToyCNN, get_test_input_image
 
@@ -96,3 +97,11 @@ class TestRAP(_TestExplainer):
     @pytest.fixture
     def explainer_type(self):
         return RAP
+
+class TestGFGP():
+    def test_model_loading(self):
+        model = ToyCNN()
+        transforms = lambda x: x
+        explainer = Gfgp(model, transforms)
+        assert explainer.diffusion_model is not None
+        assert explainer.diffusion is not None
