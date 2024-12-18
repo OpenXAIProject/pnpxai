@@ -101,10 +101,10 @@ print("Metric: ", metric.__class__.__name__)
 
 # explain and evaluate
 results = expr.run_batch(
-    data_ids=range(batch_size),
     explainer_id=explainer_id,
     postprocessor_id=post_processor_id,
     metric_id=metric_id,
+    data_ids=range(batch_size),
 )
 
 

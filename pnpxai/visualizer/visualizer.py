@@ -172,10 +172,10 @@ class Visualizer:
         for explainer_id in explainer_ids:
             for metric_id in metric_ids:
                 outputs[explainer_id][metric_id] = self.experiment.run_batch(
-                    data_ids=[data_id],
                     explainer_id=explainer_id,
                     metric_id=metric_id,
                     postprocessor_id=postprocessor_id,
+                    data_ids=[data_id],
                 )
         return outputs
 

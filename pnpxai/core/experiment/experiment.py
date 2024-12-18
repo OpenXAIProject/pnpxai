@@ -1,19 +1,13 @@
-from typing import Any, Callable, Optional, Sequence, Union, List, Dict, Literal, Tuple
-import time
-import warnings
-import itertools
+from typing import Any, Callable, Optional, Sequence, Union, List, Literal
 
 import torch
 from torch import Tensor
 import numpy as np
 import optuna
-from plotly import express as px
-from plotly.graph_objects import Figure
 
 from pnpxai.core._types import DataSource, Model
 from pnpxai.core.modality.modality import Modality, TextModality
 from pnpxai.core.experiment.experiment_metrics_defaults import EVALUATION_METRIC_REVERSE_SORT, EVALUATION_METRIC_SORT_PRIORITY
-from pnpxai.core.experiment.observable import ExperimentObservableEvent
 from pnpxai.core.experiment.manager import ExperimentManager
 from pnpxai.explainers import Explainer, Lime, KernelShap
 from pnpxai.explainers.utils.postprocess import Identity
@@ -24,7 +18,6 @@ from pnpxai.evaluator.optimizer.utils import (
     get_default_n_trials,
 )
 from pnpxai.evaluator.metrics.base import Metric
-from pnpxai.messages import get_message
 
 from pnpxai.utils import (
     class_to_string, Observable, to_device,
@@ -122,10 +115,10 @@ class Experiment(Observable):
 
     def run_batch(
         self,
-        data_ids: Sequence[int],
         explainer_id: int,
         postprocessor_id: int,
         metric_id: int,
+        data_ids: Optional[Sequence[int]] = None,
     ) -> dict:
         """
         Runs the experiment for selected batch of data, explainer, postprocessor and metric.
@@ -144,6 +137,8 @@ class Experiment(Observable):
 
         Note: The input parameters allow for flexibility in specifying subset of data, explainer, postprocessor and metric to process.
         """
+        data_ids = data_ids if data_ids is not None else self.manager.get_data_ids(
+            data_ids)
 
         self.predict_batch(data_ids)
         self.explain_batch(data_ids, explainer_id)
@@ -178,6 +173,7 @@ class Experiment(Observable):
 
         This method orchestrates the experiment by configuring the manager and processing data. It then caches the results in the manager, and returns back to the user.
         """
+
         data_ids_pred = [
             idx for idx in data_ids
             if self.manager.get_output_by_id(idx) is None
@@ -256,7 +252,8 @@ class Experiment(Observable):
                 and isinstance(mod, TextModality)
                 and not isinstance(pp.pooling_fn, Identity)
             ):
-                raise ValueError(f'postprocessor {postprocessor_id} does not support explainer {explainer_id}.')
+                raise ValueError(
+                    f'postprocessor {postprocessor_id} does not support explainer {explainer_id}.')
             batch.append(pp(attr))
         return format_out_tuple_if_single(batch)
 
@@ -380,280 +377,6 @@ class Experiment(Observable):
             postprocessor=opt_postprocessor,
             study=study,
         )
-
-    def run(
-        self,
-        data_ids: Optional[Sequence[int]] = None,
-        explainer_ids: Optional[Sequence[int]] = None,
-        postprocessor_ids: Optional[Sequence[int]] = None,
-        metric_ids: Optional[Sequence[int]] = None,
-    ) -> 'Experiment':
-        """
-        Run the experiment by processing data, generating explanations, evaluating with metrics, caching and retrieving the data.
-
-        Args:
-            data_ids (Optional[Sequence[int]]): A sequence of data IDs to specify the subset of data to process.
-            explainer_ids (Optional[Sequence[int]]): A sequence of explainer IDs to specify the subset of explainers to use.
-            postprocessor_ids (Optional[Sequence[int]]): A sequence of postprocessor IDs to specify the subset of postprocessors to use.
-            metric_ids (Optional[Sequence[int]]): A sequence of metric IDs to specify the subset of metrics to evaluate.
-
-        Returns:
-            The Experiment instance with updated results and state.
-
-        This method orchestrates the experiment by configuring the manager, obtaining explainer and metric instances,
-        processing data, generating explanations, and evaluating metrics. It then saves the results in the manager.
-
-        Note: The input parameters allow for flexibility in specifying subsets of data, explainers, and metrics to process.
-        If not provided, the method processes all available data, explainers, postprocessors, and metrics.
-        """
-        self.reset_errors()
-        # self.manager.set_config(data_ids, explainer_ids, metrics_ids)
-
-        # inference
-
-        # data_ids is filtered out data indices whose output is saved in cache
-        data, data_ids_pred = self.manager.get_data_to_predict(data_ids)
-        outputs = self._predict(data)
-        self.manager.save_outputs(outputs, data, data_ids_pred)
-
-        # explain
-        explainers, explainer_ids = self.manager.get_explainers(explainer_ids)
-        postprocessors, postprocessor_ids = self.manager.get_postprocessors(postprocessor_ids)
-        metrics, metric_ids = self.manager.get_metrics(metric_ids)
-
-        for explainer, explainer_id in zip(explainers, explainer_ids):
-            explainer_name = class_to_string(explainer)
-
-            # data_ids is filtered out data indices whose explanation is saved in cache
-            data, data_ids_expl = self.manager.get_data_to_process_for_explainer(
-                explainer_id, data_ids)
-            explanations = self._explain(data, data_ids_expl, explainer)
-            self.manager.save_explanations(
-                explanations, data, data_ids_expl, explainer_id
-            )
-            message = get_message(
-                'experiment.event.explainer', explainer=explainer_name
-            )
-            print(f"[Experiment] {message}")
-            self.fire(ExperimentObservableEvent(
-                self.manager, message, explainer))
-
-            for postprocessor, postprocessor_id in zip(postprocessors, postprocessor_ids):
-                for metric, metric_id in zip(metrics, metric_ids):
-                    metric_name = class_to_string(metric)
-                    data, data_ids_eval = self.manager.get_data_to_process_for_metric(
-                        explainer_id, postprocessor_id, metric_id, data_ids)
-                    explanations, data_ids_eval = self.manager.get_valid_explanations(
-                        explainer_id, data_ids_eval)
-                    data, _ = self.manager.get_data(data_ids_eval)
-                    evaluations = self._evaluate(
-                        data, data_ids_eval, explanations, explainer, postprocessor, metric)
-                    self.manager.save_evaluations(
-                        evaluations, data, data_ids_eval, explainer_id, postprocessor_id, metric_id)
-
-                    message = get_message(
-                        'experiment.event.explainer.metric', explainer=explainer_name, metric=metric_name)
-                    print(f"[Experiment] {message}")
-                    self.fire(ExperimentObservableEvent(
-                        self.manager, message, explainer, metric))
-        return self
-
-    def _predict(self, data: DataSource):
-        """
-        Predict input data with experiment model.
-
-        Args:
-            data (DataSource): A data to be explained.
-
-        Returns:
-            Predictions corresponding to input data.
-        """
-        outputs = [
-            self.model(*format_into_tuple(
-                self.to_device(self.input_extractor(datum)))
-            ) for datum in data
-        ]
-        return outputs
-
-    def _explain(self, data: DataSource, data_ids: Sequence[int], explainer: Explainer):
-        """
-        Explain input data with an explainer.
-
-        Args:
-            data (DataSource): A data to be explained.
-            data_ids (Sequence[int]): A sequence of data IDs corresponding to the provided data source. Data IDs are used to cache results.
-            explainer (Explainer): A explainer object to use for explanation.
-
-        Returns:
-            Explanations corresponding to input data, generated by the explainer.
-
-        This method explains data with a specified explainer. Produced results are cached by the manager.
-        """
-        explanations = [None] * len(data)
-        explainer_name = class_to_string(explainer)
-        for i, (datum, data_id) in enumerate(zip(data, data_ids)):
-            try:
-                datum = self.to_device(datum)
-                inputs = format_into_tuple(self.input_extractor(datum))
-                targets = self.label_extractor(datum) if self.target_labels \
-                    else self._get_targets(data_ids)
-                explanations[i] = explainer.attribute(
-                    inputs=inputs,
-                    targets=targets,
-                )
-            except NotImplementedError as error:
-                warnings.warn(
-                    f"\n[Experiment] {get_message('experiment.errors.explainer_unsupported', explainer=explainer_name)}")
-                raise error
-            except Exception as e:
-                warnings.warn(
-                    f"\n[Experiment] {get_message('experiment.errors.explanation', explainer=explainer_name, error=e)}")
-                self._errors.append(e)
-        return explanations
-
-    # def _evaluate(self, data: DataSource, data_ids: List[int], explanations: DataSource, explainer: Explainer, postprocessor: Callable, metric: Metric):
-    #     if explanations is None:
-    #         return None
-    #     started_at = time.time()
-    #     metric_name = class_to_string(metric)
-    #     explainer_name = class_to_string(explainer)
-
-    #     evaluations = [None] * len(data)
-    #     for i, (datum, data_id, explanation) in enumerate(zip(data, data_ids, explanations)):
-    #         if explanation is None:
-    #             continue
-    #         datum = self.to_device(datum)
-    #         explanation = self.to_device(explanation)
-    #         inputs = self.input_extractor(datum)
-    #         targets = self.label_extractor(datum) if self.target_labels \
-    #             else self._get_targets(data_ids)
-    #         try:
-    #             metric = metric.set_explainer(explainer).set_postprocessor(postprocessor)
-    #             evaluations[i] = metric.evaluate(
-    #                 inputs=inputs,
-    #                 targets=targets,
-    #                 attributions=explanation,
-    #             )
-    #         except Exception as e:
-    #             import pdb; pdb.set_trace()
-    #             warnings.warn(
-    #                 f"\n[Experiment] {get_message('experiment.errors.evaluation', explainer=explainer_name, metric=metric_name, error=e)}")
-    #             self._errors.append(e)
-    #     elapsed_time = time.time() - started_at
-    #     print(
-    #         f"[Experiment] {get_message('elapsed', modality=metric_name, elapsed=elapsed_time)}")
-
-    #     return evaluations
-
-    def _get_targets(self, data_ids: Sequence[int]):
-        """
-        Retrieve and flatten last run target (output) data.
-
-        Args:
-            data_ids (Optional[Sequence[int]]): A sequence of data IDs to specify the subset of data to process.
-
-        Returns:
-            Flattened target (output) data.
-
-        This method retrieves target (output) data using the target extractor and flattens it for further processing.
-
-        Note: The input parameters allow for flexibility in specifying subsets of data to process. If not provided, the method processes all available data.
-        """
-        # predict if not cached
-        not_predicted = [
-            data_id for data_id in data_ids
-            if self.manager._cache.get_output(data_id) is None
-        ]
-        if len(not_predicted) > 0:
-            self.predict_batch(not_predicted)
-
-        # load outputs from cache
-        outputs = torch.stack([
-            self.manager._cache.get_output(data_id)
-            for data_id in data_ids
-        ])
-        return self.target_extractor(outputs)
-
-    # def get_visualizations_flattened(self) -> Sequence[Sequence[Figure]]:
-    #     """
-    #     Generate flattened visualizations for each data point based on explanations.
-
-    #     Returns:
-    #         List of visualizations for each data point across explainers.
-
-    #     This method retrieves valid explanations for each explainer, formats them for visualization,
-    #     and generates visualizations using Plotly Express. The results are flattened based on the data points
-    #     and returned as a list of lists of figures.
-    #     """
-    #     assert self.modality == 'image', f"Visualization for '{self.modality} is not supported yet"
-    #     explainers, explainer_ids = self.manager.get_explainers()
-    #     # Get all data ids
-    #     experiment_data_ids = self.manager.get_data_ids()
-    #     visualizations = []
-
-    #     for explainer, explainer_id in zip(explainers, explainer_ids):
-    #         # Get all valid explanations and data ids for this explainer
-    #         explanations, data_ids = self.manager.get_valid_explanations(
-    #             explainer_id)
-    #         data = self.manager.get_data(data_ids)[0]
-    #         explainer_visualizations = []
-    #         for explanation in explanations:
-    #             figs = []
-    #             for attr in explanation:
-    #                 postprocessed = postprocess_attr(
-    #                     attr,
-    #                     channel_dim=0,
-    #                     pooling_method='l2normsq',
-    #                     normalization_method='minmax'
-    #                 ).detach().numpy()
-    #                 fig = px.imshow(postprocessed, color_continuous_scale='RdBu_R', color_continuous_midpoint=.5)
-    #                 figs.append(fig)
-    #             explainer_visualizations.append(figs)
-
-    #         # explainer_visualizations = [[
-    #         #     px.imshow(
-    #         #         postprocess_attr(
-    #         #             attr, # C x H x W
-    #         #             channel_dim=0,
-    #         #             pooling_method='l2normsq',
-    #         #             normalization_method='minmax',
-    #         #         ).detach().numpy(),
-    #         #         color_continuous_scale='RdBu_R',
-    #         #         color_continuous_midpoint=.5,
-    #         #     ) for attr in explanation]
-    #         #     for explanation in explanations
-    #         # ]
-    #         # # Visualize each valid explanataion
-    #         # for datum, explanation in zip(data, explanations):
-    #         #     inputs = self.input_extractor(datum)
-    #         #     targets = self.target_extractor(datum)
-    #         #     formatted = explainer.format_outputs_for_visualization(
-    #         #         inputs=inputs,
-    #         #         targets=targets,
-    #         #         explanations=explanation,
-    #         #         modality=self.modality
-    #         #     )
-
-    #         #     if not self.manager.is_batched:
-    #         #         formatted = [formatted]
-    #         #     formatted_visualizations = [
-    #         #         px.imshow(explanation, color_continuous_scale="RdBu_r", color_continuous_midpoint=0.0) for explanation in formatted
-    #         #     ]
-    #         #     if not self.manager.is_batched:
-    #         #         formatted_visualizations = formatted_visualizations[0]
-    #         #     explainer_visualizations.append(formatted_visualizations)
-
-    #         flat_explainer_visualizations = self.manager.flatten_if_batched(
-    #             explainer_visualizations, data)
-    #         # Set visualizaions of all data ids as None
-    #         explainer_visualizations = {
-    #             idx: None for idx in experiment_data_ids}
-    #         # Fill all valid visualizations
-    #         for visualization, data_id in zip(flat_explainer_visualizations, data_ids):
-    #             explainer_visualizations[data_id] = visualization
-    #         visualizations.append(list(explainer_visualizations.values()))
-
-    #     return visualizations
 
     def get_inputs_flattened(self, data_ids: Optional[Sequence[int]] = None) -> Sequence[Tensor]:
         """
