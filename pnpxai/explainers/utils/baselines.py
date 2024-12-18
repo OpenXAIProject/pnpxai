@@ -5,8 +5,7 @@ import torch
 import torchvision.transforms.functional as TF
 from optuna.trial import Trial
 from pnpxai.explainers.utils.base import UtilFunction
-from pnpxai.evaluator.optimizer.utils import generate_param_key
-
+from pnpxai.utils import generate_param_key
 
 BaselineMethod = Literal['zeros', 'invert', 'gaussian_blur', 'token']
 
@@ -22,10 +21,16 @@ class BaselineFunction(UtilFunction):
           inherit from this class and implement the actual baseline logic.
         - Subclasses can override the `__init__` method to accept additional parameters required 
           for their specific baseline operations.
-    """
-    
+    """    
     def __init__(self, *args, **kwargs):
         pass
+
+    @classmethod
+    def from_method(cls, method, **kwargs):
+        baseline_fn = BASELINE_FUNCTIONS.get(method, None)
+        if baseline_fn is None:
+            raise ValueError
+        return baseline_fn(**kwargs)
 
 
 class TokenBaselineFunction(BaselineFunction):

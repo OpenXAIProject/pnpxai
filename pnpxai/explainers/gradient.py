@@ -11,6 +11,22 @@ from .utils import captum_wrap_model_input
 
 
 class Gradient(ZennitExplainer):
+    """
+    Gradient explainer.
+
+    Supported Modules: `Linear`, `Convolution`, `LSTM`, `RNN`, `Attention`
+
+    Parameters:
+        model (Module): The PyTorch model for which attribution is to be computed.
+		layer (Optional[Union[Union[str, Module], Sequence[Union[str, Module]]]]): The target module to be explained.
+		n_classes (int): The number of classes.
+        forward_arg_extractor: A function that extracts forward arguments from the input batch(s) where the attribution scores are assigned.
+        additional_forward_arg_extractor: A secondary function that extract additional forward arguments from the input batch(s).
+        **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer
+
+    Reference:
+        Gabriel Erion, Joseph D. Janizek, Pascal Sturmfels, Scott Lundberg, Su-In Lee. Improving performance of deep learning models with axiomatic attribution priors and expected gradients.
+    """
     SUPPORTED_MODULES = [Linear, Convolution, LSTM, RNN, Attention]
 
     def __init__(
@@ -58,6 +74,16 @@ class Gradient(ZennitExplainer):
         inputs: Union[Tensor, Tuple[Tensor]],
         targets: Tensor
     ) -> Union[Tensor, Tuple[Tensor]]:
+        """
+        Computes attributions for the given inputs and targets.
+
+        Args:
+            inputs (torch.Tensor): The input data.
+            targets (torch.Tensor): The target labels for the inputs.
+
+        Returns:
+            Union[torch.Tensor, Tuple[torch.Tensor]]: The result of the explanation.
+        """
         forward_args, additional_forward_args = self._extract_forward_args(inputs)
         attrs = self.attributor.forward(
             forward_args,

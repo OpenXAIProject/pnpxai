@@ -58,8 +58,6 @@ class Experiment(Observable):
         input_extractor (Optional[Callable[[Any], Any]]): Function to extract inputs from data.
         label_extractor (Optional[Callable[[Any], Any]]): Function to extract labels from data.
         target_extractor (Optional[Callable[[Any], Any]]): Function to extract targets from data.
-        input_visualizer (Optional[Callable[[Any], Any]]): Function to visualize input data.
-        target_visualizer (Optional[Callable[[Any], Any]]): Function to visualize target data.
         cache_device (Optional[Union[torch.device, str]]): Device to cache data and results.
         target_labels (bool): True if the target is a label, False otherwise.
 
@@ -84,8 +82,6 @@ class Experiment(Observable):
         input_extractor: Optional[Callable[[Any], Any]] = None,
         label_extractor: Optional[Callable[[Any], Any]] = None,
         target_extractor: Optional[Callable[[Any], Any]] = None,
-        input_visualizer: Optional[Callable[[Any], Any]] = None,
-        target_visualizer: Optional[Callable[[Any], Any]] = None,
         cache_device: Optional[Union[torch.device, str]] = None,
         target_labels: bool = False,
     ):
@@ -110,8 +106,6 @@ class Experiment(Observable):
         self.target_extractor = target_extractor \
             if target_extractor is not None \
             else default_target_extractor
-        self.input_visualizer = input_visualizer
-        self.target_visualizer = target_visualizer
         self.target_labels = target_labels
         self.modality = modality
         self.reset_errors()

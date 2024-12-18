@@ -58,7 +58,7 @@ class MuFidelity(Metric):
         self,
         inputs: torch.Tensor,
         targets: torch.Tensor,
-        attributions: torch.Tensor,
+        attributions: Optional[torch.Tensor] = None,
     ) -> torch.Tensor:
         """
         Args:
@@ -69,7 +69,7 @@ class MuFidelity(Metric):
         Returns:
             torch.Tensor: The result of the metric evaluation.
         """
-        attributions = attributions.to(self.device)
+        attributions = self._get_attributions(inputs, targets, attributions).to(self.device)
 
         outputs = self.model(inputs)
         n_classes = outputs.shape[-1]

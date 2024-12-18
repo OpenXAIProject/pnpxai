@@ -68,6 +68,22 @@ def get_imagenet_dataset(
     return subset
 
 
+class IMDBDataset(Dataset):
+    def __init__(self, split='test'):
+        super().__init__()
+        # data_iter = IMDB(split=split)
+        # self.annotations = [(line, label-1) for label, line in tqdm(data_iter)]
+
+    def __len__(self):
+        return len(self.annotations)
+
+    def __getitem__(self, idx):
+        return self.annotations[idx]
+
+
+def get_imdb_dataset(split='test'):
+    return IMDBDataset(split=split)
+
 disable_warnings(InsecureRequestWarning)
 
 

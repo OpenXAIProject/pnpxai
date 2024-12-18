@@ -20,8 +20,6 @@ from pnpxai.explainers.zennit.attribution import Gradient, LayerGradient
 from pnpxai.explainers.zennit.base import ZennitExplainer
 from pnpxai.explainers.utils import captum_wrap_model_input
 from pnpxai.explainers.types import ForwardArgumentExtractor
-from pnpxai.evaluator.optimizer.utils import generate_param_key
-
 
 def rollout_min_head_fusion_function(attn_weights):
     return attn_weights.min(axis=1).values
@@ -42,6 +40,27 @@ def _get_rollout_head_fusion_function(method: Literal['min', 'max', 'mean']):
 
 
 class AttentionRolloutBase(ZennitExplainer):
+    """
+    Base class for `AttentionRollout` and `TransformerAttribution` explainers.
+
+    Supported Modules: `Attention`
+
+    Parameters:
+        model (Module): The PyTorch model for which attribution is to be computed.
+        interpolate_mode (Optional[str]): The interpolation mode used by the explainer. Available methods are: "bilinear" and "bicubic"
+        head_fusion_method: (Optional[str]): Method to apply to head fusion. Available methods are: `"min"`, `"max"`, `"mean"`
+        discard_ratio: (Optional[float]): Describes ration of attention values to discard.
+        forward_arg_extractor (Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]): Optional function to extract forward arguments from inputs.
+        additional_forward_arg_extractor (Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]): Optional function to extract additional forward arguments.
+        n_classes: (Optional[int]): Number of classes
+        forward_arg_extractor: A function that extracts forward arguments from the input batch(s) where the attribution scores are assigned.
+        additional_forward_arg_extractor: A secondary function that extract additional forward arguments from the input batch(s).
+        **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer
+
+    Reference:
+        Samira Abnar, Willem Zuidema. Quantifying Attention Flow in Transformers.
+    """
+
     SUPPORTED_MODULES = [Attention]
 
     def __init__(
@@ -96,6 +115,17 @@ class AttentionRolloutBase(ZennitExplainer):
         inputs: Union[Tensor, Tuple[Tensor]],
         targets: Tensor
     ) -> Union[Tensor, Tuple[Tensor]]:
+        """
+        Computes attributions for the given inputs and targets.
+
+        Args:
+            inputs (torch.Tensor): The input data.
+            targets (torch.Tensor): The target labels for the inputs.
+
+        Returns:
+            torch.Tensor: The result of the explanation.
+        """
+
         attn_maps = self.collect_attention_map(inputs, targets)
         with torch.no_grad():
             rollout = self.rollout(*attn_maps)
@@ -117,6 +147,16 @@ class AttentionRolloutBase(ZennitExplainer):
         return attrs
 
     def get_tunables(self):
+        """
+        Provides Tunable parameters for the optimizer
+
+        Tunable parameters:
+            `interpolate_mode` (str): Value can be selected of `"bilinear"` and `"bicubic"`
+
+            `head_fusion_method` (str): Value can be selected of `"min"`, `"max"`, and `"mean"`
+
+            `discard_ratio` (float): Value can be selected in the range of `range(0, 0.95, 0.05)`
+        """
         return {
             'interpolate_mode': (list, {'choices': ['bilinear', 'bicubic']}),
             'head_fusion_method': (list, {'choices': ['min', 'max', 'mean']}),
@@ -125,6 +165,24 @@ class AttentionRolloutBase(ZennitExplainer):
 
 
 class AttentionRollout(AttentionRolloutBase):
+    """
+    Implementation of `AttentionRollout` explainer.
+
+    Supported Modules: `Attention`
+
+    Parameters:
+        model (Module): The PyTorch model for which attribution is to be computed.
+        interpolate_mode (Optional[str]): The interpolation mode used by the explainer. Available methods are: "bilinear" and "bicubic"
+        head_fusion_method: (Optional[str]): Method to apply to head fusion. Available methods are: `"min"`, `"max"`, `"mean"`
+        discard_ratio: (Optional[float]): Describes ration of attention values to discard.
+        forward_arg_extractor (Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]): Optional function to extract forward arguments from inputs.
+        additional_forward_arg_extractor (Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]): Optional function to extract additional forward arguments.
+        n_classes: (Optional[int]): Number of classes
+        **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer
+
+    Reference:
+        Samira Abnar, Willem Zuidema. Quantifying Attention Flow in Transformers.
+    """
     def __init__(
         self,
         model: Module,
@@ -170,6 +228,25 @@ class AttentionRollout(AttentionRolloutBase):
 
 
 class TransformerAttribution(AttentionRolloutBase):
+    """
+    Implementation of `TransformerAttribution` explainer.
+
+    Supported Modules: `Attention`
+
+    Parameters:
+        model (Module): The PyTorch model for which attribution is to be computed.
+        interpolate_mode (Optional[str]): The interpolation mode used by the explainer. Available methods are: "bilinear" and "bicubic"
+        head_fusion_method: (Optional[str]): Method to apply to head fusion. Available methods are: `"min"`, `"max"`, `"mean"`
+        discard_ratio: (Optional[float]): Describes ration of attention values to discard.
+        forward_arg_extractor (Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]): Optional function to extract forward arguments from inputs.
+        additional_forward_arg_extractor (Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]): Optional function to extract additional forward arguments.
+        n_classes: (Optional[int]): Number of classes
+        **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer
+
+    Reference:
+        Chefer H., Gur S., and Wolf L. Self-Attention Attribution: Transformer interpretability beyond attention visualization.
+    """
+
     SUPPORTED_MODULES = [Attention]
     
     def __init__(
