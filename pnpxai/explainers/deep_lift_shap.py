@@ -1,13 +1,11 @@
-from typing import Dict, Tuple, Callable
+from typing import Dict, Tuple, Callable, Optional
 
 import torch
-import shap
-import captum
+from shap import DeepExplainer
 from torch import Tensor
 from pnpxai.core.detector.types import Convolution
 from pnpxai.explainers.base import Explainer
 from torch.nn.modules import Module
-from captum.attr import DeepLiftShap as CaptumDeepLiftShap
 from pnpxai.explainers.base import Explainer
 from pnpxai.explainers.types import ForwardArgumentExtractor
 from pnpxai.explainers.utils.baselines import BaselineMethodOrFunction, BaselineFunction
@@ -50,7 +48,7 @@ class DeepLiftShap(Explainer):
         Returns:
             torch.Tensor: The result of the explanation.
         """
-        _explainer = shap.DeepExplainer(self.model, self.background_data)
+        _explainer = DeepExplainer(self.model, self.background_data)
         shap_values = _explainer.shap_values(inputs)
         for i in range(len(shap_values)):
             shap_values[i] = shap_values[i][0]

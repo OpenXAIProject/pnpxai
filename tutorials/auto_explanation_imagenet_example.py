@@ -49,10 +49,10 @@ expr.manager.get_metric_by_id(0)  # -> Metric. In this case, AbPC
 
 # explain and evaluate
 results = expr.run_batch(
-    data_ids=range(4),
     explainer_id=4,
     postprocessor_id=0,
     metric_id=0,
+    data_ids=range(4),
 )
 
 
