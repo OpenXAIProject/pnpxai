@@ -1,4 +1,4 @@
-from typing import Dict, Tuple, Callable
+from typing import Dict, Tuple, Callable, Optional
 
 import torch
 import shap

@@ -59,7 +59,10 @@ class Explainer(ABC):
         self.model = model.eval()
         self.forward_arg_extractor = forward_arg_extractor
         self.additional_forward_arg_extractor = additional_forward_arg_extractor
-        self.device = next(model.parameters()).device
+
+    @property
+    def device(self):
+        return next(self.model.parameters()).device
 
     def __repr__(self):
         kwargs_repr = ', '.join(

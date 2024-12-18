@@ -22,6 +22,7 @@ from pnpxai.explainers.attention_rollout import (
     AttentionRollout,
     TransformerAttribution,
 )
+from pnpxai.explainers.gfgp import Gfgp
 
 
 CAM_BASED_EXPLAINERS = [GradCam, GuidedGradCam]
@@ -39,6 +40,7 @@ GRADIENT_BASED_EXPLAINERS = [
 PERTURBATION_BASED_EXPLAINERS = [
     KernelShap,
     Lime,
+    Gfgp
 ]
 ATTENTION_SPECIFIC_EXPLAINERS = [
     AttentionRollout,
@@ -59,6 +61,7 @@ AVAILABLE_EXPLAINERS: Tuple[Explainer] = (
     RAP,
     KernelShap,
     Lime,
+    Gfgp,
     AttentionRollout,
     TransformerAttribution,
 )

@@ -72,7 +72,6 @@ def suggest(
         tuned_explainer = suggest(trial, explainer, modality)
         ```
     """
-
     is_multi_modal = len(format_into_tuple(modality)) > 1
     force_params = force_params or {}
     for param_nm, (method_type, method_kwargs) in obj.get_tunables().items():

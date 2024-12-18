@@ -144,7 +144,6 @@ class Experiment(Observable):
 
         Note: The input parameters allow for flexibility in specifying subset of data, explainer, postprocessor and metric to process.
         """
-
         self.predict_batch(data_ids)
         self.explain_batch(data_ids, explainer_id)
         self.evaluate_batch(
