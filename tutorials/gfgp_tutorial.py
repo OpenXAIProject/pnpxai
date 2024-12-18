@@ -45,8 +45,7 @@ inputs = expr.input_extractor(data)
 labels = expr.label_extractor(data)
 
 
-# diffusion_ckpt_path = '../pnpxai/explainers/diffusion_ckpts/256x256_diffusion_uncond.pt'
-explainer = Gfgp(model=model, transforms=transform, diffusion_ckpt_path=None)
+explainer = Gfgp(model=model, transforms=transform)
 modality = ImageModality(channel_dim=1)
 default_kwargs = {"feature_mask_fn": modality.get_default_feature_mask_fn(),
                   "baseline_fn": modality.get_default_baseline_fn()}
