@@ -83,7 +83,7 @@ class Gfgp(Explainer):
     def __init__(
         self,
         model,  # classification model to be explained
-        transforms,
+        transforms: Optional[callable] = None,
         timesteps: Optional[Sequence[int]] = None,
         n_perturbations=100,
         model_config=None,
@@ -131,8 +131,11 @@ class Gfgp(Explainer):
             im = np.transpose(im, (1, 2, 0))
             im = normalize_np(im)
             im = (im * 255).astype(np.uint8)
-            im = Image.fromarray(im)
-            im = self.transforms(im)
+            if self.transforms is not None:
+                im = Image.fromarray(im)
+                im = self.transforms(im)
+            else:
+                im = torch.from_numpy(im)
             pred = self.model(im.unsqueeze(0).to(self.device))
             pred = pred.squeeze().detach().cpu().numpy()
             # fx0t = pred[target_category]
