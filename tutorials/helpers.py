@@ -25,39 +25,41 @@ class ImageNetDataset(Dataset):
     def __init__(self, root_dir, transform=None):
         self.root_dir = root_dir
         self.img_dir = os.path.join(self.root_dir, 'samples/')
-        self.label_dir = os.path.join(self.root_dir, 'imagenet_class_index.json')
-        
+        self.label_dir = os.path.join(
+            self.root_dir, 'imagenet_class_index.json')
+
         with open(self.label_dir) as json_data:
             self.idx_to_labels = json.load(json_data)
-        
+
         self.img_names = os.listdir(self.img_dir)
         self.img_names.sort()
-        
+
         self.transform = transform
-    
+
     def __len__(self):
         return len(self.img_names)
-    
+
     def __getitem__(self, idx):
         img_path = os.path.join(self.img_dir, self.img_names[idx])
         image = Image.open(img_path).convert('RGB')
         label = idx
-        
+
         if self.transform:
             image = self.transform(image)
-        
+
         return image, label
 
     def idx_to_label(self, idx):
         return self.idx_to_labels[str(idx)][1]
 
+
 def get_imagenet_dataset(
-        transform,
-        subset_size: int=100, # ignored if indices is not None
-        root_dir="./data/ImageNet",
-        indices: Optional[List[int]]=None,
-    ):
-    os.chdir(Path(__file__).parent) # ensure path
+    transform,
+    subset_size: int = 100,  # ignored if indices is not None
+    root_dir="./data/ImageNet",
+    indices: Optional[List[int]] = None,
+):
+    os.chdir(Path(__file__).parent)  # ensure path
     dataset = ImageNetDataset(root_dir=root_dir, transform=transform)
     if indices is not None:
         return Subset(dataset, indices=indices)
@@ -82,8 +84,8 @@ class IMDBDataset(Dataset):
 def get_imdb_dataset(split='test'):
     return IMDBDataset(split=split)
 
-
 disable_warnings(InsecureRequestWarning)
+
 
 class VQADataset(Dataset):
     def __init__(self):
@@ -93,7 +95,6 @@ class VQADataset(Dataset):
 
     def __len__(self):
         return len(self.annotations)
-
 
     def __getitem__(self, idx):
         data = self.annotations[idx]
@@ -107,7 +108,6 @@ class VQADataset(Dataset):
 
 def get_vqa_dataset():
     return VQADataset()
-
 
 
 # models
@@ -153,10 +153,9 @@ def get_vilt_model(model_name):
     return Vilt.from_pretrained(model_name)
 
 
-
 # utils
+def img_to_np(img): return img.permute(1, 2, 0).detach().numpy()
 
-img_to_np = lambda img: img.permute(1, 2, 0).detach().numpy()
 
 def denormalize_image(inputs, mean, std):
     return img_to_np(
@@ -215,7 +214,8 @@ def load_model_and_dataloader_for_tutorial(modality, device):
         loader = DataLoader(dataset, batch_size=8, shuffle=False)
         return model, loader, transform
     elif modality == 'text':
-        model = get_bert_model('fabriceyhc/bert-base-uncased-imdb', num_labels=2)
+        model = get_bert_model(
+            'fabriceyhc/bert-base-uncased-imdb', num_labels=2)
         model = model.to(device)
         model.eval()
         dataset = get_imdb_dataset(split='test')
