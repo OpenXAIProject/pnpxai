@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="../../../assets/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.45">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.33">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.0253249f.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.3cba04c6.min.css">
       
       
 
@@ -47,7 +47,7 @@
     
       <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -89,7 +89,7 @@
     </a>
     <label class="md-header__button md-icon" for="__drawer">
       
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -109,7 +109,7 @@
     </div>
     
     
-      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
     
     
@@ -1016,11 +1016,6 @@
 
 
 
-
-
-
-
-
   <div class="doc doc-children">
 
 
@@ -1046,7 +1041,7 @@
               Bases: <code><a class="autorefs autorefs-internal" title="pnpxai.explainers.smooth_grad.SmoothGrad" href="../smooth_grad/#pnpxai.explainers.smooth_grad.SmoothGrad">SmoothGrad</a></code></p>
 
 
-        <p>VarGrad explainer.</p>
+      <p>VarGrad explainer.</p>
 <p>Supported Modules: <code>Linear</code>, <code>Convolution</code>, <code>LSTM</code>, <code>RNN</code>, <code>Attention</code></p>
 
 
@@ -1062,9 +1057,7 @@
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>model</code>
-            </td>
+            <td><code>model</code></td>
             <td>
                   <code><span title="torch.nn.modules.Module">Module</span></code>
             </td>
@@ -1081,9 +1074,35 @@
             </td>
           </tr>
           <tr class="doc-section-item">
+            <td><code>forward_arg_extractor</code></td>
             <td>
-                <code>**kwargs</code>
+                  <code><span title="typing.Optional">Optional</span>[<span title="typing.Callable">Callable</span>[[<span title="typing.Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>]], <span title="typing.Union">Union</span>[<span title="torch.Tensor">Tensor</span>, <span title="typing.Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>]]]]</code>
             </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A function that extracts forward arguments from the input batch(s) where the attribution scores are assigned.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>additional_forward_arg_extractor</code></td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="typing.Callable">Callable</span>[[<span title="typing.Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>]], <span title="typing.Union">Union</span>[<span title="torch.Tensor">Tensor</span>, <span title="typing.Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>]]]]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A secondary function that extract additional forward arguments from the input batch(s).               </p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>**kwargs</code></td>
             <td>
             </td>
             <td>
@@ -1103,11 +1122,6 @@
   <summary>Reference</summary>
   <p>Lorenz Richter, Ayman Boustati, Nikolas Nüsken, Francisco J. R. Ruiz, Ömer Deniz Akyildiz. VarGrad: A Low-Variance Gradient Estimator for Variational Inference.</p>
 </details>
-
-
-
-
-
               <details class="quote">
                 <summary>Source code in <code>pnpxai/explainers/var_grad.py</code></summary>
                 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">17</span>
@@ -1178,7 +1192,9 @@
 <span class="normal">82</span>
 <span class="normal">83</span>
 <span class="normal">84</span>
-<span class="normal">85</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">VarGrad</span><span class="p">(</span><span class="n">SmoothGrad</span><span class="p">):</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">VarGrad</span><span class="p">(</span><span class="n">SmoothGrad</span><span class="p">):</span>
 <span class="w">	</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    VarGrad explainer.</span>
 
@@ -1189,6 +1205,8 @@
 <span class="sd">		noise_level (float): The noise level added during attribution.</span>
 <span class="sd">		n_iter (int): The number of iterations, the input is modified.</span>
 <span class="sd">		layer (Optional[Union[Union[str, Module], Sequence[Union[str, Module]]]]): The target module to be explained.</span>
+<span class="sd">        forward_arg_extractor: A function that extracts forward arguments from the input batch(s) where the attribution scores are assigned.</span>
+<span class="sd">        additional_forward_arg_extractor: A secondary function that extract additional forward arguments from the input batch(s).		</span>
 <span class="sd">        **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer</span>
 
 <span class="sd">    Reference:</span>
@@ -1273,7 +1291,7 @@
 
     <div class="doc doc-contents ">
 
-        <p>Computes attributions for the given inputs and targets.</p>
+      <p>Computes attributions for the given inputs and targets.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1288,9 +1306,7 @@
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>inputs</code>
-            </td>
+            <td><code>inputs</code></td>
             <td>
                   <code><span title="torch.Tensor">Tensor</span></code>
             </td>
@@ -1304,9 +1320,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>targets</code>
-            </td>
+            <td><code>targets</code></td>
             <td>
                   <code><span title="torch.Tensor">Tensor</span></code>
             </td>
@@ -1347,9 +1361,7 @@
 
             <details class="quote">
               <summary>Source code in <code>pnpxai/explainers/var_grad.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">56</span>
-<span class="normal">57</span>
-<span class="normal">58</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">58</span>
 <span class="normal">59</span>
 <span class="normal">60</span>
 <span class="normal">61</span>
@@ -1376,7 +1388,9 @@
 <span class="normal">82</span>
 <span class="normal">83</span>
 <span class="normal">84</span>
-<span class="normal">85</span></pre></div></td><td class="code"><div><pre><span></span><code>	<span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+<span class="normal">85</span>
+<span class="normal">86</span>
+<span class="normal">87</span></pre></div></td><td class="code"><div><pre><span></span><code>	<span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
 		<span class="bp">self</span><span class="p">,</span>
 		<span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]],</span>
 		<span class="n">targets</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">,</span>
@@ -1474,10 +1488,10 @@
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../../..", "features": [], "search": "../../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": [], "search": "../../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.83f73b43.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.af256bd8.min.js"></script>
       
     
   </body>

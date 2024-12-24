@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="../../../assets/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.45">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.33">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.0253249f.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.3cba04c6.min.css">
       
       
 
@@ -47,7 +47,7 @@
     
       <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -89,7 +89,7 @@
     </a>
     <label class="md-header__button md-icon" for="__drawer">
       
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -109,7 +109,7 @@
     </div>
     
     
-      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
     
     
@@ -1208,11 +1208,6 @@
 
 
 
-
-
-
-
-
   <div class="doc doc-children">
 
 
@@ -1238,7 +1233,7 @@
               Bases: <code><span title="pnpxai.explainers.zennit.base.ZennitExplainer">ZennitExplainer</span></code></p>
 
 
-        <p>Base class for <code>LRPUniformEpsilon</code>, <code>LRPEpsilonGammaBox</code>, <code>LRPEpsilonPlus</code>, and <code>LRPEpsilonAlpha2Beta1</code> explainers.</p>
+      <p>Base class for <code>LRPUniformEpsilon</code>, <code>LRPEpsilonGammaBox</code>, <code>LRPEpsilonPlus</code>, and <code>LRPEpsilonAlpha2Beta1</code> explainers.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1253,9 +1248,7 @@
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>model</code>
-            </td>
+            <td><code>model</code></td>
             <td>
                   <code><span title="torch.nn.modules.Module">Module</span></code>
             </td>
@@ -1269,9 +1262,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>zennit_composite</code>
-            </td>
+            <td><code>zennit_composite</code></td>
             <td>
                   <code><span title="zennit.core.Composite">Composite</span></code>
             </td>
@@ -1285,9 +1276,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>layer</code>
-            </td>
+            <td><code>layer</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Union">Union</span>[<span title="typing.Union">Union</span>[str, <span title="torch.nn.modules.Module">Module</span>], <span title="typing.Sequence">Sequence</span>[<span title="typing.Union">Union</span>[str, <span title="torch.nn.modules.Module">Module</span>]]]]</code>
             </td>
@@ -1301,9 +1290,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>n_classes</code>
-            </td>
+            <td><code>n_classes</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[int]</code>
             </td>
@@ -1317,9 +1304,35 @@
             </td>
           </tr>
           <tr class="doc-section-item">
+            <td><code>forward_arg_extractor</code></td>
             <td>
-                <code>**kwargs</code>
+                  <code><span title="typing.Optional">Optional</span>[<span title="pnpxai.explainers.types.ForwardArgumentExtractor">ForwardArgumentExtractor</span>]</code>
             </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A function that extracts forward arguments from the input batch(s) where the attribution scores are assigned.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>additional_forward_arg_extractor</code></td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="pnpxai.explainers.types.ForwardArgumentExtractor">ForwardArgumentExtractor</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A secondary function that extract additional forward arguments from the input batch(s).        </p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>**kwargs</code></td>
             <td>
             </td>
             <td>
@@ -1339,11 +1352,6 @@
   <summary>Reference</summary>
   <p>Bach S., Binder A., Montavon G., Klauschen F., M¨uller K.-R., and Samek. On pixel-wise explanations for non-linear classifier decisions by layer-wise relevance propagation.</p>
 </details>
-
-
-
-
-
               <details class="quote">
                 <summary>Source code in <code>pnpxai/explainers/lrp.py</code></summary>
                 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 33</span>
@@ -1460,7 +1468,9 @@
 <span class="normal">144</span>
 <span class="normal">145</span>
 <span class="normal">146</span>
-<span class="normal">147</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">LRPBase</span><span class="p">(</span><span class="n">ZennitExplainer</span><span class="p">):</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">LRPBase</span><span class="p">(</span><span class="n">ZennitExplainer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for `LRPUniformEpsilon`, `LRPEpsilonGammaBox`, `LRPEpsilonPlus`, and `LRPEpsilonAlpha2Beta1` explainers.</span>
 
@@ -1469,6 +1479,8 @@
 <span class="sd">        zennit_composite (Composite): The Composite object applies canonizers and register hooks to modules. One Composite instance may only be applied to a single module at a time.</span>
 <span class="sd">        layer (Optional[Union[Union[str, Module], Sequence[Union[str, Module]]]]): The target module to be explained</span>
 <span class="sd">        n_classes (Optional[int]): Number of classes</span>
+<span class="sd">        forward_arg_extractor: A function that extracts forward arguments from the input batch(s) where the attribution scores are assigned.</span>
+<span class="sd">        additional_forward_arg_extractor: A secondary function that extract additional forward arguments from the input batch(s).        </span>
 <span class="sd">        **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer</span>
 
 <span class="sd">    Reference:</span>
@@ -1601,7 +1613,7 @@
 
     <div class="doc doc-contents ">
 
-        <p>Computes attributions for the given inputs and targets.</p>
+      <p>Computes attributions for the given inputs and targets.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1616,9 +1628,7 @@
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>inputs</code>
-            </td>
+            <td><code>inputs</code></td>
             <td>
                   <code><span title="torch.Tensor">Tensor</span></code>
             </td>
@@ -1632,9 +1642,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>targets</code>
-            </td>
+            <td><code>targets</code></td>
             <td>
                   <code><span title="torch.Tensor">Tensor</span></code>
             </td>
@@ -1675,9 +1683,7 @@
 
             <details class="quote">
               <summary>Source code in <code>pnpxai/explainers/lrp.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">125</span>
 <span class="normal">126</span>
 <span class="normal">127</span>
 <span class="normal">128</span>
@@ -1699,7 +1705,9 @@
 <span class="normal">144</span>
 <span class="normal">145</span>
 <span class="normal">146</span>
-<span class="normal">147</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]],</span>
     <span class="n">targets</span><span class="p">:</span> <span class="n">Tensor</span>
@@ -1754,7 +1762,7 @@
               Bases: <code><a class="autorefs autorefs-internal" title="pnpxai.explainers.lrp.LRPBase" href="#pnpxai.explainers.lrp.LRPBase">LRPBase</a></code></p>
 
 
-        <p>LRPEpsilonAlpha2Beta1 explainer.</p>
+      <p>LRPEpsilonAlpha2Beta1 explainer.</p>
 <p>Supported Modules: <code>Convolution</code></p>
 
 
@@ -1770,9 +1778,7 @@
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>model</code>
-            </td>
+            <td><code>model</code></td>
             <td>
                   <code><span title="torch.nn.modules.Module">Module</span></code>
             </td>
@@ -1786,9 +1792,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>epsilon</code>
-            </td>
+            <td><code>epsilon</code></td>
             <td>
                   <code><span title="typing.Union">Union</span>[float, <span title="typing.Callable">Callable</span>[[<span title="torch.Tensor">Tensor</span>], <span title="torch.Tensor">Tensor</span>]]</code>
             </td>
@@ -1802,9 +1806,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>stabilizer</code>
-            </td>
+            <td><code>stabilizer</code></td>
             <td>
                   <code><span title="typing.Union">Union</span>[float, <span title="typing.Callable">Callable</span>[[<span title="torch.Tensor">Tensor</span>], <span title="torch.Tensor">Tensor</span>]]</code>
             </td>
@@ -1818,9 +1820,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>zennit_canonizers</code>
-            </td>
+            <td><code>zennit_canonizers</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.List">List</span>[<span title="zennit.canonizers.Canonizer">Canonizer</span>]]</code>
             </td>
@@ -1834,9 +1834,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>layer</code>
-            </td>
+            <td><code>layer</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Union">Union</span>[<span title="typing.Union">Union</span>[str, <span title="torch.nn.modules.Module">Module</span>], <span title="typing.Sequence">Sequence</span>[<span title="typing.Union">Union</span>[str, <span title="torch.nn.modules.Module">Module</span>]]]]</code>
             </td>
@@ -1850,9 +1848,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>n_classes</code>
-            </td>
+            <td><code>n_classes</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[int]</code>
             </td>
@@ -1866,9 +1862,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>**kwargs</code>
-            </td>
+            <td><code>**kwargs</code></td>
             <td>
             </td>
             <td>
@@ -1883,16 +1877,9 @@
       </tbody>
     </table>
 
-
-
-
-
-
               <details class="quote">
                 <summary>Source code in <code>pnpxai/explainers/lrp.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">330</span>
-<span class="normal">331</span>
-<span class="normal">332</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">332</span>
 <span class="normal">333</span>
 <span class="normal">334</span>
 <span class="normal">335</span>
@@ -1943,7 +1930,9 @@
 <span class="normal">380</span>
 <span class="normal">381</span>
 <span class="normal">382</span>
-<span class="normal">383</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">LRPEpsilonAlpha2Beta1</span><span class="p">(</span><span class="n">LRPBase</span><span class="p">):</span>
+<span class="normal">383</span>
+<span class="normal">384</span>
+<span class="normal">385</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">LRPEpsilonAlpha2Beta1</span><span class="p">(</span><span class="n">LRPBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    LRPEpsilonAlpha2Beta1 explainer.</span>
 
@@ -2023,7 +2012,7 @@
 
     <div class="doc doc-contents ">
 
-        <p>Provides Tunable parameters for the optimizer</p>
+      <p>Provides Tunable parameters for the optimizer</p>
 
 
 <details class="tunable-parameters" open>
@@ -2032,16 +2021,16 @@
 </details>
             <details class="quote">
               <summary>Source code in <code>pnpxai/explainers/lrp.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">374</span>
-<span class="normal">375</span>
-<span class="normal">376</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">376</span>
 <span class="normal">377</span>
 <span class="normal">378</span>
 <span class="normal">379</span>
 <span class="normal">380</span>
 <span class="normal">381</span>
 <span class="normal">382</span>
-<span class="normal">383</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_tunables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]:</span>
+<span class="normal">383</span>
+<span class="normal">384</span>
+<span class="normal">385</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_tunables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Provides Tunable parameters for the optimizer</span>
 
@@ -2081,7 +2070,7 @@
               Bases: <code><a class="autorefs autorefs-internal" title="pnpxai.explainers.lrp.LRPBase" href="#pnpxai.explainers.lrp.LRPBase">LRPBase</a></code></p>
 
 
-        <p>LRPEpsilonGammaBox explainer.</p>
+      <p>LRPEpsilonGammaBox explainer.</p>
 <p>Supported Modules: <code>Convolution</code></p>
 
 
@@ -2097,9 +2086,7 @@
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>model</code>
-            </td>
+            <td><code>model</code></td>
             <td>
                   <code><span title="torch.nn.modules.Module">Module</span></code>
             </td>
@@ -2113,9 +2100,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>low</code>
-            </td>
+            <td><code>low</code></td>
             <td>
                   <code>float</code>
             </td>
@@ -2129,9 +2114,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>high</code>
-            </td>
+            <td><code>high</code></td>
             <td>
                   <code>float</code>
             </td>
@@ -2145,9 +2128,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>gamma</code>
-            </td>
+            <td><code>gamma</code></td>
             <td>
                   <code>float</code>
             </td>
@@ -2161,9 +2142,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>epsilon</code>
-            </td>
+            <td><code>epsilon</code></td>
             <td>
                   <code><span title="typing.Union">Union</span>[float, <span title="typing.Callable">Callable</span>[[<span title="torch.Tensor">Tensor</span>], <span title="torch.Tensor">Tensor</span>]]</code>
             </td>
@@ -2177,9 +2156,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>stabilizer</code>
-            </td>
+            <td><code>stabilizer</code></td>
             <td>
                   <code><span title="typing.Union">Union</span>[float, <span title="typing.Callable">Callable</span>[[<span title="torch.Tensor">Tensor</span>], <span title="torch.Tensor">Tensor</span>]]</code>
             </td>
@@ -2193,9 +2170,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>zennit_canonizers</code>
-            </td>
+            <td><code>zennit_canonizers</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.List">List</span>[<span title="zennit.canonizers.Canonizer">Canonizer</span>]]</code>
             </td>
@@ -2209,9 +2184,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>layer</code>
-            </td>
+            <td><code>layer</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Union">Union</span>[<span title="typing.Union">Union</span>[str, <span title="torch.nn.modules.Module">Module</span>], <span title="typing.Sequence">Sequence</span>[<span title="typing.Union">Union</span>[str, <span title="torch.nn.modules.Module">Module</span>]]]]</code>
             </td>
@@ -2225,9 +2198,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>n_classes</code>
-            </td>
+            <td><code>n_classes</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[int]</code>
             </td>
@@ -2241,9 +2212,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>**kwargs</code>
-            </td>
+            <td><code>**kwargs</code></td>
             <td>
             </td>
             <td>
@@ -2258,16 +2227,9 @@
       </tbody>
     </table>
 
-
-
-
-
-
               <details class="quote">
                 <summary>Source code in <code>pnpxai/explainers/lrp.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">206</span>
-<span class="normal">207</span>
-<span class="normal">208</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">208</span>
 <span class="normal">209</span>
 <span class="normal">210</span>
 <span class="normal">211</span>
@@ -2330,7 +2292,9 @@
 <span class="normal">268</span>
 <span class="normal">269</span>
 <span class="normal">270</span>
-<span class="normal">271</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">LRPEpsilonGammaBox</span><span class="p">(</span><span class="n">LRPBase</span><span class="p">):</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">LRPEpsilonGammaBox</span><span class="p">(</span><span class="n">LRPBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    LRPEpsilonGammaBox explainer.</span>
 
@@ -2422,7 +2386,7 @@
 
     <div class="doc doc-contents ">
 
-        <p>Provides Tunable parameters for the optimizer</p>
+      <p>Provides Tunable parameters for the optimizer</p>
 
 
 <details class="tunable-parameters" open>
@@ -2432,9 +2396,7 @@
 </details>
             <details class="quote">
               <summary>Source code in <code>pnpxai/explainers/lrp.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">259</span>
-<span class="normal">260</span>
-<span class="normal">261</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">261</span>
 <span class="normal">262</span>
 <span class="normal">263</span>
 <span class="normal">264</span>
@@ -2444,7 +2406,9 @@
 <span class="normal">268</span>
 <span class="normal">269</span>
 <span class="normal">270</span>
-<span class="normal">271</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_tunables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]:</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_tunables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Provides Tunable parameters for the optimizer</span>
 
@@ -2487,7 +2451,7 @@
               Bases: <code><a class="autorefs autorefs-internal" title="pnpxai.explainers.lrp.LRPBase" href="#pnpxai.explainers.lrp.LRPBase">LRPBase</a></code></p>
 
 
-        <p>LRPEpsilonPlus explainer.</p>
+      <p>LRPEpsilonPlus explainer.</p>
 <p>Supported Modules: <code>Convolution</code></p>
 
 
@@ -2503,9 +2467,7 @@
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>model</code>
-            </td>
+            <td><code>model</code></td>
             <td>
                   <code><span title="torch.nn.modules.Module">Module</span></code>
             </td>
@@ -2519,9 +2481,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>epsilon</code>
-            </td>
+            <td><code>epsilon</code></td>
             <td>
                   <code><span title="typing.Union">Union</span>[float, <span title="typing.Callable">Callable</span>[[<span title="torch.Tensor">Tensor</span>], <span title="torch.Tensor">Tensor</span>]]</code>
             </td>
@@ -2535,9 +2495,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>stabilizer</code>
-            </td>
+            <td><code>stabilizer</code></td>
             <td>
                   <code><span title="typing.Union">Union</span>[float, <span title="typing.Callable">Callable</span>[[<span title="torch.Tensor">Tensor</span>], <span title="torch.Tensor">Tensor</span>]]</code>
             </td>
@@ -2551,9 +2509,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>zennit_canonizers</code>
-            </td>
+            <td><code>zennit_canonizers</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.List">List</span>[<span title="zennit.canonizers.Canonizer">Canonizer</span>]]</code>
             </td>
@@ -2567,9 +2523,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>layer</code>
-            </td>
+            <td><code>layer</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Union">Union</span>[<span title="typing.Union">Union</span>[str, <span title="torch.nn.modules.Module">Module</span>], <span title="typing.Sequence">Sequence</span>[<span title="typing.Union">Union</span>[str, <span title="torch.nn.modules.Module">Module</span>]]]]</code>
             </td>
@@ -2583,9 +2537,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>n_classes</code>
-            </td>
+            <td><code>n_classes</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[int]</code>
             </td>
@@ -2599,9 +2551,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>**kwargs</code>
-            </td>
+            <td><code>**kwargs</code></td>
             <td>
             </td>
             <td>
@@ -2616,16 +2566,9 @@
       </tbody>
     </table>
 
-
-
-
-
-
               <details class="quote">
                 <summary>Source code in <code>pnpxai/explainers/lrp.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">274</span>
-<span class="normal">275</span>
-<span class="normal">276</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">276</span>
 <span class="normal">277</span>
 <span class="normal">278</span>
 <span class="normal">279</span>
@@ -2676,7 +2619,9 @@
 <span class="normal">324</span>
 <span class="normal">325</span>
 <span class="normal">326</span>
-<span class="normal">327</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">LRPEpsilonPlus</span><span class="p">(</span><span class="n">LRPBase</span><span class="p">):</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">LRPEpsilonPlus</span><span class="p">(</span><span class="n">LRPBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    LRPEpsilonPlus explainer.</span>
 
@@ -2756,7 +2701,7 @@
 
     <div class="doc doc-contents ">
 
-        <p>Provides Tunable parameters for the optimizer</p>
+      <p>Provides Tunable parameters for the optimizer</p>
 
 
 <details class="tunable-parameters" open>
@@ -2765,16 +2710,16 @@
 </details>
             <details class="quote">
               <summary>Source code in <code>pnpxai/explainers/lrp.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">318</span>
-<span class="normal">319</span>
-<span class="normal">320</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">320</span>
 <span class="normal">321</span>
 <span class="normal">322</span>
 <span class="normal">323</span>
 <span class="normal">324</span>
 <span class="normal">325</span>
 <span class="normal">326</span>
-<span class="normal">327</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_tunables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]:</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_tunables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Provides Tunable parameters for the optimizer</span>
 
@@ -2814,7 +2759,7 @@
               Bases: <code><a class="autorefs autorefs-internal" title="pnpxai.explainers.lrp.LRPBase" href="#pnpxai.explainers.lrp.LRPBase">LRPBase</a></code></p>
 
 
-        <p>LRPUniformEpsilon explainer.</p>
+      <p>LRPUniformEpsilon explainer.</p>
 <p>Supported Modules: <code>Linear</code>, <code>Convolution</code>, <code>LSTM</code>, <code>RNN</code>, <code>Attention</code></p>
 
 
@@ -2830,9 +2775,7 @@
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>model</code>
-            </td>
+            <td><code>model</code></td>
             <td>
                   <code><span title="torch.nn.modules.Module">Module</span></code>
             </td>
@@ -2846,9 +2789,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>epsilon</code>
-            </td>
+            <td><code>epsilon</code></td>
             <td>
                   <code><span title="typing.Union">Union</span>[float, <span title="typing.Callable">Callable</span>[[<span title="torch.Tensor">Tensor</span>], <span title="torch.Tensor">Tensor</span>]]</code>
             </td>
@@ -2862,9 +2803,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>stabilizer</code>
-            </td>
+            <td><code>stabilizer</code></td>
             <td>
                   <code><span title="typing.Union">Union</span>[float, <span title="typing.Callable">Callable</span>[[<span title="torch.Tensor">Tensor</span>], <span title="torch.Tensor">Tensor</span>]]</code>
             </td>
@@ -2878,9 +2817,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>zennit_canonizers</code>
-            </td>
+            <td><code>zennit_canonizers</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.List">List</span>[<span title="zennit.canonizers.Canonizer">Canonizer</span>]]</code>
             </td>
@@ -2894,9 +2831,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>layer</code>
-            </td>
+            <td><code>layer</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Union">Union</span>[<span title="typing.Union">Union</span>[str, <span title="torch.nn.modules.Module">Module</span>], <span title="typing.Sequence">Sequence</span>[<span title="typing.Union">Union</span>[str, <span title="torch.nn.modules.Module">Module</span>]]]]</code>
             </td>
@@ -2910,9 +2845,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>n_classes</code>
-            </td>
+            <td><code>n_classes</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[int]</code>
             </td>
@@ -2926,9 +2859,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>**kwargs</code>
-            </td>
+            <td><code>**kwargs</code></td>
             <td>
             </td>
             <td>
@@ -2943,16 +2874,9 @@
       </tbody>
     </table>
 
-
-
-
-
-
               <details class="quote">
                 <summary>Source code in <code>pnpxai/explainers/lrp.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">150</span>
-<span class="normal">151</span>
-<span class="normal">152</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">152</span>
 <span class="normal">153</span>
 <span class="normal">154</span>
 <span class="normal">155</span>
@@ -3003,7 +2927,9 @@
 <span class="normal">200</span>
 <span class="normal">201</span>
 <span class="normal">202</span>
-<span class="normal">203</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">LRPUniformEpsilon</span><span class="p">(</span><span class="n">LRPBase</span><span class="p">):</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">LRPUniformEpsilon</span><span class="p">(</span><span class="n">LRPBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    LRPUniformEpsilon explainer.</span>
 
@@ -3083,7 +3009,7 @@
 
     <div class="doc doc-contents ">
 
-        <p>Provides Tunable parameters for the optimizer</p>
+      <p>Provides Tunable parameters for the optimizer</p>
 
 
 <details class="tunable-parameters" open>
@@ -3092,16 +3018,16 @@
 </details>
             <details class="quote">
               <summary>Source code in <code>pnpxai/explainers/lrp.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">194</span>
-<span class="normal">195</span>
-<span class="normal">196</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">196</span>
 <span class="normal">197</span>
 <span class="normal">198</span>
 <span class="normal">199</span>
 <span class="normal">200</span>
 <span class="normal">201</span>
 <span class="normal">202</span>
-<span class="normal">203</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_tunables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]:</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_tunables</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Provides Tunable parameters for the optimizer</span>
 
@@ -3179,10 +3105,10 @@
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../../..", "features": [], "search": "../../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": [], "search": "../../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.83f73b43.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.af256bd8.min.js"></script>
       
     
   </body>

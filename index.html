@@ -16,7 +16,7 @@
       
       
       <link rel="icon" href="assets/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.45">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.33">
     
     
       
@@ -24,7 +24,7 @@
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.0253249f.min.css">
+      <link rel="stylesheet" href="assets/stylesheets/main.3cba04c6.min.css">
       
       
 
@@ -45,7 +45,7 @@
     
       <link rel="stylesheet" href="assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -87,7 +87,7 @@
     </a>
     <label class="md-header__button md-icon" for="__drawer">
       
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -107,7 +107,7 @@
     </div>
     
     
-      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
     
     
@@ -256,6 +256,24 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#acknowledgements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Acknowledgements
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#license" class="md-nav__link">
+    <span class="md-ellipsis">
+      License
+    </span>
+  </a>
   
 </li>
       
@@ -1044,6 +1062,24 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#acknowledgements" class="md-nav__link">
+    <span class="md-ellipsis">
+      Acknowledgements
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#license" class="md-nav__link">
+    <span class="md-ellipsis">
+      License
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1066,6 +1102,8 @@
 </div>
 
 <p><code>PnPXAI</code> is a Python package that provides a modular and easy-to-use framework for explainable artificial intelligence (XAI). It allows users to apply various XAI methods to their own models and datasets, and visualize the results in an interactive and intuitive way.</p>
+<hr>
+
 <h2 id="features">Features</h2>
 <ul>
 <li><a href="detector/"><strong>Detector</strong></a>: The detector module provides automatic detection of AI models implemented in PyTorch.</li>
@@ -1085,11 +1123,15 @@
 <li><a href="api/core/experiment/"><strong>Experiment</strong></a>: module, responsible for data manipulation, model explanation and explanations' evaluation</li>
 <li><a href="api/core/auto_explanation/"><strong>Auto Explanation</strong></a>: module, responsible for data manipulation, model explanation and explanations' evaluation</li>
 </ul>
+<hr>
+
 <h2 id="installation">Installation</h2>
 <p>To install <code>pnpxai</code>, run the following command:</p>
 <pre><code class="language-bash"># Command lines for installation
 pip install -e .
 </code></pre>
+<hr>
+
 <h2 id="getting-started">Getting Started</h2>
 <h3 id="auto-explanation">Auto Explanation</h3>
 <p>To use <code>pnpxai</code>, you need to import the package and its modules in your Python script. Proper functionality of the system requires initial setup of model, test data, and the <code>pnpxai.AutoExplanationForImageClassification</code>.</p>
@@ -1212,6 +1254,17 @@ experiment = Experiment(
     target_extractor=lambda outputs: outputs.argmax(-1).to(device)
 )
 </code></pre>
+<hr>
+
+<h2 id="acknowledgements">Acknowledgements</h2>
+<blockquote>
+<p>This research was initiated by KAIST XAI Center and conducted in collaboration with multiple institutions, including Seoul National University, Korea University, Sogang University, and ETRI.
+We are grateful for the grant from the Institute of Information &amp; communications Technology Planning &amp; Evaluation (IITP) (No.RS-2022-II220984).</p>
+</blockquote>
+<hr>
+
+<h2 id="license">License</h2>
+<p>PnP XAI is released under Apache license 2.0. See <a href="LICENSE">LICENSE</a> for additional details.</p>
 
 
 
@@ -1258,10 +1311,10 @@ experiment = Experiment(
     </div>
     
     
-    <script id="__config" type="application/json">{"base": ".", "features": [], "search": "assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": ".", "features": [], "search": "assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="assets/javascripts/bundle.83f73b43.min.js"></script>
+      <script src="assets/javascripts/bundle.af256bd8.min.js"></script>
       
     
   </body>

@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="../../../assets/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.45">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.33">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.0253249f.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.3cba04c6.min.css">
       
       
 
@@ -47,7 +47,7 @@
     
       <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -89,7 +89,7 @@
     </a>
     <label class="md-header__button md-icon" for="__drawer">
       
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -109,7 +109,7 @@
     </div>
     
     
-      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
     
     
@@ -1268,11 +1268,6 @@
 
 
 
-
-
-
-
-
   <div class="doc doc-children">
 
 
@@ -1298,7 +1293,7 @@
               Bases: <code><span title="pnpxai.utils.Observable">Observable</span></code></p>
 
 
-        <p>A class representing an experiment for model interpretability.</p>
+      <p>A class representing an experiment for model interpretability.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1313,9 +1308,7 @@
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>model</code>
-            </td>
+            <td><code>model</code></td>
             <td>
                   <code><span title="pnpxai.core._types.Model">Model</span></code>
             </td>
@@ -1329,9 +1322,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>data</code>
-            </td>
+            <td><code>data</code></td>
             <td>
                   <code><span title="pnpxai.core._types.DataSource">DataSource</span></code>
             </td>
@@ -1345,9 +1336,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>modality</code>
-            </td>
+            <td><code>modality</code></td>
             <td>
                   <code><a class="autorefs autorefs-internal" title="pnpxai.core.modality.modality.Modality" href="../modality/#pnpxai.core.modality.modality.Modality">Modality</a></code>
             </td>
@@ -1361,9 +1350,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>explainers</code>
-            </td>
+            <td><code>explainers</code></td>
             <td>
                   <code><span title="typing.Sequence">Sequence</span>[<a class="autorefs autorefs-internal" title="pnpxai.explainers.Explainer" href="../../explainer/base/#pnpxai.explainers.base.Explainer">Explainer</a>]</code>
             </td>
@@ -1377,9 +1364,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>postprocessors</code>
-            </td>
+            <td><code>postprocessors</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Sequence">Sequence</span>[<span title="typing.Callable">Callable</span>]]</code>
             </td>
@@ -1393,9 +1378,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>metrics</code>
-            </td>
+            <td><code>metrics</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Sequence">Sequence</span>[<span title="pnpxai.evaluator.metrics.base.Metric">Metric</span>]]</code>
             </td>
@@ -1409,9 +1392,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>input_extractor</code>
-            </td>
+            <td><code>input_extractor</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Callable">Callable</span>[[<span title="typing.Any">Any</span>], <span title="typing.Any">Any</span>]]</code>
             </td>
@@ -1425,9 +1406,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>label_extractor</code>
-            </td>
+            <td><code>label_extractor</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Callable">Callable</span>[[<span title="typing.Any">Any</span>], <span title="typing.Any">Any</span>]]</code>
             </td>
@@ -1441,9 +1420,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>target_extractor</code>
-            </td>
+            <td><code>target_extractor</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Callable">Callable</span>[[<span title="typing.Any">Any</span>], <span title="typing.Any">Any</span>]]</code>
             </td>
@@ -1457,9 +1434,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>cache_device</code>
-            </td>
+            <td><code>cache_device</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Union">Union</span>[<span title="torch.device">device</span>, str]]</code>
             </td>
@@ -1473,9 +1448,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>target_labels</code>
-            </td>
+            <td><code>target_labels</code></td>
             <td>
                   <code>bool</code>
             </td>
@@ -1581,11 +1554,6 @@
           </tr>
       </tbody>
     </table>
-
-
-
-
-
 
               <details class="quote">
                 <summary>Source code in <code>pnpxai/core/experiment/experiment.py</code></summary>
@@ -3200,7 +3168,7 @@
 
     <div class="doc doc-contents ">
 
-        <p>Evaluates selected batch of data within experiment.</p>
+      <p>Evaluates selected batch of data within experiment.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -3215,9 +3183,7 @@
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>data_ids</code>
-            </td>
+            <td><code>data_ids</code></td>
             <td>
                   <code><span title="typing.Sequence">Sequence</span>[int]</code>
             </td>
@@ -3231,9 +3197,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>explainer_id</code>
-            </td>
+            <td><code>explainer_id</code></td>
             <td>
                   <code>int</code>
             </td>
@@ -3247,9 +3211,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>postprocessor_id</code>
-            </td>
+            <td><code>postprocessor_id</code></td>
             <td>
                   <code>int</code>
             </td>
@@ -3263,9 +3225,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>metric_id</code>
-            </td>
+            <td><code>metric_id</code></td>
             <td>
                   <code>int</code>
             </td>
@@ -3302,7 +3262,7 @@
           </tr>
       </tbody>
     </table>
-        <p>This method orchestrates the experiment by configuring the manager, obtaining explainer instance,
+      <p>This method orchestrates the experiment by configuring the manager, obtaining explainer instance,
 processing data, generating explanations, and evaluating results. It then caches the results in the manager, and returns back to the user.</p>
 
             <details class="quote">
@@ -3411,7 +3371,7 @@ processing data, generating explanations, and evaluating results. It then caches
 
     <div class="doc doc-contents ">
 
-        <p>Explains selected batch of data within experiment.</p>
+      <p>Explains selected batch of data within experiment.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -3426,9 +3386,7 @@ processing data, generating explanations, and evaluating results. It then caches
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>data_ids</code>
-            </td>
+            <td><code>data_ids</code></td>
             <td>
                   <code><span title="typing.Sequence">Sequence</span>[int]</code>
             </td>
@@ -3465,7 +3423,7 @@ processing data, generating explanations, and evaluating results. It then caches
           </tr>
       </tbody>
     </table>
-        <p>This method orchestrates the experiment by configuring the manager, obtaining explainer instance,
+      <p>This method orchestrates the experiment by configuring the manager, obtaining explainer instance,
 processing data, and generating explanations. It then caches the results in the manager, and returns back to the user.</p>
 
             <details class="quote">
@@ -3546,7 +3504,7 @@ processing data, and generating explanations. It then caches the results in the 
 
     <div class="doc doc-contents ">
 
-        <p>Retrieve and flatten all input data.</p>
+      <p>Retrieve and flatten all input data.</p>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -3570,7 +3528,7 @@ processing data, and generating explanations. It then caches the results in the 
           </tr>
       </tbody>
     </table>
-        <p>This method retrieves input data from all available data points using the input extractor and flattens it.</p>
+      <p>This method retrieves input data from all available data points using the input extractor and flattens it.</p>
 
             <details class="quote">
               <summary>Source code in <code>pnpxai/core/experiment/experiment.py</code></summary>
@@ -3614,7 +3572,7 @@ processing data, and generating explanations. It then caches the results in the 
 
     <div class="doc doc-contents ">
 
-        <p>Retrieve and flatten evaluations for all explainers and metrics.</p>
+      <p>Retrieve and flatten evaluations for all explainers and metrics.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -3629,9 +3587,7 @@ processing data, and generating explanations. It then caches the results in the 
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>data_ids</code>
-            </td>
+            <td><code>data_ids</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Sequence">Sequence</span>[int]]</code>
             </td>
@@ -3669,7 +3625,7 @@ processing data, and generating explanations. It then caches the results in the 
           </tr>
       </tbody>
     </table>
-        <p>This method retrieves flattened evaluations for each explainer and metric using the manager's
+      <p>This method retrieves flattened evaluations for each explainer and metric using the manager's
 get_flat_evaluations method.</p>
 <p>Note: The input parameters allow for flexibility in specifying subsets of data to process. If not provided, the method processes all available data.</p>
 
@@ -3745,7 +3701,7 @@ get_flat_evaluations method.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Calculate and return rankings for explainers based on evaluations.</p>
+      <p>Calculate and return rankings for explainers based on evaluations.</p>
 
 
     <p><span class="doc-section-title">Returns:</span></p>
@@ -3769,7 +3725,7 @@ get_flat_evaluations method.</p>
           </tr>
       </tbody>
     </table>
-        <p>This method calculates rankings for explainers based on evaluations and metric scores. It considers
+      <p>This method calculates rankings for explainers based on evaluations and metric scores. It considers
 metric priorities and sorting preferences to produce rankings.</p>
 
             <details class="quote">
@@ -3878,7 +3834,7 @@ metric priorities and sorting preferences to produce rankings.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Retrieve and flatten explanations from all explainers.</p>
+      <p>Retrieve and flatten explanations from all explainers.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -3893,9 +3849,7 @@ metric priorities and sorting preferences to produce rankings.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>data_ids</code>
-            </td>
+            <td><code>data_ids</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Sequence">Sequence</span>[int]]</code>
             </td>
@@ -3933,7 +3887,7 @@ metric priorities and sorting preferences to produce rankings.</p>
           </tr>
       </tbody>
     </table>
-        <p>This method retrieves flattened explanations for each explainer using the manager's <code>get_flat_explanations</code> method.</p>
+      <p>This method retrieves flattened explanations for each explainer using the manager's <code>get_flat_explanations</code> method.</p>
 <p>Note: The input parameters allow for flexibility in specifying subsets of data to process. If not provided, the method processes all available data.</p>
 
             <details class="quote">
@@ -3992,7 +3946,7 @@ metric priorities and sorting preferences to produce rankings.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Retrieve and flatten last run input data.</p>
+      <p>Retrieve and flatten last run input data.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -4007,9 +3961,7 @@ metric priorities and sorting preferences to produce rankings.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>data_ids</code>
-            </td>
+            <td><code>data_ids</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Sequence">Sequence</span>[int]]</code>
             </td>
@@ -4047,7 +3999,7 @@ metric priorities and sorting preferences to produce rankings.</p>
           </tr>
       </tbody>
     </table>
-        <p>This method retrieves input data using the input extractor and flattens it for further processing.</p>
+      <p>This method retrieves input data using the input extractor and flattens it for further processing.</p>
 <p>Note: The input parameters allow for flexibility in specifying subsets of data to process. If not provided, the method processes all available data.</p>
 
             <details class="quote">
@@ -4102,7 +4054,7 @@ metric priorities and sorting preferences to produce rankings.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Retrieve and flatten labels data.</p>
+      <p>Retrieve and flatten labels data.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -4117,9 +4069,7 @@ metric priorities and sorting preferences to produce rankings.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>data_ids</code>
-            </td>
+            <td><code>data_ids</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Sequence">Sequence</span>[int]]</code>
             </td>
@@ -4157,7 +4107,7 @@ metric priorities and sorting preferences to produce rankings.</p>
           </tr>
       </tbody>
     </table>
-        <p>This method retrieves label data using the label extractor and flattens it for further processing.</p>
+      <p>This method retrieves label data using the label extractor and flattens it for further processing.</p>
 
             <details class="quote">
               <summary>Source code in <code>pnpxai/core/experiment/experiment.py</code></summary>
@@ -4207,7 +4157,7 @@ metric priorities and sorting preferences to produce rankings.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Retrieve and flatten model outputs.</p>
+      <p>Retrieve and flatten model outputs.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -4222,9 +4172,7 @@ metric priorities and sorting preferences to produce rankings.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>data_ids</code>
-            </td>
+            <td><code>data_ids</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Sequence">Sequence</span>[int]]</code>
             </td>
@@ -4262,7 +4210,7 @@ metric priorities and sorting preferences to produce rankings.</p>
           </tr>
       </tbody>
     </table>
-        <p>This method retrieves flattened model outputs using the manager's get_flat_outputs method.</p>
+      <p>This method retrieves flattened model outputs using the manager's get_flat_outputs method.</p>
 <p>Note: The input parameters allow for flexibility in specifying subsets of data to process. If not provided, the method processes all available data.</p>
 
             <details class="quote">
@@ -4313,7 +4261,7 @@ metric priorities and sorting preferences to produce rankings.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Retrieve and flatten target data.</p>
+      <p>Retrieve and flatten target data.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -4328,9 +4276,7 @@ metric priorities and sorting preferences to produce rankings.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>data_ids</code>
-            </td>
+            <td><code>data_ids</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Sequence">Sequence</span>[int]]</code>
             </td>
@@ -4368,7 +4314,7 @@ metric priorities and sorting preferences to produce rankings.</p>
           </tr>
       </tbody>
     </table>
-        <p>This method retrieves target data using the target extractor and flattens it for further processing.</p>
+      <p>This method retrieves target data using the target extractor and flattens it for further processing.</p>
 <p>Note: The input parameters allow for flexibility in specifying subsets of data to process. If not provided, the method processes all available data.</p>
 
             <details class="quote">
@@ -4427,7 +4373,7 @@ metric priorities and sorting preferences to produce rankings.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Optimize experiment hyperparameters by processing data, generating explanations, evaluating with metrics, caching and retrieving the data.</p>
+      <p>Optimize experiment hyperparameters by processing data, generating explanations, evaluating with metrics, caching and retrieving the data.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -4442,9 +4388,7 @@ metric priorities and sorting preferences to produce rankings.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>data_ids</code>
-            </td>
+            <td><code>data_ids</code></td>
             <td>
                   <code><span title="typing.Union">Union</span>[int, <span title="typing.Sequence">Sequence</span>[int]]</code>
             </td>
@@ -4458,9 +4402,7 @@ metric priorities and sorting preferences to produce rankings.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>explainer_id</code>
-            </td>
+            <td><code>explainer_id</code></td>
             <td>
                   <code>int</code>
             </td>
@@ -4474,9 +4416,7 @@ metric priorities and sorting preferences to produce rankings.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>metric_id</code>
-            </td>
+            <td><code>metric_id</code></td>
             <td>
                   <code>int</code>
             </td>
@@ -4490,9 +4430,7 @@ metric priorities and sorting preferences to produce rankings.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>direction</code>
-            </td>
+            <td><code>direction</code></td>
             <td>
                   <code><span title="typing.Literal">Literal</span>[&#39;minimize&#39;, &#39;maximize&#39;]</code>
             </td>
@@ -4506,9 +4444,7 @@ metric priorities and sorting preferences to produce rankings.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>sampler</code>
-            </td>
+            <td><code>sampler</code></td>
             <td>
                   <code><span title="typing.Literal">Literal</span>[&#39;grid&#39;, &#39;random&#39;, &#39;tpe&#39;]</code>
             </td>
@@ -4522,9 +4458,7 @@ metric priorities and sorting preferences to produce rankings.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>n_trials</code>
-            </td>
+            <td><code>n_trials</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[int]</code>
             </td>
@@ -4538,9 +4472,7 @@ metric priorities and sorting preferences to produce rankings.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>timeout</code>
-            </td>
+            <td><code>timeout</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[float]</code>
             </td>
@@ -4577,7 +4509,7 @@ metric priorities and sorting preferences to produce rankings.</p>
           </tr>
       </tbody>
     </table>
-        <p>This method orchestrates the experiment by configuring the manager, obtaining explainer and metric instances,
+      <p>This method orchestrates the experiment by configuring the manager, obtaining explainer and metric instances,
 processing data, generating explanations, and evaluating metrics. It then saves the results in the manager.</p>
 <p>Note: The input parameters allow for flexibility in specifying subsets of data, explainers, and metrics to process.
 If not provided, the method processes all available data, explainers, postprocessors, and metrics.</p>
@@ -4738,7 +4670,7 @@ If not provided, the method processes all available data, explainers, postproces
 
     <div class="doc doc-contents ">
 
-        <p>Postprocesses selected batch of data within experiment.</p>
+      <p>Postprocesses selected batch of data within experiment.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -4753,9 +4685,7 @@ If not provided, the method processes all available data, explainers, postproces
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>data_ids</code>
-            </td>
+            <td><code>data_ids</code></td>
             <td>
                   <code><span title="typing.Sequence">Sequence</span>[int]</code>
             </td>
@@ -4769,9 +4699,7 @@ If not provided, the method processes all available data, explainers, postproces
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>explainer_id</code>
-            </td>
+            <td><code>explainer_id</code></td>
             <td>
                   <code>int</code>
             </td>
@@ -4785,9 +4713,7 @@ If not provided, the method processes all available data, explainers, postproces
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>postprocessor_id</code>
-            </td>
+            <td><code>postprocessor_id</code></td>
             <td>
                   <code>int</code>
             </td>
@@ -4824,7 +4750,7 @@ If not provided, the method processes all available data, explainers, postproces
           </tr>
       </tbody>
     </table>
-        <p>This method orchestrates the experiment by configuring the manager, obtaining explainer instance,
+      <p>This method orchestrates the experiment by configuring the manager, obtaining explainer instance,
 processing data, and generating explanations. It then caches the results in the manager, and returns back to the user.</p>
 
             <details class="quote">
@@ -4923,7 +4849,7 @@ processing data, and generating explanations. It then caches the results in the 
 
     <div class="doc doc-contents ">
 
-        <p>Predicts results of the experiment for selected batch of data.</p>
+      <p>Predicts results of the experiment for selected batch of data.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -4938,9 +4864,7 @@ processing data, and generating explanations. It then caches the results in the 
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>data_ids</code>
-            </td>
+            <td><code>data_ids</code></td>
             <td>
                   <code><span title="typing.Sequence">Sequence</span>[int]</code>
             </td>
@@ -4977,7 +4901,7 @@ processing data, and generating explanations. It then caches the results in the 
           </tr>
       </tbody>
     </table>
-        <p>This method orchestrates the experiment by configuring the manager and processing data. It then caches the results in the manager, and returns back to the user.</p>
+      <p>This method orchestrates the experiment by configuring the manager and processing data. It then caches the results in the manager, and returns back to the user.</p>
 
             <details class="quote">
               <summary>Source code in <code>pnpxai/core/experiment/experiment.py</code></summary>
@@ -5047,7 +4971,7 @@ processing data, and generating explanations. It then caches the results in the 
 
     <div class="doc doc-contents ">
 
-        <p>Run the experiment by processing data, generating explanations, evaluating with metrics, caching and retrieving the data.</p>
+      <p>Run the experiment by processing data, generating explanations, evaluating with metrics, caching and retrieving the data.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -5062,9 +4986,7 @@ processing data, and generating explanations. It then caches the results in the 
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>data_ids</code>
-            </td>
+            <td><code>data_ids</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Sequence">Sequence</span>[int]]</code>
             </td>
@@ -5078,9 +5000,7 @@ processing data, and generating explanations. It then caches the results in the 
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>explainer_ids</code>
-            </td>
+            <td><code>explainer_ids</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Sequence">Sequence</span>[int]]</code>
             </td>
@@ -5094,9 +5014,7 @@ processing data, and generating explanations. It then caches the results in the 
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>postprocessor_ids</code>
-            </td>
+            <td><code>postprocessor_ids</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Sequence">Sequence</span>[int]]</code>
             </td>
@@ -5110,9 +5028,7 @@ processing data, and generating explanations. It then caches the results in the 
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>metric_ids</code>
-            </td>
+            <td><code>metric_ids</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Sequence">Sequence</span>[int]]</code>
             </td>
@@ -5150,7 +5066,7 @@ processing data, and generating explanations. It then caches the results in the 
           </tr>
       </tbody>
     </table>
-        <p>This method orchestrates the experiment by configuring the manager, obtaining explainer and metric instances,
+      <p>This method orchestrates the experiment by configuring the manager, obtaining explainer and metric instances,
 processing data, generating explanations, and evaluating metrics. It then saves the results in the manager.</p>
 <p>Note: The input parameters allow for flexibility in specifying subsets of data, explainers, and metrics to process.
 If not provided, the method processes all available data, explainers, postprocessors, and metrics.</p>
@@ -5325,7 +5241,7 @@ If not provided, the method processes all available data, explainers, postproces
 
     <div class="doc doc-contents ">
 
-        <p>Runs the experiment for selected batch of data, explainer, postprocessor and metric.</p>
+      <p>Runs the experiment for selected batch of data, explainer, postprocessor and metric.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -5340,9 +5256,7 @@ If not provided, the method processes all available data, explainers, postproces
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>data_ids</code>
-            </td>
+            <td><code>data_ids</code></td>
             <td>
                   <code><span title="typing.Sequence">Sequence</span>[int]</code>
             </td>
@@ -5356,9 +5270,7 @@ If not provided, the method processes all available data, explainers, postproces
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>explainer_id</code>
-            </td>
+            <td><code>explainer_id</code></td>
             <td>
                   <code>int</code>
             </td>
@@ -5372,9 +5284,7 @@ If not provided, the method processes all available data, explainers, postproces
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>postprocessor_id</code>
-            </td>
+            <td><code>postprocessor_id</code></td>
             <td>
                   <code>int</code>
             </td>
@@ -5388,9 +5298,7 @@ If not provided, the method processes all available data, explainers, postproces
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>metrics_id</code>
-            </td>
+            <td><code>metrics_id</code></td>
             <td>
                   <code>int</code>
             </td>
@@ -5428,7 +5336,7 @@ If not provided, the method processes all available data, explainers, postproces
           </tr>
       </tbody>
     </table>
-        <p>This method orchestrates the experiment by configuring the manager, obtaining explainer and metric instances,
+      <p>This method orchestrates the experiment by configuring the manager, obtaining explainer and metric instances,
 processing data, generating explanations, and evaluating metrics. It then caches the results in the manager, and returns back to the user.</p>
 <p>Note: The input parameters allow for flexibility in specifying subset of data, explainer, postprocessor and metric to process.</p>
 
@@ -5585,10 +5493,10 @@ processing data, generating explanations, and evaluating metrics. It then caches
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../../..", "features": [], "search": "../../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": [], "search": "../../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.83f73b43.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.af256bd8.min.js"></script>
       
     
   </body>

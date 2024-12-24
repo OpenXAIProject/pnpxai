@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="../../../assets/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.45">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.33">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.0253249f.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.3cba04c6.min.css">
       
       
 
@@ -47,7 +47,7 @@
     
       <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -89,7 +89,7 @@
     </a>
     <label class="md-header__button md-icon" for="__drawer">
       
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -109,7 +109,7 @@
     </div>
     
     
-      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
     
     
@@ -1070,11 +1070,6 @@
 
 
 
-
-
-
-
-
   <div class="doc doc-children">
 
 
@@ -1100,7 +1095,7 @@
               Bases: <code><a class="autorefs autorefs-internal" title="pnpxai.explainers.attention_rollout.AttentionRolloutBase" href="#pnpxai.explainers.attention_rollout.AttentionRolloutBase">AttentionRolloutBase</a></code></p>
 
 
-        <p>Implementation of <code>AttentionRollout</code> explainer.</p>
+      <p>Implementation of <code>AttentionRollout</code> explainer.</p>
 <p>Supported Modules: <code>Attention</code></p>
 
 
@@ -1116,9 +1111,7 @@
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>model</code>
-            </td>
+            <td><code>model</code></td>
             <td>
                   <code><span title="torch.nn.modules.Module">Module</span></code>
             </td>
@@ -1132,9 +1125,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>interpolate_mode</code>
-            </td>
+            <td><code>interpolate_mode</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[str]</code>
             </td>
@@ -1148,9 +1139,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>head_fusion_method</code>
-            </td>
+            <td><code>head_fusion_method</code></td>
             <td>
                   <code><span title="typing.Literal">Literal</span>[&#39;min&#39;, &#39;max&#39;, &#39;mean&#39;]</code>
             </td>
@@ -1164,9 +1153,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>discard_ratio</code>
-            </td>
+            <td><code>discard_ratio</code></td>
             <td>
                   <code>float</code>
             </td>
@@ -1180,9 +1167,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>forward_arg_extractor</code>
-            </td>
+            <td><code>forward_arg_extractor</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Callable">Callable</span>[[<span title="typing.Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>]], <span title="typing.Union">Union</span>[<span title="torch.Tensor">Tensor</span>, <span title="typing.Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>]]]]</code>
             </td>
@@ -1196,9 +1181,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>additional_forward_arg_extractor</code>
-            </td>
+            <td><code>additional_forward_arg_extractor</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Callable">Callable</span>[[<span title="typing.Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>]], <span title="typing.Union">Union</span>[<span title="torch.Tensor">Tensor</span>, <span title="typing.Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>]]]]</code>
             </td>
@@ -1212,9 +1195,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>n_classes</code>
-            </td>
+            <td><code>n_classes</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[int]</code>
             </td>
@@ -1228,9 +1209,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>**kwargs</code>
-            </td>
+            <td><code>**kwargs</code></td>
             <td>
             </td>
             <td>
@@ -1250,16 +1229,9 @@
   <summary>Reference</summary>
   <p>Samira Abnar, Willem Zuidema. Quantifying Attention Flow in Transformers.</p>
 </details>
-
-
-
-
-
               <details class="quote">
                 <summary>Source code in <code>pnpxai/explainers/attention_rollout.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">167</span>
 <span class="normal">168</span>
 <span class="normal">169</span>
 <span class="normal">170</span>
@@ -1317,7 +1289,9 @@
 <span class="normal">222</span>
 <span class="normal">223</span>
 <span class="normal">224</span>
-<span class="normal">225</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">AttentionRollout</span><span class="p">(</span><span class="n">AttentionRolloutBase</span><span class="p">):</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">AttentionRollout</span><span class="p">(</span><span class="n">AttentionRolloutBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Implementation of `AttentionRollout` explainer.</span>
 
@@ -1417,7 +1391,7 @@
               Bases: <code><span title="pnpxai.explainers.zennit.base.ZennitExplainer">ZennitExplainer</span></code></p>
 
 
-        <p>Base class for <code>AttentionRollout</code> and <code>TransformerAttribution</code> explainers.</p>
+      <p>Base class for <code>AttentionRollout</code> and <code>TransformerAttribution</code> explainers.</p>
 <p>Supported Modules: <code>Attention</code></p>
 
 
@@ -1433,9 +1407,7 @@
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>model</code>
-            </td>
+            <td><code>model</code></td>
             <td>
                   <code><span title="torch.nn.modules.Module">Module</span></code>
             </td>
@@ -1449,9 +1421,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>interpolate_mode</code>
-            </td>
+            <td><code>interpolate_mode</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[str]</code>
             </td>
@@ -1465,9 +1435,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>head_fusion_method</code>
-            </td>
+            <td><code>head_fusion_method</code></td>
             <td>
                   <code><span title="typing.Literal">Literal</span>[&#39;min&#39;, &#39;max&#39;, &#39;mean&#39;]</code>
             </td>
@@ -1481,9 +1449,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>discard_ratio</code>
-            </td>
+            <td><code>discard_ratio</code></td>
             <td>
                   <code>float</code>
             </td>
@@ -1497,9 +1463,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>forward_arg_extractor</code>
-            </td>
+            <td><code>forward_arg_extractor</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Callable">Callable</span>[[<span title="typing.Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>]], <span title="typing.Union">Union</span>[<span title="torch.Tensor">Tensor</span>, <span title="typing.Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>]]]]</code>
             </td>
@@ -1513,9 +1477,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>additional_forward_arg_extractor</code>
-            </td>
+            <td><code>additional_forward_arg_extractor</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Callable">Callable</span>[[<span title="typing.Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>]], <span title="typing.Union">Union</span>[<span title="torch.Tensor">Tensor</span>, <span title="typing.Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>]]]]</code>
             </td>
@@ -1529,9 +1491,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>n_classes</code>
-            </td>
+            <td><code>n_classes</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[int]</code>
             </td>
@@ -1545,9 +1505,35 @@
             </td>
           </tr>
           <tr class="doc-section-item">
+            <td><code>forward_arg_extractor</code></td>
             <td>
-                <code>**kwargs</code>
+                  <code><span title="typing.Optional">Optional</span>[<span title="pnpxai.explainers.types.ForwardArgumentExtractor">ForwardArgumentExtractor</span>]</code>
             </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A function that extracts forward arguments from the input batch(s) where the attribution scores are assigned.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>additional_forward_arg_extractor</code></td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="pnpxai.explainers.types.ForwardArgumentExtractor">ForwardArgumentExtractor</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A secondary function that extract additional forward arguments from the input batch(s).</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td><code>**kwargs</code></td>
             <td>
             </td>
             <td>
@@ -1567,11 +1553,6 @@
   <summary>Reference</summary>
   <p>Samira Abnar, Willem Zuidema. Quantifying Attention Flow in Transformers.</p>
 </details>
-
-
-
-
-
               <details class="quote">
                 <summary>Source code in <code>pnpxai/explainers/attention_rollout.py</code></summary>
                 <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 42</span>
@@ -1694,7 +1675,9 @@
 <span class="normal">159</span>
 <span class="normal">160</span>
 <span class="normal">161</span>
-<span class="normal">162</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">AttentionRolloutBase</span><span class="p">(</span><span class="n">ZennitExplainer</span><span class="p">):</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">AttentionRolloutBase</span><span class="p">(</span><span class="n">ZennitExplainer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for `AttentionRollout` and `TransformerAttribution` explainers.</span>
 
@@ -1708,6 +1691,8 @@
 <span class="sd">        forward_arg_extractor (Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]): Optional function to extract forward arguments from inputs.</span>
 <span class="sd">        additional_forward_arg_extractor (Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]): Optional function to extract additional forward arguments.</span>
 <span class="sd">        n_classes: (Optional[int]): Number of classes</span>
+<span class="sd">        forward_arg_extractor: A function that extracts forward arguments from the input batch(s) where the attribution scores are assigned.</span>
+<span class="sd">        additional_forward_arg_extractor: A secondary function that extract additional forward arguments from the input batch(s).</span>
 <span class="sd">        **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer</span>
 
 <span class="sd">    Reference:</span>
@@ -1841,7 +1826,7 @@
 
     <div class="doc doc-contents ">
 
-        <p>Computes attributions for the given inputs and targets.</p>
+      <p>Computes attributions for the given inputs and targets.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1856,9 +1841,7 @@
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>inputs</code>
-            </td>
+            <td><code>inputs</code></td>
             <td>
                   <code><span title="torch.Tensor">Tensor</span></code>
             </td>
@@ -1872,9 +1855,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>targets</code>
-            </td>
+            <td><code>targets</code></td>
             <td>
                   <code><span title="torch.Tensor">Tensor</span></code>
             </td>
@@ -1915,9 +1896,7 @@
 
             <details class="quote">
               <summary>Source code in <code>pnpxai/explainers/attention_rollout.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">113</span>
 <span class="normal">114</span>
 <span class="normal">115</span>
 <span class="normal">116</span>
@@ -1949,7 +1928,9 @@
 <span class="normal">142</span>
 <span class="normal">143</span>
 <span class="normal">144</span>
-<span class="normal">145</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">attribute</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">inputs</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]],</span>
     <span class="n">targets</span><span class="p">:</span> <span class="n">Tensor</span>
@@ -2001,7 +1982,7 @@
 
     <div class="doc doc-contents ">
 
-        <p>Provides Tunable parameters for the optimizer</p>
+      <p>Provides Tunable parameters for the optimizer</p>
 
 
 <details class="tunable-parameters" open>
@@ -2012,9 +1993,7 @@
 </details>
             <details class="quote">
               <summary>Source code in <code>pnpxai/explainers/attention_rollout.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">147</span>
-<span class="normal">148</span>
-<span class="normal">149</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">149</span>
 <span class="normal">150</span>
 <span class="normal">151</span>
 <span class="normal">152</span>
@@ -2027,7 +2006,9 @@
 <span class="normal">159</span>
 <span class="normal">160</span>
 <span class="normal">161</span>
-<span class="normal">162</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_tunables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_tunables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Provides Tunable parameters for the optimizer</span>
 
@@ -2073,7 +2054,7 @@
               Bases: <code><a class="autorefs autorefs-internal" title="pnpxai.explainers.attention_rollout.AttentionRolloutBase" href="#pnpxai.explainers.attention_rollout.AttentionRolloutBase">AttentionRolloutBase</a></code></p>
 
 
-        <p>Implementation of <code>TransformerAttribution</code> explainer.</p>
+      <p>Implementation of <code>TransformerAttribution</code> explainer.</p>
 <p>Supported Modules: <code>Attention</code></p>
 
 
@@ -2089,9 +2070,7 @@
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>model</code>
-            </td>
+            <td><code>model</code></td>
             <td>
                   <code><span title="torch.nn.modules.Module">Module</span></code>
             </td>
@@ -2105,9 +2084,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>interpolate_mode</code>
-            </td>
+            <td><code>interpolate_mode</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[str]</code>
             </td>
@@ -2121,9 +2098,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>head_fusion_method</code>
-            </td>
+            <td><code>head_fusion_method</code></td>
             <td>
                   <code><span title="typing.Literal">Literal</span>[&#39;min&#39;, &#39;max&#39;, &#39;mean&#39;]</code>
             </td>
@@ -2137,9 +2112,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>discard_ratio</code>
-            </td>
+            <td><code>discard_ratio</code></td>
             <td>
                   <code>float</code>
             </td>
@@ -2153,9 +2126,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>forward_arg_extractor</code>
-            </td>
+            <td><code>forward_arg_extractor</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Callable">Callable</span>[[<span title="typing.Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>]], <span title="typing.Union">Union</span>[<span title="torch.Tensor">Tensor</span>, <span title="typing.Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>]]]]</code>
             </td>
@@ -2169,9 +2140,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>additional_forward_arg_extractor</code>
-            </td>
+            <td><code>additional_forward_arg_extractor</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="typing.Callable">Callable</span>[[<span title="typing.Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>]], <span title="typing.Union">Union</span>[<span title="torch.Tensor">Tensor</span>, <span title="typing.Tuple">Tuple</span>[<span title="torch.Tensor">Tensor</span>]]]]</code>
             </td>
@@ -2185,9 +2154,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>n_classes</code>
-            </td>
+            <td><code>n_classes</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[int]</code>
             </td>
@@ -2201,9 +2168,7 @@
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>**kwargs</code>
-            </td>
+            <td><code>**kwargs</code></td>
             <td>
             </td>
             <td>
@@ -2223,16 +2188,9 @@
   <summary>Reference</summary>
   <p>Chefer H., Gur S., and Wolf L. Self-Attention Attribution: Transformer interpretability beyond attention visualization.</p>
 </details>
-
-
-
-
-
               <details class="quote">
                 <summary>Source code in <code>pnpxai/explainers/attention_rollout.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">228</span>
-<span class="normal">229</span>
-<span class="normal">230</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">230</span>
 <span class="normal">231</span>
 <span class="normal">232</span>
 <span class="normal">233</span>
@@ -2357,7 +2315,9 @@
 <span class="normal">352</span>
 <span class="normal">353</span>
 <span class="normal">354</span>
-<span class="normal">355</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">TransformerAttribution</span><span class="p">(</span><span class="n">AttentionRolloutBase</span><span class="p">):</span>
+<span class="normal">355</span>
+<span class="normal">356</span>
+<span class="normal">357</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">TransformerAttribution</span><span class="p">(</span><span class="n">AttentionRolloutBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Implementation of `TransformerAttribution` explainer.</span>
 
@@ -2562,10 +2522,10 @@
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../../..", "features": [], "search": "../../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": [], "search": "../../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.83f73b43.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.af256bd8.min.js"></script>
       
     
   </body>

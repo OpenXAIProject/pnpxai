@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="../../../assets/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.5.45">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.33">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.0253249f.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.3cba04c6.min.css">
       
       
 
@@ -47,7 +47,7 @@
     
       <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -89,7 +89,7 @@
     </a>
     <label class="md-header__button md-icon" for="__drawer">
       
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -109,7 +109,7 @@
     </div>
     
     
-      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
     
     
@@ -1142,11 +1142,6 @@
 
 
 
-
-
-
-
-
   <div class="doc doc-children">
 
 
@@ -1170,7 +1165,7 @@
     <div class="doc doc-contents ">
 
 
-        <p>A class that encapsulates the logic for evaluating a model's performance using a 
+      <p>A class that encapsulates the logic for evaluating a model's performance using a 
 specified explainer, postprocessor, and metric within a given modality. The <code>Objective</code> 
 class is designed to be callable and can be used within an optimization framework 
 like Optuna to evaluate different configurations of explainers and postprocessors.</p>
@@ -1188,9 +1183,7 @@ like Optuna to evaluate different configurations of explainers and postprocessor
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>explainer</code>
-            </td>
+            <td><code>explainer</code></td>
             <td>
                   <code><a class="autorefs autorefs-internal" title="pnpxai.explainers.Explainer" href="../../explainer/base/#pnpxai.explainers.base.Explainer">Explainer</a></code>
             </td>
@@ -1204,9 +1197,7 @@ like Optuna to evaluate different configurations of explainers and postprocessor
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>postprocessor</code>
-            </td>
+            <td><code>postprocessor</code></td>
             <td>
                   <code><span title="pnpxai.explainers.utils.postprocess.PostProcessor">PostProcessor</span></code>
             </td>
@@ -1220,9 +1211,7 @@ like Optuna to evaluate different configurations of explainers and postprocessor
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>metric</code>
-            </td>
+            <td><code>metric</code></td>
             <td>
                   <code><span title="pnpxai.evaluator.metrics.base.Metric">Metric</span></code>
             </td>
@@ -1236,9 +1225,7 @@ like Optuna to evaluate different configurations of explainers and postprocessor
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>modality</code>
-            </td>
+            <td><code>modality</code></td>
             <td>
                   <code><a class="autorefs autorefs-internal" title="pnpxai.core.modality.modality.Modality" href="../../core/modality/#pnpxai.core.modality.modality.Modality">Modality</a></code>
             </td>
@@ -1252,9 +1239,7 @@ like Optuna to evaluate different configurations of explainers and postprocessor
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>inputs</code>
-            </td>
+            <td><code>inputs</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="pnpxai.core._types.TensorOrTupleOfTensors">TensorOrTupleOfTensors</span>]</code>
             </td>
@@ -1268,9 +1253,7 @@ like Optuna to evaluate different configurations of explainers and postprocessor
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>targets</code>
-            </td>
+            <td><code>targets</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[<span title="torch.Tensor">Tensor</span>]</code>
             </td>
@@ -1285,11 +1268,6 @@ like Optuna to evaluate different configurations of explainers and postprocessor
           </tr>
       </tbody>
     </table>
-
-
-
-
-
 
               <details class="quote">
                 <summary>Source code in <code>pnpxai/evaluator/optimizer/objectives.py</code></summary>
@@ -1640,7 +1618,7 @@ like Optuna to evaluate different configurations of explainers and postprocessor
 
     <div class="doc doc-contents ">
 
-        <p>Executes the objective function within an optimization trial. This method is 
+      <p>Executes the objective function within an optimization trial. This method is 
 responsible for selecting the explainer and postprocessor based on the trial 
 suggestions, performing the explanation and postprocessing, and evaluating the 
 results using the specified metric.</p>
@@ -1658,9 +1636,7 @@ results using the specified metric.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>trial</code>
-            </td>
+            <td><code>trial</code></td>
             <td>
                   <code><span title="optuna.trial.Trial">Trial</span></code>
             </td>
@@ -1887,7 +1863,7 @@ results using the specified metric.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Sets both the input data and target labels for the objective.</p>
+      <p>Sets both the input data and target labels for the objective.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1902,9 +1878,7 @@ results using the specified metric.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>inputs</code>
-            </td>
+            <td><code>inputs</code></td>
             <td>
                   <code><span title="pnpxai.core._types.TensorOrTupleOfTensors">TensorOrTupleOfTensors</span></code>
             </td>
@@ -1918,9 +1892,7 @@ results using the specified metric.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>targets</code>
-            </td>
+            <td><code>targets</code></td>
             <td>
                   <code><span title="torch.Tensor">Tensor</span></code>
             </td>
@@ -2008,7 +1980,7 @@ results using the specified metric.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Sets the input data for the objective.</p>
+      <p>Sets the input data for the objective.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -2023,9 +1995,7 @@ results using the specified metric.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>inputs</code>
-            </td>
+            <td><code>inputs</code></td>
             <td>
                   <code><span title="pnpxai.core._types.TensorOrTupleOfTensors">TensorOrTupleOfTensors</span></code>
             </td>
@@ -2107,7 +2077,7 @@ results using the specified metric.</p>
 
     <div class="doc doc-contents ">
 
-        <p>Sets the target labels for the objective.</p>
+      <p>Sets the target labels for the objective.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -2122,9 +2092,7 @@ results using the specified metric.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>targets</code>
-            </td>
+            <td><code>targets</code></td>
             <td>
                   <code><span title="torch.Tensor">Tensor</span></code>
             </td>
@@ -2221,11 +2189,6 @@ results using the specified metric.</p>
 
 
 
-
-
-
-
-
   <div class="doc doc-children">
 
 
@@ -2247,7 +2210,7 @@ results using the specified metric.</p>
 
     <div class="doc doc-contents ">
 
-        <p>A utility function that suggests parameters for a given object based on an optimization trial. 
+      <p>A utility function that suggests parameters for a given object based on an optimization trial. 
 The function recursively tunes the parameters of the object according to the modality (or 
 modalities) provided.</p>
 
@@ -2264,9 +2227,7 @@ modalities) provided.</p>
       </thead>
       <tbody>
           <tr class="doc-section-item">
-            <td>
-                <code>trial</code>
-            </td>
+            <td><code>trial</code></td>
             <td>
                   <code><span title="optuna.Trial">Trial</span></code>
             </td>
@@ -2281,9 +2242,7 @@ parameters for tuning.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>obj</code>
-            </td>
+            <td><code>obj</code></td>
             <td>
                   <code><span title="typing.Any">Any</span></code>
             </td>
@@ -2298,9 +2257,7 @@ parameters for tuning.</p>
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>modality</code>
-            </td>
+            <td><code>modality</code></td>
             <td>
                   <code><span title="typing.Union">Union</span>[<a class="autorefs autorefs-internal" title="pnpxai.core.modality.modality.Modality" href="../../core/modality/#pnpxai.core.modality.modality.Modality">Modality</a>, <span title="typing.Tuple">Tuple</span>[<a class="autorefs autorefs-internal" title="pnpxai.core.modality.modality.Modality" href="../../core/modality/#pnpxai.core.modality.modality.Modality">Modality</a>]]</code>
             </td>
@@ -2315,9 +2272,7 @@ If multiple modalities are provided, the function handles multi-modal tuning.</p
             </td>
           </tr>
           <tr class="doc-section-item">
-            <td>
-                <code>key</code>
-            </td>
+            <td><code>key</code></td>
             <td>
                   <code><span title="typing.Optional">Optional</span>[str]</code>
             </td>
@@ -2574,11 +2529,6 @@ with tunable parameters, you can tune it as follows:</p>
 
 
 
-
-
-
-
-
   <div class="doc doc-children">
 
 
@@ -2606,7 +2556,7 @@ with tunable parameters, you can tune it as follows:</p>
     <div class="doc doc-contents ">
 
 
-        <p>A dataclass used to store the results of an optimization process, including the chosen 
+      <p>A dataclass used to store the results of an optimization process, including the chosen 
 explainer, postprocessor, and the Optuna study object that was used during the optimization.</p>
 
 
@@ -2659,11 +2609,6 @@ contains information about the optimization trials and results.</p>
           </tr>
       </tbody>
     </table>
-
-
-
-
-
 
               <details class="quote">
                 <summary>Source code in <code>pnpxai/evaluator/optimizer/types.py</code></summary>
@@ -2787,10 +2732,10 @@ contains information about the optimization trials and results.</p>
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../../..", "features": [], "search": "../../../assets/javascripts/workers/search.6ce7567c.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "../../..", "features": [], "search": "../../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.83f73b43.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.af256bd8.min.js"></script>
       
     
   </body>
