@@ -120,6 +120,11 @@ This guide explains how to automatically explain your own models and datasets us
 
 ## [Demo](https://openxaiproject.github.io/pnpxai/demo/)
 
+## Acknowledgements
+
+> This research was initiated by KAIST XAI Center and conducted in collaboration with multiple institutions, including Seoul National University, Korea University, Sogang University, and ETRI.
+We are grateful for the grant from the Institute of Information & communications Technology Planning & Evaluation (IITP) (No.RS-2022-II220984).
+
 ## License
 
 PnP XAI is released under Apache license 2.0. See [LICENSE](LICENSE) for additional details.

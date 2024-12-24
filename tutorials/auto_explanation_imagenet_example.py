@@ -163,4 +163,4 @@ for ax in axes.flatten():
     ax.set_xticks([])
     ax.set_yticks([])
 
-plt.savefig('auto_explanation_imagenet_example.png')
+plt.savefig('auto_explanation_imagenet_example_.png')
