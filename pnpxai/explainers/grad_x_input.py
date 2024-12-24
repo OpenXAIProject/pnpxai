@@ -24,7 +24,7 @@ class GradientXInput(Explainer):
         **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer
 
     Reference:
-        Avanti Shrikumar, Peyton Greenside, Anna Shcherbina, Anshul Kundaje. Grad-CAM: Not Just a Black Box: Learning Important Features Through Propagating Activation Differences.
+        Avanti Shrikumar, Peyton Greenside, Anna Shcherbina, Anshul Kundaje. Not Just a Black Box: Learning Important Features Through Propagating Activation Differences.
     """
 
     SUPPORTED_MODULES = [Linear, Convolution, LSTM, RNN, Attention]

@@ -28,7 +28,7 @@ class SmoothGrad(ZennitExplainer):
         **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer
 
     Reference:
-        Ramprasaath R. Selvaraju, Michael Cogswell, Abhishek Das, Ramakrishna Vedantam, Devi Parikh, Dhruv Batra. Grad-CAM: Visual Explanations from Deep Networks via Gradient-based Localization.
+        Daniel Smilkov, Nikhil Thorat, Been Kim, Fernanda Viégas, Martin Wattenberg. SmoothGrad: removing noise by adding noise.
     """
 
     SUPPORTED_MODULES = [Linear, Convolution, LSTM, RNN, Attention]
