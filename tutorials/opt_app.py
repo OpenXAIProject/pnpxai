@@ -1,3 +1,4 @@
+import gradio as gr
 import functools
 import torch
 import torchvision.transforms.functional as TF
@@ -22,13 +23,13 @@ expr = AutoExplanationForImageClassification(
     input_extractor=lambda batch: batch[0].to(device),
     label_extractor=lambda batch: batch[-1].to(device),
     target_extractor=lambda outputs: outputs.argmax(-1).to(device),
-    target_labels=False, # target prediction if False
+    target_labels=False,  # target prediction if False
 )
 
 
-#------------------------------------------------------------------------------#
-#--------------------------------- client -------------------------------------#
-#------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------#
+# --------------------------------- client -------------------------------------#
+# ------------------------------------------------------------------------------#
 
 # run with default hp
 def run_default(data_id, explainer_id, postprocessor_id, metric_id):
@@ -38,13 +39,15 @@ def run_default(data_id, explainer_id, postprocessor_id, metric_id):
     # - evaluation by the metric
     # are cached.
     return expr.run_batch(
-        data_ids=[data_id],
         explainer_id=explainer_id,
         postprocessor_id=postprocessor_id,
         metric_id=metric_id,
+        data_ids=[data_id],
     )
 
 # get data
+
+
 def get_input_image(data_id):
     batch = expr.manager.batch_data_by_ids(data_ids=[data_id])
     input_img = expr.input_extractor(batch)[0]
@@ -52,28 +55,35 @@ def get_input_image(data_id):
         input_img.detach().cpu(), mean=transform.mean, std=transform.std,
     )
 
+
 def get_label(data_id):
     batch = expr.manager.batch_data_by_ids(data_ids=[data_id])
     label = expr.label_extractor(batch)[0].item()
     return dataset.dataset.idx_to_label(str(label))
 
+
 def get_target(data_id):
     target = expr._get_targets(data_ids=[data_id])[0].item()
     return dataset.dataset.idx_to_label(str(target))
+
 
 def get_prob(data_id):
     output = expr.manager.get_output_by_id(data_id=data_id)
     return output.softmax(-1).max().item()
 
+
 def get_explainer(explainer_id):
     explainer = expr.manager.get_explainer_by_id(explainer_id)
     return str(explainer)
 
+
 def get_postprocessor(postprocessor_id):
     return str(expr.manager.get_postprocessor_by_id(postprocessor_id))
 
+
 def get_metric(metric_id):
     return str(expr.manager.get_metric_by_id(metric_id))
+
 
 def get_explanation(data_id, explainer_id, postprocessor_id, cmap='YlGn'):
     attrs = expr.manager.batch_explanations_by_ids(
@@ -84,9 +94,11 @@ def get_explanation(data_id, explainer_id, postprocessor_id, cmap='YlGn'):
     postprocessed = postprocessor(attrs)[0].detach().cpu().numpy()
     return coloring_heatmap(postprocessed, cmap=cmap)
 
+
 def coloring_heatmap(postprocessed, cmap='YlGn'):
     cmap = plt.get_cmap(cmap)
     return cmap(postprocessed)
+
 
 def get_evaluation(data_id, explainer_id, postprocessor_id, metric_id):
     return expr.manager.get_evaluation_by_id(
@@ -95,6 +107,7 @@ def get_evaluation(data_id, explainer_id, postprocessor_id, metric_id):
         postprocessor_id=postprocessor_id,
         metric_id=metric_id,
     )
+
 
 def post_default_explanation(
     explainer_id,
@@ -114,6 +127,7 @@ def post_default_explanation(
 
 N_TRIALS = 50
 OPTIM_SEED = 42
+
 
 def post_opt(
     explainer_id,
@@ -144,26 +158,26 @@ def post_opt(
     postprocessors = []
     values = []
     for q in q_indices:
-        explainer, postprocessor = objective.load_from_optuna_params(trials[q].params)
+        explainer, postprocessor = objective.load_from_optuna_params(
+            trials[q].params)
         explainers.append(str(explainer))
         postprocessors.append(str(postprocessor))
         values.append(trials[q].value)
         postprocessed = postprocessor(explainer.attribute(inputs, targets))[0]
-        attrs.append(coloring_heatmap(postprocessed.detach().cpu().numpy(), cmap=cmap))
+        attrs.append(coloring_heatmap(
+            postprocessed.detach().cpu().numpy(), cmap=cmap))
     return tuple([*attrs, *explainers, *postprocessors, *values])
 
 
 CMAPS = ['Reds', 'YlGn', 'coolwarm', 'viridis', 'jet']
 
 
-#------------------------------------------------------------------------------#
-#----------------------------------- app --------------------------------------#
-#------------------------------------------------------------------------------#
-
-import gradio as gr
+# ------------------------------------------------------------------------------#
+# ----------------------------------- app --------------------------------------#
+# ------------------------------------------------------------------------------#
 
 
-# Assume that data_id was selected through the vanilla user scenario. 
+# Assume that data_id was selected through the vanilla user scenario.
 data_id = 1
 
 with gr.Blocks() as demo:

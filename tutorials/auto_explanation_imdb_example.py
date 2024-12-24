@@ -63,10 +63,10 @@ expr = AutoExplanationForTextClassification(
 
 # explain and evaluate
 results = expr.run_batch(
-    data_ids=range(4),
     explainer_id=0,
     postprocessor_id=0,
     metric_id=1,
+    data_ids=range(4),
 )
 
 # import pdb; pdb.set_trace()
