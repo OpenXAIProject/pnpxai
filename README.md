@@ -118,7 +118,22 @@ This guide explains how to automatically explain your own models and datasets us
 - [ImageNet Example All Explainers](tutorials/imagenet_example_all_explainers.md)
 - [ImageNet Example All Metrics](tutorials/imagenet_example_all_metrics.md)
 
-## [Demo](https://openxaiproject.github.io/pnpxai/demo/)
+## Research Group results
+1. [Free MCG](tutorials/gfgp_tutorial.py) [[Reference](https://arxiv.org/abs/2411.15265)]
+2. 
+3. [LEAR (Learn-Explain-Reinforce)](tutorials/LEAR_example_all_explainers.md) [[Reference](https://ieeexplore.ieee.org/document/9854196)]
+4. [KorFactScore (Korean Factual precision in atomicity Score)](tutorials/fact_score_example_korfactscore.py) [[Reference](https://github.com/ETRI-XAINLP/KorFactScore)]
+
+
+
+## Documentation
+
+The [Documentation](https://openxaiproject.github.io/pnpxai/) contains the API reference for all of the functionality of the framework. Primarily, high-level modules of the framework include: 
+- Detector
+- Explainer
+- Recommender
+- Evaluator
+- Optimizer
 
 ## Acknowledgements
 
