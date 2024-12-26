@@ -10,7 +10,6 @@ from zennit.canonizers import Canonizer
 from zennit.composites import layer_map_base, LayerMapComposite
 from zennit.rules import AlphaBeta
 from zennit.types import Linear
-from optuna.trial import Trial
 
 from pnpxai.core.detector.types import Attention
 from pnpxai.explainers.attentions.attributions import SavingAttentionAttributor

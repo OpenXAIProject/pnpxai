@@ -5,7 +5,7 @@ from torch.nn import Module
 
 from pnpxai.explainers.base import Explainer
 from pnpxai.utils import format_into_tuple
-from ..base import Explainer
+from pnpxai.explainers.base import Explainer
 
 
 class ZennitExplainer(Explainer):

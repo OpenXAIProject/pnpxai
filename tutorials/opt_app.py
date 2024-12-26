@@ -1,10 +1,8 @@
 import gradio as gr
 import functools
 import torch
-import torchvision.transforms.functional as TF
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
-from PIL import Image
 from pnpxai import AutoExplanationForImageClassification
 
 from helpers import get_imagenet_dataset, get_torchvision_model, denormalize_image

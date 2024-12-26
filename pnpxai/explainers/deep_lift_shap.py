@@ -1,4 +1,4 @@
-from typing import Dict, Tuple, Callable, Optional
+from typing import Optional
 
 import torch
 from shap import DeepExplainer
@@ -7,9 +7,6 @@ from pnpxai.core.detector.types import Convolution
 from pnpxai.explainers.base import Explainer
 from torch.nn.modules import Module
 from pnpxai.explainers.base import Explainer
-from pnpxai.explainers.types import ForwardArgumentExtractor
-from pnpxai.explainers.utils.baselines import BaselineMethodOrFunction, BaselineFunction
-from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 
 
 class DeepLiftShap(Explainer):
@@ -53,7 +50,7 @@ class DeepLiftShap(Explainer):
         for i in range(len(shap_values)):
             shap_values[i] = shap_values[i][0]
         return torch.tensor(
-            shap_values[targets.cpu().item()],
+            shap_values[targets.cpu().tolist()],
             dtype=self.dtype,
             device=self.device,
         )

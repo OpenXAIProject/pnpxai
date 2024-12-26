@@ -1,14 +1,13 @@
 from abc import abstractmethod
 
 import torch
-import torch.nn.functional as F
 from torch.nn import MultiheadAttention
 from zennit.core import Stabilizer
 from zennit.rules import ClampMod, zero_bias, ParamMod
 from zennit.core import RemovableHandleList, RemovableHandle, Hook
 
-from ..attentions import partial_forwards
-from ..zennit.hooks import HookWithKwargs
+from pnpxai.explainers.attentions import partial_forwards
+from pnpxai.explainers.zennit.hooks import HookWithKwargs
 
 
 class SavingAttention(HookWithKwargs):

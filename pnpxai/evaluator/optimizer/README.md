@@ -10,7 +10,7 @@ The optimization method requires initialization of an `Experiment`, where `modal
 
 ```python
 import torch
-from torcu.utils.data import DataLoader
+from torch.utils.data import DataLoader
 
 from pnpxai import Experiment
 from pnpxai.core.modality import ImageModality

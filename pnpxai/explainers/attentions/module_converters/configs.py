@@ -3,9 +3,9 @@ import timm
 import transformers
 from torch import nn
 
-from .layers import StackAndSum
-from .validations import *
-from .warnings import *
+from pnpxai.explainers.attentions.module_converters.layers import StackAndSum
+from pnpxai.explainers.attentions.module_converters.validations import *
+from pnpxai.explainers.attentions.module_converters.warnings import *
 
 
 def transform_attn_mask_of_transformers(in_args, in_kwargs, kept, out_module):

@@ -48,10 +48,22 @@ expr = AutoExplanationForVisualQuestionAnswering(
 
 expr.recommended.print_tabular()
 
+data_id = 0
+explainer_id = 2
+metric_id = 1
+post_processor_id = 0
+batch_size = 4
+
+results = expr.run_batch(
+    explainer_id=explainer_id,
+    postprocessor_id=post_processor_id,
+    metric_id=metric_id,
+    data_ids=range(batch_size),
+)
 optimized = expr.optimize(
-    data_ids=0,
-    explainer_id=2,
-    metric_id=1,
+    data_ids=[data_id],
+    explainer_id=explainer_id,
+    metric_id=metric_id,
     direction='maximize', # less is better
     sampler='tpe', # Literal['tpe','random']
     n_trials=50, # by default, 50 for sampler in ['random', 'tpe'], None for ['grid']

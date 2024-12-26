@@ -3,19 +3,12 @@ import os#; os.environ['CUDA_VISIBLE_DEVICES']='1'
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
-import torchvision.transforms.functional as TF
-from torch.utils.data._utils.collate import default_collate
 from torch.utils.data import DataLoader
 from pnpxai import AutoExplanationForImageClassification
-from pnpxai.explainers.utils.baselines import MeanBaselineFunction
 
-from helpers import get_imagenet_dataset, get_torchvision_model, denormalize_image
+from helpers import get_imagenet_dataset, get_torchvision_model
 
-import torch.nn as nn
-import torch.nn.functional as F
-import torchvision
-
-from pnpxai.explainers import IntegratedGradients, Gradient, GradientXInput, Gfgp
+from pnpxai.explainers import Gfgp
 from pnpxai.core.modality.modality import ImageModality
 from pnpxai.explainers.utils.postprocess import PostProcessor
 

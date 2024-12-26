@@ -7,7 +7,7 @@ from scipy.stats import entropy
 
 from pnpxai.core._types import Model
 from pnpxai.explainers.base import Explainer
-from .base import Metric
+from pnpxai.evaluator.metrics.base import Metric
 
 
 class Complexity(Metric):

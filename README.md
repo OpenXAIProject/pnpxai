@@ -50,7 +50,7 @@ This guide explains how to automatically explain your own models and datasets us
         
     ```python
     import torch
-    from torcu.utils.data import DataLoader
+    from torch.utils.data import DataLoader
 
     from pnpxai import AutoExplanationForImageClassification
 
@@ -117,13 +117,10 @@ This guide explains how to automatically explain your own models and datasets us
 - [Evaluator](tutorials/evaluator.py)
 - [ImageNet Example All Explainers](tutorials/imagenet_example_all_explainers.md)
 - [ImageNet Example All Metrics](tutorials/imagenet_example_all_metrics.md)
-
-## Research Group results
-1. [Free MCG](tutorials/gfgp_tutorial.py) [[Reference](https://arxiv.org/abs/2411.15265)]
-2. 
-3. [LEAR (Learn-Explain-Reinforce)](tutorials/LEAR_example_all_explainers.md) [[Reference](https://ieeexplore.ieee.org/document/9854196)]
-4. [KorFactScore (Korean Factual precision in atomicity Score)](tutorials/fact_score_example_korfactscore.py) [[Reference](https://github.com/ETRI-XAINLP/KorFactScore)]
-
+- [Free MCG](tutorials/gfgp_tutorial.py) [[Reference](https://arxiv.org/abs/2411.15265)] 
+- [LEAR (Learn-Explain-Reinforce)](tutorials/LEAR_example_all_explainers.md) [[Reference](https://ieeexplore.ieee.org/document/9854196)]
+- [Speech Impairment Diagnosis Model](tutorials/xai_ddk_pnpxai_example.md)
+- [KorFactScore (Korean Factual precision in atomicity Score)](tutorials/fact_score_example_korfactscore.py) [[Reference](https://github.com/ETRI-XAINLP/KorFactScore)]
 
 
 ## Documentation

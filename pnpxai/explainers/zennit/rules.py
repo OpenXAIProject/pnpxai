@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 from zennit.core import Hook, Stabilizer
 
-from .hooks import HookWithKwargs
+from pnpxai.explainers.zennit.hooks import HookWithKwargs
 
 
 class AttentionHeadRule(HookWithKwargs):

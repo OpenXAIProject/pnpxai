@@ -4,10 +4,10 @@ from torch import Tensor
 from torch.nn.modules import Module
 
 from pnpxai.core.detector.types import Linear, Convolution, LSTM, RNN, Attention
-from .zennit.attribution import Gradient as GradientAttributor
-from .zennit.attribution import LayerGradient as LayerGradientAttributor
-from .zennit.base import ZennitExplainer
-from .utils import captum_wrap_model_input
+from pnpxai.explainers.zennit.attribution import Gradient as GradientAttributor
+from pnpxai.explainers.zennit.attribution import LayerGradient as LayerGradientAttributor
+from pnpxai.explainers.zennit.base import ZennitExplainer
+from pnpxai.explainers.utils import captum_wrap_model_input
 
 
 class Gradient(ZennitExplainer):

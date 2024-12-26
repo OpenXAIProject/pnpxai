@@ -9,7 +9,7 @@ from scipy.special import softmax
 import torch
 import torchvision.transforms as T
 
-from .base import Explainer
+from pnpxai.explainers.base import Explainer
 
 
 def normalize_np(img):
