@@ -2,19 +2,19 @@
 
 최종 업데이트: 2024-12-26
 
-이 문서는 마비말 진단 모델에 PnPXAI를 활용하여 (1) 특징 중요도 산출 (2)피쳐별 우수/개선 영역 분석을 수행하는 방법을 소개합니다. 
+이 문서는 마비말 진단 모델에 PnPXAI를 활용하여 (1) 피처 중요도 산출 (2)피처별 우수/개선 영역 분석을 수행하는 방법을 소개합니다. 
 
 ## 마비말 진단 모델 개요
 
 **DDK(Task)란?**
 * **DDK**(Diadochokinetic) Task는 구어운동조절능력 평가용 작업이며, 신경학적 말장애나 운동조절 문제 진단에 자주 활용됩니다.
 * /퍼/, /터/, /커/ 그리고 /퍼터커/와 같은 반복 음절을 일정 속도·리듬으로 발화하도록 하여, 발음 규칙성·속도·리듬·쉼 간격 등을 평가합니다.
-* 본 튜토리얼에 사용된 마비말 모델은 DDK task에서 마비말의 심각도를 예측합니다.
+* 본 튜토리얼에서 사용된 마비말 진단 모델은 DDK task를 수행한 환자의 음성 데이터를 기반으로 마비말 증상의 심각도를 정상, 경증, 중증의 세 단계로 분류합니다.
 
 **모델 입력**
 1. Mel-spectrogram
 2. Wav2Vec2
-3. DDK (발음 반복 횟수, 규칙성, 쉼 간격 등)
+3. DDK (발음 반복 횟수, 발음 규칙성, 쉼 간격 등)
 
 **모델 구조**
 * 다층 퍼셉트론(MLP), ResNet, Wav2Vec2 layer 등을 결합한 형태
@@ -22,17 +22,31 @@
 **모델 출력**
 * 심각도: 0 (정상), 1 (경증), 2 (중증)
 
+## 언어치료사 자문 리스트
+
+아래 언어치료사 자문 리스트는 DDK task 음성 데이터셋에 대해, 언어치료사가 직접 판단한 우수/개선 영역 레이블(0=우수, 1=보통, 2=개선)을 기록한 자료입니다.
+대상 피처는 총 6가지로,
+* `ddk_rate`: 일정 시간 내 **음절 반복 횟수** (값이 높을수록 빠르고 정확한 반복 발음 가능)
+* `ddk_average`: 각 음절 발음의 **평균 길이** (값이 낮을수록 발음 속도가 빠름)
+* `ddk_std`: 음절 발음 간 길이·간격의 **규칙성** (값이 낮을수록 발음의 리듬이 일정함)
+* `ddk_pause_rate`: 음절 사이에 발생하는 **쉼의 횟수** (값이 낮을수록 불필요한 쉼이 적고 발음 연속성이 좋음)
+* `ddk_pause_average`: 음절 사이 **쉼 시간의 평균** (값이 짧을수록 자연스러운 리듬으로 발음)
+* `ddk_pause_std`: 음절 **쉼 시간의 변동 정도(규칙성)** (값이 낮을수록 일정한 간격으로 말함)
+등이 포함됩니다. 각 환자별로 이 6개 피처에 대해 언어치료사가 “우수(0) / 보통(1) / 개선(2)”을 매기면서, 실제 임상적 판단과 모델을 통해 추론한 우수/개선 영역과 결과를 비교할 수 있도록 구성하였습니다.
+
+
 ## 전체 파이프라인 요약
-**마비말 진단 모델에서**, 주요 특징(Mel-spectrogram, Wav2Vec2, DDK)을 이용해 예측을 수행합니다. 그리고 예측 과정에서 pnpxai 라이브러리에 포함된 **설명알고리즘**을 적용해, 모델이 어느 특징에 크게 의존했는지 정량적으로 확인합니다 (본 튜토리얼에서는 여러 설명 알고리즘 중 Integrated Gradients (IG) 알고리즘 사용). 그리고 IG 결과를 바탕으로 각 피처가 **우수(0)/보통(1)/개선(2)** 중 어디에 해당하는지를 추론하고, 이를 **언어치료사가 직접 레이블링한 데이터**와 비교함으로써 모델의 해석 가능성과 예측 신뢰도를 함께 검증하는 과정을 거치게 됩니다.
+
+> 본 튜토리얼에서는 의료 개인데이터 보호 문제로 **합성데이터**를 사용합니다.
+
+**마비말 진단 모델에서**, 주요 피처(Mel-spectrogram, Wav2Vec2, DDK)을 이용해 예측을 수행합니다. 그리고 예측 과정에서 PnPXAI 라이브러리에 포함된 **설명알고리즘**을 적용해, 모델이 어느 피처에 크게 의존했는지 정량적으로 확인합니다 (본 튜토리얼에서는 여러 설명 알고리즘 중 Integrated Gradients (IG) 알고리즘 사용). 그리고 IG 결과를 바탕으로 각 피처가 **우수(0)/보통(1)/개선(2)** 중 어디에 해당하는지를 추론하고, 이를 언어치료사가 환자의 음성데이터각 피처별로 에 대해 우수, 보통, 개선으로 직접 레이블링한 정답데이터와 비교함으로써 모델의 해석 가능성과 예측 신뢰도를 함께 검증하는 과정을 거치게 됩니다. 
 
 1. 환경 세팅 및 데이터 다운로드
 * 합성음 + 레이블(언어치료사 레이블) + 모델 파라미터(ckpt) 다운로드
-2. 특징 추출 및 CSV 저장
-* 마비말 진단 모델에 사용되는 feature들을 추출후 CSV 생성(DDK, Wav2Vec, Mel-spectrogram)
-2. 모델 Inference
-* CSV로부터 특징을 로드하고, 예측을 수행하여 (id, task_id → 심각도)를 출력
-3. PnPXAI 기반 특징 중요도 산출
-* `pnpxai.explainers.IntegratedGradients`를 사용하여 특징별 중요도(IG) 계산
+2. 피처 추출 및 CSV 저장
+* 마비말 진단 모델에 사용되는 feature들을 추출 후 CSV 생성(DDK, Wav2Vec2, Mel-spectrogram)
+3. PnPXAI 기반 피처 중요도 산출
+* `pnpxai.explainers.IntegratedGradients`를 사용하여 피처별 중요도(IG) 계산
 4. 우수/개선 영역 분석
 * 언어치료사가 레이블링한 6개 DDK feature(예: ddk_rate, ddk_pause_rate 등)에 대해 우수(0)/보통(1)/개선(2) 영역 추출
 
@@ -49,10 +63,6 @@ mkdir data
 # 합성음 (synthesized 음성) 다운로드 및 압축 해제
 gdown --id 1ukq2RNBeh2Rfwde04wVUUlN3lya1LT1q
 unzip ddk_test_synthesized.zip -d data
-
-# 정답지 다운로드 (환자별 중증도 + 언어치료사판단한 피쳐별 우수/개선 영역 레이블)
-gdown --id 1w8G7txx4ArvLPyRXNgJ8E6KBPPqxc0Ab
-mv test_labels.csv data
 
 # 모델 파라미터 (checkpoint 등)
 gdown "https://drive.google.com/drive/folders/1each5iWfjFS6_-PeFLZWOl5W3ozz2-kd" --folder
@@ -73,8 +83,8 @@ xai_ddk_multi/
 └── (... 기타 코드 및 라이브러리 ...)
 ```
 
-## 특징 추출 및 CSV 저장
-아래 코드는 DDK 모델에서 사용하는 특징을 추출하여, `test_data_1.csv`와 `test_data_2.csv` 형태로 저장합니다.
+## 피처 추출 및 CSV 저장
+아래 코드는 DDK 모델에서 사용하는 피처을 추출하여, `test_data_1.csv`와 `test_data_2.csv` 형태로 저장합니다.
 
 ```python
 from common import APP_ROOT
@@ -248,7 +258,7 @@ class FeaturesGenerator(object):
 
         return spec_w2v_x, features 
 
-df_labels = pd.read_csv(os.path.join(APP_ROOT, 'data/test_labels.csv'))
+df_labels = pd.read_csv(os.path.join(APP_ROOT, 'resources/test_labels.csv'))
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = DDKWav2VecModel.load_from_checkpoint(os.path.join(MODEL_DIR, "multi_input_model.ckpt")).to(device).eval()
@@ -315,8 +325,8 @@ df_2 = pd.DataFrame(data_2, columns=column_names)
 df_2.to_csv(os.path.join(APP_ROOT, 'logs/test_data_2.csv'), index=False)
 ```
 
-## PnPXAI를 활용한 특징 중요도산출
-본 튜토리얼에서는 `pnpxai.explainers.IntegratedGradients`를 사용하여 특징별 기여도를 산출합니다. 아래 예시에서는 `test_data_1.csv` + `test_data_2.csv`를 concat한 뒤 IG를 구하고, 그 결과를 `test_ig_pnpxai.csv`에 저장합니다.
+## PnPXAI를 활용한 피처 중요도산출
+본 튜토리얼에서는 `pnpxai.explainers.IntegratedGradients`를 사용하여 피처별 기여도를 산출합니다. 아래 예시에서는 `test_data_1.csv` + `test_data_2.csv`를 concat한 뒤 IG를 구하고, 그 결과를 `test_ig_pnpxai.csv`에 저장합니다.
 
 ```python
 import numpy as np
@@ -441,7 +451,7 @@ results_df = pd.DataFrame(results)
 results_df.to_csv(os.path.join(APP_ROOT, 'logs/test_ig_pnpxai.csv'), index=False)
 ```
 
-**피쳐 중요도 출력 예시**
+**피처 중요도 출력 예시**
 아래는 환자번호 `021`이 `/퍼/` 발음 (task_id = 002)을 수행했을 때, 중증(클래스=2) 판정에 기여한 `DDK 피처 중요도`를 확인하는 예시입니다:
 
 > **Note**: task_id는 /퍼/, /터/, /커/, /퍼터커/ 발음과 대응됩니다. 예를 들어:
@@ -451,37 +461,64 @@ results_df.to_csv(os.path.join(APP_ROOT, 'logs/test_ig_pnpxai.csv'), index=False
 > * Task 5: /퍼터커/ 연속 발음
 
 ```python
-from pprint import pprint
+shap_df = pd.read_csv(os.path.join(APP_ROOT, 'logs', 'test_ig_pnpxai.csv'))
+df_labels = pd.read_csv(os.path.join(APP_ROOT, 'data', 'test_labels.csv'))
 
-df_filtered = results_df[
-    (results_df['id'] == '021') &
-    (results_df['task_id'] == '002') &
-    (results_df['shap_class'] == 2)
-][['ddk_rate', 'ddk_average', 'ddk_std', 
-   'ddk_pause_rate', 'ddk_pause_average', 'ddk_pause_std']]
+# SHAP DF에서 특정 id, task_id, shap_class=2만 필터
+df_filtered = shap_df[
+    (shap_df['id'] == '021') &
+    (shap_df['task_id'] == 2) &
+    (shap_df['shap_class'] == 2)
+][[
+    'ddk_rate', 'ddk_average', 'ddk_std',
+    'ddk_pause_rate', 'ddk_pause_average', 'ddk_pause_std'
+]]
 
+# records 형태의 dict 변환 (여러 행 중 첫 번째 행만 예시로 사용)
 dict_list = df_filtered.to_dict(orient='records')[0]
-pprint(dict_list)
+
+# df_labels에서 동일 환자('021')의 언어치료사 판단 정보를 추출
+df_label_row = df_labels[df_labels['id'] == '021']
+
+if len(df_label_row) == 0:
+    print("해당 환자의 레이블 정보가 없습니다.")
+else:
+    # 여러 행이 있으면 첫 번째만 사용 (상황에 맞게 조정 가능)
+    df_label_row = df_label_row.iloc[0]
+
+    # 우수(0), 보통(1), 개선(2) 등을 매핑할 딕셔너리
+    slp_map = {0: "우수", 1: "보통", 2: "개선"}
+
+    # 두 정보를 합쳐 출력
+    print("=== 피처 중요도 & 언어치료사 레이블 ===")
+    for feature, shap_value in dict_list.items():
+        # 언어치료사 판단값 (0/1/2)
+        slp_judgment_code = df_label_row.get(feature, None)
+        # 우수/개선/보통 등 텍스트
+        slp_judgment_text = slp_map.get(slp_judgment_code, "알수없음")
+        print(f"{feature} => 피처 중요도: {round(np.nanmean(shap_value), 3)}, 언어치료사: {slp_judgment_text}")
 ```
 
 ```
-{'ddk_average': 0.0094147280714601,
- 'ddk_pause_average': 0.0005840267535008,
- 'ddk_pause_rate': 0.0158981472574364,
- 'ddk_pause_std': 0.0159348086878431,
- 'ddk_rate': -0.2094800142811265,
- 'ddk_std': -0.0095264077489048}
+=== 피처 중요도 & 언어치료사 레이블 ===
+ddk_rate => 피처 중요도: -0.209, 언어치료사: 보통
+ddk_average => 피처 중요도: 0.009, 언어치료사: 우수
+ddk_std => 피처 중요도: -0.01, 언어치료사: 보통
+ddk_pause_rate => 피처 중요도: 0.016, 언어치료사: 우수
+ddk_pause_average => 피처 중요도: 0.001, 언어치료사: 우수
+ddk_pause_std => 피처 중요도: 0.016, 언어치료사: 우수
 ```
 
 ## 우수/개선 영역 분석
 
-언어치료사가 레이블링한 6가지 피쳐(`ddk_rate`, `ddk_average`, `ddk_std`, `ddk_pause_rate`, `ddk_pause_average`, `ddk_pause_std`)에 대해, IG값을 우수(0) / 보통(1) / 개선(2)으로 매핑하는 예시입니다.
+언어치료사가 레이블링한 6가지 피처(`ddk_rate`, `ddk_average`, `ddk_std`, `ddk_pause_rate`, `ddk_pause_average`, `ddk_pause_std`)에 대해, IG값을 우수(0) / 보통(1) / 개선(2)으로 매핑하는 예시입니다.
 
-**중증 환자에 기여하는 피쳐 → 0~100 점수화**
-* IG값이 정상군 평균 vs 중증군 평균 중 어디에 더 가까운가?” 를 살펴보고 정상군(0) vs 중증군(2)의 평균값(normal_mean[feature], severe_mean[feature]) 사이에서 환자의 실제값(또는 IG값)이 어느 정도 위치하는지를 0~100 범위로 스케일링하고,
-    * 70점 이상이면 우수(0)
-    * 30점 이하이면 개선(2)
-    * 그 사이면 보통(1) 로 범주화합니다.
+**중증 환자에 기여하는 피처 → 0~100 점수화**
+
+"IG값이 정상군 평균 vs 중증군 평균 중 어디에 더 가까운가?” 를 살펴보고 정상군(0) vs 중증군(2)의 평균값(normal_mean[feature], severe_mean[feature]) 사이에서 환자의 실제값(또는 IG값)이 어느 정도 위치하는지를 0~100 범위로 스케일링하고 다음과 같이 3개 구간으로 범주화합니다.
+* 우수(0): 70 ~ 100
+* 보통(1): 30 ~ 69
+* 개선(2): 0 ~ 29
 
 ```python
 from pprint import pprint
@@ -498,7 +535,7 @@ def cal_scores(df, normal_mean, severe_mean):
 
     scores = {}
 
-    # Ascending 방향 피쳐 계산
+    # Ascending 방향 피처 계산
     for a in ascending:
         a_max = severe_mean[a]
         if df.loc[0, a] < normal_mean[a]:
@@ -509,7 +546,7 @@ def cal_scores(df, normal_mean, severe_mean):
             score = (df.loc[0, a] - normal_mean[a]) / (a_max - normal_mean[a])
             scores[a] = round((1 - score) * 100, 2)
 
-    # Descending 방향 피쳐 계산
+    # Descending 방향 피처 계산
     for d in descending:
         d_min = severe_mean[d]
         if df.loc[0, d] > normal_mean[d]:
@@ -608,10 +645,10 @@ def analyze_patient_scores(patient_id,
 
 # 데이터 불러오기
 algo = 'ig'
-df_labels = pd.read_csv(os.path.join(APP_ROOT, 'data/test_labels.csv'))
+df_labels = pd.read_csv(os.path.join(APP_ROOT, 'resources/test_labels.csv'))
 shap_df = pd.read_csv(os.path.join(APP_ROOT, f'logs/test_{algo}_pnpxai.csv'))
 
-# 분석할 피쳐 리스트
+# 분석할 피처 리스트
 features = ['ddk_rate', 'ddk_average', 'ddk_std', 'ddk_pause_rate', 'ddk_pause_average', 'ddk_pause_std']
 
 # id를 기준으로 severity 정보를 shap_df에 병합
@@ -672,18 +709,24 @@ analyze_patient_scores(
 ㆍ개선영역(2): []
 
 [Feature Average Scores]
-{'ddk_average': 91.905,
- 'ddk_pause_average': 96.72500000000001,
- 'ddk_pause_rate': 98.4075,
- 'ddk_pause_std': 82.595,
+{'ddk_average': 91.9,
+ 'ddk_pause_average': 96.72,
+ 'ddk_pause_rate': 98.41,
+ 'ddk_pause_std': 82.6,
  'ddk_rate': 73.58,
- 'ddk_std': 93.30250000000001}
+ 'ddk_std': 93.3}
 ==================================================
 ```
 
+> Note:
+> * 우수/개선 영역 추출 결과: 6개 피처 모두 우수(0) 영역으로 판단
+> * 언어치료사 레이블: 동일하게 6개 모두 우수(0)
+> * 정상 환자의 경우, 발음 반복 속도가 높고, 발음 간격과 음절 쉼이 일정하여 일반적으로 많은 피처가 우수한 상태로 평가됩니다.
+
+
 **경증 환자 우수/개선 영역 출력 예시**
 ```python
-patient_id = 'nia_HC0022'
+patient_id = 'nia_HC0107'
 analyze_patient_scores(
     patient_id=patient_id,
     shap_class_2_df=shap_class_2_df,
@@ -697,25 +740,31 @@ analyze_patient_scores(
 
 ```
 ==================================================
-[환자번호] nia_HC0022
+[환자번호] nia_HC0107
 --------------------------------------------------
 [모델 산출]
-ㆍ우수영역 (70점 이상): ['ddk_std']
-ㆍ개선영역 (30점 이하): ['ddk_pause_rate']
+ㆍ우수영역 (70점 이상): []
+ㆍ개선영역 (30점 이하): ['ddk_rate', 'ddk_average', 'ddk_pause_std']
 
 [언어치료사 판단]
-ㆍ우수영역(0): ['ddk_std', 'ddk_pause_std']
-ㆍ개선영역(2): []
+ㆍ우수영역(0): []
+ㆍ개선영역(2): ['ddk_rate', 'ddk_average', 'ddk_pause_std']
 
 [Feature Average Scores]
-{'ddk_average': 65.6725,
- 'ddk_pause_average': 63.587500000000006,
- 'ddk_pause_rate': 25.0,
- 'ddk_pause_std': 47.4975,
- 'ddk_rate': 32.05,
- 'ddk_std': 90.655}
+{'ddk_average': 0.0,
+ 'ddk_pause_average': 47.36,
+ 'ddk_pause_rate': 39.99,
+ 'ddk_pause_std': 28.24,
+ 'ddk_rate': 0.0,
+ 'ddk_std': 37.66}
 ==================================================
 ```
+
+> Note:
+> * 우수/개선 영역 추출 결과: ddk_rate, ddk_average, ddk_pause_std가 개선(2)에 해당, 나머지는 보통(1) 수준 (단, 여기서 우수(0)에 해당하는 피처는 없음)
+> * 언어치료사 레이블: 동일하게 3개(ddk_rate, ddk_average, ddk_pause_std)를 개선(2) 영역으로 판단
+> * 즉, 3개 개선 피처가 완벽하게 일치, 나머지 피처(ddk_std, ddk_pause_rate, ddk_pause_average)도 둘 다 우수는 아니므로, 경증 환자의 특성이 잘 반영되었다고 볼 수 있습니다.
+
 
 **중증 환자 우수/개선 영역 출력 예시**
 ```python
@@ -745,22 +794,16 @@ analyze_patient_scores(
 
 [Feature Average Scores]
 {'ddk_average': 13.61,
- 'ddk_pause_average': 16.035,
- 'ddk_pause_rate': 30.9425,
- 'ddk_pause_std': 3.9625,
+ 'ddk_pause_average': 16.04,
+ 'ddk_pause_rate': 30.94,
+ 'ddk_pause_std': 3.96,
  'ddk_rate': 0.0,
  'ddk_std': 14.39}
 ==================================================
 ```
 
-> **Note**:
-> * `ddk_rate`: 일정 시간 내 **음절 반복 횟수** 
-> * `ddk_average`: 각 음절 발음의 **평균 길이**
-> * `ddk_std`: 음절 발음 간 **길이·간격의 규칙성** 
-> * `ddk_pause_rate`: **음절 사이에 발생하는 쉼의 횟수** 
-> * `ddk_pause_average`: **음절 사이 쉼 시간의 평균** 
-> * `ddk_pause_std`: 음절 쉼 시간의 **변동 정도(규칙성)**
->
-> 정상 환자의 경우, 빠르고 안정된 음절 반복 능력을 보여 여러 피처가 높은 점수(우수)에 해당합니다. 반면, 중증 환자의 경우 대부분 피처 점수가 낮게 나타납니다.
-> 예를 들어, 중증환자의 경우 반복 횟수가 적거나 불규칙, 쉼 횟수와 쉼 길이가 지나치게 길어, 대부분의 피쳐들이 개선이 필요한(2) 영역으로 분류되는 모습을 확인할 수 있습니다.
+> Note:
+> * 우수/개선 영역 추출 결과: 6개 중 5개( ddk_rate, ddk_average, ddk_std, ddk_pause_average, ddk_pause_std)가 개선(2)에 해당
+> * 언어치료사 레이블: 6개 중 6개를 개선(2) 영역으로 판단하였으나, ddk_pause_rate만 모델과 약간 차이가 있음(모델=보통(1) vs. 언어치료사=개선(2))
+> * 중증 환자는 일반적으로 반복 횟수가 극단적으로 낮거나, 발음 간격, 쉼이 비정상적으로 길어 많은 피처가 개선이 필요한 상태로 산출됩니다.
 
