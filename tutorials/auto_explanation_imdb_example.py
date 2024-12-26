@@ -74,7 +74,7 @@ results = expr.run_batch(
 #------------------------------- optimization ---------------------------------#
 #------------------------------------------------------------------------------#
 
-data_id = 3176
+data_id = 3
 explainer_id = 2 # KernelShap
 metric_id = 1 # ABPC
 
@@ -84,7 +84,7 @@ optimized = expr.optimize(
     metric_id=metric_id,
     direction='maximize', # less is better
     sampler='random', # Literal['tpe','random']
-    n_trials=50, # by default, 50 for sampler in ['random', 'tpe'], None for ['grid']
+    n_trials=3, # by default, 50 for sampler in ['random', 'tpe'], None for ['grid']
     seed=42, # seed for sampler: by default, None
 )
 
@@ -93,7 +93,7 @@ print('Best/PostProcessor:', optimized.postprocessor) # get the optimized postpr
 print('Best/value:', optimized.study.best_trial.value) # get the optimized value
 
 # Every trial in study has its explainer and postprocessor in user attr.
-i = 25
+i = 2
 print(f'{i}th Trial/Explainer', optimized.study.trials[i].user_attrs['explainer']) # get the explainer of i-th trial
 print(f'{i}th Trial/PostProcessor', optimized.study.trials[i].user_attrs['postprocessor']) # get the postprocessor of i-th trial
 print(f'{i}th Trial/value', optimized.study.trials[i].value)

@@ -50,7 +50,7 @@ class DeepLiftShap(Explainer):
         for i in range(len(shap_values)):
             shap_values[i] = shap_values[i][0]
         return torch.tensor(
-            shap_values[targets.cpu().item()],
+            shap_values[targets.cpu().tolist()],
             dtype=self.dtype,
             device=self.device,
         )
