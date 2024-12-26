@@ -45,10 +45,10 @@ experiment = Experiment(
 data_ids = range(4)
 for metric_id, metric in enumerate(metrics):
     data = experiment.run_batch(
-        data_ids,
         metric_id=metric_id,
         explainer_id=0,
         postprocessor_id=0
+        data_ids=data_ids,
     )
     evaluations = data['evaluation']
     for metric, metric_evals in zip(metrics, evaluations):

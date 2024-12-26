@@ -14,6 +14,8 @@ from pnpxai.evaluator.metrics import (
     MuFidelity,
     Sensitivity,
     Complexity,
+    MoRF,
+    LeRF,
     AbPC,
 )
 from pnpxai.utils import format_into_tuple
@@ -21,6 +23,11 @@ from pnpxai.utils import format_into_tuple
 
 METRICS_BASELINE_FN_REQUIRED = PIXEL_FLIPPING_METRICS
 METRICS_CHANNEL_DIM_REQUIRED = PIXEL_FLIPPING_METRICS
+DEFAULT_METRICS_FOR_TEXT = [
+    MoRF,
+    LeRF,
+    AbPC,
+]
 DEFAULT_METRICS = [
     MuFidelity,
     AbPC,
@@ -220,6 +227,17 @@ class AutoExplanationForTextClassification(AutoExplanation):
             'baseline_fn': self.modality.get_default_baseline_fn(),
             'channel_dim': self.modality.channel_dim,
         }
+
+    def _load_default_metrics(self, model):
+        empty_metrics = []  # empty means that explainer is not assigned yet
+        for metric_type in DEFAULT_METRICS_FOR_TEXT:
+            metric = metric_type(model=model)
+            default_kwargs = self._generate_default_kwargs_for_metric()
+            for k, v in default_kwargs.items():
+                if hasattr(metric, k):
+                    metric = metric.set_kwargs(**{k: v})
+            empty_metrics.append(metric)
+        return empty_metrics
 
 
 class AutoExplanationForVisualQuestionAnswering(AutoExplanation):

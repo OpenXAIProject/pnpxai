@@ -7,6 +7,13 @@ class UtilFunction(ABC):
     def __init__(self, *args, **kwargs):
         pass
 
+    # def __repr__(self):
+    #     return "{}({!r})".format(self.__class__.__name__, self.__dict__)
+
+    def __repr__(self):
+        kwargs_repr = ', '.join('{}={}'.format(key, value) for key, value in self.__dict__.items())
+        return "{}({})".format(self.__class__.__name__, kwargs_repr)
+
     def copy(self):
         return copy.copy(self)
 

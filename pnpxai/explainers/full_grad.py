@@ -31,6 +31,22 @@ def _format_interpolate_mode(mode):
 
 
 class FullGrad(ZennitExplainer):
+    """
+    FullGrad explainer.
+
+    Supported Modules: `Convolution`
+
+    Parameters:
+        model (Module): The PyTorch model for which attribution is to be computed.
+        pooling_method (Optional[str]): The pooling mode used by the explainer. Available methods are: `"abssum"` (absolute sum) and `"possum"` (positive sum)
+        interpolate_mode (Optional[str]): The interpolation mode used by the explainer. Available methods are: `"bilinear"`, `"nearest"`, `"nearest_exact"`, and `"bicubic"`
+        n_classes (Optional[int]): The number of classes
+        **kwargs: Keyword arguments that are forwarded to the base implementation of the Explainer
+
+    Reference:
+        Suraj Srinivas, Francois Fleuret. Full-Gradient Representation for Neural Network Visualization.
+    """
+
     SUPPORTED_MODULES = [Convolution]
     
     def __init__(
@@ -45,6 +61,16 @@ class FullGrad(ZennitExplainer):
         self.interpolate_mode = interpolate_mode
 
     def attribute(self, inputs: Tensor, targets: Tensor):
+        """
+        Computes attributions for the given inputs and targets.
+
+        Args:
+            inputs (torch.Tensor): The input data.
+            targets (torch.Tensor): The target labels for the inputs.
+
+        Returns:
+            torch.Tensor: The result of the explanation.
+        """
         with FullGradAttributor(
             model=self.model,
             pooling_method=_format_pooling_method(self.pooling_method),
@@ -54,6 +80,14 @@ class FullGrad(ZennitExplainer):
         return attrs
 
     def get_tunables(self):
+        """
+            Provides Tunable parameters for the optimizer
+
+            Tunable parameters:
+                `pooling_method` (str): Value can be selected of `"abssum"` and `"possum"`
+                
+                `interpolate_mode` (str): Value can be selected of `"bilinear"`, `"nearest"`, `"nearest_exact"`, and `"bicubic"`
+        """
         return {
             'pooling_method': (list, {'choices': ['abssum', 'possum']}),
             'interpolate_mode': (list, {'choices': ['bilinear', 'nearest', 'nearest_exact', 'bicubic']}),

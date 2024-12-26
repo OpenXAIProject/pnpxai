@@ -307,10 +307,10 @@ expr = AutoExplanationForTabularClassification(
 attrs_all = [{
     'explainer': explainer,
     'results': expr.run_batch(
-        data_ids=range(4),
         explainer_id=explainer_id,
         postprocessor_id=0,
         metric_id=1,
+        data_ids=range(4),
     ),
 } for explainer_id, explainer in enumerate(expr.manager.explainers)]
 

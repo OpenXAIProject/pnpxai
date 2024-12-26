@@ -6,15 +6,17 @@
 
 `PnPXAI` is a Python package that provides a modular and easy-to-use framework for explainable artificial intelligence (XAI). It allows users to apply various XAI methods to their own models and datasets, and visualize the results in an interactive and intuitive way.
 
+<hr>
+
 ## Features
 
 - [**Detector**](detector.md): The detector module provides automatic detection of AI models implemented in PyTorch.
 - [**Evaluator**](evaluator.md): The evaluator module provides various ways to evaluate and compare the performance and explainability of AI models with the categorized evaluation properties of correctness ([fidelity](api/evaluator/metrics.md/#pnpxai.evaluator.metrics.mu_fidelity.MuFidelity), [area between perturbation curves](api/evaluator/metrics/#pnpxai.evaluator.metrics.pixel_flipping.AbPC)), continuity ([sensitivity](api/evaluator/metrics.md#pnpxai.evaluator.metrics.sensitivity.Sensitivity)), and compactness ([complexity](api/evaluator/metrics.md#pnpxai.evaluator.metrics.complexity.Complexity)).
-- **Explainers**: The explainers module contains a collection of state-of-the-art XAI methods that can generate global or local explanations for any AI model, such as:
-	- Perturbation-based ([SHAP](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/kernel_shap.py), [LIME](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/lime.py))
-	- Relevance-based ([IG](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/integrated_gradients.py), [LRP](https://github.com/openxaiproject/pnpxai/explainers/lrp.py), and [RAP](https://github.com/openxaiproject/pnpxai/explainers/rap), [GuidedBackprop](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/guided_backprop.py))
-	- CAM-based ([GradCAM](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/grad_cam.py), [Guided GradCAM](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/guided_grad_cam.py))
-	- Gradient-based ([SmoothGrad](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/smooth_grad.py), [VarGrad](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/var_grad.py), [FullGrad](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/full_grad.py), [Gradient &times; Input](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/grad_x_input.py))
+- [**Explainers**](explainer.md): The explainers module contains a collection of state-of-the-art XAI methods that can generate global or local explanations for any AI model, such as:
+	- Perturbation-based ([SHAP](api/explainer/kernel_shap), [LIME](api/explainer/lime))
+	- Relevance-based ([IG](api/explainer/ig), [LRP](api/pnpxai/explainer/lrp), and [RAP](api/explainer/rap))
+	- CAM-based ([GradCAM](api/explainer/grad_cam), [Guided GradCAM](api/explainer/guided_grad_cam))
+	- Gradient-based ([SmoothGrad](api/explainer/smooth_grad), [VarGrad](api/explainer/var_grad), [Gradient &times; Input](api/explainer/grad_x_input))
 - [**Recommender**](recommender.md): The recommender module offers a recommender system that can suggest the most suitable XAI methods for a given model and dataset, based on the user’s preferences and goals.
 - [**Optimizer**](optimizer.md): The optimizer module is finds the best hyperparameter options, given a user-specified metric.
 
@@ -22,6 +24,8 @@
 
 * [**Experiment**](api/core/experiment.md): module, responsible for data manipulation, model explanation and explanations' evaluation
 * [**Auto Explanation**](api/core/auto_explanation.md): module, responsible for data manipulation, model explanation and explanations' evaluation
+
+<hr>
 
 ## Installation
 
@@ -31,6 +35,8 @@ To install `pnpxai`, run the following command:
 # Command lines for installation
 pip install -e .
 ```
+
+<hr>
 
 ## Getting Started
 
@@ -172,3 +178,16 @@ experiment = Experiment(
     target_extractor=lambda outputs: outputs.argmax(-1).to(device)
 )
 ```
+
+<hr>
+
+## Acknowledgements
+
+> This research was initiated by KAIST XAI Center and conducted in collaboration with multiple institutions, including Seoul National University, Korea University, Sogang University, and ETRI.
+We are grateful for the grant from the Institute of Information & communications Technology Planning & Evaluation (IITP) (No.RS-2022-II220984).
+
+<hr>
+
+## License
+
+PnP XAI is released under Apache license 2.0. See [LICENSE](LICENSE) for additional details.
