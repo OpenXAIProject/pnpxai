@@ -120,3 +120,6 @@ def format_into_tuple_all(**kwargs):
     return {k: format_into_tuple(v) for k, v in kwargs.items()}
 
 
+def generate_param_key(*args):
+    # ensure the uniqueness of param name of optuna
+    return '.'.join([str(arg) for arg in args if arg is not None])

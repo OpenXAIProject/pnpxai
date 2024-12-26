@@ -4,10 +4,6 @@ theme:
   name: material
   logo: assets/logo.png
   favicon: assets/favicon.ico
-  features:
-    - navigation.expand
-
-
 
 plugins:
   - mkdocstrings:
@@ -23,6 +19,7 @@ plugins:
                   show_source: false  # don't include source code
                   members_order: source  # order methods according to their order of definition in the source code, not alphabetical order
                   heading_level: 4
+
 nav:
   - Home: index.md
   - API:
@@ -35,7 +32,25 @@ nav:
     - Evaluator:
       - Metrics: api/evaluator/metrics.md
       - Optimizer: api/evaluator/optimizer.md
+    - Explainer:
+      - Base: api/explainer/base.md
+      - GradCam: api/explainer/grad_cam.md
+      - GuidedGradCam: api/explainer/guided_grad_cam.md
+      - Gradient: api/explainer/gradient.md
+      - GradientXInput: api/explainer/grad_x_input.md
+      - SmoothGrad: api/explainer/smooth_grad.md
+      - VarGrad: api/explainer/var_grad.md
+      - IntegratedGradients: api/explainer/ig.md
+      - LRP: api/explainer/lrp.md
+      - RAP: api/explainer/rap.md
+      - KernelShap: api/explainer/kernel_shap.md
+      - Lime: api/explainer/lime.md
+      - AttentionRollout: api/explainer/attn_rollout.md
   - Detector: detector.md
+  - Explainer: explainer.md
   - Recommender: recommender.md
   - Evaluator: evaluator.md
   - Optimizer: optimizer.md
+
+watch:
+  - pnpxai

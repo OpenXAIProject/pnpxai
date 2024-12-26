@@ -24,10 +24,6 @@ def load_sampler(sampler: Literal['grid', 'random', 'tpe']='tpe', **kwargs):
 def get_default_n_trials(sampler):
     return DEFAULT_N_TRIALS[sampler]
 
-def generate_param_key(*args):
-    # ensure the uniqueness of param name of optuna
-    return '.'.join([str(arg) for arg in args if arg is not None])
-
 def nest_params(flattened_params):
     nested = {}
     for k, v in flattened_params.items():

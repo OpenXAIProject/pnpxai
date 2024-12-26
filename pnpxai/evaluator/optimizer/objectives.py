@@ -8,9 +8,8 @@ from pnpxai.core.modality.modality import Modality, TextModality
 from pnpxai.explainers import Explainer, KernelShap, Lime
 from pnpxai.explainers.utils.postprocess import PostProcessor, Identity
 from pnpxai.evaluator.metrics.base import Metric
-from pnpxai.evaluator.optimizer.utils import generate_param_key, nest_params
 from pnpxai.evaluator.optimizer.suggestor import suggest
-from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
+from pnpxai.utils import format_into_tuple, format_out_tuple_if_single, generate_param_key
 
 
 class Objective:

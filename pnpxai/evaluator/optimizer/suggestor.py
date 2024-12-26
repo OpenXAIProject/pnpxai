@@ -1,7 +1,6 @@
 from typing import Optional, Any, Dict, Type, Union, Tuple
 from optuna import Trial
 
-from pnpxai.evaluator.optimizer.utils import generate_param_key
 from pnpxai.core.modality.modality import Modality
 from pnpxai.explainers.base import Explainer
 from pnpxai.explainers.utils import (
@@ -13,8 +12,7 @@ from pnpxai.explainers.utils import (
 )
 from pnpxai.explainers import Lime, KernelShap
 from pnpxai.explainers.utils.function_selectors import FunctionSelector
-from pnpxai.evaluator.optimizer.utils import generate_param_key
-from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
+from pnpxai.utils import format_into_tuple, format_out_tuple_if_single, generate_param_key
 
 
 def map_suggest_method(
@@ -74,7 +72,6 @@ def suggest(
         tuned_explainer = suggest(trial, explainer, modality)
         ```
     """
-
     is_multi_modal = len(format_into_tuple(modality)) > 1
     force_params = force_params or {}
     for param_nm, (method_type, method_kwargs) in obj.get_tunables().items():
