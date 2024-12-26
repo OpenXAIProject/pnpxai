@@ -120,6 +120,15 @@ This guide explains how to automatically explain your own models and datasets us
 
 ## [Demo](https://openxaiproject.github.io/pnpxai/demo/)
 
+## Documentation
+
+The [Documentation](https://openxaiproject.github.io/pnpxai/) contains the API reference for all of the functionality of the framework. Primarily, high-level modules of the framework include: 
+- Detector
+- Explainer
+- Recommender
+- Evaluator
+- Optimizer
+
 ## Acknowledgements
 
 > This research was initiated by KAIST XAI Center and conducted in collaboration with multiple institutions, including Seoul National University, Korea University, Sogang University, and ETRI.
