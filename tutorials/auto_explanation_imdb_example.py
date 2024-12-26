@@ -1,4 +1,3 @@
-import functools
 import torch
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader

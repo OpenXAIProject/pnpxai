@@ -1,8 +1,8 @@
 from typing import Set, Tuple, Optional
 from torch import fx, nn
 from pnpxai.core._types import Model
-from .utils import get_target_module_of
-from .types import (
+from pnpxai.core.detector.utils import get_target_module_of
+from pnpxai.core.detector.types import (
     ModuleType,
     Linear,
     Convolution,

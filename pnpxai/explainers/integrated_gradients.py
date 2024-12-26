@@ -8,8 +8,8 @@ from captum.attr import LayerIntegratedGradients as CaptumLayerIntegratedGradien
 from pnpxai.core.detector.types import Linear, Convolution, Attention
 from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 from pnpxai.explainers.utils.baselines import BaselineMethodOrFunction, BaselineFunction
-from .base import Explainer
-from .utils import captum_wrap_model_input
+from pnpxai.explainers.base import Explainer
+from pnpxai.explainers.utils import captum_wrap_model_input
 
 
 class IntegratedGradients(Explainer):

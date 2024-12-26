@@ -50,7 +50,7 @@ This guide explains how to automatically explain your own models and datasets us
         
     ```python
     import torch
-    from torcu.utils.data import DataLoader
+    from torch.utils.data import DataLoader
 
     from pnpxai import AutoExplanationForImageClassification
 

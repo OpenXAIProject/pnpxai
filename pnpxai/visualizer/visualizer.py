@@ -3,7 +3,6 @@ from collections import defaultdict
 from typing import Union, Dict, List, Optional, Tuple, Sequence
 
 import gradio as gr
-from plotly import express as px
 from matplotlib import pyplot as plt
 
 from pnpxai import Experiment

@@ -1,9 +1,5 @@
-from typing import Optional, Dict, Callable
-
-import copy
 from torch import Tensor
 from pnpxai.explainers.utils.base import UtilFunction
-from pnpxai.explainers.utils.function_selectors import FunctionSelector
 
 
 def sumpos(attrs: Tensor, channel_dim: int) -> Tensor:

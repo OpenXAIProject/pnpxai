@@ -1,11 +1,11 @@
 from torch.nn import MultiheadAttention
 from torch.nn.modules import Module
 from zennit.attribution import Attributor
-from zennit.composites import LayerMapComposite, layer_map_base
+from zennit.composites import LayerMapComposite
 
-from .rules import SavingAttention
-from .module_converters import default_attention_converters
-from ..utils import _format_to_tuple
+from pnpxai.explainers.attentions.rules import SavingAttention
+from pnpxai.explainers.attentions.module_converters import default_attention_converters
+from pnpxai.explainers.utils import _format_to_tuple
 
 
 class SavingAttentionAttributor(Attributor):

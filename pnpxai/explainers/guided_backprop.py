@@ -6,9 +6,8 @@ from zennit.composites import LayerMapComposite
 from zennit.rules import NoMod
 from zennit.types import Linear
 
-from .lrp import LRPBase, canonizers_base
-
-from .types import (
+from pnpxai.explainers.lrp import LRPBase, canonizers_base
+from pnpxai.explainers.types import (
     ForwardArgumentExtractor,
     TargetLayer,
 )

@@ -1,5 +1,5 @@
-from typing import Literal, Union, Optional, Sequence
-import copy
+from typing import Literal, Union
+
 import torch
 from skimage.segmentation import (
     felzenszwalb,
@@ -7,9 +7,8 @@ from skimage.segmentation import (
     slic,
     watershed,
 )
-from optuna.trial import Trial
+
 from pnpxai.explainers.utils.base import UtilFunction
-from pnpxai.utils import generate_param_key
 
 
 class FeatureMaskFunction(UtilFunction):

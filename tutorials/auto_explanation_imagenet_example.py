@@ -1,15 +1,9 @@
 import matplotlib.pyplot as plt
 import torch
-import torchvision.transforms.functional as TF
-from torch.utils.data._utils.collate import default_collate
 from torch.utils.data import DataLoader
 from pnpxai import AutoExplanationForImageClassification
 
 from helpers import get_imagenet_dataset, get_torchvision_model, denormalize_image
-
-import torch.nn as nn
-import torch.nn.functional as F
-import torchvision
 
 # ------------------------------------------------------------------------------#
 # -------------------------------- basic usage ---------------------------------#
@@ -63,7 +57,7 @@ results = expr.run_batch(
 # user inputs
 explainer_id = 4 # explainer_id to be optimized: KernelShap
 metric_id = 1 # metric_id to be used as objective: AbPC
-data_id = 668
+data_id = 3
 
 # optimize: returns optimal explainer id, optimal postprocessor id, (and study)
 optimized = expr.optimize(

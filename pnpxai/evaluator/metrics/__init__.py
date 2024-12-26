@@ -1,8 +1,8 @@
-from .base import Metric
-from .mu_fidelity import MuFidelity
-from .sensitivity import Sensitivity
-from .complexity import Complexity
-from .pixel_flipping import (
+from pnpxai.evaluator.metrics.base import Metric
+from pnpxai.evaluator.metrics.mu_fidelity import MuFidelity
+from pnpxai.evaluator.metrics.sensitivity import Sensitivity
+from pnpxai.evaluator.metrics.complexity import Complexity
+from pnpxai.evaluator.metrics.pixel_flipping import (
     PixelFlipping,
     MoRF,
     LeRF,

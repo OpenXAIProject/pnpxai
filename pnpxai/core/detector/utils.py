@@ -1,5 +1,5 @@
 from torch import fx
-from .types import ModuleType
+from pnpxai.core.detector.types import ModuleType
 
 
 def get_target_module_of(node: fx.Node):

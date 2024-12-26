@@ -1,5 +1,4 @@
 from typing import Literal, Optional
-import torch
 import optuna
 from pnpxai.evaluator.optimizer.objectives import Objective
 from pnpxai.evaluator.optimizer.utils import (

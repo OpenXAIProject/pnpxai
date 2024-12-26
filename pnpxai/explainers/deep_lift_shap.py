@@ -1,4 +1,4 @@
-from typing import Dict, Tuple, Callable, Optional
+from typing import Optional
 
 import torch
 from shap import DeepExplainer
@@ -7,9 +7,6 @@ from pnpxai.core.detector.types import Convolution
 from pnpxai.explainers.base import Explainer
 from torch.nn.modules import Module
 from pnpxai.explainers.base import Explainer
-from pnpxai.explainers.types import ForwardArgumentExtractor
-from pnpxai.explainers.utils.baselines import BaselineMethodOrFunction, BaselineFunction
-from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 
 
 class DeepLiftShap(Explainer):

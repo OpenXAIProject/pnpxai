@@ -1,12 +1,12 @@
-from typing import Dict, Tuple, Optional
+from typing import Dict, Tuple
 from torch import Tensor, nn
 from captum.attr import LayerGradCam, LayerAttribution
 
 from pnpxai.utils import format_into_tuple
 from pnpxai.core.detector.types import Convolution
-from .base import Explainer
-from .utils import find_cam_target_layer
-from .errors import NoCamTargetLayerAndNotTraceableError
+from pnpxai.explainers.base import Explainer
+from pnpxai.explainers.utils import find_cam_target_layer
+from pnpxai.explainers.errors import NoCamTargetLayerAndNotTraceableError
 
 
 class GradCam(Explainer):

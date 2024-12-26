@@ -1,11 +1,8 @@
-from typing import Literal, Optional, Union, Literal, Sequence
-import copy
+from typing import Literal, Union, Literal
 
 import torch
 import torchvision.transforms.functional as TF
-from optuna.trial import Trial
 from pnpxai.explainers.utils.base import UtilFunction
-from pnpxai.utils import generate_param_key
 
 BaselineMethod = Literal['zeros', 'invert', 'gaussian_blur', 'token']
 

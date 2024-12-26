@@ -2,16 +2,7 @@ from typing import Optional, Any, Dict, Type, Union, Tuple
 from optuna import Trial
 
 from pnpxai.core.modality.modality import Modality
-from pnpxai.explainers.base import Explainer
-from pnpxai.explainers.utils import (
-    UtilFunction,
-    BaselineFunction,
-    FeatureMaskFunction,
-    PoolingFunction,
-    NormalizationFunction,
-)
-from pnpxai.explainers import Lime, KernelShap
-from pnpxai.explainers.utils.function_selectors import FunctionSelector
+from pnpxai.explainers.utils import UtilFunction
 from pnpxai.utils import format_into_tuple, format_out_tuple_if_single, generate_param_key
 
 

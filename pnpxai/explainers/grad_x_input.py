@@ -6,8 +6,8 @@ from captum.attr import InputXGradient as CaptumGradientXInput
 from captum.attr import LayerGradientXActivation as CaptumLayerGradientXInput
 
 from pnpxai.core.detector.types import Linear, Convolution, LSTM, RNN, Attention
-from .base import Explainer
-from .utils import captum_wrap_model_input
+from pnpxai.explainers.base import Explainer
+from pnpxai.explainers.utils import captum_wrap_model_input
 
 
 class GradientXInput(Explainer):

@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional, Tuple
+from typing import Dict, Optional, Tuple
 from torch import Tensor
 from torch.nn.modules import Module
 from captum.attr import GuidedGradCam as CaptumGuidedGradCam
@@ -7,7 +7,7 @@ from pnpxai.core.detector.types import Convolution
 from pnpxai.explainers.base import Explainer
 from pnpxai.explainers.utils import find_cam_target_layer
 from pnpxai.utils import format_into_tuple
-from .errors import NoCamTargetLayerAndNotTraceableError
+from pnpxai.explainers.errors import NoCamTargetLayerAndNotTraceableError
 
 
 class GuidedGradCam(Explainer):

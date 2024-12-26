@@ -2,13 +2,11 @@ from typing import Optional, Literal
 
 import torchvision.transforms.functional as TF
 from torch.nn.modules import Module
-from optuna.trial import Trial
 
 from pnpxai.core.detector.types import Convolution
 from pnpxai.core._types import Tensor
 from pnpxai.explainers.zennit.base import ZennitExplainer
 from pnpxai.explainers.zennit.attribution import FullGradient as FullGradAttributor
-from pnpxai.utils import format_into_tuple
 
 
 def _format_pooling_method(method):

@@ -1,5 +1,4 @@
-import warnings
-from typing import Optional, Tuple, Dict, Callable, Any
+from typing import Optional, Any
 from torch import Tensor
 from optuna.trial import Trial, TrialState
 

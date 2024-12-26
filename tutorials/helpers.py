@@ -15,7 +15,6 @@ from torch.utils.data import Dataset, Subset, DataLoader
 from transformers import BertTokenizer, BertForSequenceClassification
 from transformers import ViltForQuestionAnswering, ViltProcessor
 
-from tqdm import tqdm
 from PIL import Image
 
 
