@@ -21,7 +21,7 @@ from pnpxai.explainers.attention_rollout import (
     AttentionRollout,
     TransformerAttribution,
 )
-
+from pnpxai.explainers.lear import LEAR
 
 CAM_BASED_EXPLAINERS = [GradCam, GuidedGradCam]
 GRADIENT_BASED_EXPLAINERS = [
@@ -62,3 +62,4 @@ AVAILABLE_EXPLAINERS: Tuple[Explainer] = (
 )
 
 EXPLAINERS_FOR_TABULAR = []
+EXPLAINERS_FOR_MEDICAL_IMAGE: Tuple[Explainer] = (LEAR,)
