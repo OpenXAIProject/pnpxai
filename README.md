@@ -119,9 +119,8 @@ This guide explains how to automatically explain your own models and datasets us
 - [ImageNet Example All Metrics](tutorials/imagenet_example_all_metrics.md)
 - [Free MCG](tutorials/gfgp_tutorial.py) [[Reference](https://arxiv.org/abs/2411.15265)] 
 - [LEAR (Learn-Explain-Reinforce)](tutorials/LEAR_example_all_explainers.md) [[Reference](https://ieeexplore.ieee.org/document/9854196)]
-- 
+- [Speech Impairment Diagnosis Model](tutorials/xai_ddk_pnpxai_example.md)
 - [KorFactScore (Korean Factual precision in atomicity Score)](tutorials/fact_score_example_korfactscore.py) [[Reference](https://github.com/ETRI-XAINLP/KorFactScore)]
-
 
 
 ## Documentation
