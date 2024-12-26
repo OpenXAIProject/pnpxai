@@ -13,7 +13,7 @@ class LEAR(Explainer):
         model (torch.nn.Module, optional): This is not used for LEAR. It is included for compatibility with the base class.
     """
 
-    def __init__(self, model_name="wltjr1007/LEAR", device=None, model=None):
+    def __init__(self, model=None, model_name: str="wltjr1007/LEAR", device: torch.device=None):
         super().__init__(model=model)
         self.device = device or ('cuda' if torch.cuda.is_available() else 'cpu')
         # Load pre-trained model for counterfactual generation (trust_remote_code=True allows custom code from model repository)
