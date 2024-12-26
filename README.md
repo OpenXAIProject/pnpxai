@@ -118,8 +118,6 @@ This guide explains how to automatically explain your own models and datasets us
 - [ImageNet Example All Explainers](tutorials/imagenet_example_all_explainers.md)
 - [ImageNet Example All Metrics](tutorials/imagenet_example_all_metrics.md)
 
-## [Demo](https://openxaiproject.github.io/pnpxai/demo/)
-
 ## Documentation
 
 The [Documentation](https://openxaiproject.github.io/pnpxai/) contains the API reference for all of the functionality of the framework. Primarily, high-level modules of the framework include: 
