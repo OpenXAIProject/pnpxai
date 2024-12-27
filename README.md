@@ -1,35 +1,42 @@
 # PnPXAI: Plug-and-Play Explainable AI
 
 <div align='center'>
-    <img src="assets/pnpxai_logo_horizontal.png">
+    <img src="https://raw.githubusercontent.com/OpenXAIProject/pnpxai/main/assets/pnpxai_logo_horizontal.png">
 </div>
 
 [PnPXAI](https://openxaiproject.github.io/pnpxai/) is a Python package that provides a modular and easy-to-use framework for explainable artificial intelligence (XAI). It allows users to apply various XAI methods to their own models and datasets, and visualize the results in an interactive and intuitive way.
 
 ## Features
 
-- [**Detector**](pnpxai/core/detector/): The detector module provides automatic detection of AI models implemented in PyTorch.
-- [**Evaluator**](pnpxai/evaluator/metrics/): The evaluator module provides various ways to evaluate and compare the performance and explainability of AI models with the categorized evaluation properties of correctness ([fidelity](pnpxai/evaluator/metrics/mu_fidelity.py), [area between perturbation curves](pnpxai/evaluator/metrics/pixel_flipping.py)), continuity ([sensitivity](pnpxai/evaluator/metrics/sensitivity.py)), and compactness ([complexity](pnpxai/evaluator/metrics/complexity.py)).
+- [**Detector**](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/core/detector): The detector module provides automatic detection of AI models implemented in PyTorch.
+- [**Evaluator**](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/evaluator/metrics/): The evaluator module provides various ways to evaluate and compare the performance and explainability of AI models with the categorized evaluation properties of correctness ([fidelity](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/evaluator/metrics/mu_fidelity.py), [area between perturbation curves](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/evaluator/metrics/pixel_flipping.py)), continuity ([sensitivity](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/evaluator/metrics/sensitivity.py)), and compactness ([complexity](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/evaluator/metrics/complexity.py)).
 - **Explainers**: The explainers module contains a collection of state-of-the-art XAI methods that can generate global or local explanations for any AI model, such as:
-	- Perturbation-based ([SHAP](pnpxai/explainers/kernel_shap.py), [LIME](pnpxai/explainers/lime.py))
-	- Relevance-based ([IG](pnpxai/explainers/integrated_gradients.py), [LRP](pnpxai/explainers/lrp.py), [RAP](pnpxai/explainers/rap), [GuidedBackprop](pnpxai/explainers/guided_backprop.py))
-	- CAM-based ([GradCAM](pnpxai/explainers/grad_cam.py), [Guided GradCAM](pnpxai/explainers/guided_grad_cam.py))
-	- Gradient-based ([SmoothGrad](pnpxai/explainers/smooth_grad.py), [VarGrad](pnpxai/explainers/var_grad.py), [FullGrad](pnpxai/explainers/full_grad.py), [Gradient &times; Input](pnpxai/explainers/grad_x_input.py))
-- [**Recommender**](pnpxai/core/recommender): The recommender module offers a recommender system that can suggest the most suitable XAI methods for a given model and dataset, based on the user’s preferences and goals.
-- [**Optimizer**](pnpxai/evaluator/optimizer): The optimizer module is finds the best hyperparameter options, given a user-specified metric.
+	- Perturbation-based ([SHAP](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/kernel_shap.py), [LIME](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/lime.py))
+	- Relevance-based ([IG](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/integrated_gradients.py), [LRP](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/lrp.py), [RAP](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/rap), [GuidedBackprop](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/guided_backprop.py))
+	- CAM-based ([GradCAM](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/grad_cam.py), [Guided GradCAM](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/guided_grad_cam.py))
+	- Gradient-based ([SmoothGrad](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/smooth_grad.py), [VarGrad](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/var_grad.py), [FullGrad](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/full_grad.py), [Gradient &times; Input](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/grad_x_input.py))
+- [**Recommender**](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/core/recommender): The recommender module offers a recommender system that can suggest the most suitable XAI methods for a given model and dataset, based on the user’s preferences and goals.
+- [**Optimizer**](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/evaluator/optimizer): The optimizer module is finds the best hyperparameter options, given a user-specified metric.
 
 ## Installation
 
-To install `pnpxai`, run the following command:
+To install `pnpxai` from `pip`, run the following command:
 
 ```bash
-# Command lines for installation
+pip install pnpxai
+```
+
+To install `pnpxai` from `GitHub`, run the following commands:
+
+```bash
+git clone git@github.com:OpenXAIProject/pnpxai.git
+cd pnpxai
 pip install -e .
 ```
 
 ## Getting Started
 
-This guide explains how to automatically explain your own models and datasets using the provided Python script. The complete code can be found [here](tutorials/auto_explanation_imagenet_example.py).
+This guide explains how to automatically explain your own models and datasets using the provided Python script. The complete code can be found [here](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/auto_explanation_imagenet_example.py).
 
 1. **Setup**: The setup involves setting a random seed for reproducibility and defining the device for computation (CPU or GPU). 
     
@@ -110,17 +117,28 @@ This guide explains how to automatically explain your own models and datasets us
 
 
 ## Tutorials
-- [Image Classification](tutorials/auto_explanation_imagenet_example.py)
-- [Text Classification](tutorials/auto_explanation_imdb_example.py)
-- [Time Series Classification](tutorials/auto_explanation_ts_example.py)
-- [Visual Question Answering](tutorials/auto_explanation_vqa_example.py)
-- [Evaluator](tutorials/evaluator.py)
-- [ImageNet Example All Explainers](tutorials/imagenet_example_all_explainers.md)
-- [ImageNet Example All Metrics](tutorials/imagenet_example_all_metrics.md)
-- [Free MCG](tutorials/gfgp_tutorial.py) [[Reference](https://arxiv.org/abs/2411.15265)] 
-- [LEAR (Learn-Explain-Reinforce)](tutorials/LEAR_example_all_explainers.md) [[Reference](https://ieeexplore.ieee.org/document/9854196)]
-- [Speech Impairment Diagnosis Model](tutorials/xai_ddk_pnpxai_example.md)
-- [KorFactScore (Korean Factual precision in atomicity Score)](tutorials/fact_score_example_korfactscore.py) [[Reference](https://github.com/ETRI-XAINLP/KorFactScore)]
+- [Image Classification](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/auto_explanation_imagenet_example.py)
+- [Text Classification](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/auto_explanation_imdb_example.py)
+- [Time Series Classification](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/auto_explanation_ts_example.py)
+- [Visual Question Answering](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/auto_explanation_vqa_example.py)
+- [Evaluator](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/evaluator.py)
+- [ImageNet Example All Explainers](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/imagenet_example_all_explainers.md)
+- [ImageNet Example All Metrics](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/imagenet_example_all_metrics.md)
+- [Free MCG](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/gfgp_tutorial.py) [[Reference](https://arxiv.org/abs/2411.15265)] 
+
+## Use Cases
+
+Medical Domain Explainability
+
+- Counterfactual Explanation ([LEAR (Learn-Explain-Reinforce)](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/LEAR_example_all_explainers.md)) for Alzheimer’s Disease Diagnosis, a joint work with Research Task 2 (PI Bohyung Han, Seoul National University) [[Reference](https://ieeexplore.ieee.org/document/9854196)]
+
+- Attribution-based Explanation for [Dysarthria Diagnosis](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/xai_ddk_pnpxai_example.md), a joint work with Research Task 3 (PI Myoung-Wan Koo, Sogang University)
+
+
+LLM Trsutworthiness
+
+- Evaluating the Factuality of Korean Text Generated by LLMs ([KorFactScore (Korean Factual precision in atomicity Score)](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/fact_score_example_korfactscore.py)), a joint work with Research Task 4 (PI Kyongman Bae, ETRI)
+ [[Reference](https://github.com/ETRI-XAINLP/KorFactScore)]
 
 
 ## Documentation
@@ -139,4 +157,4 @@ We are grateful for the grant from the Institute of Information & communications
 
 ## License
 
-PnP XAI is released under Apache license 2.0. See [LICENSE](LICENSE) for additional details.
+PnP XAI is released under Apache license 2.0. See [LICENSE](https://github.com/OpenXAIProject/pnpxai/tree/main/LICENSE) for additional details.
