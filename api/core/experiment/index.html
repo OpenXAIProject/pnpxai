@@ -428,15 +428,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pnpxai.core.experiment.experiment.Experiment.run" class="md-nav__link">
-    <span class="md-ellipsis">
-      run
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#pnpxai.core.experiment.experiment.Experiment.run_batch" class="md-nav__link">
     <span class="md-ellipsis">
       run_batch
@@ -1220,15 +1211,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#pnpxai.core.experiment.experiment.Experiment.run" class="md-nav__link">
-    <span class="md-ellipsis">
-      run
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#pnpxai.core.experiment.experiment.Experiment.run_batch" class="md-nav__link">
     <span class="md-ellipsis">
       run_batch
@@ -1557,7 +1539,14 @@
 
               <details class="quote">
                 <summary>Source code in <code>pnpxai/core/experiment/experiment.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 47</span>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 40</span>
+<span class="normal"> 41</span>
+<span class="normal"> 42</span>
+<span class="normal"> 43</span>
+<span class="normal"> 44</span>
+<span class="normal"> 45</span>
+<span class="normal"> 46</span>
+<span class="normal"> 47</span>
 <span class="normal"> 48</span>
 <span class="normal"> 49</span>
 <span class="normal"> 50</span>
@@ -2072,284 +2061,7 @@
 <span class="normal">559</span>
 <span class="normal">560</span>
 <span class="normal">561</span>
-<span class="normal">562</span>
-<span class="normal">563</span>
-<span class="normal">564</span>
-<span class="normal">565</span>
-<span class="normal">566</span>
-<span class="normal">567</span>
-<span class="normal">568</span>
-<span class="normal">569</span>
-<span class="normal">570</span>
-<span class="normal">571</span>
-<span class="normal">572</span>
-<span class="normal">573</span>
-<span class="normal">574</span>
-<span class="normal">575</span>
-<span class="normal">576</span>
-<span class="normal">577</span>
-<span class="normal">578</span>
-<span class="normal">579</span>
-<span class="normal">580</span>
-<span class="normal">581</span>
-<span class="normal">582</span>
-<span class="normal">583</span>
-<span class="normal">584</span>
-<span class="normal">585</span>
-<span class="normal">586</span>
-<span class="normal">587</span>
-<span class="normal">588</span>
-<span class="normal">589</span>
-<span class="normal">590</span>
-<span class="normal">591</span>
-<span class="normal">592</span>
-<span class="normal">593</span>
-<span class="normal">594</span>
-<span class="normal">595</span>
-<span class="normal">596</span>
-<span class="normal">597</span>
-<span class="normal">598</span>
-<span class="normal">599</span>
-<span class="normal">600</span>
-<span class="normal">601</span>
-<span class="normal">602</span>
-<span class="normal">603</span>
-<span class="normal">604</span>
-<span class="normal">605</span>
-<span class="normal">606</span>
-<span class="normal">607</span>
-<span class="normal">608</span>
-<span class="normal">609</span>
-<span class="normal">610</span>
-<span class="normal">611</span>
-<span class="normal">612</span>
-<span class="normal">613</span>
-<span class="normal">614</span>
-<span class="normal">615</span>
-<span class="normal">616</span>
-<span class="normal">617</span>
-<span class="normal">618</span>
-<span class="normal">619</span>
-<span class="normal">620</span>
-<span class="normal">621</span>
-<span class="normal">622</span>
-<span class="normal">623</span>
-<span class="normal">624</span>
-<span class="normal">625</span>
-<span class="normal">626</span>
-<span class="normal">627</span>
-<span class="normal">628</span>
-<span class="normal">629</span>
-<span class="normal">630</span>
-<span class="normal">631</span>
-<span class="normal">632</span>
-<span class="normal">633</span>
-<span class="normal">634</span>
-<span class="normal">635</span>
-<span class="normal">636</span>
-<span class="normal">637</span>
-<span class="normal">638</span>
-<span class="normal">639</span>
-<span class="normal">640</span>
-<span class="normal">641</span>
-<span class="normal">642</span>
-<span class="normal">643</span>
-<span class="normal">644</span>
-<span class="normal">645</span>
-<span class="normal">646</span>
-<span class="normal">647</span>
-<span class="normal">648</span>
-<span class="normal">649</span>
-<span class="normal">650</span>
-<span class="normal">651</span>
-<span class="normal">652</span>
-<span class="normal">653</span>
-<span class="normal">654</span>
-<span class="normal">655</span>
-<span class="normal">656</span>
-<span class="normal">657</span>
-<span class="normal">658</span>
-<span class="normal">659</span>
-<span class="normal">660</span>
-<span class="normal">661</span>
-<span class="normal">662</span>
-<span class="normal">663</span>
-<span class="normal">664</span>
-<span class="normal">665</span>
-<span class="normal">666</span>
-<span class="normal">667</span>
-<span class="normal">668</span>
-<span class="normal">669</span>
-<span class="normal">670</span>
-<span class="normal">671</span>
-<span class="normal">672</span>
-<span class="normal">673</span>
-<span class="normal">674</span>
-<span class="normal">675</span>
-<span class="normal">676</span>
-<span class="normal">677</span>
-<span class="normal">678</span>
-<span class="normal">679</span>
-<span class="normal">680</span>
-<span class="normal">681</span>
-<span class="normal">682</span>
-<span class="normal">683</span>
-<span class="normal">684</span>
-<span class="normal">685</span>
-<span class="normal">686</span>
-<span class="normal">687</span>
-<span class="normal">688</span>
-<span class="normal">689</span>
-<span class="normal">690</span>
-<span class="normal">691</span>
-<span class="normal">692</span>
-<span class="normal">693</span>
-<span class="normal">694</span>
-<span class="normal">695</span>
-<span class="normal">696</span>
-<span class="normal">697</span>
-<span class="normal">698</span>
-<span class="normal">699</span>
-<span class="normal">700</span>
-<span class="normal">701</span>
-<span class="normal">702</span>
-<span class="normal">703</span>
-<span class="normal">704</span>
-<span class="normal">705</span>
-<span class="normal">706</span>
-<span class="normal">707</span>
-<span class="normal">708</span>
-<span class="normal">709</span>
-<span class="normal">710</span>
-<span class="normal">711</span>
-<span class="normal">712</span>
-<span class="normal">713</span>
-<span class="normal">714</span>
-<span class="normal">715</span>
-<span class="normal">716</span>
-<span class="normal">717</span>
-<span class="normal">718</span>
-<span class="normal">719</span>
-<span class="normal">720</span>
-<span class="normal">721</span>
-<span class="normal">722</span>
-<span class="normal">723</span>
-<span class="normal">724</span>
-<span class="normal">725</span>
-<span class="normal">726</span>
-<span class="normal">727</span>
-<span class="normal">728</span>
-<span class="normal">729</span>
-<span class="normal">730</span>
-<span class="normal">731</span>
-<span class="normal">732</span>
-<span class="normal">733</span>
-<span class="normal">734</span>
-<span class="normal">735</span>
-<span class="normal">736</span>
-<span class="normal">737</span>
-<span class="normal">738</span>
-<span class="normal">739</span>
-<span class="normal">740</span>
-<span class="normal">741</span>
-<span class="normal">742</span>
-<span class="normal">743</span>
-<span class="normal">744</span>
-<span class="normal">745</span>
-<span class="normal">746</span>
-<span class="normal">747</span>
-<span class="normal">748</span>
-<span class="normal">749</span>
-<span class="normal">750</span>
-<span class="normal">751</span>
-<span class="normal">752</span>
-<span class="normal">753</span>
-<span class="normal">754</span>
-<span class="normal">755</span>
-<span class="normal">756</span>
-<span class="normal">757</span>
-<span class="normal">758</span>
-<span class="normal">759</span>
-<span class="normal">760</span>
-<span class="normal">761</span>
-<span class="normal">762</span>
-<span class="normal">763</span>
-<span class="normal">764</span>
-<span class="normal">765</span>
-<span class="normal">766</span>
-<span class="normal">767</span>
-<span class="normal">768</span>
-<span class="normal">769</span>
-<span class="normal">770</span>
-<span class="normal">771</span>
-<span class="normal">772</span>
-<span class="normal">773</span>
-<span class="normal">774</span>
-<span class="normal">775</span>
-<span class="normal">776</span>
-<span class="normal">777</span>
-<span class="normal">778</span>
-<span class="normal">779</span>
-<span class="normal">780</span>
-<span class="normal">781</span>
-<span class="normal">782</span>
-<span class="normal">783</span>
-<span class="normal">784</span>
-<span class="normal">785</span>
-<span class="normal">786</span>
-<span class="normal">787</span>
-<span class="normal">788</span>
-<span class="normal">789</span>
-<span class="normal">790</span>
-<span class="normal">791</span>
-<span class="normal">792</span>
-<span class="normal">793</span>
-<span class="normal">794</span>
-<span class="normal">795</span>
-<span class="normal">796</span>
-<span class="normal">797</span>
-<span class="normal">798</span>
-<span class="normal">799</span>
-<span class="normal">800</span>
-<span class="normal">801</span>
-<span class="normal">802</span>
-<span class="normal">803</span>
-<span class="normal">804</span>
-<span class="normal">805</span>
-<span class="normal">806</span>
-<span class="normal">807</span>
-<span class="normal">808</span>
-<span class="normal">809</span>
-<span class="normal">810</span>
-<span class="normal">811</span>
-<span class="normal">812</span>
-<span class="normal">813</span>
-<span class="normal">814</span>
-<span class="normal">815</span>
-<span class="normal">816</span>
-<span class="normal">817</span>
-<span class="normal">818</span>
-<span class="normal">819</span>
-<span class="normal">820</span>
-<span class="normal">821</span>
-<span class="normal">822</span>
-<span class="normal">823</span>
-<span class="normal">824</span>
-<span class="normal">825</span>
-<span class="normal">826</span>
-<span class="normal">827</span>
-<span class="normal">828</span>
-<span class="normal">829</span>
-<span class="normal">830</span>
-<span class="normal">831</span>
-<span class="normal">832</span>
-<span class="normal">833</span>
-<span class="normal">834</span>
-<span class="normal">835</span>
-<span class="normal">836</span>
-<span class="normal">837</span>
-<span class="normal">838</span>
-<span class="normal">839</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Experiment</span><span class="p">(</span><span class="n">Observable</span><span class="p">):</span>
+<span class="normal">562</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">Experiment</span><span class="p">(</span><span class="n">Observable</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A class representing an experiment for model interpretability.</span>
 
@@ -2427,10 +2139,10 @@
 
     <span class="k">def</span> <span class="nf">run_batch</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
-        <span class="n">data_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
         <span class="n">explainer_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">postprocessor_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">metric_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">data_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Runs the experiment for selected batch of data, explainer, postprocessor and metric.</span>
@@ -2449,6 +2161,8 @@
 
 <span class="sd">        Note: The input parameters allow for flexibility in specifying subset of data, explainer, postprocessor and metric to process.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data_ids</span> <span class="o">=</span> <span class="n">data_ids</span> <span class="k">if</span> <span class="n">data_ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_data_ids</span><span class="p">(</span>
+            <span class="n">data_ids</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">predict_batch</span><span class="p">(</span><span class="n">data_ids</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">explain_batch</span><span class="p">(</span><span class="n">data_ids</span><span class="p">,</span> <span class="n">explainer_id</span><span class="p">)</span>
@@ -2483,6 +2197,7 @@
 
 <span class="sd">        This method orchestrates the experiment by configuring the manager and processing data. It then caches the results in the manager, and returns back to the user.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
         <span class="n">data_ids_pred</span> <span class="o">=</span> <span class="p">[</span>
             <span class="n">idx</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">data_ids</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_output_by_id</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
@@ -2561,7 +2276,8 @@
                 <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="n">TextModality</span><span class="p">)</span>
                 <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pp</span><span class="o">.</span><span class="n">pooling_fn</span><span class="p">,</span> <span class="n">Identity</span><span class="p">)</span>
             <span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;postprocessor </span><span class="si">{</span><span class="n">postprocessor_id</span><span class="si">}</span><span class="s1"> does not support explainer </span><span class="si">{</span><span class="n">explainer_id</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s1">&#39;postprocessor </span><span class="si">{</span><span class="n">postprocessor_id</span><span class="si">}</span><span class="s1"> does not support explainer </span><span class="si">{</span><span class="n">explainer_id</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
             <span class="n">batch</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pp</span><span class="p">(</span><span class="n">attr</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">format_out_tuple_if_single</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
 
@@ -2685,280 +2401,6 @@
             <span class="n">postprocessor</span><span class="o">=</span><span class="n">opt_postprocessor</span><span class="p">,</span>
             <span class="n">study</span><span class="o">=</span><span class="n">study</span><span class="p">,</span>
         <span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">data_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">explainer_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">postprocessor_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">metric_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Experiment&#39;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Run the experiment by processing data, generating explanations, evaluating with metrics, caching and retrieving the data.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            data_ids (Optional[Sequence[int]]): A sequence of data IDs to specify the subset of data to process.</span>
-<span class="sd">            explainer_ids (Optional[Sequence[int]]): A sequence of explainer IDs to specify the subset of explainers to use.</span>
-<span class="sd">            postprocessor_ids (Optional[Sequence[int]]): A sequence of postprocessor IDs to specify the subset of postprocessors to use.</span>
-<span class="sd">            metric_ids (Optional[Sequence[int]]): A sequence of metric IDs to specify the subset of metrics to evaluate.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            The Experiment instance with updated results and state.</span>
-
-<span class="sd">        This method orchestrates the experiment by configuring the manager, obtaining explainer and metric instances,</span>
-<span class="sd">        processing data, generating explanations, and evaluating metrics. It then saves the results in the manager.</span>
-
-<span class="sd">        Note: The input parameters allow for flexibility in specifying subsets of data, explainers, and metrics to process.</span>
-<span class="sd">        If not provided, the method processes all available data, explainers, postprocessors, and metrics.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">reset_errors</span><span class="p">()</span>
-        <span class="c1"># self.manager.set_config(data_ids, explainer_ids, metrics_ids)</span>
-
-        <span class="c1"># inference</span>
-
-        <span class="c1"># data_ids is filtered out data indices whose output is saved in cache</span>
-        <span class="n">data</span><span class="p">,</span> <span class="n">data_ids_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_data_to_predict</span><span class="p">(</span><span class="n">data_ids</span><span class="p">)</span>
-        <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">save_outputs</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">data_ids_pred</span><span class="p">)</span>
-
-        <span class="c1"># explain</span>
-        <span class="n">explainers</span><span class="p">,</span> <span class="n">explainer_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_explainers</span><span class="p">(</span><span class="n">explainer_ids</span><span class="p">)</span>
-        <span class="n">postprocessors</span><span class="p">,</span> <span class="n">postprocessor_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_postprocessors</span><span class="p">(</span><span class="n">postprocessor_ids</span><span class="p">)</span>
-        <span class="n">metrics</span><span class="p">,</span> <span class="n">metric_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_metrics</span><span class="p">(</span><span class="n">metric_ids</span><span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">explainer</span><span class="p">,</span> <span class="n">explainer_id</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">explainers</span><span class="p">,</span> <span class="n">explainer_ids</span><span class="p">):</span>
-            <span class="n">explainer_name</span> <span class="o">=</span> <span class="n">class_to_string</span><span class="p">(</span><span class="n">explainer</span><span class="p">)</span>
-
-            <span class="c1"># data_ids is filtered out data indices whose explanation is saved in cache</span>
-            <span class="n">data</span><span class="p">,</span> <span class="n">data_ids_expl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_data_to_process_for_explainer</span><span class="p">(</span>
-                <span class="n">explainer_id</span><span class="p">,</span> <span class="n">data_ids</span><span class="p">)</span>
-            <span class="n">explanations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_explain</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">data_ids_expl</span><span class="p">,</span> <span class="n">explainer</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">save_explanations</span><span class="p">(</span>
-                <span class="n">explanations</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">data_ids_expl</span><span class="p">,</span> <span class="n">explainer_id</span>
-            <span class="p">)</span>
-            <span class="n">message</span> <span class="o">=</span> <span class="n">get_message</span><span class="p">(</span>
-                <span class="s1">&#39;experiment.event.explainer&#39;</span><span class="p">,</span> <span class="n">explainer</span><span class="o">=</span><span class="n">explainer_name</span>
-            <span class="p">)</span>
-            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Experiment] </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">fire</span><span class="p">(</span><span class="n">ExperimentObservableEvent</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">explainer</span><span class="p">))</span>
-
-            <span class="k">for</span> <span class="n">postprocessor</span><span class="p">,</span> <span class="n">postprocessor_id</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">postprocessors</span><span class="p">,</span> <span class="n">postprocessor_ids</span><span class="p">):</span>
-                <span class="k">for</span> <span class="n">metric</span><span class="p">,</span> <span class="n">metric_id</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">metric_ids</span><span class="p">):</span>
-                    <span class="n">metric_name</span> <span class="o">=</span> <span class="n">class_to_string</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span>
-                    <span class="n">data</span><span class="p">,</span> <span class="n">data_ids_eval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_data_to_process_for_metric</span><span class="p">(</span>
-                        <span class="n">explainer_id</span><span class="p">,</span> <span class="n">postprocessor_id</span><span class="p">,</span> <span class="n">metric_id</span><span class="p">,</span> <span class="n">data_ids</span><span class="p">)</span>
-                    <span class="n">explanations</span><span class="p">,</span> <span class="n">data_ids_eval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_valid_explanations</span><span class="p">(</span>
-                        <span class="n">explainer_id</span><span class="p">,</span> <span class="n">data_ids_eval</span><span class="p">)</span>
-                    <span class="n">data</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">data_ids_eval</span><span class="p">)</span>
-                    <span class="n">evaluations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluate</span><span class="p">(</span>
-                        <span class="n">data</span><span class="p">,</span> <span class="n">data_ids_eval</span><span class="p">,</span> <span class="n">explanations</span><span class="p">,</span> <span class="n">explainer</span><span class="p">,</span> <span class="n">postprocessor</span><span class="p">,</span> <span class="n">metric</span><span class="p">)</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">save_evaluations</span><span class="p">(</span>
-                        <span class="n">evaluations</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">data_ids_eval</span><span class="p">,</span> <span class="n">explainer_id</span><span class="p">,</span> <span class="n">postprocessor_id</span><span class="p">,</span> <span class="n">metric_id</span><span class="p">)</span>
-
-                    <span class="n">message</span> <span class="o">=</span> <span class="n">get_message</span><span class="p">(</span>
-                        <span class="s1">&#39;experiment.event.explainer.metric&#39;</span><span class="p">,</span> <span class="n">explainer</span><span class="o">=</span><span class="n">explainer_name</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">metric_name</span><span class="p">)</span>
-                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Experiment] </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">fire</span><span class="p">(</span><span class="n">ExperimentObservableEvent</span><span class="p">(</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">explainer</span><span class="p">,</span> <span class="n">metric</span><span class="p">))</span>
-        <span class="k">return</span> <span class="bp">self</span>
-
-    <span class="k">def</span> <span class="nf">_predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">DataSource</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Predict input data with experiment model.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            data (DataSource): A data to be explained.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            Predictions corresponding to input data.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">outputs</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="o">*</span><span class="n">format_into_tuple</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">to_device</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_extractor</span><span class="p">(</span><span class="n">datum</span><span class="p">)))</span>
-            <span class="p">)</span> <span class="k">for</span> <span class="n">datum</span> <span class="ow">in</span> <span class="n">data</span>
-        <span class="p">]</span>
-        <span class="k">return</span> <span class="n">outputs</span>
-
-    <span class="k">def</span> <span class="nf">_explain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">DataSource</span><span class="p">,</span> <span class="n">data_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">explainer</span><span class="p">:</span> <span class="n">Explainer</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Explain input data with an explainer.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            data (DataSource): A data to be explained.</span>
-<span class="sd">            data_ids (Sequence[int]): A sequence of data IDs corresponding to the provided data source. Data IDs are used to cache results.</span>
-<span class="sd">            explainer (Explainer): A explainer object to use for explanation.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            Explanations corresponding to input data, generated by the explainer.</span>
-
-<span class="sd">        This method explains data with a specified explainer. Produced results are cached by the manager.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">explanations</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="n">explainer_name</span> <span class="o">=</span> <span class="n">class_to_string</span><span class="p">(</span><span class="n">explainer</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">datum</span><span class="p">,</span> <span class="n">data_id</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">data_ids</span><span class="p">)):</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">datum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_device</span><span class="p">(</span><span class="n">datum</span><span class="p">)</span>
-                <span class="n">inputs</span> <span class="o">=</span> <span class="n">format_into_tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input_extractor</span><span class="p">(</span><span class="n">datum</span><span class="p">))</span>
-                <span class="n">targets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">label_extractor</span><span class="p">(</span><span class="n">datum</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_labels</span> \
-                    <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_targets</span><span class="p">(</span><span class="n">data_ids</span><span class="p">)</span>
-                <span class="n">explanations</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">explainer</span><span class="o">.</span><span class="n">attribute</span><span class="p">(</span>
-                    <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
-                    <span class="n">targets</span><span class="o">=</span><span class="n">targets</span><span class="p">,</span>
-                <span class="p">)</span>
-            <span class="k">except</span> <span class="ne">NotImplementedError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
-                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[Experiment] </span><span class="si">{</span><span class="n">get_message</span><span class="p">(</span><span class="s1">&#39;experiment.errors.explainer_unsupported&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">explainer</span><span class="o">=</span><span class="n">explainer_name</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="k">raise</span> <span class="n">error</span>
-            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">[Experiment] </span><span class="si">{</span><span class="n">get_message</span><span class="p">(</span><span class="s1">&#39;experiment.errors.explanation&#39;</span><span class="p">,</span><span class="w"> </span><span class="n">explainer</span><span class="o">=</span><span class="n">explainer_name</span><span class="p">,</span><span class="w"> </span><span class="n">error</span><span class="o">=</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_errors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">explanations</span>
-
-    <span class="c1"># def _evaluate(self, data: DataSource, data_ids: List[int], explanations: DataSource, explainer: Explainer, postprocessor: Callable, metric: Metric):</span>
-    <span class="c1">#     if explanations is None:</span>
-    <span class="c1">#         return None</span>
-    <span class="c1">#     started_at = time.time()</span>
-    <span class="c1">#     metric_name = class_to_string(metric)</span>
-    <span class="c1">#     explainer_name = class_to_string(explainer)</span>
-
-    <span class="c1">#     evaluations = [None] * len(data)</span>
-    <span class="c1">#     for i, (datum, data_id, explanation) in enumerate(zip(data, data_ids, explanations)):</span>
-    <span class="c1">#         if explanation is None:</span>
-    <span class="c1">#             continue</span>
-    <span class="c1">#         datum = self.to_device(datum)</span>
-    <span class="c1">#         explanation = self.to_device(explanation)</span>
-    <span class="c1">#         inputs = self.input_extractor(datum)</span>
-    <span class="c1">#         targets = self.label_extractor(datum) if self.target_labels \</span>
-    <span class="c1">#             else self._get_targets(data_ids)</span>
-    <span class="c1">#         try:</span>
-    <span class="c1">#             metric = metric.set_explainer(explainer).set_postprocessor(postprocessor)</span>
-    <span class="c1">#             evaluations[i] = metric.evaluate(</span>
-    <span class="c1">#                 inputs=inputs,</span>
-    <span class="c1">#                 targets=targets,</span>
-    <span class="c1">#                 attributions=explanation,</span>
-    <span class="c1">#             )</span>
-    <span class="c1">#         except Exception as e:</span>
-    <span class="c1">#             import pdb; pdb.set_trace()</span>
-    <span class="c1">#             warnings.warn(</span>
-    <span class="c1">#                 f&quot;\n[Experiment] {get_message(&#39;experiment.errors.evaluation&#39;, explainer=explainer_name, metric=metric_name, error=e)}&quot;)</span>
-    <span class="c1">#             self._errors.append(e)</span>
-    <span class="c1">#     elapsed_time = time.time() - started_at</span>
-    <span class="c1">#     print(</span>
-    <span class="c1">#         f&quot;[Experiment] {get_message(&#39;elapsed&#39;, modality=metric_name, elapsed=elapsed_time)}&quot;)</span>
-
-    <span class="c1">#     return evaluations</span>
-
-    <span class="k">def</span> <span class="nf">_get_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Retrieve and flatten last run target (output) data.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            data_ids (Optional[Sequence[int]]): A sequence of data IDs to specify the subset of data to process.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">            Flattened target (output) data.</span>
-
-<span class="sd">        This method retrieves target (output) data using the target extractor and flattens it for further processing.</span>
-
-<span class="sd">        Note: The input parameters allow for flexibility in specifying subsets of data to process. If not provided, the method processes all available data.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># predict if not cached</span>
-        <span class="n">not_predicted</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">data_id</span> <span class="k">for</span> <span class="n">data_id</span> <span class="ow">in</span> <span class="n">data_ids</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">_cache</span><span class="o">.</span><span class="n">get_output</span><span class="p">(</span><span class="n">data_id</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
-        <span class="p">]</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">not_predicted</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">predict_batch</span><span class="p">(</span><span class="n">not_predicted</span><span class="p">)</span>
-
-        <span class="c1"># load outputs from cache</span>
-        <span class="n">outputs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">_cache</span><span class="o">.</span><span class="n">get_output</span><span class="p">(</span><span class="n">data_id</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">data_id</span> <span class="ow">in</span> <span class="n">data_ids</span>
-        <span class="p">])</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_extractor</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
-
-    <span class="c1"># def get_visualizations_flattened(self) -&gt; Sequence[Sequence[Figure]]:</span>
-    <span class="c1">#     &quot;&quot;&quot;</span>
-    <span class="c1">#     Generate flattened visualizations for each data point based on explanations.</span>
-
-    <span class="c1">#     Returns:</span>
-    <span class="c1">#         List of visualizations for each data point across explainers.</span>
-
-    <span class="c1">#     This method retrieves valid explanations for each explainer, formats them for visualization,</span>
-    <span class="c1">#     and generates visualizations using Plotly Express. The results are flattened based on the data points</span>
-    <span class="c1">#     and returned as a list of lists of figures.</span>
-    <span class="c1">#     &quot;&quot;&quot;</span>
-    <span class="c1">#     assert self.modality == &#39;image&#39;, f&quot;Visualization for &#39;{self.modality} is not supported yet&quot;</span>
-    <span class="c1">#     explainers, explainer_ids = self.manager.get_explainers()</span>
-    <span class="c1">#     # Get all data ids</span>
-    <span class="c1">#     experiment_data_ids = self.manager.get_data_ids()</span>
-    <span class="c1">#     visualizations = []</span>
-
-    <span class="c1">#     for explainer, explainer_id in zip(explainers, explainer_ids):</span>
-    <span class="c1">#         # Get all valid explanations and data ids for this explainer</span>
-    <span class="c1">#         explanations, data_ids = self.manager.get_valid_explanations(</span>
-    <span class="c1">#             explainer_id)</span>
-    <span class="c1">#         data = self.manager.get_data(data_ids)[0]</span>
-    <span class="c1">#         explainer_visualizations = []</span>
-    <span class="c1">#         for explanation in explanations:</span>
-    <span class="c1">#             figs = []</span>
-    <span class="c1">#             for attr in explanation:</span>
-    <span class="c1">#                 postprocessed = postprocess_attr(</span>
-    <span class="c1">#                     attr,</span>
-    <span class="c1">#                     channel_dim=0,</span>
-    <span class="c1">#                     pooling_method=&#39;l2normsq&#39;,</span>
-    <span class="c1">#                     normalization_method=&#39;minmax&#39;</span>
-    <span class="c1">#                 ).detach().numpy()</span>
-    <span class="c1">#                 fig = px.imshow(postprocessed, color_continuous_scale=&#39;RdBu_R&#39;, color_continuous_midpoint=.5)</span>
-    <span class="c1">#                 figs.append(fig)</span>
-    <span class="c1">#             explainer_visualizations.append(figs)</span>
-
-    <span class="c1">#         # explainer_visualizations = [[</span>
-    <span class="c1">#         #     px.imshow(</span>
-    <span class="c1">#         #         postprocess_attr(</span>
-    <span class="c1">#         #             attr, # C x H x W</span>
-    <span class="c1">#         #             channel_dim=0,</span>
-    <span class="c1">#         #             pooling_method=&#39;l2normsq&#39;,</span>
-    <span class="c1">#         #             normalization_method=&#39;minmax&#39;,</span>
-    <span class="c1">#         #         ).detach().numpy(),</span>
-    <span class="c1">#         #         color_continuous_scale=&#39;RdBu_R&#39;,</span>
-    <span class="c1">#         #         color_continuous_midpoint=.5,</span>
-    <span class="c1">#         #     ) for attr in explanation]</span>
-    <span class="c1">#         #     for explanation in explanations</span>
-    <span class="c1">#         # ]</span>
-    <span class="c1">#         # # Visualize each valid explanataion</span>
-    <span class="c1">#         # for datum, explanation in zip(data, explanations):</span>
-    <span class="c1">#         #     inputs = self.input_extractor(datum)</span>
-    <span class="c1">#         #     targets = self.target_extractor(datum)</span>
-    <span class="c1">#         #     formatted = explainer.format_outputs_for_visualization(</span>
-    <span class="c1">#         #         inputs=inputs,</span>
-    <span class="c1">#         #         targets=targets,</span>
-    <span class="c1">#         #         explanations=explanation,</span>
-    <span class="c1">#         #         modality=self.modality</span>
-    <span class="c1">#         #     )</span>
-
-    <span class="c1">#         #     if not self.manager.is_batched:</span>
-    <span class="c1">#         #         formatted = [formatted]</span>
-    <span class="c1">#         #     formatted_visualizations = [</span>
-    <span class="c1">#         #         px.imshow(explanation, color_continuous_scale=&quot;RdBu_r&quot;, color_continuous_midpoint=0.0) for explanation in formatted</span>
-    <span class="c1">#         #     ]</span>
-    <span class="c1">#         #     if not self.manager.is_batched:</span>
-    <span class="c1">#         #         formatted_visualizations = formatted_visualizations[0]</span>
-    <span class="c1">#         #     explainer_visualizations.append(formatted_visualizations)</span>
-
-    <span class="c1">#         flat_explainer_visualizations = self.manager.flatten_if_batched(</span>
-    <span class="c1">#             explainer_visualizations, data)</span>
-    <span class="c1">#         # Set visualizaions of all data ids as None</span>
-    <span class="c1">#         explainer_visualizations = {</span>
-    <span class="c1">#             idx: None for idx in experiment_data_ids}</span>
-    <span class="c1">#         # Fill all valid visualizations</span>
-    <span class="c1">#         for visualization, data_id in zip(flat_explainer_visualizations, data_ids):</span>
-    <span class="c1">#             explainer_visualizations[data_id] = visualization</span>
-    <span class="c1">#         visualizations.append(list(explainer_visualizations.values()))</span>
-
-    <span class="c1">#     return visualizations</span>
 
     <span class="k">def</span> <span class="nf">get_inputs_flattened</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -3267,7 +2709,10 @@ processing data, generating explanations, and evaluating results. It then caches
 
             <details class="quote">
               <summary>Source code in <code>pnpxai/core/experiment/experiment.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">263</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
 <span class="normal">264</span>
 <span class="normal">265</span>
 <span class="normal">266</span>
@@ -3307,10 +2752,7 @@ processing data, generating explanations, and evaluating results. It then caches
 <span class="normal">300</span>
 <span class="normal">301</span>
 <span class="normal">302</span>
-<span class="normal">303</span>
-<span class="normal">304</span>
-<span class="normal">305</span>
-<span class="normal">306</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">evaluate_batch</span><span class="p">(</span>
+<span class="normal">303</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">evaluate_batch</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">data_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
     <span class="n">explainer_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -3428,7 +2870,11 @@ processing data, and generating explanations. It then caches the results in the 
 
             <details class="quote">
               <summary>Source code in <code>pnpxai/core/experiment/experiment.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">192</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
 <span class="normal">193</span>
 <span class="normal">194</span>
 <span class="normal">195</span>
@@ -3453,11 +2899,7 @@ processing data, and generating explanations. It then caches the results in the 
 <span class="normal">214</span>
 <span class="normal">215</span>
 <span class="normal">216</span>
-<span class="normal">217</span>
-<span class="normal">218</span>
-<span class="normal">219</span>
-<span class="normal">220</span>
-<span class="normal">221</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">explain_batch</span><span class="p">(</span>
+<span class="normal">217</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">explain_batch</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">data_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
     <span class="n">explainer_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -3532,18 +2974,18 @@ processing data, and generating explanations. It then caches the results in the 
 
             <details class="quote">
               <summary>Source code in <code>pnpxai/core/experiment/experiment.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">676</span>
-<span class="normal">677</span>
-<span class="normal">678</span>
-<span class="normal">679</span>
-<span class="normal">680</span>
-<span class="normal">681</span>
-<span class="normal">682</span>
-<span class="normal">683</span>
-<span class="normal">684</span>
-<span class="normal">685</span>
-<span class="normal">686</span>
-<span class="normal">687</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_all_inputs_flattened</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">399</span>
+<span class="normal">400</span>
+<span class="normal">401</span>
+<span class="normal">402</span>
+<span class="normal">403</span>
+<span class="normal">404</span>
+<span class="normal">405</span>
+<span class="normal">406</span>
+<span class="normal">407</span>
+<span class="normal">408</span>
+<span class="normal">409</span>
+<span class="normal">410</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_all_inputs_flattened</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Retrieve and flatten all input data.</span>
 
@@ -3631,33 +3073,33 @@ get_flat_evaluations method.</p>
 
             <details class="quote">
               <summary>Source code in <code>pnpxai/core/experiment/experiment.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">764</span>
-<span class="normal">765</span>
-<span class="normal">766</span>
-<span class="normal">767</span>
-<span class="normal">768</span>
-<span class="normal">769</span>
-<span class="normal">770</span>
-<span class="normal">771</span>
-<span class="normal">772</span>
-<span class="normal">773</span>
-<span class="normal">774</span>
-<span class="normal">775</span>
-<span class="normal">776</span>
-<span class="normal">777</span>
-<span class="normal">778</span>
-<span class="normal">779</span>
-<span class="normal">780</span>
-<span class="normal">781</span>
-<span class="normal">782</span>
-<span class="normal">783</span>
-<span class="normal">784</span>
-<span class="normal">785</span>
-<span class="normal">786</span>
-<span class="normal">787</span>
-<span class="normal">788</span>
-<span class="normal">789</span>
-<span class="normal">790</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_evaluations_flattened</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]]:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">487</span>
+<span class="normal">488</span>
+<span class="normal">489</span>
+<span class="normal">490</span>
+<span class="normal">491</span>
+<span class="normal">492</span>
+<span class="normal">493</span>
+<span class="normal">494</span>
+<span class="normal">495</span>
+<span class="normal">496</span>
+<span class="normal">497</span>
+<span class="normal">498</span>
+<span class="normal">499</span>
+<span class="normal">500</span>
+<span class="normal">501</span>
+<span class="normal">502</span>
+<span class="normal">503</span>
+<span class="normal">504</span>
+<span class="normal">505</span>
+<span class="normal">506</span>
+<span class="normal">507</span>
+<span class="normal">508</span>
+<span class="normal">509</span>
+<span class="normal">510</span>
+<span class="normal">511</span>
+<span class="normal">512</span>
+<span class="normal">513</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_evaluations_flattened</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Retrieve and flatten evaluations for all explainers and metrics.</span>
 
@@ -3730,50 +3172,50 @@ metric priorities and sorting preferences to produce rankings.</p>
 
             <details class="quote">
               <summary>Source code in <code>pnpxai/core/experiment/experiment.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">792</span>
-<span class="normal">793</span>
-<span class="normal">794</span>
-<span class="normal">795</span>
-<span class="normal">796</span>
-<span class="normal">797</span>
-<span class="normal">798</span>
-<span class="normal">799</span>
-<span class="normal">800</span>
-<span class="normal">801</span>
-<span class="normal">802</span>
-<span class="normal">803</span>
-<span class="normal">804</span>
-<span class="normal">805</span>
-<span class="normal">806</span>
-<span class="normal">807</span>
-<span class="normal">808</span>
-<span class="normal">809</span>
-<span class="normal">810</span>
-<span class="normal">811</span>
-<span class="normal">812</span>
-<span class="normal">813</span>
-<span class="normal">814</span>
-<span class="normal">815</span>
-<span class="normal">816</span>
-<span class="normal">817</span>
-<span class="normal">818</span>
-<span class="normal">819</span>
-<span class="normal">820</span>
-<span class="normal">821</span>
-<span class="normal">822</span>
-<span class="normal">823</span>
-<span class="normal">824</span>
-<span class="normal">825</span>
-<span class="normal">826</span>
-<span class="normal">827</span>
-<span class="normal">828</span>
-<span class="normal">829</span>
-<span class="normal">830</span>
-<span class="normal">831</span>
-<span class="normal">832</span>
-<span class="normal">833</span>
-<span class="normal">834</span>
-<span class="normal">835</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_explainers_ranks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">515</span>
+<span class="normal">516</span>
+<span class="normal">517</span>
+<span class="normal">518</span>
+<span class="normal">519</span>
+<span class="normal">520</span>
+<span class="normal">521</span>
+<span class="normal">522</span>
+<span class="normal">523</span>
+<span class="normal">524</span>
+<span class="normal">525</span>
+<span class="normal">526</span>
+<span class="normal">527</span>
+<span class="normal">528</span>
+<span class="normal">529</span>
+<span class="normal">530</span>
+<span class="normal">531</span>
+<span class="normal">532</span>
+<span class="normal">533</span>
+<span class="normal">534</span>
+<span class="normal">535</span>
+<span class="normal">536</span>
+<span class="normal">537</span>
+<span class="normal">538</span>
+<span class="normal">539</span>
+<span class="normal">540</span>
+<span class="normal">541</span>
+<span class="normal">542</span>
+<span class="normal">543</span>
+<span class="normal">544</span>
+<span class="normal">545</span>
+<span class="normal">546</span>
+<span class="normal">547</span>
+<span class="normal">548</span>
+<span class="normal">549</span>
+<span class="normal">550</span>
+<span class="normal">551</span>
+<span class="normal">552</span>
+<span class="normal">553</span>
+<span class="normal">554</span>
+<span class="normal">555</span>
+<span class="normal">556</span>
+<span class="normal">557</span>
+<span class="normal">558</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_explainers_ranks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calculate and return rankings for explainers based on evaluations.</span>
 
@@ -3892,25 +3334,25 @@ metric priorities and sorting preferences to produce rankings.</p>
 
             <details class="quote">
               <summary>Source code in <code>pnpxai/core/experiment/experiment.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">744</span>
-<span class="normal">745</span>
-<span class="normal">746</span>
-<span class="normal">747</span>
-<span class="normal">748</span>
-<span class="normal">749</span>
-<span class="normal">750</span>
-<span class="normal">751</span>
-<span class="normal">752</span>
-<span class="normal">753</span>
-<span class="normal">754</span>
-<span class="normal">755</span>
-<span class="normal">756</span>
-<span class="normal">757</span>
-<span class="normal">758</span>
-<span class="normal">759</span>
-<span class="normal">760</span>
-<span class="normal">761</span>
-<span class="normal">762</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_explanations_flattened</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">467</span>
+<span class="normal">468</span>
+<span class="normal">469</span>
+<span class="normal">470</span>
+<span class="normal">471</span>
+<span class="normal">472</span>
+<span class="normal">473</span>
+<span class="normal">474</span>
+<span class="normal">475</span>
+<span class="normal">476</span>
+<span class="normal">477</span>
+<span class="normal">478</span>
+<span class="normal">479</span>
+<span class="normal">480</span>
+<span class="normal">481</span>
+<span class="normal">482</span>
+<span class="normal">483</span>
+<span class="normal">484</span>
+<span class="normal">485</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_explanations_flattened</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Retrieve and flatten explanations from all explainers.</span>
 
@@ -4004,23 +3446,23 @@ metric priorities and sorting preferences to produce rankings.</p>
 
             <details class="quote">
               <summary>Source code in <code>pnpxai/core/experiment/experiment.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">658</span>
-<span class="normal">659</span>
-<span class="normal">660</span>
-<span class="normal">661</span>
-<span class="normal">662</span>
-<span class="normal">663</span>
-<span class="normal">664</span>
-<span class="normal">665</span>
-<span class="normal">666</span>
-<span class="normal">667</span>
-<span class="normal">668</span>
-<span class="normal">669</span>
-<span class="normal">670</span>
-<span class="normal">671</span>
-<span class="normal">672</span>
-<span class="normal">673</span>
-<span class="normal">674</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_inputs_flattened</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">381</span>
+<span class="normal">382</span>
+<span class="normal">383</span>
+<span class="normal">384</span>
+<span class="normal">385</span>
+<span class="normal">386</span>
+<span class="normal">387</span>
+<span class="normal">388</span>
+<span class="normal">389</span>
+<span class="normal">390</span>
+<span class="normal">391</span>
+<span class="normal">392</span>
+<span class="normal">393</span>
+<span class="normal">394</span>
+<span class="normal">395</span>
+<span class="normal">396</span>
+<span class="normal">397</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_inputs_flattened</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Retrieve and flatten last run input data.</span>
 
@@ -4111,21 +3553,21 @@ metric priorities and sorting preferences to produce rankings.</p>
 
             <details class="quote">
               <summary>Source code in <code>pnpxai/core/experiment/experiment.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">689</span>
-<span class="normal">690</span>
-<span class="normal">691</span>
-<span class="normal">692</span>
-<span class="normal">693</span>
-<span class="normal">694</span>
-<span class="normal">695</span>
-<span class="normal">696</span>
-<span class="normal">697</span>
-<span class="normal">698</span>
-<span class="normal">699</span>
-<span class="normal">700</span>
-<span class="normal">701</span>
-<span class="normal">702</span>
-<span class="normal">703</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_labels_flattened</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">412</span>
+<span class="normal">413</span>
+<span class="normal">414</span>
+<span class="normal">415</span>
+<span class="normal">416</span>
+<span class="normal">417</span>
+<span class="normal">418</span>
+<span class="normal">419</span>
+<span class="normal">420</span>
+<span class="normal">421</span>
+<span class="normal">422</span>
+<span class="normal">423</span>
+<span class="normal">424</span>
+<span class="normal">425</span>
+<span class="normal">426</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_labels_flattened</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Retrieve and flatten labels data.</span>
 
@@ -4215,21 +3657,21 @@ metric priorities and sorting preferences to produce rankings.</p>
 
             <details class="quote">
               <summary>Source code in <code>pnpxai/core/experiment/experiment.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">728</span>
-<span class="normal">729</span>
-<span class="normal">730</span>
-<span class="normal">731</span>
-<span class="normal">732</span>
-<span class="normal">733</span>
-<span class="normal">734</span>
-<span class="normal">735</span>
-<span class="normal">736</span>
-<span class="normal">737</span>
-<span class="normal">738</span>
-<span class="normal">739</span>
-<span class="normal">740</span>
-<span class="normal">741</span>
-<span class="normal">742</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_outputs_flattened</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">451</span>
+<span class="normal">452</span>
+<span class="normal">453</span>
+<span class="normal">454</span>
+<span class="normal">455</span>
+<span class="normal">456</span>
+<span class="normal">457</span>
+<span class="normal">458</span>
+<span class="normal">459</span>
+<span class="normal">460</span>
+<span class="normal">461</span>
+<span class="normal">462</span>
+<span class="normal">463</span>
+<span class="normal">464</span>
+<span class="normal">465</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_outputs_flattened</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Retrieve and flatten model outputs.</span>
 
@@ -4319,25 +3761,25 @@ metric priorities and sorting preferences to produce rankings.</p>
 
             <details class="quote">
               <summary>Source code in <code>pnpxai/core/experiment/experiment.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">705</span>
-<span class="normal">706</span>
-<span class="normal">707</span>
-<span class="normal">708</span>
-<span class="normal">709</span>
-<span class="normal">710</span>
-<span class="normal">711</span>
-<span class="normal">712</span>
-<span class="normal">713</span>
-<span class="normal">714</span>
-<span class="normal">715</span>
-<span class="normal">716</span>
-<span class="normal">717</span>
-<span class="normal">718</span>
-<span class="normal">719</span>
-<span class="normal">720</span>
-<span class="normal">721</span>
-<span class="normal">722</span>
-<span class="normal">723</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_targets_flattened</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]:</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">428</span>
+<span class="normal">429</span>
+<span class="normal">430</span>
+<span class="normal">431</span>
+<span class="normal">432</span>
+<span class="normal">433</span>
+<span class="normal">434</span>
+<span class="normal">435</span>
+<span class="normal">436</span>
+<span class="normal">437</span>
+<span class="normal">438</span>
+<span class="normal">439</span>
+<span class="normal">440</span>
+<span class="normal">441</span>
+<span class="normal">442</span>
+<span class="normal">443</span>
+<span class="normal">444</span>
+<span class="normal">445</span>
+<span class="normal">446</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">get_targets_flattened</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tensor</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Retrieve and flatten target data.</span>
 
@@ -4516,7 +3958,10 @@ If not provided, the method processes all available data, explainers, postproces
 
             <details class="quote">
               <summary>Source code in <code>pnpxai/core/experiment/experiment.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">314</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span>
 <span class="normal">315</span>
 <span class="normal">316</span>
 <span class="normal">317</span>
@@ -4581,10 +4026,7 @@ If not provided, the method processes all available data, explainers, postproces
 <span class="normal">376</span>
 <span class="normal">377</span>
 <span class="normal">378</span>
-<span class="normal">379</span>
-<span class="normal">380</span>
-<span class="normal">381</span>
-<span class="normal">382</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">optimize</span><span class="p">(</span>
+<span class="normal">379</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">optimize</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">data_ids</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span>
     <span class="n">explainer_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -4755,7 +4197,11 @@ processing data, and generating explanations. It then caches the results in the 
 
             <details class="quote">
               <summary>Source code in <code>pnpxai/core/experiment/experiment.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">223</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
 <span class="normal">224</span>
 <span class="normal">225</span>
 <span class="normal">226</span>
@@ -4790,10 +4236,7 @@ processing data, and generating explanations. It then caches the results in the 
 <span class="normal">255</span>
 <span class="normal">256</span>
 <span class="normal">257</span>
-<span class="normal">258</span>
-<span class="normal">259</span>
-<span class="normal">260</span>
-<span class="normal">261</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">postprocess_batch</span><span class="p">(</span>
+<span class="normal">258</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">postprocess_batch</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">data_ids</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
     <span class="n">explainer_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
@@ -4829,7 +4272,8 @@ processing data, and generating explanations. It then caches the results in the 
             <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mod</span><span class="p">,</span> <span class="n">TextModality</span><span class="p">)</span>
             <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pp</span><span class="o">.</span><span class="n">pooling_fn</span><span class="p">,</span> <span class="n">Identity</span><span class="p">)</span>
         <span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;postprocessor </span><span class="si">{</span><span class="n">postprocessor_id</span><span class="si">}</span><span class="s1"> does not support explainer </span><span class="si">{</span><span class="n">explainer_id</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;postprocessor </span><span class="si">{</span><span class="n">postprocessor_id</span><span class="si">}</span><span class="s1"> does not support explainer </span><span class="si">{</span><span class="n">explainer_id</span><span class="si">}</span><span class="s1">.&#39;</span><span class="p">)</span>
         <span class="n">batch</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pp</span><span class="p">(</span><span class="n">attr</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">format_out_tuple_if_single</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
@@ -4905,7 +4349,12 @@ processing data, and generating explanations. It then caches the results in the 
 
             <details class="quote">
               <summary>Source code in <code>pnpxai/core/experiment/experiment.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">166</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
 <span class="normal">167</span>
 <span class="normal">168</span>
 <span class="normal">169</span>
@@ -4925,11 +4374,7 @@ processing data, and generating explanations. It then caches the results in the 
 <span class="normal">183</span>
 <span class="normal">184</span>
 <span class="normal">185</span>
-<span class="normal">186</span>
-<span class="normal">187</span>
-<span class="normal">188</span>
-<span class="normal">189</span>
-<span class="normal">190</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">predict_batch</span><span class="p">(</span>
+<span class="normal">186</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">predict_batch</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">data_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
 <span class="p">):</span>
@@ -4944,6 +4389,7 @@ processing data, and generating explanations. It then caches the results in the 
 
 <span class="sd">    This method orchestrates the experiment by configuring the manager and processing data. It then caches the results in the manager, and returns back to the user.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">data_ids_pred</span> <span class="o">=</span> <span class="p">[</span>
         <span class="n">idx</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">data_ids</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_output_by_id</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span>
@@ -4963,278 +4409,8 @@ processing data, and generating explanations. It then caches the results in the 
 <div class="doc doc-object doc-function">
 
 
-<h3 id="pnpxai.core.experiment.experiment.Experiment.run" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">run</span><span class="p">(</span><span class="n">data_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">explainer_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">postprocessor_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metric_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
-
-</h3>
-
-
-    <div class="doc doc-contents ">
-
-      <p>Run the experiment by processing data, generating explanations, evaluating with metrics, caching and retrieving the data.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td><code>data_ids</code></td>
-            <td>
-                  <code><span title="typing.Optional">Optional</span>[<span title="typing.Sequence">Sequence</span>[int]]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>A sequence of data IDs to specify the subset of data to process.</p>
-              </div>
-            </td>
-            <td>
-                  <code>None</code>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code>explainer_ids</code></td>
-            <td>
-                  <code><span title="typing.Optional">Optional</span>[<span title="typing.Sequence">Sequence</span>[int]]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>A sequence of explainer IDs to specify the subset of explainers to use.</p>
-              </div>
-            </td>
-            <td>
-                  <code>None</code>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code>postprocessor_ids</code></td>
-            <td>
-                  <code><span title="typing.Optional">Optional</span>[<span title="typing.Sequence">Sequence</span>[int]]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>A sequence of postprocessor IDs to specify the subset of postprocessors to use.</p>
-              </div>
-            </td>
-            <td>
-                  <code>None</code>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-            <td><code>metric_ids</code></td>
-            <td>
-                  <code><span title="typing.Optional">Optional</span>[<span title="typing.Sequence">Sequence</span>[int]]</code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>A sequence of metric IDs to specify the subset of metrics to evaluate.</p>
-              </div>
-            </td>
-            <td>
-                  <code>None</code>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                  <code><a class="autorefs autorefs-internal" title="pnpxai.core.experiment.experiment.Experiment" href="#pnpxai.core.experiment.experiment.Experiment">Experiment</a></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>The Experiment instance with updated results and state.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-      <p>This method orchestrates the experiment by configuring the manager, obtaining explainer and metric instances,
-processing data, generating explanations, and evaluating metrics. It then saves the results in the manager.</p>
-<p>Note: The input parameters allow for flexibility in specifying subsets of data, explainers, and metrics to process.
-If not provided, the method processes all available data, explainers, postprocessors, and metrics.</p>
-
-            <details class="quote">
-              <summary>Source code in <code>pnpxai/core/experiment/experiment.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">384</span>
-<span class="normal">385</span>
-<span class="normal">386</span>
-<span class="normal">387</span>
-<span class="normal">388</span>
-<span class="normal">389</span>
-<span class="normal">390</span>
-<span class="normal">391</span>
-<span class="normal">392</span>
-<span class="normal">393</span>
-<span class="normal">394</span>
-<span class="normal">395</span>
-<span class="normal">396</span>
-<span class="normal">397</span>
-<span class="normal">398</span>
-<span class="normal">399</span>
-<span class="normal">400</span>
-<span class="normal">401</span>
-<span class="normal">402</span>
-<span class="normal">403</span>
-<span class="normal">404</span>
-<span class="normal">405</span>
-<span class="normal">406</span>
-<span class="normal">407</span>
-<span class="normal">408</span>
-<span class="normal">409</span>
-<span class="normal">410</span>
-<span class="normal">411</span>
-<span class="normal">412</span>
-<span class="normal">413</span>
-<span class="normal">414</span>
-<span class="normal">415</span>
-<span class="normal">416</span>
-<span class="normal">417</span>
-<span class="normal">418</span>
-<span class="normal">419</span>
-<span class="normal">420</span>
-<span class="normal">421</span>
-<span class="normal">422</span>
-<span class="normal">423</span>
-<span class="normal">424</span>
-<span class="normal">425</span>
-<span class="normal">426</span>
-<span class="normal">427</span>
-<span class="normal">428</span>
-<span class="normal">429</span>
-<span class="normal">430</span>
-<span class="normal">431</span>
-<span class="normal">432</span>
-<span class="normal">433</span>
-<span class="normal">434</span>
-<span class="normal">435</span>
-<span class="normal">436</span>
-<span class="normal">437</span>
-<span class="normal">438</span>
-<span class="normal">439</span>
-<span class="normal">440</span>
-<span class="normal">441</span>
-<span class="normal">442</span>
-<span class="normal">443</span>
-<span class="normal">444</span>
-<span class="normal">445</span>
-<span class="normal">446</span>
-<span class="normal">447</span>
-<span class="normal">448</span>
-<span class="normal">449</span>
-<span class="normal">450</span>
-<span class="normal">451</span>
-<span class="normal">452</span>
-<span class="normal">453</span>
-<span class="normal">454</span>
-<span class="normal">455</span>
-<span class="normal">456</span>
-<span class="normal">457</span>
-<span class="normal">458</span>
-<span class="normal">459</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">run</span><span class="p">(</span>
-    <span class="bp">self</span><span class="p">,</span>
-    <span class="n">data_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">explainer_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">postprocessor_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="n">metric_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Experiment&#39;</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Run the experiment by processing data, generating explanations, evaluating with metrics, caching and retrieving the data.</span>
-
-<span class="sd">    Args:</span>
-<span class="sd">        data_ids (Optional[Sequence[int]]): A sequence of data IDs to specify the subset of data to process.</span>
-<span class="sd">        explainer_ids (Optional[Sequence[int]]): A sequence of explainer IDs to specify the subset of explainers to use.</span>
-<span class="sd">        postprocessor_ids (Optional[Sequence[int]]): A sequence of postprocessor IDs to specify the subset of postprocessors to use.</span>
-<span class="sd">        metric_ids (Optional[Sequence[int]]): A sequence of metric IDs to specify the subset of metrics to evaluate.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        The Experiment instance with updated results and state.</span>
-
-<span class="sd">    This method orchestrates the experiment by configuring the manager, obtaining explainer and metric instances,</span>
-<span class="sd">    processing data, generating explanations, and evaluating metrics. It then saves the results in the manager.</span>
-
-<span class="sd">    Note: The input parameters allow for flexibility in specifying subsets of data, explainers, and metrics to process.</span>
-<span class="sd">    If not provided, the method processes all available data, explainers, postprocessors, and metrics.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">reset_errors</span><span class="p">()</span>
-    <span class="c1"># self.manager.set_config(data_ids, explainer_ids, metrics_ids)</span>
-
-    <span class="c1"># inference</span>
-
-    <span class="c1"># data_ids is filtered out data indices whose output is saved in cache</span>
-    <span class="n">data</span><span class="p">,</span> <span class="n">data_ids_pred</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_data_to_predict</span><span class="p">(</span><span class="n">data_ids</span><span class="p">)</span>
-    <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">save_outputs</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">data_ids_pred</span><span class="p">)</span>
-
-    <span class="c1"># explain</span>
-    <span class="n">explainers</span><span class="p">,</span> <span class="n">explainer_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_explainers</span><span class="p">(</span><span class="n">explainer_ids</span><span class="p">)</span>
-    <span class="n">postprocessors</span><span class="p">,</span> <span class="n">postprocessor_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_postprocessors</span><span class="p">(</span><span class="n">postprocessor_ids</span><span class="p">)</span>
-    <span class="n">metrics</span><span class="p">,</span> <span class="n">metric_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_metrics</span><span class="p">(</span><span class="n">metric_ids</span><span class="p">)</span>
-
-    <span class="k">for</span> <span class="n">explainer</span><span class="p">,</span> <span class="n">explainer_id</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">explainers</span><span class="p">,</span> <span class="n">explainer_ids</span><span class="p">):</span>
-        <span class="n">explainer_name</span> <span class="o">=</span> <span class="n">class_to_string</span><span class="p">(</span><span class="n">explainer</span><span class="p">)</span>
-
-        <span class="c1"># data_ids is filtered out data indices whose explanation is saved in cache</span>
-        <span class="n">data</span><span class="p">,</span> <span class="n">data_ids_expl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_data_to_process_for_explainer</span><span class="p">(</span>
-            <span class="n">explainer_id</span><span class="p">,</span> <span class="n">data_ids</span><span class="p">)</span>
-        <span class="n">explanations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_explain</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">data_ids_expl</span><span class="p">,</span> <span class="n">explainer</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">save_explanations</span><span class="p">(</span>
-            <span class="n">explanations</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">data_ids_expl</span><span class="p">,</span> <span class="n">explainer_id</span>
-        <span class="p">)</span>
-        <span class="n">message</span> <span class="o">=</span> <span class="n">get_message</span><span class="p">(</span>
-            <span class="s1">&#39;experiment.event.explainer&#39;</span><span class="p">,</span> <span class="n">explainer</span><span class="o">=</span><span class="n">explainer_name</span>
-        <span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Experiment] </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fire</span><span class="p">(</span><span class="n">ExperimentObservableEvent</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">explainer</span><span class="p">))</span>
-
-        <span class="k">for</span> <span class="n">postprocessor</span><span class="p">,</span> <span class="n">postprocessor_id</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">postprocessors</span><span class="p">,</span> <span class="n">postprocessor_ids</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">metric</span><span class="p">,</span> <span class="n">metric_id</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">metrics</span><span class="p">,</span> <span class="n">metric_ids</span><span class="p">):</span>
-                <span class="n">metric_name</span> <span class="o">=</span> <span class="n">class_to_string</span><span class="p">(</span><span class="n">metric</span><span class="p">)</span>
-                <span class="n">data</span><span class="p">,</span> <span class="n">data_ids_eval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_data_to_process_for_metric</span><span class="p">(</span>
-                    <span class="n">explainer_id</span><span class="p">,</span> <span class="n">postprocessor_id</span><span class="p">,</span> <span class="n">metric_id</span><span class="p">,</span> <span class="n">data_ids</span><span class="p">)</span>
-                <span class="n">explanations</span><span class="p">,</span> <span class="n">data_ids_eval</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_valid_explanations</span><span class="p">(</span>
-                    <span class="n">explainer_id</span><span class="p">,</span> <span class="n">data_ids_eval</span><span class="p">)</span>
-                <span class="n">data</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_data</span><span class="p">(</span><span class="n">data_ids_eval</span><span class="p">)</span>
-                <span class="n">evaluations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_evaluate</span><span class="p">(</span>
-                    <span class="n">data</span><span class="p">,</span> <span class="n">data_ids_eval</span><span class="p">,</span> <span class="n">explanations</span><span class="p">,</span> <span class="n">explainer</span><span class="p">,</span> <span class="n">postprocessor</span><span class="p">,</span> <span class="n">metric</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">save_evaluations</span><span class="p">(</span>
-                    <span class="n">evaluations</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">data_ids_eval</span><span class="p">,</span> <span class="n">explainer_id</span><span class="p">,</span> <span class="n">postprocessor_id</span><span class="p">,</span> <span class="n">metric_id</span><span class="p">)</span>
-
-                <span class="n">message</span> <span class="o">=</span> <span class="n">get_message</span><span class="p">(</span>
-                    <span class="s1">&#39;experiment.event.explainer.metric&#39;</span><span class="p">,</span> <span class="n">explainer</span><span class="o">=</span><span class="n">explainer_name</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="n">metric_name</span><span class="p">)</span>
-                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;[Experiment] </span><span class="si">{</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">fire</span><span class="p">(</span><span class="n">ExperimentObservableEvent</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">explainer</span><span class="p">,</span> <span class="n">metric</span><span class="p">))</span>
-    <span class="k">return</span> <span class="bp">self</span>
-</code></pre></div></td></tr></table></div>
-            </details>
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
 <h3 id="pnpxai.core.experiment.experiment.Experiment.run_batch" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">run_batch</span><span class="p">(</span><span class="n">data_ids</span><span class="p">,</span> <span class="n">explainer_id</span><span class="p">,</span> <span class="n">postprocessor_id</span><span class="p">,</span> <span class="n">metric_id</span><span class="p">)</span></code>
+            <code class="highlight language-python"><span class="n">run_batch</span><span class="p">(</span><span class="n">explainer_id</span><span class="p">,</span> <span class="n">postprocessor_id</span><span class="p">,</span> <span class="n">metric_id</span><span class="p">,</span> <span class="n">data_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 </h3>
 
@@ -5266,7 +4442,7 @@ If not provided, the method processes all available data, explainers, postproces
               </div>
             </td>
             <td>
-                <em>required</em>
+                  <code>None</code>
             </td>
           </tr>
           <tr class="doc-section-item">
@@ -5342,7 +4518,14 @@ processing data, generating explanations, and evaluating metrics. It then caches
 
             <details class="quote">
               <summary>Source code in <code>pnpxai/core/experiment/experiment.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">123</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
 <span class="normal">124</span>
 <span class="normal">125</span>
 <span class="normal">126</span>
@@ -5378,17 +4561,12 @@ processing data, generating explanations, and evaluating metrics. It then caches
 <span class="normal">156</span>
 <span class="normal">157</span>
 <span class="normal">158</span>
-<span class="normal">159</span>
-<span class="normal">160</span>
-<span class="normal">161</span>
-<span class="normal">162</span>
-<span class="normal">163</span>
-<span class="normal">164</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">run_batch</span><span class="p">(</span>
+<span class="normal">159</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">run_batch</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
-    <span class="n">data_ids</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
     <span class="n">explainer_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">postprocessor_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">metric_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">data_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Runs the experiment for selected batch of data, explainer, postprocessor and metric.</span>
@@ -5407,6 +4585,8 @@ processing data, generating explanations, and evaluating metrics. It then caches
 
 <span class="sd">    Note: The input parameters allow for flexibility in specifying subset of data, explainer, postprocessor and metric to process.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data_ids</span> <span class="o">=</span> <span class="n">data_ids</span> <span class="k">if</span> <span class="n">data_ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">manager</span><span class="o">.</span><span class="n">get_data_ids</span><span class="p">(</span>
+        <span class="n">data_ids</span><span class="p">)</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">predict_batch</span><span class="p">(</span><span class="n">data_ids</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">explain_batch</span><span class="p">(</span><span class="n">data_ids</span><span class="p">,</span> <span class="n">explainer_id</span><span class="p">)</span>

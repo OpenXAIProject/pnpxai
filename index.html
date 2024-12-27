@@ -260,6 +260,24 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#tutorials" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tutorials
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      Use Cases
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#acknowledgements" class="md-nav__link">
     <span class="md-ellipsis">
       Acknowledgements
@@ -1063,6 +1081,24 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#tutorials" class="md-nav__link">
+    <span class="md-ellipsis">
+      Tutorials
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#use-cases" class="md-nav__link">
+    <span class="md-ellipsis">
+      Use Cases
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#acknowledgements" class="md-nav__link">
     <span class="md-ellipsis">
       Acknowledgements
@@ -1126,8 +1162,12 @@
 <hr>
 
 <h2 id="installation">Installation</h2>
-<p>To install <code>pnpxai</code>, run the following command:</p>
-<pre><code class="language-bash"># Command lines for installation
+<p>To install <code>pnpxai</code> from <code>pip</code>, run the following command:</p>
+<pre><code class="language-bash">pip install pnpxai
+</code></pre>
+<p>To install <code>pnpxai</code> from <code>GitHub</code>, run the following commands:</p>
+<pre><code class="language-bash">git clone git@github.com:OpenXAIProject/pnpxai.git
+cd pnpxai
 pip install -e .
 </code></pre>
 <hr>
@@ -1138,7 +1178,7 @@ pip install -e .
 <p>The explanation module can be specified according to a modality, which fits best for the user's task. Specifically, <code>pnpxai</code> offers <a href="api/core/auto_explanation/#pnpxai.core.experiment.auto_explanation.AutoExplanationForImageClassification"><code>AutoExplanationForImageClassification</code></a>, <a href="api/core/auto_explanation/#pnpxai.core.experiment.auto_explanation.AutoExplanationForTextClassification"><code>AutoExplanationForTextClassification</code></a>, <a href="api/core/auto_explanation/#pnpxai.core.experiment.auto_explanation.AutoExplanationForTSClassification"><code>AutoExplanationForTSClassification</code></a>,
 <a href="api/core/auto_explanation/#pnpxai.core.experiment.auto_explanation.AutoExplanationForVisualQuestionAnswering"><code>AutoExplanationForVisualQuestionAnswering</code></a>, which can be utilized for image, test, time series, and a combination of image and text modalities respectively.</p>
 <pre><code class="language-python">import torch
-from torcu.utils.data import DataLoader
+from torch.utils.data import DataLoader
 
 from pnpxai import AutoExplanationForImageClassification
 
@@ -1177,7 +1217,7 @@ optimized = experiment.optimize(
 </code></pre>
 <p>Complete backbone of initialization code can be represented as follows:</p>
 <pre><code class="language-python">import torch
-from torcu.utils.data import DataLoader
+from torch.utils.data import DataLoader
 
 from pnpxai import AutoExplanationForImageClassification
 
@@ -1215,7 +1255,7 @@ optimized = experiment.optimize(
 <p><code>AutoExplanationForImageClassification</code> class is guided by <a href="recommender/"><code>pnpxai.XaiRecommender</code></a> to select the most applicable explainers, and metrics for experiment. However, <code>pnpxai</code> additionally provides API to manually define explainers and metrics to use.</p>
 <p>Here, users are asked to manually define modalities, in order to enable modality-dependent control flow. The <code>pnpxai</code> package comes with a set of predefined modalities, namely <a href="api/core/modality/#pnpxai.core.modality.modality.ImageModality"><code>ImageModality</code></a>, <a href="api/core/modality/#pnpxai.core.modality.modality.TextModality"><code>TextModality</code></a>, <a href="api/core/modality/#pnpxai.core.modality.modality.TimeSeriesModality"><code>TimeSeriesModality</code></a>. However, API also enables extension possiblity with the help of a <a href="api/core/modality/#pnpxai.core.modality.modality.Modality"><code>Modality</code></a> base class.</p>
 <pre><code class="language-python">import torch
-from torcu.utils.data import DataLoader
+from torch.utils.data import DataLoader
 
 from pnpxai import Experiment
 from pnpxai.core.modality import ImageModality
@@ -1256,6 +1296,36 @@ experiment = Experiment(
 </code></pre>
 <hr>
 
+<h2 id="tutorials">Tutorials</h2>
+<ul>
+<li><a href="https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/auto_explanation_imagenet_example.py">Image Classification</a></li>
+<li><a href="https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/auto_explanation_imdb_example.py">Text Classification</a></li>
+<li><a href="https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/auto_explanation_ts_example.py">Time Series Classification</a></li>
+<li><a href="https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/auto_explanation_vqa_example.py">Visual Question Answering</a></li>
+<li><a href="https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/evaluator.py">Evaluator</a></li>
+<li><a href="https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/imagenet_example_all_explainers.md">ImageNet Example All Explainers</a></li>
+<li><a href="https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/imagenet_example_all_metrics.md">ImageNet Example All Metrics</a></li>
+<li><a href="https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/gfgp_tutorial.py">Free MCG</a> [<a href="https://arxiv.org/abs/2411.15265">Reference</a>] </li>
+</ul>
+<hr>
+
+<h2 id="use-cases">Use Cases</h2>
+<p>Medical Domain Explainability</p>
+<ul>
+<li>
+<p>Counterfactual Explanation (<a href="https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/LEAR_example_all_explainers.md">LEAR (Learn-Explain-Reinforce)</a>) for Alzheimer’s Disease Diagnosis, a joint work with Research Task 2 (PI Bohyung Han, Seoul National University) [<a href="https://ieeexplore.ieee.org/document/9854196">Reference</a>]</p>
+</li>
+<li>
+<p>Attribution-based Explanation for <a href="https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/xai_ddk_pnpxai_example.md">Dysarthria Diagnosis</a>, a joint work with Research Task 3 (PI Myoung-Wan Koo, Sogang University)</p>
+</li>
+</ul>
+<p>LLM Trsutworthiness</p>
+<ul>
+<li>Evaluating the Factuality of Korean Text Generated by LLMs (<a href="https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/fact_score_example_korfactscore.py">KorFactScore (Korean Factual precision in atomicity Score)</a>), a joint work with Research Task 4 (PI Kyongman Bae, ETRI)
+ [<a href="https://github.com/ETRI-XAINLP/KorFactScore">Reference</a>]</li>
+</ul>
+<hr>
+
 <h2 id="acknowledgements">Acknowledgements</h2>
 <blockquote>
 <p>This research was initiated by KAIST XAI Center and conducted in collaboration with multiple institutions, including Seoul National University, Korea University, Sogang University, and ETRI.
@@ -1264,7 +1334,7 @@ We are grateful for the grant from the Institute of Information &amp; communicat
 <hr>
 
 <h2 id="license">License</h2>
-<p>PnP XAI is released under Apache license 2.0. See <a href="LICENSE">LICENSE</a> for additional details.</p>
+<p>PnP XAI is released under Apache license 2.0. See <a href="https://github.com/OpenXAIProject/pnpxai/tree/main/LICENSE">LICENSE</a> for additional details.</p>
 
 
 
