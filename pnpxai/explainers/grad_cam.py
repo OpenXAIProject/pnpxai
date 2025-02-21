@@ -1,15 +1,15 @@
-from typing import Dict, Tuple
+from typing import Optional, List, Union, Any, Callable
 from torch import Tensor, nn
 from captum.attr import LayerGradCam, LayerAttribution
 
-from pnpxai.utils import format_into_tuple
 from pnpxai.core.detector.types import Convolution
-from pnpxai.explainers.base import Explainer
+from pnpxai.explainers.base import Explainer, Tunable
 from pnpxai.explainers.utils import find_cam_target_layer
+from pnpxai.explainers.types import TunableParameter
 from pnpxai.explainers.errors import NoCamTargetLayerAndNotTraceableError
 
 
-class GradCam(Explainer):
+class GradCam(Explainer, Tunable):
     """
     GradCAM explainer.
 
@@ -25,18 +25,39 @@ class GradCam(Explainer):
     """
 
     SUPPORTED_MODULES = [Convolution]
+    SUPPORTED_DTYPES = [float]
+    SUPPORTED_NDIMS = [2, 4]
 
     def __init__(
-        self, model: nn.Module, interpolate_mode: str = "bilinear", **kwargs
+        self,
+        model: nn.Module,
+        interpolate_mode: str = "bilinear",
+        target_input_keys: Optional[List[Union[str, int]]] = None,
+        additional_input_keys: Optional[List[Union[str, int]]] = None,
+        output_modifier: Optional[Callable[[Any], Tensor]] = None,
     ) -> None:
-        super().__init__(model, **kwargs)
-        self.interpolate_mode = interpolate_mode
+        self.interpolate_mode = TunableParameter(
+            name='interpolate_mode',
+            current_value=interpolate_mode,
+            dtype=str,
+            is_leaf=True,
+            space={'choices': ['bilinear', 'bicubic', 'nearest', 'nearest-exact']},
+        )
+        Explainer.__init__(
+            self,
+            model,
+            target_input_keys,
+            additional_input_keys,
+            output_modifier,
+        )
+        Tunable.__init__(self)
+        self.register_tunable_params([self.interpolate_mode])
 
     @property
     def layer(self):
         try:
             return self._layer or find_cam_target_layer(self.model)
-        except:
+        except Exception:
             raise NoCamTargetLayerAndNotTraceableError(
                 'You did not set cam target layer and',
                 'it does not automatically determined.',
@@ -59,10 +80,7 @@ class GradCam(Explainer):
         Returns:
             torch.Tensor: The result of the explanation.
         """
-        forward_args, additional_forward_args = self._extract_forward_args(inputs)
-        forward_args = format_into_tuple(forward_args)
-        additional_forward_args = format_into_tuple(additional_forward_args)
-
+        forward_args, additional_forward_args = self.format_inputs(inputs)
         assert (
             len(forward_args) == 1
         ), "GradCam for multiple inputs is not supported yet."
@@ -78,17 +96,6 @@ class GradCam(Explainer):
         upsampled = LayerAttribution.interpolate(
             layer_attribution=attrs,
             interpolate_dims=forward_args[0].shape[2:],
-            interpolate_mode=self.interpolate_mode,
+            interpolate_mode=self.interpolate_mode.current_value,
         )
         return upsampled
-
-    def get_tunables(self) -> Dict[str, Tuple[type, dict]]:
-        """
-        Provides Tunable parameters for the optimizer
-
-        Tunable parameters:
-            `interpolate_mode` (str): Value can be selected of `"bilinear"` and `"bicubic"`
-        """
-        return {
-            "interpolate_mode": (list, {"choices": ["bilinear", "bicubic"]}),
-        }

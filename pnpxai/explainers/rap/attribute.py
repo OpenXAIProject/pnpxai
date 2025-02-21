@@ -1,4 +1,4 @@
-from typing import Any, Optional, Dict
+from typing import Any, Optional, Dict, Optional, List, Union, Callable
 
 import torch
 from torch import Tensor, nn
@@ -23,9 +23,22 @@ class RAP(Explainer):
     """
 
     SUPPORTED_MODULES = [Linear, Convolution]
+    SUPPORTED_DTYPES = [float]
+    SUPPORTED_NDIMS = [4]
 
-    def __init__(self, model: Model):
-        super().__init__(model)
+    def __init__(
+        self,
+        model: Model,
+        target_input_keys: Optional[List[Union[str, int]]] = None,
+        additional_input_keys: Optional[List[Union[str, int]]] = None,
+        output_modifier: Optional[Callable[[Any], Tensor]] = None,
+    ):
+        super().__init__(
+            model,
+            target_input_keys,
+            additional_input_keys,
+            output_modifier,
+        )
         self.method = RelativeAttributePropagation(model)
 
     def compute_pred(self, output: Tensor) -> Tensor:
@@ -59,7 +72,11 @@ class RAP(Explainer):
         Returns:
             DataSource: RAP attributions.
         """
-        outputs = self.method.run(inputs)
+        inputs, _ = self.format_inputs(inputs)
+        assert (
+            len(inputs) == 1
+        ), "RAP for multiple inputs is not supported."
+        outputs = self.method.run(*inputs)
         preds = self.compute_pred(outputs)
         relprop = self.method.relprop(preds)
         return relprop

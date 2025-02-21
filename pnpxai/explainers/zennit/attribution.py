@@ -1,11 +1,10 @@
-from typing import Optional, Sequence, Union, List, Tuple, Callable, Any, Dict, Literal
+from typing import Optional, Sequence, Union, List, Tuple, Callable, Any, Dict
 
 from collections import defaultdict
 import threading
 
 import torch
 import torchvision.transforms.functional as TF
-from torch import Tensor, device
 from torch.nn import Module
 from captum._utils.common import _run_forward, _sort_key_list, _reduce_list
 from captum._utils.gradient import (
@@ -27,12 +26,13 @@ class Gradient(ZennitGradient):
     def __init__(
         self,
         model: Module,
-        composite: Optional[Composite]=None,
+        composite: Optional[Composite] = None,
         attr_output=None,
         create_graph=False,
         retain_graph=None,
     ) -> None:
-        super().__init__(model, composite, attr_output, create_graph, retain_graph)
+        super().__init__(
+            model, composite, attr_output, create_graph, retain_graph)
 
     def grad(self, forward_args, targets, additional_forward_args=None):
         self._process_forward_args_before_grad(forward_args)
@@ -75,12 +75,13 @@ class LayerGradient(Gradient):
         self,
         model: Module,
         layer: Union[str, Module, Sequence[Union[str, Module]]],
-        composite: Optional[Composite]=None,
+        composite: Optional[Composite] = None,
         attr_output=None,
         create_graph=False,
         retain_graph=None,
     ) -> None:
-        super().__init__(model, composite, attr_output, create_graph, retain_graph)
+        super().__init__(
+            model, composite, attr_output, create_graph, retain_graph)
         self.layer = layer
 
     def grad(self, forward_args, targets, additional_forward_args=None):
@@ -101,23 +102,24 @@ class SmoothGradient(Gradient):
     def __init__(
         self,
         model: Module,
-        noise_level: Union[float, List[float]]=.1,
-        n_iter: int=20,
-        composite: Optional[Composite]=None,
+        noise_level: Union[float, List[float]] = .1,
+        n_iter: int = 20,
+        composite: Optional[Composite] = None,
         attr_output=None,
         create_graph=None,
         retain_graph=None,
     ) -> None:
-        super().__init__(model, composite, attr_output, create_graph, retain_graph)
+        super().__init__(
+            model, composite, attr_output, create_graph, retain_graph)
         self.noise_level = noise_level
         self.n_iter = n_iter
 
     def forward(
         self,
-        inputs: TensorOrTupleOfTensors,
+        inputs: Tensor,
         targets: Tensor,
-        additional_forward_args: Optional[TensorOrTupleOfTensors]=None,
-        return_squared: bool=False,
+        additional_forward_args: Optional[TensorOrTupleOfTensors] = None,
+        return_squared: bool = False,
     ):
         dims = tuple(range(1, inputs.ndim))
         std = self.noise_level * (inputs.amax(dims, keepdim=True) - inputs.amin(dims, keepdim=True))
@@ -224,8 +226,8 @@ def _forward_layer_distributed_eval_with_noise(
     forward_hook_with_return: bool = True,
     require_layer_grads: bool = True,
 ) -> Union[
-    Tuple[Dict[Module, Dict[device, Tuple[Tensor, ...]]], Tensor],
-    Dict[Module, Dict[device, Tuple[Tensor, ...]]],
+    Tuple[Dict[Module, Dict[torch.device, Tuple[Tensor, ...]]], Tensor],
+    Dict[Module, Dict[torch.device, Tuple[Tensor, ...]]],
 ]:
     r"""
     A helper function that allows to set a hook on model's `layer`, run the forward
@@ -313,7 +315,6 @@ def _forward_layer_distributed_eval_with_noise(
     if forward_hook_with_return:
         return saved_layer, output
     return saved_layer
-
 
 
 def compute_layer_gradients_and_eval_with_noise(

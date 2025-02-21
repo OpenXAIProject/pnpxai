@@ -1,4 +1,7 @@
-from typing import Any, Callable, Optional, Sequence, Union, List, Literal
+from typing import Any, Callable, Optional, Sequence, Union, List, Literal, Type, Dict
+import itertools
+import inspect
+from collections import defaultdict
 
 import torch
 from torch import Tensor
@@ -6,11 +9,21 @@ import numpy as np
 import optuna
 
 from pnpxai.core._types import DataSource, Model
-from pnpxai.core.modality.modality import Modality, TextModality
-from pnpxai.core.experiment.experiment_metrics_defaults import EVALUATION_METRIC_REVERSE_SORT, EVALUATION_METRIC_SORT_PRIORITY
+from pnpxai.core.modality.modality import Modality
+from pnpxai.core.experiment.experiment_metrics_defaults import (
+    EVALUATION_METRIC_REVERSE_SORT,
+    EVALUATION_METRIC_SORT_PRIORITY,
+)
 from pnpxai.core.experiment.manager import ExperimentManager
+from pnpxai.core.utils import ModelWrapper
 from pnpxai.explainers import Explainer, Lime, KernelShap
-from pnpxai.explainers.utils.postprocess import Identity
+from pnpxai.explainers.base import Tunable
+from pnpxai.explainers.utils import FunctionSelector
+from pnpxai.explainers.utils.postprocess import Identity, PostProcessor
+from pnpxai.explainers.types import (
+    TensorOrTupleOfTensors,
+    TargetLayerOrTupleOfTargetLayers,
+)
 from pnpxai.evaluator.optimizer.types import OptimizationOutput
 from pnpxai.evaluator.optimizer.objectives import Objective
 from pnpxai.evaluator.optimizer.utils import (
@@ -18,6 +31,7 @@ from pnpxai.evaluator.optimizer.utils import (
     get_default_n_trials,
 )
 from pnpxai.evaluator.metrics.base import Metric
+from pnpxai.core.experiment.types import ExperimentOutput
 
 from pnpxai.utils import (
     class_to_string, Observable, to_device,
@@ -50,7 +64,7 @@ class Experiment(Observable):
         metrics (Optional[Sequence[Metric]]): Evaluation metrics used to assess model interpretability.
         input_extractor (Optional[Callable[[Any], Any]]): Function to extract inputs from data.
         label_extractor (Optional[Callable[[Any], Any]]): Function to extract labels from data.
-        target_extractor (Optional[Callable[[Any], Any]]): Function to extract targets from data.
+        target_class_extractor (Optional[Callable[[Any], Any]]): Function to extract targets from data.
         cache_device (Optional[Union[torch.device, str]]): Device to cache data and results.
         target_labels (bool): True if the target is a label, False otherwise.
 
@@ -69,38 +83,50 @@ class Experiment(Observable):
         model: Model,
         data: DataSource,
         modality: Modality,
-        explainers: Sequence[Explainer],
-        postprocessors: Sequence[Callable],
-        metrics: Sequence[Metric],
-        input_extractor: Optional[Callable[[Any], Any]] = None,
-        label_extractor: Optional[Callable[[Any], Any]] = None,
-        target_extractor: Optional[Callable[[Any], Any]] = None,
-        cache_device: Optional[Union[torch.device, str]] = None,
+        explainers: Optional[Dict[str, Type[Explainer]]] = None,
+        metrics: Optional[Dict[str, Type[Metric]]] = None,
+        target_layer: Optional[TargetLayerOrTupleOfTargetLayers] = None,
+        target_input_keys: Optional[List[Union[str, int]]] = None,
+        additional_input_keys: Optional[List[Union[str, int]]] = None,
+        output_modifier: Optional[Callable[[Any], torch.Tensor]] = None,
+        target_class_extractor: Optional[Callable[[Any], Any]] = None,
+        label_key: Optional[Union[str, int]] = -1,
         target_labels: bool = False,
+        cache_device: Optional[Union[torch.device, str]] = None,
     ):
         super(Experiment, self).__init__()
+
+        # set model
         self.model = model
         self.model_device = next(self.model.parameters()).device
+        self.target_input_keys = target_input_keys
+        self.additional_input_keys = additional_input_keys
+        self.output_modifier = output_modifier
 
+        # set data
         self.manager = ExperimentManager(data=data, cache_device=cache_device)
-        for explainer in explainers:
-            self.manager.add_explainer(explainer)
-        for postprocessor in postprocessors:
-            self.manager.add_postprocessor(postprocessor)
-        for metric in metrics:
-            self.manager.add_metric(metric)
-
-        self.input_extractor = input_extractor \
-            if input_extractor is not None \
-            else default_input_extractor
-        self.label_extractor = label_extractor \
-            if label_extractor is not None \
-            else default_target_extractor
-        self.target_extractor = target_extractor \
-            if target_extractor is not None \
-            else default_target_extractor
-        self.target_labels = target_labels
         self.modality = modality
+
+        # set explainer choices
+        self.explainers = FunctionSelector()
+        if explainers is not None:
+            for k, explainer_type in explainers.items():
+                self.explainers.add(k, explainer_type)
+
+        # set metrics
+        self.metrics = FunctionSelector()
+        if metrics is not None:
+            for k, metric_type in metrics.items():
+                self.metrics.add(k, metric_type)
+
+        self.target_layer = target_layer
+        self.target_class_extractor = target_class_extractor or default_target_extractor
+        self.target_labels = target_labels
+        self.label_key = label_key
+
+        self._explainer_key_to_id = {}
+        self._postprocessor_key_to_id = {}
+        self._metric_key_to_id = {}
         self.reset_errors()
 
     def reset_errors(self):
@@ -113,19 +139,25 @@ class Experiment(Observable):
     def to_device(self, x):
         return to_device(x, self.model_device)
 
+    def _validate_choice(self, selector: FunctionSelector, choice: str):
+        if choice not in selector.choices:
+            raise ValueError(f"'{choice}' not found in {selector}")
+
     def run_batch(
         self,
-        explainer_id: int,
-        postprocessor_id: int,
-        metric_id: int,
+        explainer_key: str,
+        metric_key: str,
         data_ids: Optional[Sequence[int]] = None,
-    ) -> dict:
+        pooling_method: Optional[str] = None,
+        normalization_method: Optional[str] = None,
+        cache=True,
+    ) -> ExperimentOutput:
         """
-        Runs the experiment for selected batch of data, explainer, postprocessor and metric.
+        Runs the experiment for selected batch of data, explainer_key, postprocessor and metric.
 
         Args:
             data_ids (Sequence[int]): A sequence of data IDs to specify the subset of data to process.
-            explainer_id (int): ID of explainer to use for the run.
+            explainer_key (str): ID of explainer to use for the run.
             postprocessor_id (int): ID of postprocessor to use for the run.
             metrics_id (int): ID of metric to use for the run.
 
@@ -137,31 +169,52 @@ class Experiment(Observable):
 
         Note: The input parameters allow for flexibility in specifying subset of data, explainer, postprocessor and metric to process.
         """
+
+        # validate choices
+        self._validate_choice(self.explainers, explainer_key)
+        self._validate_choice(self.metrics, metric_key)
+
         data_ids = data_ids if data_ids is not None else self.manager.get_data_ids(
             data_ids)
 
         self.predict_batch(data_ids)
-        self.explain_batch(data_ids, explainer_id)
-        self.evaluate_batch(
-            data_ids, explainer_id, postprocessor_id, metric_id)
-        data = self.manager.batch_data_by_ids(data_ids)
-        return {
-            'inputs': self.input_extractor(data),
-            'labels': self.label_extractor(data),
-            'outputs': self.manager.batch_outputs_by_ids(data_ids),
-            'targets': self._get_targets(data_ids),
-            'explainer': self.manager.get_explainer_by_id(explainer_id),
-            'explanation': self.manager.batch_explanations_by_ids(data_ids, explainer_id),
-            'postprocessor': self.manager.get_postprocessor_by_id(postprocessor_id),
-            'postprocessed': self.postprocess_batch(data_ids, explainer_id, postprocessor_id),
-            'metric': self.manager.get_metric_by_id(metric_id),
-            'evaluation': self.manager.batch_evaluations_by_ids(data_ids, explainer_id, postprocessor_id, metric_id),
-        }
+        self.explain_batch(data_ids, explainer_key)
+        attrs_pp, pp_methods = self.postprocess_batch(
+            data_ids, explainer_key, pooling_method, normalization_method,
+            return_methods=True,
+        )
+        evals = self.evaluate_batch(
+            data_ids, explainer_key, metric_key,
+            *pp_methods,
+        )
+        return ExperimentOutput(
+            explanations=attrs_pp,
+            evaluations=evals,
+        )
+
+    @property
+    def _wrapped_model(self):
+        return ModelWrapper(
+            model=self.model,
+            target_input_keys=self.target_input_keys,
+            additional_input_keys=self.additional_input_keys,
+            output_modifier=self.output_modifier,
+        )
+
+    def input_extractor(self, batch) -> TensorOrTupleOfTensors:
+        return self._wrapped_model.format_inputs(batch)
+
+    def label_extractor(self, batch) -> Tensor:
+        return batch[self.label_key]
+
+    def _forward_batch(self, batch):
+        formatted_inputs = self._wrapped_model.format_inputs(batch)
+        return self._wrapped_model(*formatted_inputs)
 
     def predict_batch(
         self,
         data_ids: Sequence[int],
-    ):
+    ) -> TensorOrTupleOfTensors:
         """
         Predicts results of the experiment for selected batch of data.
 
@@ -179,17 +232,98 @@ class Experiment(Observable):
             if self.manager.get_output_by_id(idx) is None
         ]
         if len(data_ids_pred) > 0:
-            data = self.manager.batch_data_by_ids(data_ids_pred)
-            outputs = self.model(
-                *format_into_tuple(self.input_extractor(data)))
+            batch = self.manager.batch_data_by_ids(data_ids_pred)
+            outputs = self._forward_batch(batch)
             self.manager.cache_outputs(data_ids_pred, outputs)
         return self.manager.batch_outputs_by_ids(data_ids)
+
+    def _create_instance(
+            self,
+            instance_type: Union[Type[Explainer], Type[Metric]],
+            **kwargs,
+    ) -> Union[Explainer, Metric]:
+        # collect constructors from experiment
+        required_params = dict(inspect.signature(instance_type).parameters)
+        expr_params = dict(inspect.signature(self.__class__).parameters)
+        params_base = {}
+        for param_nm, param in expr_params.items():
+            if param_nm in required_params:
+                required_param = required_params.pop(param_nm)
+                params_base[required_param.name] = getattr(self, required_param.name)
+
+        # update additional constructors
+        additional_params = defaultdict(list)
+        modalities = format_into_tuple(self.modality)
+        for param_nm, param in required_params.items():
+            if param_nm in kwargs:
+                if param_nm in modalities[0].util_functions:
+                    assert isinstance(kwargs[param_nm], Sequence), (
+                        f"'{param_nm}' must be a tuple."
+                    )
+                    assert len(kwargs[param_nm]) == len(modalities), (
+                        f"'{param_nm}' must have same length with modality."
+                    )
+                additional_params[param_nm] = kwargs[param_nm]
+            else:
+                if param_nm in modalities[0].util_functions:
+                    for modality in modalities:
+                        default_fn_key = modality.util_functions[param_nm].choices[0]
+                        default_fn = modality.util_functions[param_nm].select(
+                            default_fn_key,
+                        )
+                        additional_params[param_nm].append(default_fn)
+                elif param.default is inspect.Parameter.empty:
+                    # raise TypeError when returning
+                    continue
+                else:
+                    additional_params[param_nm] = param.default
+
+        # format additional constructors
+        additional_params = {
+            k: tuple(v) if isinstance(v, list) else v
+            for k, v in additional_params.items()
+        }
+        return instance_type(**params_base, **additional_params)
+
+    def create_explainer(self, explainer_key: str, **kwargs) -> Explainer:
+        explainer_type = self.explainers.get(explainer_key)
+        explainer = self._create_instance(explainer_type, **kwargs)
+
+        # set util function space for tunable explainer
+        modalities = format_into_tuple(self.modality)
+        if isinstance(explainer, Tunable):
+            for tunable_param in explainer.tunable_params:
+                if not tunable_param.is_leaf and tunable_param.space is None:
+                    # tunable_param may be one of tunable util functions
+                    fn_key, *_keys = tunable_param.name.split('.')
+                    if _keys:
+                        modality_key, *_ = _keys
+                    else:
+                        modality_key = 0
+                    modality = modalities[int(modality_key)]
+                    tunable_param.set_selector(
+                        modality.util_functions[fn_key], set_space=True)
+        return explainer
+
+    def create_metric(self, metric_key, **kwargs) -> Metric:
+        metric_type = self.metrics.get(metric_key)
+        metric = self._create_instance(metric_type, **kwargs)
+
+        # modify pooling dim
+        modalities = format_into_tuple(self.modality)
+        pooling_dims = tuple()
+        if hasattr(metric, 'pooling_dim'):
+            for modality in modalities:
+                pooling_dims += (modality.pooling_dim,)
+        metric.pooling_dim = format_out_tuple_if_single(pooling_dims)
+        return metric
 
     def explain_batch(
         self,
         data_ids: Sequence[int],
-        explainer_id: int,
-    ):
+        explainer_key: str,
+        **kwargs,
+    ) -> TensorOrTupleOfTensors:
         """
         Explains selected batch of data within experiment.
 
@@ -202,33 +336,45 @@ class Experiment(Observable):
         This method orchestrates the experiment by configuring the manager, obtaining explainer instance,
         processing data, and generating explanations. It then caches the results in the manager, and returns back to the user.
         """
+
+        # collect data_ids not cached yet
+        explainer_id = self._explainer_key_to_id.get(explainer_key, '_placeholder')
         data_ids_expl = [
             idx for idx in data_ids
             if self.manager.get_explanation_by_id(idx, explainer_id) is None
         ]
-        if len(data_ids_expl):
-            data = self.manager.batch_data_by_ids(data_ids_expl)
-            inputs = self.input_extractor(data)
-            targets = self._get_targets(data_ids_expl)
-            explainer = self.manager.get_explainer_by_id(explainer_id)
-            explanations = explainer.attribute(inputs, targets)
+        if len(data_ids_expl) > 0:
+            batch = self.manager.batch_data_by_ids(data_ids_expl)
+            inputs = self._wrapped_model.extract_inputs(batch)
+            targets = self.get_targets_by_id(data_ids_expl)
+            explainer = self.create_explainer(explainer_key, **kwargs)
+
+            # TODO: cache around here
+            if explainer_id == '_placeholder':
+                explainer_id = self.manager.add_explainer(explainer)
+                self._explainer_key_to_id[explainer_key] = explainer_id
+
+            attrs = explainer.attribute(inputs, targets)
             self.manager.cache_explanations(
-                explainer_id, data_ids_expl, explanations)
+                explainer_id, data_ids_expl, attrs)
         return self.manager.batch_explanations_by_ids(data_ids, explainer_id)
 
     def postprocess_batch(
         self,
         data_ids: List[int],
-        explainer_id: int,
-        postprocessor_id: int,
-    ):
+        explainer_key: str,
+        pooling_method: Optional[str] = None,
+        normalization_method: Optional[str] = None,
+        return_methods: bool = False,
+    ) -> TensorOrTupleOfTensors:
         """
         Postprocesses selected batch of data within experiment.
 
         Args:
             data_ids (Sequence[int]): A sequence of data IDs to specify the subset of data to postprocess.
-            explainer_id (int): An explainer ID to specify the explainer to use.
+            explainer_key (str): An explainer ID to specify the explainer to use.
             postprocessor_id (int): A postprocessor ID to specify the postprocessor to use.
+            return_methods (bool): Returns postprocess methods if True
 
         Returns:
             Batched postprocessed model explanations corresponding to data ids.
@@ -236,42 +382,74 @@ class Experiment(Observable):
         This method orchestrates the experiment by configuring the manager, obtaining explainer instance,
         processing data, and generating explanations. It then caches the results in the manager, and returns back to the user.
         """
-        explanations = self.manager.batch_explanations_by_ids(
+        explainer_id = self._explainer_key_to_id.get(explainer_key)
+        pp_key = self._generate_postprocessor_key(
+            pooling_method, normalization_method)
+        pp_id = self._postprocessor_key_to_id.get(pp_key, '_placeholder')
+        mods = format_into_tuple(self.modality)
+        pools = format_into_tuple(pooling_method)
+        norms = format_into_tuple(normalization_method)
+        attrs = self.manager.batch_explanations_by_ids(
             data_ids, explainer_id)
-        postprocessor = self.manager.get_postprocessor_by_id(postprocessor_id)
+        attrs = format_into_tuple(attrs)
+        zipped = itertools.zip_longest(mods, pools, norms, attrs)
+        attrs_pp = tuple()
+        applied_pps = tuple()
+        applied_pools = tuple()
+        applied_norms = tuple()
+        explainer_type = self.explainers.get(explainer_key)
+        for modality, pool, norm, attr in zipped:
+            # given or default pooling method
+            pool = pool or modality.util_functions['pooling_fn'].choices[0]
 
-        modalities = format_into_tuple(self.modality)
-        explanations = format_into_tuple(explanations)
-        postprocessors = format_into_tuple(postprocessor)
+            # TODO: more elegant way
+            skip_pool = (
+                explainer_type in (KernelShap, Lime)
+                and modality.dtype_key == int
+            )
+            if skip_pool:
+                pool = 'identity'
+                modality.util_functions['pooling_fn'].add_fallback_option(
+                    key=pool, value=Identity)
+            norm = norm or modality.util_functions['normalization_fn'].choices[0]
+            pp = PostProcessor(modality, pool, norm)
+            attrs_pp += (pp(attr),)
+            applied_pps += (pp,)
+            applied_pools += (pool,)
+            applied_norms += (norm,)
+        attrs_pp = format_out_tuple_if_single(attrs_pp)
+        if pp_id == '_placeholder':
+            pp_id = self.manager.add_postprocessor(applied_pps)
+            pp_key = self._generate_postprocessor_key(applied_pools, applied_norms)
+            self._postprocessor_key_to_id[pp_key] = pp_id
+        if not return_methods:
+            return attrs_pp
+        applied_pools = format_out_tuple_if_single(applied_pools)
+        applied_norms = format_out_tuple_if_single(applied_norms)
+        return attrs_pp, (applied_pools, applied_norms)
 
-        batch = []
-        explainer = self.manager.get_explainer_by_id(explainer_id)
-        for mod, attr, pp in zip(modalities, explanations, postprocessors):
-            if (
-                isinstance(explainer, (Lime, KernelShap))
-                and isinstance(mod, TextModality)
-                and not isinstance(pp.pooling_fn, Identity)
-            ):
-                raise ValueError(
-                    f'postprocessor {postprocessor_id} does not support explainer {explainer_id}.')
-            batch.append(pp(attr))
-        return format_out_tuple_if_single(batch)
+    def _generate_postprocessor_key(self, pooling_method, normalization_method):
+        pools = format_into_tuple(pooling_method)
+        norms = format_into_tuple(normalization_method)
+        return '-'.join(
+            ['_'.join([pool, norm]) for pool, norm in zip(pools, norms)])
 
     def evaluate_batch(
         self,
         data_ids: List[int],
-        explainer_id: int,
-        postprocessor_id: int,
-        metric_id: int,
-    ):
+        explainer_key: str,
+        metric_key: str,
+        pooling_method: Optional[str] = None,
+        normalization_method: Optional[str] = None,
+    ) -> TensorOrTupleOfTensors:
         """
         Evaluates selected batch of data within experiment.
 
         Args:
             data_ids (Sequence[int]): A sequence of data IDs to specify the subset of data to postprocess.
-            explainer_id (int): An explainer ID to specify the explainer to use.
+            explainer (str): An explainer ID to specify the explainer to use.
             postprocessor_id (int): A postprocessor ID to specify the postprocessor to use.
-            metric_id (int): A metric ID to evaluate the model explanations.
+            metric (int): A metric ID to evaluate the model explanations.
 
         Returns:
             Batched model evaluations corresponding to data ids.
@@ -279,53 +457,84 @@ class Experiment(Observable):
         This method orchestrates the experiment by configuring the manager, obtaining explainer instance,
         processing data, generating explanations, and evaluating results. It then caches the results in the manager, and returns back to the user.
         """
+        explainer_id = self._explainer_key_to_id.get(explainer_key)
+        pp_id =self._postprocessor_key_to_id.get(self._generate_postprocessor_key(
+            pooling_method, normalization_method,
+        ))
+        metric_id = self._metric_key_to_id.get(metric_key, '_placeholder')
         data_ids_eval = [
             idx for idx in data_ids
             if self.manager.get_evaluation_by_id(
-                idx, explainer_id, postprocessor_id, metric_id) is None
+                idx, explainer_id, pp_id, metric_id) is None
         ]
-        if len(data_ids_eval):
-            data = self.manager.batch_data_by_ids(data_ids_eval)
-            inputs = self.input_extractor(data)
-            targets = self._get_targets(data_ids_eval)
-            postprocessed = self.postprocess_batch(
-                data_ids_eval, explainer_id, postprocessor_id)
+        if len(data_ids_eval) > 0:
+            batch = self.manager.batch_data_by_ids(data_ids_eval)
+            inputs = self._wrapped_model.extract_inputs(batch)
+            targets = self.get_targets_by_id(data_ids_eval)
+            attrs_pp = self.postprocess_batch(
+                data_ids_eval, explainer_key, pooling_method, normalization_method)
             explainer = self.manager.get_explainer_by_id(explainer_id)
-            metric = self.manager.get_metric_by_id(metric_id)
-            evaluations = metric.set_explainer(explainer).evaluate(
-                inputs, targets, postprocessed)
+            metric = self.create_metric(metric_key)
+            if metric_id == '_placeholder':
+                metric_id = self.manager.add_metric(metric)
+                self._metric_key_to_id[metric_key] = metric_id
+            evals = metric.set_explainer(explainer).evaluate(
+                inputs, targets, attrs_pp,
+            )
             self.manager.cache_evaluations(
-                explainer_id, postprocessor_id, metric_id,
-                data_ids_eval, evaluations
+                explainer_id, pp_id, metric_id,
+                data_ids_eval, evals,
             )
         return self.manager.batch_evaluations_by_ids(
-            data_ids, explainer_id, postprocessor_id, metric_id
+            data_ids, explainer_id, pp_id, metric_id
         )
 
-    def _get_targets(self, data_ids):
+    def get_targets_by_id(self, data_ids):
         if self.target_labels:
-            return self.label_extractor(self.manager.batch_data_by_ids(data_ids))
+            batch = self.manager.batch_data_by_ids(data_ids)
+            labels = batch[self.label_key]
+            return labels.to(self.model_device)
         outputs = self.manager.batch_outputs_by_ids(data_ids)
-        return self.target_extractor(outputs)
+        return self.target_class_extractor(outputs).to(self.model_device)
+
+    def is_tunable(self, explainer_key):
+        is_tunable_explainer = issubclass(
+            self.explainers.get(explainer_key), Tunable)
+        modalities = format_into_tuple(self.modality)
+        is_tunable_by_pool = any(
+            len(modality.util_functions['pooling_fn'].choices) > 1
+            for modality in modalities
+        )
+        is_tunable_by_norm = any(
+            len(modality.util_functions['normalization_fn'].choices) > 1
+            for modality in modalities
+        )
+        return any([
+            is_tunable_explainer,
+            is_tunable_by_pool,
+            is_tunable_by_norm,
+        ])
 
     def optimize(
         self,
-        data_ids: Union[int, Sequence[int]],
-        explainer_id: int,
-        metric_id: int,
+        explainer_key: str,
+        metric_key: str,
         direction: Literal['minimize', 'maximize'] = 'maximize',
         sampler: Literal['grid', 'random', 'tpe'] = 'tpe',
+        data_ids: Optional[Union[int, Sequence[int]]] = None,
         n_trials: Optional[int] = None,
         timeout: Optional[float] = None,
+        num_threads: Optional[int] = None,
+        show_progress: bool = False,
         **kwargs,  # sampler kwargs
-    ):
+    ) -> OptimizationOutput:
         """
         Optimize experiment hyperparameters by processing data, generating explanations, evaluating with metrics, caching and retrieving the data.
 
         Args:
             data_ids (Union[int, Sequence[int]]): A single data ID or sequence of data IDs to specify the subset of data to process.
-            explainer_id (int): An explainer ID to specify the explainer to use.
-            metric_id (int): A metric ID to evaluate optimizer decisions.
+            explainer (str): An explainer ID to specify the explainer to use.
+            metric (int): A metric ID to evaluate optimizer decisions.
             direction (Literal['minimize', 'maximize']): A string to specify the direction of optimization.
             sampler (Literal['grid', 'random', 'tpe']): A string to specify the sampler to use for optimization.
             n_trials (Optional[int]): An integer to specify the number of trials for optimization. If none passed, the number of trials is inferred from `timeout`.
@@ -340,21 +549,20 @@ class Experiment(Observable):
         Note: The input parameters allow for flexibility in specifying subsets of data, explainers, and metrics to process.
         If not provided, the method processes all available data, explainers, postprocessors, and metrics.
         """
-        data_ids = [data_ids] if isinstance(data_ids, int) else data_ids
-        data = self.manager.batch_data_by_ids(data_ids)
-        explainer = self.manager.get_explainer_by_id(explainer_id)
-        postprocessor = self.manager.get_postprocessor_by_id(
-            0)  # sample postprocessor to ensure channel_dim
-        metric = self.manager.get_metric_by_id(metric_id)
-
+        org_num_threads = torch.get_num_threads()
+        if num_threads is not None:
+            torch.set_num_threads(num_threads)
         objective = Objective(
-            explainer=explainer,
-            postprocessor=postprocessor,
-            metric=metric,
             modality=self.modality,
-            inputs=self.input_extractor(data),
-            targets=self._get_targets(data_ids),
+            explainer=self.create_explainer(explainer_key),
+            metric=self.create_metric(metric_key),
+            data=self.manager.get_data(data_ids)[0],
+            target_class_extractor=self.target_class_extractor,
+            label_key=self.label_key,
+            target_labels=self.target_labels,
+            show_progress=show_progress,
         )
+
         # TODO: grid search
         if timeout is None:
             n_trials = n_trials or get_default_n_trials(sampler)
@@ -372,13 +580,17 @@ class Experiment(Observable):
         )
         opt_explainer = study.best_trial.user_attrs['explainer']
         opt_postprocessor = study.best_trial.user_attrs['postprocessor']
+        torch.set_num_threads(org_num_threads)
         return OptimizationOutput(
             explainer=opt_explainer,
             postprocessor=opt_postprocessor,
             study=study,
         )
 
-    def get_inputs_flattened(self, data_ids: Optional[Sequence[int]] = None) -> Sequence[Tensor]:
+    def get_inputs_flattened(
+        self,
+        data_ids: Optional[Sequence[int]] = None,
+    ) -> Sequence[Tensor]:
         """
         Retrieve and flatten last run input data.
 
@@ -409,7 +621,10 @@ class Experiment(Observable):
         data = [self.input_extractor(datum) for datum in data]
         return self.manager.flatten_if_batched(data, data)
 
-    def get_labels_flattened(self, data_ids: Optional[Sequence[int]] = None) -> Sequence[Tensor]:
+    def get_labels_flattened(
+        self,
+        data_ids: Optional[Sequence[int]] = None,
+    ) -> Sequence[Tensor]:
         """
         Retrieve and flatten labels data.
 
@@ -425,7 +640,10 @@ class Experiment(Observable):
         labels = [self.label_extractor(datum) for datum in data]
         return self.manager.flatten_if_batched(labels, data)
 
-    def get_targets_flattened(self, data_ids: Optional[Sequence[int]] = None) -> Sequence[Tensor]:
+    def get_targets_flattened(
+        self,
+        data_ids: Optional[Sequence[int]] = None,
+    ) -> Sequence[Tensor]:
         """
         Retrieve and flatten target data.
 
@@ -442,13 +660,13 @@ class Experiment(Observable):
         if self.target_labels:
             return self.get_labels_flattened(data_ids)
         data, _ = self.manager.get_data(data_ids)
-        targets = [self._get_targets(data_ids)]
+        targets = [self.get_targets_by_id(data_ids)]
         return self.manager.flatten_if_batched(targets, data)
-        # targets = [self.label_extractor(datum) for datum in data] \
-        #     if self.target_labels else [self._get_targets(data_ids)]
-        # return self.manager.flatten_if_batched(targets, data)
 
-    def get_outputs_flattened(self, data_ids: Optional[Sequence[int]] = None) -> Sequence[Tensor]:
+    def get_outputs_flattened(
+        self,
+        data_ids: Optional[Sequence[int]] = None,
+    ) -> Sequence[Tensor]:
         """
         Retrieve and flatten model outputs.
 
@@ -464,7 +682,10 @@ class Experiment(Observable):
         """
         return self.manager.get_flat_outputs(data_ids)
 
-    def get_explanations_flattened(self, data_ids: Optional[Sequence[int]] = None) -> Sequence[Sequence[Tensor]]:
+    def get_explanations_flattened(
+        self,
+        data_ids: Optional[Sequence[int]] = None,
+    ) -> Sequence[Sequence[Tensor]]:
         """
         Retrieve and flatten explanations from all explainers.
 
@@ -480,11 +701,14 @@ class Experiment(Observable):
         """
         _, explainer_ids = self.manager.get_explainers()
         return [
-            self.manager.get_flat_explanations(explainer_id, data_ids)
-            for explainer_id in explainer_ids
+            self.manager.get_flat_explanations(explainer, explainer_ids)
+            for explainer in explainer_ids
         ]
 
-    def get_evaluations_flattened(self, data_ids: Optional[Sequence[int]] = None) -> Sequence[Sequence[Sequence[Tensor]]]:
+    def get_evaluations_flattened(
+        self,
+        data_ids: Optional[Sequence[int]] = None,
+    ) -> Sequence[Sequence[Sequence[Tensor]]]:
         """
         Retrieve and flatten evaluations for all explainers and metrics.
 
@@ -505,10 +729,10 @@ class Experiment(Observable):
 
         formatted = [[[
             self.manager.get_flat_evaluations(
-                explainer_id, postprocessor_id, metric_id, data_ids)
-            for metric_id in metric_ids
+                explainer, postprocessor_id, metric, data_ids)
+            for metric in metric_ids
         ] for postprocessor_id in postprocessor_ids]
-            for explainer_id in explainer_ids]
+            for explainer in explainer_ids]
 
         return formatted
 

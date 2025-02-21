@@ -1,16 +1,14 @@
 import abc
 import sys
-import warnings
-from typing import Optional, Union, Callable, Tuple
+from typing import Optional, Union, Callable, Tuple, List, Any, Dict
 
 import copy
 import torch
 from torch import nn
 
+from pnpxai.core.utils import ModelWrapper
 from pnpxai.core._types import ExplanationType
-from pnpxai.explainers import GradCam
 from pnpxai.explainers.base import Explainer
-from pnpxai.explainers.utils.postprocess import PostProcessor
 
 # Ensure compatibility with Python 2/3
 ABC = abc.ABC if sys.version_info >= (3, 4) else abc.ABCMeta(str("ABC"), (), {})
@@ -41,13 +39,30 @@ class Metric(ABC):
     SUPPORTED_EXPLANATION_TYPE: ExplanationType = "attribution"
 
     def __init__(
-        self, model: nn.Module, explainer: Optional[Explainer] = None, **kwargs
+        self,
+        model: nn.Module,
+        explainer: Optional[Explainer] = None,
+        target_input_keys: Optional[List[Union[str, int]]] = None,
+        additional_input_keys: Optional[List[Union[str, int]]] = None,
+        output_modifier: Optional[Callable[[Any], torch.Tensor]] = None,
+        **kwargs,
     ):
         self.model = model.eval()  # Set the model to evaluation mode
         self.explainer = explainer
-        self.device = next(
-            model.parameters()
-        ).device  # Determine the device used by the model
+        self._wrapped_model = ModelWrapper(
+            model=model,
+            target_input_keys=target_input_keys,
+            additional_input_keys=additional_input_keys,
+            output_modifier=output_modifier,
+        )
+
+    @property
+    def wrapped_model(self):
+        return self._wrapped_model
+
+    @property
+    def device(self):
+        return next(self.model.parameters()).device
 
     def __repr__(self):
         """
@@ -64,6 +79,11 @@ class Metric(ABC):
             ]
         )
         return f"{self.__class__.__name__}({displayed_attrs})"
+
+    def format_inputs(self, inputs: Union[Tuple, Dict]):
+        forward_args = self._wrapped_model.format_target_inputs(inputs)
+        additional_forward_args = self._wrapped_model.format_additional_inputs(inputs)
+        return forward_args, additional_forward_args
 
     def copy(self):
         """

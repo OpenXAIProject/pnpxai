@@ -1,4 +1,4 @@
-from typing import Callable, Optional, Tuple, Union, Sequence, Dict
+from typing import Callable, Optional, Tuple, Union, Sequence, List, Any
 
 from torch import Tensor
 from torch.nn.modules import Module
@@ -6,13 +6,22 @@ from captum.attr import IntegratedGradients as CaptumIntegratedGradients
 from captum.attr import LayerIntegratedGradients as CaptumLayerIntegratedGradients
 
 from pnpxai.core.detector.types import Linear, Convolution, Attention
-from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
-from pnpxai.explainers.utils.baselines import BaselineMethodOrFunction, BaselineFunction
-from pnpxai.explainers.base import Explainer
+from pnpxai.utils import format_out_tuple_if_single
+from pnpxai.utils import (
+    format_multimodal_supporting_input,
+    run_multimodal_supporting_util_fn,
+)
+from pnpxai.explainers.base import Explainer, Tunable
+from pnpxai.explainers.types import (
+    TargetLayerOrTupleOfTargetLayers,
+    TunableParameter,
+)
 from pnpxai.explainers.utils import captum_wrap_model_input
+from pnpxai.explainers.utils.types import BaselineFunctionOrTupleOfBaselineFunctions
+from pnpxai.explainers.utils.baselines import ZeroBaselineFunction
 
 
-class IntegratedGradients(Explainer):
+class IntegratedGradients(Explainer, Tunable):
     """
     IntegratedGradients explainer.
 
@@ -22,7 +31,7 @@ class IntegratedGradients(Explainer):
         model (Module): The PyTorch model for which attribution is to be computed.
         baseline_fn (Union[BaselineMethodOrFunction, Tuple[BaselineMethodOrFunction]]): The baseline function, accepting the attribution input, and returning the baseline accordingly.
         n_steps (int): The Number of steps the algorithm makes
-        layer (Optional[Union[Union[str, Module], Sequence[Union[str, Module]]]]): The target module to be explained
+        target_layer (Optional[Union[Union[str, Module], Sequence[Union[str, Module]]]]): The target module to be explained
         n_classes (Optional[int]): Number of classes
         forward_arg_extractor: A function that extracts forward arguments from the input batch(s) where the attribution scores are assigned.
         additional_forward_arg_extractor: A secondary function that extract additional forward arguments from the input batch(s).
@@ -33,32 +42,53 @@ class IntegratedGradients(Explainer):
     """
 
     SUPPORTED_MODULES = [Linear, Convolution, Attention]
+    SUPPORTED_DTYPES = [float, int]
+    SUPPORTED_NDIMS = [2, 4]
 
     def __init__(
         self,
         model: Module,
         n_steps: int = 20,
-        baseline_fn: Union[BaselineMethodOrFunction,
-                           Tuple[BaselineMethodOrFunction]] = 'zeros',
-        layer: Optional[Callable[[Tuple[Tensor]],
-                                 Union[Tensor, Tuple[Tensor]]]] = None,
-        forward_arg_extractor: Optional[Callable[[
-            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
-        additional_forward_arg_extractor: Optional[Callable[[
-            Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
+        baseline_fn: Optional[BaselineFunctionOrTupleOfBaselineFunctions] = None,
+        target_layer: Optional[TargetLayerOrTupleOfTargetLayers] = None,
+        target_input_keys: Optional[List[Union[str, int]]] = None,
+        additional_input_keys: Optional[List[Union[str, int]]] = None,
+        output_modifier: Optional[Callable[[Any], Tensor]] = None,
     ) -> None:
-        super().__init__(model, forward_arg_extractor, additional_forward_arg_extractor)
-        self.layer = layer
-        self.n_steps = n_steps
-        self.baseline_fn = baseline_fn
+        self.target_layer = target_layer
+        self.n_steps = TunableParameter(
+            name='n_steps',
+            current_value=n_steps,
+            dtype=int,
+            is_leaf=True,
+            space={'low': 10, 'high': 100, 'step': 10},
+        )
+        baseline_fn = baseline_fn or ZeroBaselineFunction()
+        self.baseline_fn = format_multimodal_supporting_input(
+            baseline_fn,
+            format=TunableParameter,
+            input_key='current_value',
+            name='baseline_fn',
+            dtype=str,
+            is_leaf=False,
+        )
+        Explainer.__init__(
+            self,
+            model,
+            target_input_keys,
+            additional_input_keys,
+            output_modifier,
+        )
+        Tunable.__init__(self)
+        self.register_tunable_params([self.n_steps, self.baseline_fn])
 
     @property
     def _layer_explainer(self) -> CaptumLayerIntegratedGradients:
         wrapped_model = captum_wrap_model_input(self.model)
         layers = [
-            wrapped_model.input_maps[layer] if isinstance(layer, str)
-            else layer for layer in self.layer
-        ] if isinstance(self.layer, Sequence) else self.layer
+            wrapped_model.input_maps[target_layer] if isinstance(target_layer, str)
+            else target_layer for target_layer in self.target_layer
+        ] if isinstance(self.target_layer, Sequence) else self.target_layer
         return CaptumLayerIntegratedGradients(
             forward_func=wrapped_model,
             layer=layers,
@@ -70,7 +100,7 @@ class IntegratedGradients(Explainer):
 
     @property
     def explainer(self) -> Union[CaptumIntegratedGradients, CaptumLayerIntegratedGradients]:
-        if self.layer is None:
+        if self.target_layer is None:
             return self._explainer
         return self._layer_explainer
 
@@ -89,31 +119,15 @@ class IntegratedGradients(Explainer):
         Returns:
             Union[torch.Tensor, Tuple[torch.Tensor]]: The result of the explanation.
         """
-        forward_args, additional_forward_args = self._extract_forward_args(
-            inputs)
-        forward_args = format_into_tuple(forward_args)
-        baselines = format_into_tuple(self._get_baselines(forward_args))
+        forward_args, additional_forward_args = self.format_inputs(inputs)
+        baselines = run_multimodal_supporting_util_fn(forward_args, self.baseline_fn)
         attrs = self.explainer.attribute(
             inputs=forward_args,
             baselines=baselines,
             target=targets,
             additional_forward_args=additional_forward_args,
-            n_steps=self.n_steps,
+            n_steps=self.n_steps.current_value,
         )
         if isinstance(attrs, tuple):
             attrs = format_out_tuple_if_single(attrs)
         return attrs
-
-    def get_tunables(self) -> Dict[str, Tuple[type, dict]]:
-        """
-        Provides Tunable parameters for the optimizer
-
-        Tunable parameters:
-            `noise_level` (float): Value can be selected in the range of `range(10, 100, 10)`
-
-            `baseline_fn` (callable): BaselineFunction selects suitable values in accordance with the modality
-        """
-        return {
-            'n_steps': (int, {'low': 10, 'high': 100, 'step': 10}),
-            'baseline_fn': (BaselineFunction, {}),
-        }
