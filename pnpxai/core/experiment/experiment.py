@@ -150,7 +150,6 @@ class Experiment(Observable):
         data_ids: Optional[Sequence[int]] = None,
         pooling_method: Optional[str] = None,
         normalization_method: Optional[str] = None,
-        cache=True,
     ) -> ExperimentOutput:
         """
         Runs the experiment for selected batch of data, explainer_key, postprocessor and metric.
@@ -178,16 +177,19 @@ class Experiment(Observable):
             data_ids)
 
         self.predict_batch(data_ids)
-        self.explain_batch(data_ids, explainer_key)
+        _, explainer = self.explain_batch(
+            data_ids, explainer_key, return_explainer=True)
         attrs_pp, pp_methods = self.postprocess_batch(
             data_ids, explainer_key, pooling_method, normalization_method,
             return_methods=True,
         )
-        evals = self.evaluate_batch(
+        evals, metric = self.evaluate_batch(
             data_ids, explainer_key, metric_key,
-            *pp_methods,
+            *pp_methods, return_metric=True,
         )
         return ExperimentOutput(
+            explainer=explainer,
+            metric=metric,
             explanations=attrs_pp,
             evaluations=evals,
         )
@@ -322,6 +324,7 @@ class Experiment(Observable):
         self,
         data_ids: Sequence[int],
         explainer_key: str,
+        return_explainer: bool = True,
         **kwargs,
     ) -> TensorOrTupleOfTensors:
         """
@@ -349,7 +352,6 @@ class Experiment(Observable):
             targets = self.get_targets_by_id(data_ids_expl)
             explainer = self.create_explainer(explainer_key, **kwargs)
 
-            # TODO: cache around here
             if explainer_id == '_placeholder':
                 explainer_id = self.manager.add_explainer(explainer)
                 self._explainer_key_to_id[explainer_key] = explainer_id
@@ -357,7 +359,11 @@ class Experiment(Observable):
             attrs = explainer.attribute(inputs, targets)
             self.manager.cache_explanations(
                 explainer_id, data_ids_expl, attrs)
-        return self.manager.batch_explanations_by_ids(data_ids, explainer_id)
+        attrs = self.manager.batch_explanations_by_ids(data_ids, explainer_id)
+        if return_explainer:
+            explainer = self.manager.get_explainer_by_id(explainer_id)
+            return attrs, explainer
+        return attrs
 
     def postprocess_batch(
         self,
@@ -441,6 +447,7 @@ class Experiment(Observable):
         metric_key: str,
         pooling_method: Optional[str] = None,
         normalization_method: Optional[str] = None,
+        return_metric: bool = False,
     ) -> TensorOrTupleOfTensors:
         """
         Evaluates selected batch of data within experiment.
@@ -485,9 +492,13 @@ class Experiment(Observable):
                 explainer_id, pp_id, metric_id,
                 data_ids_eval, evals,
             )
-        return self.manager.batch_evaluations_by_ids(
+        evals = self.manager.batch_evaluations_by_ids(
             data_ids, explainer_id, pp_id, metric_id
         )
+        if return_metric:
+            metric = self.manager.get_metric_by_id(metric_id)
+            return evals, metric
+        return evals
 
     def get_targets_by_id(self, data_ids):
         if self.target_labels:
@@ -618,7 +629,8 @@ class Experiment(Observable):
         This method retrieves input data from all available data points using the input extractor and flattens it.
         """
         data = self.manager.get_all_data()
-        data = [self.input_extractor(datum) for datum in data]
+        data = [format_out_tuple_if_single(
+            self.input_extractor(datum)) for datum in data]
         return self.manager.flatten_if_batched(data, data)
 
     def get_labels_flattened(
