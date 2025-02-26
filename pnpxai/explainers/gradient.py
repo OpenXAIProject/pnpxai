@@ -4,10 +4,11 @@ from torch import Tensor
 from torch.nn.modules import Module
 
 from pnpxai.core.detector.types import Linear, Convolution, LSTM, RNN, Attention
+from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 from pnpxai.explainers.zennit.attribution import Gradient as GradientAttributor
 from pnpxai.explainers.zennit.attribution import LayerGradient as LayerGradientAttributor
 from pnpxai.explainers.zennit.base import ZennitExplainer
-from pnpxai.explainers.utils import captum_wrap_model_input
+from pnpxai.explainers.utils import ModelWrapperForLayerAttribution
 from pnpxai.explainers.types import TargetLayerOrTupleOfTargetLayers
 
 
@@ -52,13 +53,12 @@ class Gradient(ZennitExplainer):
 
     @property
     def _layer_attributor(self) -> LayerGradientAttributor:
-        wrapped_model = captum_wrap_model_input(self._wrapped_model)
+        wrapped_model = ModelWrapperForLayerAttribution(self._wrapped_model)
         layers = [
             wrapped_model.input_maps[target_layer] if isinstance(target_layer, str)
-            else target_layer for target_layer in self.target_layer
-        ] if isinstance(self.target_layer, Sequence) else [self.target_layer]
-        if len(layers) == 1:
-            layers = layers[0]
+            else target_layer for target_layer in format_into_tuple(self.target_layer)
+        ]
+        layers = format_out_tuple_if_single(layers)
         return LayerGradientAttributor(
             model=wrapped_model,
             layer=layers,

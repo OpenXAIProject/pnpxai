@@ -6,17 +6,18 @@ from captum.attr import IntegratedGradients as CaptumIntegratedGradients
 from captum.attr import LayerIntegratedGradients as CaptumLayerIntegratedGradients
 
 from pnpxai.core.detector.types import Linear, Convolution, Attention
-from pnpxai.utils import format_out_tuple_if_single
 from pnpxai.utils import (
     format_multimodal_supporting_input,
     run_multimodal_supporting_util_fn,
+    format_into_tuple,
+    format_out_tuple_if_single,
 )
 from pnpxai.explainers.base import Explainer, Tunable
 from pnpxai.explainers.types import (
     TargetLayerOrTupleOfTargetLayers,
     TunableParameter,
 )
-from pnpxai.explainers.utils import captum_wrap_model_input
+from pnpxai.explainers.utils import ModelWrapperForLayerAttribution
 from pnpxai.explainers.utils.types import BaselineFunctionOrTupleOfBaselineFunctions
 from pnpxai.explainers.utils.baselines import ZeroBaselineFunction
 
@@ -84,11 +85,12 @@ class IntegratedGradients(Explainer, Tunable):
 
     @property
     def _layer_explainer(self) -> CaptumLayerIntegratedGradients:
-        wrapped_model = captum_wrap_model_input(self.model)
+        wrapped_model = ModelWrapperForLayerAttribution(self._wrapped_model)
         layers = [
             wrapped_model.input_maps[target_layer] if isinstance(target_layer, str)
-            else target_layer for target_layer in self.target_layer
-        ] if isinstance(self.target_layer, Sequence) else self.target_layer
+            else target_layer for target_layer in format_into_tuple(self.target_layer)
+        ]
+        layers = format_out_tuple_if_single(layers)
         return CaptumLayerIntegratedGradients(
             forward_func=wrapped_model,
             layer=layers,

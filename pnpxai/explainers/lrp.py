@@ -25,11 +25,12 @@ from pnpxai.explainers.zennit.attribution import Gradient, LayerGradient
 from pnpxai.explainers.zennit.rules import LayerNormRule
 from pnpxai.explainers.zennit.base import ZennitExplainer
 from pnpxai.explainers.zennit.layer import StackAndSum
-from pnpxai.explainers.utils import captum_wrap_model_input
+from pnpxai.explainers.utils import ModelWrapperForLayerAttribution
 from pnpxai.explainers.types import (
     TargetLayerOrTupleOfTargetLayers,
     TunableParameter,
 )
+from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 
 
 class LRPBase(ZennitExplainer):
@@ -72,14 +73,15 @@ class LRPBase(ZennitExplainer):
         self,
         model: Union[Module, fx.GraphModule],
     ) -> LayerGradient:
-        wrapped_model = captum_wrap_model_input(model)
-        stack = self.target_layer.copy() if isinstance(
-            self.target_layer, Sequence) else [self.target_layer]
-        layers = []
+        wrapped_model = ModelWrapperForLayerAttribution(self._wrapped_model)
+        stack = list(format_into_tuple(self.target_layer))
+        # stack = self.target_layer.copy() if isinstance(
+        #     self.target_layer, Sequence) else [self.target_layer]
+        layers = ()
         while stack:
             target_layer = stack.pop(0)
             if isinstance(target_layer, str):
-                layers.append(wrapped_model.input_maps[target_layer])
+                layers += (wrapped_model.input_maps[target_layer],)
                 continue
             if isinstance(model, fx.GraphModule):
                 child_nodes = []
@@ -91,7 +93,7 @@ class LRPBase(ZennitExplainer):
                         except AttributeError:
                             continue
                         if module is target_layer:
-                            layers.append(target_layer)
+                            layers += (target_layer,)
                             found = True
                             break
                         path_to_node = node.target.split(".")[:-1]
@@ -107,11 +109,10 @@ class LRPBase(ZennitExplainer):
                 if not found:
                     last_child = self.model.get_submodule(
                         child_nodes[-1].target)
-                    layers.append(last_child)
+                    layers += (last_child,)
             elif isinstance(model, Module):
-                layers.append(target_layer)
-        if len(layers) == 1:
-            layers = layers[0]
+                layers += (target_layer,)
+        layers = format_out_tuple_if_single(layers)
         return LayerGradient(
             model=wrapped_model,
             layer=layers,

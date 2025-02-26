@@ -109,7 +109,7 @@ class Lime(Explainer, Tunable):
         baselines = run_multimodal_supporting_util_fn(forward_args, self.baseline_fn)
         feature_masks = run_multimodal_supporting_util_fn(forward_args, self.feature_mask_fn)
 
-        _explainer = CaptumLime(self.model, perturb_func=self.perturb_fn)
+        _explainer = CaptumLime(self._wrapped_model, perturb_func=self.perturb_fn)
         attrs = _explainer.attribute(
             inputs=forward_args,
             target=targets,

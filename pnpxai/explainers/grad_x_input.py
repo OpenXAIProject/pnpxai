@@ -7,8 +7,9 @@ from captum.attr import LayerGradientXActivation as CaptumLayerGradientXInput
 
 from pnpxai.core.detector.types import Linear, Convolution, LSTM, RNN, Attention
 from pnpxai.explainers.base import Explainer
-from pnpxai.explainers.utils import captum_wrap_model_input
+from pnpxai.explainers.utils import ModelWrapperForLayerAttribution
 from pnpxai.explainers.types import TargetLayerOrTupleOfTargetLayers
+from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 
 
 class GradientXInput(Explainer):
@@ -50,14 +51,15 @@ class GradientXInput(Explainer):
 
     @property
     def _layer_explainer(self) -> CaptumLayerGradientXInput:
-        wrapped_model = captum_wrap_model_input(self.model)
+        wrapped_model = ModelWrapperForLayerAttribution(self._wrapped_model)
         layers = [
             wrapped_model.input_maps[target_layer] if isinstance(target_layer, str)
-            else target_layer for target_layer in self.target_layer
-        ] if isinstance(self.target_layer, Sequence) else self.target_layer
+            else target_layer for target_layer in format_into_tuple(self.target_layer)
+        ]
+        layers = format_out_tuple_if_single(layers)
         return CaptumLayerGradientXInput(
             forward_func=wrapped_model,
-            target_layer=layers,
+            layer=layers,
         )
 
     @property

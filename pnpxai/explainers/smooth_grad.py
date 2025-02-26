@@ -12,7 +12,7 @@ from pnpxai.explainers.zennit.attribution import (
     LayerSmoothGradient as LayerSmoothGradAttributor,
 )
 from pnpxai.explainers.zennit.base import ZennitExplainer
-from pnpxai.explainers.utils import captum_wrap_model_input
+from pnpxai.explainers.utils import ModelWrapperForLayerAttribution
 
 
 class SmoothGrad(ZennitExplainer, Tunable):
@@ -78,17 +78,12 @@ class SmoothGrad(ZennitExplainer, Tunable):
 
     @property
     def _layer_attributor(self) -> LayerSmoothGradAttributor:
-        wrapped_model = captum_wrap_model_input(self.model)
-        layers = (
-            [
-                wrapped_model.input_maps[target_layer] if isinstance(target_layer, str) else target_layer
-                for target_layer in self.target_layer
-            ]
-            if isinstance(self.target_layer, Sequence)
-            else [self.target_layer]
-        )
-        if len(layers) == 1:
-            layers = layers[0]
+        wrapped_model = ModelWrapperForLayerAttribution(self._wrapped_model)
+        layers = [
+            wrapped_model.input_maps[target_layer] if isinstance(target_layer, str) else target_layer
+            for target_layer in format_into_tuple(self.target_layer)
+        ]
+        layers = format_out_tuple_if_single(layers)
         return LayerSmoothGradAttributor(
             model=wrapped_model,
             layer=layers,

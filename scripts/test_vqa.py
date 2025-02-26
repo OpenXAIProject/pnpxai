@@ -26,17 +26,13 @@ from collections import defaultdict
 
 import torch
 import numpy as np
+import pandas as pd
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
 from transformers import ViltForQuestionAnswering, ViltProcessor
 from PIL import Image
 
-from pnpxai import (
-    XaiRecommender,
-    AutoExplanation,
-    Experiment,
-)
-from pnpxai.evaluator.metrics import AbPC
+from pnpxai import AutoExplanation
 from pnpxai.core.modality.modality import Modality
 
 
@@ -44,7 +40,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--model', type=str, choices=['vilt', 'visual_bert'], required=True)
 parser.add_argument('--data_dir', type=str, required=True)
 parser.add_argument('--num_workers', type=int, default=8)
-parser.add_argument('--batch_size', type=int, default=8)
+parser.add_argument('--batch_size', type=int, default=1)
 parser.add_argument('--disable_gpu', action='store_true')
 parser.add_argument('--fast_dev_run', action='store_true')
 
@@ -226,6 +222,9 @@ def main(args):
 
     # You can get pnpxai recommendation results without AutoExplanation as followings:
 
+    from pnpxai import XaiRecommender
+
+
     recommended = XaiRecommender().recommend(
         modality=(img_modality, qst_modality),
         model=model,
@@ -241,7 +240,12 @@ def main(args):
     #--------------------------------------------------------------------------#
 
     # You can manually create experiment as followings:
-    # expr = Experiment(
+
+    from pnpxai import Experiment
+    from pnpxai.evaluation.metrics import AbPC
+
+
+    expr = Experiment(
         model=model,
         data=dataloader,
         modality=(img_modality, qst_modality), # ensure the order to follow target_input_keys
@@ -292,13 +296,13 @@ def main(args):
     records = []
     best_params = defaultdict(dict)
     combs = list(itertools.product(
-        expr.explainers.choices,
-        expr.metrics.choices,
+        expr.explainers.choices[5:],
+        expr.metrics.choices[:1],
     ))
     pbar = tqdm(combs, total=len(combs))
-    for explainer_key, metric_key in pbar:
+    for i, (explainer_key, metric_key) in enumerate(pbar):
         if expr.is_tunable(explainer_key):
-            pbar.set_description(f'Optimizing {explainer_key} on {metric_key}')
+            pbar.set_description(f'[{i}] Optimizing {explainer_key} on {metric_key}')
             direction = {
                 'mo_r_f': 'minimize',
                 'le_r_f': 'maximize',
@@ -311,15 +315,15 @@ def main(args):
                 sampler='random',
                 seed=42,
                 show_progress=not args.fast_dev_run,
-                n_trials=2 if args.fast_dev_run else 100,
+                n_trials=1 if args.fast_dev_run else 100,
                 num_threads=16,
             )
             records.append({
                 'explainer': explainer_key,
                 'metric': metric_key,
-                'value': opt_results.study.best_trial.value,
+                'value': opt_results.value,
             })
-            best_params[explainer_key][metric_key] = opt_results.study.best_params
+            best_params[explainer_key][metric_key] = opt_results.params
     df = pd.DataFrame.from_records(records)
     summary_table = df.set_index(
         ['explainer', 'metric'])['value'].unstack('metric')

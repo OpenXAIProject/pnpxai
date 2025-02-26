@@ -1,6 +1,6 @@
 from pnpxai.explainers.utils.utils import (
     find_cam_target_layer,
-    captum_wrap_model_input,
+    ModelWrapperForLayerAttribution,
 )
 from pnpxai.explainers.utils.base import UtilFunction
 from pnpxai.explainers.utils.baselines import BaselineFunction

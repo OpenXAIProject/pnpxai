@@ -19,7 +19,7 @@ from pnpxai.explainers.base import Tunable
 from pnpxai.explainers.types import TunableParameter
 from pnpxai.explainers.zennit.attribution import Gradient, LayerGradient
 from pnpxai.explainers.zennit.base import ZennitExplainer
-from pnpxai.explainers.utils import captum_wrap_model_input
+from pnpxai.explainers.utils import ModelWrapperForLayerAttribution
 
 
 def rollout_min_head_fusion_function(attn_weights):
@@ -330,11 +330,13 @@ class TransformerAttribution(AttentionRolloutBase):
     
     @property
     def _layer_gradient(self) -> LayerGradient:
-        wrapped_model = captum_wrap_model_input(self.model)
+        wrapped_model = ModelWrapperForLayerAttribution(self._wrapped_model)
+        format_into_tuple
         layers = [
             wrapped_model.input_maps[target_layer] if isinstance(target_layer, str)
-            else target_layer for target_layer in self.target_layer
-        ] if isinstance(self.target_layer, Sequence) else self.target_layer
+            else target_layer for target_layer in format_into_tuple(self.target_layer)
+        ]
+        layers = format_out_tuple_if_single(layers)
         return LayerGradient(
             model=wrapped_model,
             target_layer=layers,
