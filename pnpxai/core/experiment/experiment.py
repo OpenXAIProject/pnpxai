@@ -589,13 +589,24 @@ class Experiment(Observable):
             timeout=timeout,
             n_jobs=1,
         )
-        opt_explainer = study.best_trial.user_attrs['explainer']
-        opt_postprocessor = study.best_trial.user_attrs['postprocessor']
+        try:
+            opt_explainer = study.best_trial.user_attrs['explainer']
+            opt_postprocessor = study.best_trial.user_attrs['postprocessor']
+            opt_params = study.best_params
+            opt_value = study.best_trial.value
+        except ValueError:
+            # all trials fail
+            opt_explainer = None
+            opt_postprocessor = None
+            opt_params = None
+            opt_value = None
         torch.set_num_threads(org_num_threads)
         return OptimizationOutput(
             explainer=opt_explainer,
             postprocessor=opt_postprocessor,
             study=study,
+            value=opt_value,
+            params=opt_params,
         )
 
     def get_inputs_flattened(

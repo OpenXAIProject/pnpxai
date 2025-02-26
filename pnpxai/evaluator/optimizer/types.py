@@ -1,3 +1,4 @@
+from typing import Dict, Any, Optional
 from dataclasses import dataclass
 
 import optuna
@@ -24,6 +25,8 @@ class OptimizationOutput:
             contains information about the optimization trials and results.
     """
     
-    explainer: Explainer
-    postprocessor: PostProcessor
-    study: optuna.study.Study
+    explainer: Optional[Explainer]
+    postprocessor: Optional[PostProcessor]
+    study: Optional[optuna.study.Study]
+    value: Optional[float]
+    params: Optional[Dict[str, Any]]
