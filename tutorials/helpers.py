@@ -246,6 +246,8 @@ def load_model_and_dataloader_for_tutorial(modality, device):
             ),
         )
         return model, loader, processor
+
+
 def get_livertumor_dataset(
         transform,
         subset_size: int=100, # ignored if indices is not None
@@ -259,8 +261,7 @@ def get_livertumor_dataset(
     if indices is not None:
         return Subset(dataset, indices=indices)
     indices = list(range(len(dataset)))
-    # subset = Subset(dataset, indices=indices[:subset_size])
-    subset = Subset(dataset, indices=indices[900:1300])
+    subset = Subset(dataset, indices=indices[:subset_size])
     return subset
 
 

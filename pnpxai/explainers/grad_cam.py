@@ -11,13 +11,12 @@ from .utils import find_cam_target_layer
 
 class GradCam(Explainer):
     def __init__(
-            self,
-            model: nn.Module,
-            interpolate_mode: str="bilinear",
-        ) -> None:
+        self,
+        model: nn.Module,
+        interpolate_mode: str="bilinear",
+    ) -> None:
         super().__init__(model)
         self.interpolate_mode = interpolate_mode
-        
 
     def attribute(self, inputs: Tensor, targets: Tensor) -> Tensor:
         forward_args, additional_forward_args = self._extract_forward_args(inputs)

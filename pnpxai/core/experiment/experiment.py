@@ -2,7 +2,9 @@ from typing import Any, Callable, Optional, Sequence, Union, List, Dict, Literal
 import time
 import warnings
 import itertools
+from easydict import EasyDict
 
+import torch
 from torch import Tensor
 import numpy as np
 import optuna
@@ -88,6 +90,7 @@ class Experiment(Observable):
         self.model_device = next(self.model.parameters()).device
 
         self.manager = ExperimentManager(data=data, cache_device=cache_device)
+        self.batch_size = self.manager.data.batch_size
         for explainer in explainers:
             self.manager.add_explainer(explainer)
         for postprocessor in postprocessors:
@@ -127,23 +130,84 @@ class Experiment(Observable):
         postprocessor_id: int,
         metric_id: int,
     ):
-        self.predict_batch(data_ids)
-        self.explain_batch(data_ids, explainer_id)
+        # import pdb; pdb.set_trace()
+        # TODO: split data_ids into batch_size and iterate over data_ids with batch_size
+        # TODO: collate intermediate results using _collate_batch() method in the below
+
+        # Type hits for the elements of the lists
+        results: EasyDict = EasyDict({
+            'inputs': List[torch.Tensor],
+            'labels': List[torch.Tensor],
+            'outputs': List[torch.Tensor],
+            'targets': List[torch.Tensor],
+            'explanation': List[torch.Tensor],
+            'postprocessed': List[torch.Tensor],
+            'evaluation': List[torch.Tensor],            
+        })
+
+        # Initialize the lists
+        results.inputs = []
+        results.labels = []
+        results.outputs = []
+        results.targets = []
+        results.explanation = []
+        results.postprocessed = []
+        results.evaluation = []
+
+        # Split data_ids into batches
+        batches = [data_ids[i:i+self.batch_size] for i in range(0, len(data_ids), self.batch_size)]
+
+        for idx, batch in enumerate(batches):
+            batch_results = self._run_mini_batch(batch, explainer_id, postprocessor_id, metric_id)
+
+            results.inputs.append(batch_results.inputs)
+            results.labels.append(batch_results.labels)
+            results.outputs.append(batch_results.outputs)
+            results.targets.append(batch_results.targets)
+            results.explanation.append(batch_results.explanation)
+            results.postprocessed.append(batch_results.postprocessed)
+            results.evaluation.append(batch_results.evaluation)
+
+        # Stack tensors
+        results.inputs = torch.cat(results.inputs, dim=0)
+        results.labels = torch.cat(results.labels, dim=0)
+        results.outputs = torch.cat(results.outputs, dim=0)
+        results.targets = torch.cat(results.targets, dim=0)
+        results.explanation = torch.cat(results.explanation, dim=0)
+        results.postprocessed = torch.cat(results.postprocessed, dim=0)
+        results.evaluation = torch.cat(results.evaluation, dim=0)
+
+        # Add non-tensor resutls
+        results.explainer = batch_results.explainer
+        results.postprocessor = batch_results.postprocessor
+        results.metric = batch_results.metric
+
+        return results
+
+    def _run_mini_batch(
+        self,
+        batch: List[int],
+        explainer_id: int,
+        postprocessor_id: int,
+        metric_id: int,
+    ):
+        self.predict_batch(batch)
+        self.explain_batch(batch, explainer_id)
         self.evaluate_batch(
-            data_ids, explainer_id, postprocessor_id, metric_id)
-        data = self.manager.batch_data_by_ids(data_ids)
-        return {
-            'inputs': self.input_extractor(data),
-            'labels': self.label_extractor(data),
-            'outputs': self.manager.batch_outputs_by_ids(data_ids),
-            'targets': self._get_targets(data_ids),
+            batch, explainer_id, postprocessor_id, metric_id)
+        data = self.manager.batch_data_by_ids(batch)
+        return EasyDict({
+            'inputs': self.input_extractor(data).detach().cpu(),
+            'labels': self.label_extractor(data).detach().cpu(),
+            'outputs': self.manager.batch_outputs_by_ids(batch).detach().cpu(),
+            'targets': self._get_targets(batch).detach().cpu(),
             'explainer': self.manager.get_explainer_by_id(explainer_id),
-            'explanation': self.manager.batch_explanations_by_ids(data_ids, explainer_id),
+            'explanation': self.manager.batch_explanations_by_ids(batch, explainer_id).detach().cpu(),
             'postprocessor': self.manager.get_postprocessor_by_id(postprocessor_id),
-            'postprocessed': self.postprocess_batch(data_ids, explainer_id, postprocessor_id),
+            'postprocessed': self.postprocess_batch(batch, explainer_id, postprocessor_id).detach().cpu(),
             'metric': self.manager.get_metric_by_id(metric_id),
-            'evaluation': self.manager.batch_evaluations_by_ids(data_ids, explainer_id, postprocessor_id, metric_id),
-        }
+            'evaluation': self.manager.batch_evaluations_by_ids(batch, explainer_id, postprocessor_id, metric_id).detach().cpu(),
+        })
 
     def predict_batch(
         self,

@@ -46,12 +46,15 @@ class LiverTumorDataset(Dataset):
             sample = self.transform(sample)
             w_sample = self.transform(w_sample)
             # sample = sample.float()
+            mask = self.transform(mask)
         else:
             sample = torch.from_numpy(sample).float()
             w_sample = torch.from_numpy(w_sample).float()
+            mask = torch.from_numpy(mask).float()
 
         # return sample, label, mask
         return sample, w_sample, label, mask
+        # return w_sample, label, mask
 
     def idx_to_label(self, idx):
         # label = self.labels.argmax(dim=1)[idx].item()

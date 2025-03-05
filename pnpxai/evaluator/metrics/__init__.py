@@ -7,6 +7,7 @@ from .pixel_flipping import (
     LeRF,
     AbPC,
 )
+from .relevance_accuracy import RelevanceAccuracy
 
 
 PIXEL_FLIPPING_METRICS = [

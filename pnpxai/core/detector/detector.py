@@ -52,6 +52,7 @@ def _get_node_target_module(node):
         target_module = getattr(target_module, t)
     return target_module
 
+
 def _format_node_target(node) -> str:
     if node.op == 'get_attr':
         return f'getattr(self, {node.target})'
@@ -63,7 +64,6 @@ def _format_node_target(node) -> str:
             target_module = getattr(target_module, t)
         return str(target_module)
     return node.target
-
 
 
 def extract_graph_data(graph_module: fx.GraphModule):
@@ -79,8 +79,7 @@ def extract_graph_data(graph_module: fx.GraphModule):
             'source': node.name,
             'target': user.name,
         } for user in node.users]
-    return data
-            
+    return data    
 
 
 def detect_model_architecture(

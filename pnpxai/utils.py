@@ -119,3 +119,9 @@ def format_into_tuple_all(**kwargs):
     return {k: format_into_tuple(v) for k, v in kwargs.items()}
 
 
+def ignore_warnings():
+    import warnings
+    warnings.filterwarnings("ignore", category=UserWarning, message="'has_cuda' is deprecated")
+    warnings.filterwarnings("ignore", category=UserWarning, message="'has_cudnn' is deprecated")
+    warnings.filterwarnings("ignore", category=UserWarning, message="'has_mps' is deprecated")
+    warnings.filterwarnings("ignore", category=UserWarning, message="'has_mkldnn' is deprecated")

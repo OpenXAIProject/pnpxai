@@ -42,6 +42,13 @@ class ExperimentManager:
         self._metric_ids = []
         self._cache._global_cache = {}
 
+    def clear_metrics(self, metric_ids):
+        assert all(0 <= metric_id < len(self._metrics) for metric_id in metric_ids), \
+            "One or more metric_ids are out of range."
+        metric_ids = set(metric_ids)
+        self._metrics = [metric for metric_id, metric in enumerate(self._metrics) if metric_id not in metric_ids]
+        self._metric_ids = list(range(len(self._metrics)))
+
     @property
     def data(self):
         return self._data

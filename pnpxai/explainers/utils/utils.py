@@ -15,18 +15,21 @@ def find_cam_target_layer(model: nn.Module) -> nn.Module:
     traced_model = symbolic_trace(model)
     last_conv_node = next(
         node for node in reversed(traced_model.graph.nodes)
-        if isinstance(get_target_module_of(node), Convolution)
+        if isinstance(get_target_module_of(node), Convolution) \
+        or isinstance(get_target_module_of(node), torch.nn.modules.Conv2d)
     )
     if last_conv_node is None:
         return
     pool_user = find_nearest_user_of(last_conv_node, Pool)
     if pool_user is None:
         return get_target_module_of(last_conv_node)
-    conv_module_nm = next(iter(pool_user.prev.meta.get("nn_module_stack")))
+    # conv_module_nm = next(iter(pool_user.prev.meta.get("nn_module_stack")))
+    conv_module_nm = next(reversed(pool_user.prev.meta.get("nn_module_stack")))
     target_module = model
     for t in conv_module_nm.split("."):
         target_module = getattr(target_module, t)
     return target_module
+    # return get_target_module_of(last_conv_node)
 
 
 def default_feature_mask_fn_image(inputs: torch.Tensor, scale=250):

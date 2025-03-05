@@ -13,9 +13,11 @@ from pnpxai.evaluator.optimizer.utils import generate_param_key
 
 
 def _skseg_for_tensor(fn, inputs: torch.Tensor, **kwargs):
+    if fn == quickshift:
+        inputs = inputs.tile(1, 3, 1, 1)
     feature_mask = [
         torch.tensor(fn(
-            inp.permute(1,2,0).detach().cpu().numpy(),
+            inp.permute(1, 2, 0).detach().cpu().numpy(),
             **kwargs
         )) for inp in inputs
     ]
