@@ -11,9 +11,8 @@ DataSource = Union[DataLoader, TensorOrTensorSequence]
 
 Model = nn.Module  # TODO: List other model types in Union[Type1, Type2, ...]
 Task = Literal["classification"]
-Modality = Literal["image", "tabular", "time_series", "text"]
-ModalityOrTupleOfModalities = Union[Modality, Tuple[Modality]]
 ExplanationType = Literal["attribution"]
+
 
 class ConfigKeys(Enum):
     EXPLAINERS = 'explainers'

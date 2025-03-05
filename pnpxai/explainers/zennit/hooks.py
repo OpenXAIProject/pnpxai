@@ -1,4 +1,5 @@
-from zennit.core import RemovableHandleList, RemovableHandle, Hook, BasicHook
+from zennit.core import RemovableHandleList, RemovableHandle, Hook
+
 
 class HookWithKwargs(Hook):
     '''Base class for hooks to be used to compute layer-wise attributions.'''
@@ -22,11 +23,3 @@ class HookWithKwargs(Hook):
             module.register_forward_hook(self.post_forward),
             module.register_forward_hook(self.forward, with_kwargs=True),
         ])
-
-
-# myeongjin hi
-class BasicHookWithRelevanceModifier(BasicHook):
-    def __init__(
-    ) -> None:
-        pass
-

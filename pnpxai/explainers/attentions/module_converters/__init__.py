@@ -1,16 +1,16 @@
 from importlib import util
-from ...zennit.module_converter import module_converting_canonizer_factory
+from pnpxai.explainers.zennit.module_converter import module_converting_canonizer_factory
 
 cfgs = dict()
 
 if util.find_spec("timm"):
     import timm
-    from .configs import TIMM_VIT_ATTENTION_CONVERTER_FACTORY_CONFIG
+    from pnpxai.explainers.attentions.module_converters.configs import TIMM_VIT_ATTENTION_CONVERTER_FACTORY_CONFIG
     cfgs[timm.models.vision_transformer.Attention] = TIMM_VIT_ATTENTION_CONVERTER_FACTORY_CONFIG
 
 if util.find_spec("transformers"):
     import transformers
-    from .configs import (
+    from pnpxai.explainers.attentions.module_converters.configs import (
         TRANSFOMERS_BERT_ATTENTION_CONVERTER_FACTORY_CONFIG,
         TRANSFORMERS_VISUAL_BERT_ATTENTION_CONVERTER_FACTORY_CONFIG,
         TRANSFORMERS_VILT_LAYER_CONVERTER_FACTORY_CONFIG,

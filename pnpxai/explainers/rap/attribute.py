@@ -1,8 +1,9 @@
-from typing import Any, Optional, Dict
+from typing import Any, Optional, Dict, Optional, List, Union, Callable
 
 import torch
 from torch import Tensor, nn
 
+from pnpxai.core.detector.types import Linear, Convolution
 from pnpxai.core._types import Model, DataSource, Task
 from pnpxai.explainers.base import Explainer
 from pnpxai.explainers.rap.rap import RelativeAttributePropagation
@@ -12,31 +13,43 @@ class RAP(Explainer):
     """
     Computes Relative Attribute Propagation (RAP) explanations for a given model.
 
-    Attributes:
-    - model (Model): The model for which RAP explanations are computed.
-    - method (RelativeAttributePropagation): The RAP method for attribute propagation.
-    - device (torch.device): The device on which the model parameters reside.
+    Supported Modules: `Linear`, `Convolution`
+
+    Parameters:
+        model (Model): The model for which RAP explanations are computed.
+
+    Reference:
+        Woo-Jeoung Nam, Shir Gur, Jaesik Choi, Lior Wolf, Seong-Whan Lee. Relative Attributing Propagation: Interpreting the Comparative Contributions of Individual Units in Deep Neural Networks.
     """
 
-    def __init__(self, model: Model):
-        """
-        Initializes an RAP object.
+    SUPPORTED_MODULES = [Linear, Convolution]
+    SUPPORTED_DTYPES = [float]
+    SUPPORTED_NDIMS = [4]
 
-        Args:
-        - model (Model): The model for which RAP explanations are computed.
-        """
-        super().__init__(model)
+    def __init__(
+        self,
+        model: Model,
+        target_input_keys: Optional[List[Union[str, int]]] = None,
+        additional_input_keys: Optional[List[Union[str, int]]] = None,
+        output_modifier: Optional[Callable[[Any], Tensor]] = None,
+    ):
+        super().__init__(
+            model,
+            target_input_keys,
+            additional_input_keys,
+            output_modifier,
+        )
         self.method = RelativeAttributePropagation(model)
 
     def compute_pred(self, output: Tensor) -> Tensor:
         """
         Computes the predicted class probabilities.
 
-        Args:
-        - output (Tensor): The model output.
+        Parameters:
+            output (Tensor): The model output.
 
         Returns:
-        - Tensor: The one-hot encoded predicted class probabilities.
+            Tensor: The one-hot encoded predicted class probabilities.
         """
         # get the index of the max log-probability
         pred = output.max(1, keepdim=True)[1]
@@ -50,16 +63,20 @@ class RAP(Explainer):
         """
         Computes RAP attributions for the given inputs.
 
-        Args:
-        - inputs (DataSource): The input data.
-        - targets (DataSource): The target labels.
-        - *args (Any): Additional positional arguments.
-        - **kwargs (Any): Additional keyword arguments.
+        Parameters:
+            inputs (DataSource): The input data.
+            targets (DataSource): The target labels.
+            *args (Any): Additional positional arguments.
+            **kwargs (Any): Additional keyword arguments.
 
         Returns:
-        - DataSource: RAP attributions.
+            DataSource: RAP attributions.
         """
-        outputs = self.method.run(inputs)
+        inputs, _ = self.format_inputs(inputs)
+        assert (
+            len(inputs) == 1
+        ), "RAP for multiple inputs is not supported."
+        outputs = self.method.run(*inputs)
         preds = self.compute_pred(outputs)
         relprop = self.method.relprop(preds)
         return relprop

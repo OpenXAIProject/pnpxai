@@ -25,9 +25,9 @@ import sys
 import platform
 
 MAJOR = 0
-MINOR = 0
+MINOR = 1
 MICRO = 1
-ISRELEASED = False
+ISRELEASED = True
 VERSION = f"{MAJOR}.{MINOR}.{MICRO}"
 
 RUN_CYTHON_BUILD = False

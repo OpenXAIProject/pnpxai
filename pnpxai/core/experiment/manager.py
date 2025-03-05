@@ -1,7 +1,5 @@
 from typing import Any, List, Optional, Sequence, Union, Type, Tuple, Callable
 
-import itertools
-
 import torch
 from torch import Tensor
 from torch.utils.data import DataLoader, Subset, Dataset
@@ -14,10 +12,6 @@ from pnpxai.evaluator.metrics.base import Metric
 from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 
 
-def _index_combinations(*indices):
-    return itertools.product(*indices)
-
-
 class ExperimentManager:
     def __init__(
         self,
@@ -28,7 +22,7 @@ class ExperimentManager:
         self.set_data_ids()
         self._explainers: List[Explainer] = []
         self._explainer_ids: List[int] = []
-        self._postprocessors: List[Callable] =[]
+        self._postprocessors: List[PostProcessor] = []
         self._postprocessor_ids: List[int] = []
         self._metrics: List[Metric] = []
         self._metric_ids: List[int] = []
@@ -41,13 +35,6 @@ class ExperimentManager:
         self._metrics = []
         self._metric_ids = []
         self._cache._global_cache = {}
-
-    def clear_metrics(self, metric_ids):
-        assert all(0 <= metric_id < len(self._metrics) for metric_id in metric_ids), \
-            "One or more metric_ids are out of range."
-        metric_ids = set(metric_ids)
-        self._metrics = [metric for metric_id, metric in enumerate(self._metrics) if metric_id not in metric_ids]
-        self._metric_ids = list(range(len(self._metrics)))
 
     @property
     def data(self):
@@ -181,7 +168,7 @@ class ExperimentManager:
         for data_id in data_ids:
             output = self.get_output_by_id(data_id)
             if output is None:
-                raise KeyError(f"Output for {data} does not exist in cache.")
+                raise KeyError(f"Output for {data_id} does not exist in cache.")
             batch.append(output)
         return self._format_batch(batch)
 
@@ -302,6 +289,7 @@ class ExperimentManager:
         return self._get_data_by_ids(data_ids), data_ids
 
     def get_data_to_predict(self, data_ids: List[int]) -> Tuple[DataSource, List[int]]:
+        data_ids = data_ids or self._data_ids
         data_ids = [
             idx for idx in data_ids if self._cache.get_output(idx) is None
         ]
@@ -369,7 +357,6 @@ class ExperimentManager:
 
         for idx, output in zip(data_ids, outputs):
             self._cache.set_output(idx, output)
-
 
     def _get_batch_size(self, data: DataSource) -> Optional[int]:
         if torch.is_tensor(data):

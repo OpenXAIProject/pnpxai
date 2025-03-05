@@ -11,14 +11,12 @@ from pnpxai.utils import flatten, map_recursive
 
 
 class RelativeAttributePropagation():
+
+    
     def __init__(self, model: nn.Module):
         self._trace = fx.symbolic_trace(model)
         self._trace.eval()
-        self._results: Dict[str, fx.Node] = {}
-        self._inputs: Dict[str, fx.Node] = defaultdict(tuple)
-        self._relprops: Dict[str, Dict[str, Tensor]] = defaultdict(dict)
-        # Solves bottleneck, when module has multiple outputs, some of which are unused
-        self._unused_nodes = set()
+        self.reset()
 
     def _backprop_unused(self, node: fx.Node, unused: Set[str]) -> Set[str]:
         unused.add(node.name)
@@ -164,6 +162,14 @@ class RelativeAttributePropagation():
             self._relprops.get(node.name, {}).get(user.name, None) is not None
             for user in node.users.keys() if not self._marked_unused(user)
         ])
+    
+    def reset(self):
+        self._results: Dict[str, fx.Node] = {}
+        self._inputs: Dict[str, fx.Node] = defaultdict(tuple)
+        self._relprops: Dict[str, Dict[str, Tensor]] = defaultdict(dict)
+        # Solves bottleneck, when module has multiple outputs, some of which are unused
+        self._unused_nodes = set()
+
 
     def relprop(self, r: Sequence[Tensor]) -> Tensor:
         queue = self._get_init_relprop_stack(r)
@@ -193,6 +199,8 @@ class RelativeAttributePropagation():
                 outputs.append(r)
 
             del self._relprops[node.name]
+
+        self.reset()
 
         if len(outputs) == 1:
             return outputs[0]

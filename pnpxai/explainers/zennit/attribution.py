@@ -4,7 +4,7 @@ from collections import defaultdict
 import threading
 
 import torch
-from torch import Tensor, device
+import torchvision.transforms.functional as TF
 from torch.nn import Module
 from captum._utils.common import _run_forward, _sort_key_list, _reduce_list
 from captum._utils.gradient import (
@@ -14,7 +14,9 @@ from captum._utils.gradient import (
     _extract_device_ids,
 )
 from zennit.attribution import Gradient as ZennitGradient
-from zennit.core import Composite
+from zennit.core import Composite, Hook
+from zennit.composites import LayerMapComposite
+from zennit.types import Convolution, BatchNorm
 
 from pnpxai.utils import format_into_tuple
 from pnpxai.core._types import TensorOrTupleOfTensors, Tensor
@@ -24,12 +26,13 @@ class Gradient(ZennitGradient):
     def __init__(
         self,
         model: Module,
-        composite: Optional[Composite]=None,
+        composite: Optional[Composite] = None,
         attr_output=None,
         create_graph=False,
         retain_graph=None,
     ) -> None:
-        super().__init__(model, composite, attr_output, create_graph, retain_graph)
+        super().__init__(
+            model, composite, attr_output, create_graph, retain_graph)
 
     def grad(self, forward_args, targets, additional_forward_args=None):
         self._process_forward_args_before_grad(forward_args)
@@ -72,12 +75,13 @@ class LayerGradient(Gradient):
         self,
         model: Module,
         layer: Union[str, Module, Sequence[Union[str, Module]]],
-        composite: Optional[Composite]=None,
+        composite: Optional[Composite] = None,
         attr_output=None,
         create_graph=False,
         retain_graph=None,
     ) -> None:
-        super().__init__(model, composite, attr_output, create_graph, retain_graph)
+        super().__init__(
+            model, composite, attr_output, create_graph, retain_graph)
         self.layer = layer
 
     def grad(self, forward_args, targets, additional_forward_args=None):
@@ -98,23 +102,24 @@ class SmoothGradient(Gradient):
     def __init__(
         self,
         model: Module,
-        noise_level: Union[float, List[float]]=.1,
-        n_iter: int=20,
-        composite: Optional[Composite]=None,
+        noise_level: Union[float, List[float]] = .1,
+        n_iter: int = 20,
+        composite: Optional[Composite] = None,
         attr_output=None,
         create_graph=None,
         retain_graph=None,
     ) -> None:
-        super().__init__(model, composite, attr_output, create_graph, retain_graph)
+        super().__init__(
+            model, composite, attr_output, create_graph, retain_graph)
         self.noise_level = noise_level
         self.n_iter = n_iter
 
     def forward(
         self,
-        inputs: TensorOrTupleOfTensors,
+        inputs: Tensor,
         targets: Tensor,
-        additional_forward_args: Optional[TensorOrTupleOfTensors]=None,
-        return_squared: bool=False,
+        additional_forward_args: Optional[TensorOrTupleOfTensors] = None,
+        return_squared: bool = False,
     ):
         dims = tuple(range(1, inputs.ndim))
         std = self.noise_level * (inputs.amax(dims, keepdim=True) - inputs.amin(dims, keepdim=True))
@@ -221,8 +226,8 @@ def _forward_layer_distributed_eval_with_noise(
     forward_hook_with_return: bool = True,
     require_layer_grads: bool = True,
 ) -> Union[
-    Tuple[Dict[Module, Dict[device, Tuple[Tensor, ...]]], Tensor],
-    Dict[Module, Dict[device, Tuple[Tensor, ...]]],
+    Tuple[Dict[Module, Dict[torch.device, Tuple[Tensor, ...]]], Tensor],
+    Dict[Module, Dict[torch.device, Tuple[Tensor, ...]]],
 ]:
     r"""
     A helper function that allows to set a hook on model's `layer`, run the forward
@@ -310,7 +315,6 @@ def _forward_layer_distributed_eval_with_noise(
     if forward_hook_with_return:
         return saved_layer, output
     return saved_layer
-
 
 
 def compute_layer_gradients_and_eval_with_noise(
@@ -485,3 +489,53 @@ def compute_layer_gradients_and_eval_with_noise(
                 inp_grads,
             )
     return layer_grads, all_outputs  # type: ignore
+
+
+def _get_bias_data(module):
+    # Borrowed from official paper impl:
+    # https://github.com/idiap/fullgrad-saliency/blob/master/saliency/tensor_extractor.py#L47
+    if isinstance(module, BatchNorm):
+        bias = -(module.running_mean*module.weight
+            /(module.running_var+module.eps).sqrt())+module.bias
+        return bias.data
+    elif module.bias is not None:
+        return module.bias.data
+    return None
+
+
+class _SavingBias(Hook):
+    def forward(self, module, input, output):
+        self.stored_tensors['bias'] = _get_bias_data(module)
+
+
+class FullGradient(ZennitGradient):
+    def __init__(
+        self,
+        model: Module,
+        pooling_method: Optional[Callable[[Tensor], Tensor]]=None,
+        interpolate_mode: Optional[TF.InterpolationMode]=None,
+    ):
+        layer_map = [(tp, _SavingBias()) for tp in [Convolution, BatchNorm]]
+        composite = LayerMapComposite(layer_map=layer_map)
+        super().__init__(model, composite, None)
+        self.pooling_method = pooling_method
+        self.interpolate_mode = interpolate_mode
+
+    def forward(self, input, attr_output_fn):
+        input = input.view_as(input)
+        _, gradient = self.grad(input, attr_output_fn)
+        rels = [gradient * input] # gradient x input
+        for hook in self.composite.hook_refs:
+            if hook.stored_tensors['bias'] is not None:
+                grad_x_bias = (
+                    hook.stored_tensors['bias'][None, :, None, None]
+                    * hook.stored_tensors['grad_output'][0]
+                )
+                grad_x_bias = TF.resize(
+                    grad_x_bias,
+                    input.shape[2:],
+                    interpolation=self.interpolate_mode,
+                )
+                rels.append(grad_x_bias)
+        pooled = [self.pooling_method(rel) for rel in rels]
+        return sum(pooled)[:, None, :, :]

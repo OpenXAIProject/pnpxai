@@ -1,1 +1,0 @@
-::: pnpxai.core.project.Project

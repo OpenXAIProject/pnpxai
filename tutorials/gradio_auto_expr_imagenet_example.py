@@ -1,8 +1,10 @@
+import gradio as gr
+from pnpxai import AutoExplanationForImageClassification
 import torch
 
-#------------------------------------------------------------------------------#
-#----------------------------------- setup ------------------------------------#
-#------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------#
+# ----------------------------------- setup ------------------------------------#
+# ------------------------------------------------------------------------------#
 
 from helpers import load_model_and_dataloader_for_tutorial
 
@@ -10,69 +12,73 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model, loader, _ = load_model_and_dataloader_for_tutorial('image', device)
 
 
-#------------------------------------------------------------------------------#
-#---------------------------- auto experiment ---------------------------------#
-#------------------------------------------------------------------------------#
+# ------------------------------------------------------------------------------#
+# ---------------------------- auto experiment ---------------------------------#
+# ------------------------------------------------------------------------------#
 
-from pnpxai import AutoExperiment
 
-expr = AutoExperiment(
+expr = AutoExplanationForImageClassification(
     model=model,
     data=loader,
-    modality='image',
-    question='why',
-    evaluator_enabled=True,
     input_extractor=lambda batch: batch[0].to(device),
     label_extractor=lambda batch: batch[1].to(device),
     target_extractor=lambda outputs: outputs.argmax(-1).to(device),
     channel_dim=1,
 )
 
-# # run_batch returns a dict of results
-# results = expr.run_batch(data_ids=[0, 1], explainer_id=1, postprocessor_id=0, metric_id=1)
 
-# # Also, we can use experiment manager to browse results as follows
-# # get data
-# data = expr.manager.get_data_by_id(0) # a pair of single instance (input, label)
-# batch = expr.manager.batch_data_by_ids(data_ids=[0, 1]) # a batch of multiple instances (inputs, labels)
+# run_batch returns a dict of results
+results = expr.run_batch(
+    explainer_id=1,
+    postprocessor_id=0,
+    metric_id=1,
+    data_ids=[0, 1],
+)
 
-# # get explainer
-# explainer = expr.manager.get_explainer_by_id(0)
+# Also, we can use experiment manager to browse results as follows
+# get data
+# a pair of single instance (input, label)
+data = expr.manager.get_data_by_id(0)
+# a batch of multiple instances (inputs, labels)
+batch = expr.manager.batch_data_by_ids(data_ids=[0, 1])
 
-# # get explanation
-# attr = expr.manager.get_explanation_by_id(data_id=0, explainer_id=0)
-# batched_attrs = expr.manager.batch_explanations_by_ids(data_ids=[0,1], explainer_id) # batched explanations
+# get explainer
+explainer = expr.manager.get_explainer_by_id(0)
 
-# # get postprocessor
-# postprocessor = expr.manager.get_postprocessor_by_id(0)
+# get explanation
+attr = expr.manager.get_explanation_by_id(data_id=0, explainer_id=1)
+batched_attrs = expr.manager.batch_explanations_by_ids(
+    data_ids=[0, 1], explainer_id=1)  # batched explanations
 
-# # postprocess
-# postprocessed = postprocessor(batched_attrs) # Note that this work only for batched attrs
+# get postprocessor
+postprocessor = expr.manager.get_postprocessor_by_id(0)
 
-# # get metric
-# metric = expr.manager.get_metric_by_id(0)
+# postprocess
+# Note that this work only for batched attrs
+postprocessed = postprocessor(batched_attrs)
 
-# # get evaluation
-# evaluation = expr.manager.get_evaluations_by_id(
-#     data_id=0,
-#     explainer_id=0,
-#     postprocessor_id=0,
-#     metric_id=0,
-# )
-# evaluations = expr.manager.batch_evaluations_by_ids( # batched evaluations
-#     data_ids=[0, 1],
-#     explainer_id=0,
-#     postprocessor_id=0,
-#     metric_id=0,
-# )
+# get metric
+metric = expr.manager.get_metric_by_id(0)
+
+# get evaluation
+evaluation = expr.manager.get_evaluation_by_id(
+    data_id=0,
+    explainer_id=1,
+    postprocessor_id=0,
+    metric_id=1,
+)
+evaluations = expr.manager.batch_evaluations_by_ids(  # batched evaluations
+    data_ids=[0, 1],
+    explainer_id=1,
+    postprocessor_id=0,
+    metric_id=1,
+)
 
 
+# #------------------------------------------------------------------------------#
+# #-------------------------------------- app -----------------------------------#
+# #------------------------------------------------------------------------------#
 
-#------------------------------------------------------------------------------#
-#-------------------------------------- app -----------------------------------#
-#------------------------------------------------------------------------------#
-
-import gradio as gr
 
 # clear results for manual experiment by UI
 expr.manager.clear()
@@ -81,14 +87,16 @@ expr.manager.clear()
 nm2cls_explainer = {
     cls.__name__: cls for cls in expr.recommended.explainers
 }
-nm2obj_postprocessor = {
-    pp.pooling_method: pp for pp in expr.manager.postprocessors
-}
+# nm2obj_postprocessor = {
+#     pp.pooling_method: pp for pp in expr.manager.postprocessors
+# }
 nm2obj_baseline_fn = {
     nm: None for nm in ['zeros', 'min', 'channel_min']
 }
 
 # forms
+
+
 def change_form_explainer_kwargs(explainer_nm):
     visible = {
         'n_steps': explainer_nm in ['IntegratedGradients'],
@@ -150,13 +158,13 @@ def change_form_explainer_kwargs(explainer_nm):
             visible=visible['gamma'],
             interactive=True,
         ),
-        'pooling_method': gr.Dropdown(
-            list(nm2obj_postprocessor.keys()),
-            label='pooling_method',
-            info='Relevance Pooling Method',
-            visible=visible['pooling_method'],
-            interactive=True,
-        ),
+        # 'pooling_method': gr.Dropdown(
+        #     list(nm2obj_postprocessor.keys()),
+        #     label='pooling_method',
+        #     info='Relevance Pooling Method',
+        #     visible=visible['pooling_method'],
+        #     interactive=True,
+        # ),
     }
     return list(form.values())
 
@@ -195,9 +203,9 @@ with gr.Blocks() as demo:
                     outputs=[current_kwargs, gr.State(form.label), form],
                 )
 
-
             # add explainer
             btn_add_explainer = gr.Button('Add Explainer')
+
             def add_explainer(explainers, new_explainer_nm, current_kwargs):
                 kwargs = {}
                 for key, value in reversed(current_kwargs):
@@ -221,7 +229,8 @@ with gr.Blocks() as demo:
             def render_explainers(ls):
                 gr.Markdown(f"### Added")
                 for data in ls:
-                    gr.Textbox(f"{data['explainer_nm']}({', '.join([k+'='+str(v) for k, v in data['kwargs'].items()])})")
+                    gr.Textbox(
+                        f"{data['explainer_nm']}({', '.join([k+'='+str(v) for k, v in data['kwargs'].items()])})")
 
         # TODO: submit explainers
         # TODO: input form and submit inputs

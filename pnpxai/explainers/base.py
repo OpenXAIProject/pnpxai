@@ -1,128 +1,208 @@
+from typing import Tuple, Optional, Union, Type, Dict, List, Callable, Any
 import abc
 from abc import abstractmethod
-import sys
-from typing import Tuple, Callable, Optional, Union, Type
-import math
 
-import copy
+import sys
+import inspect
+from collections import defaultdict
+
 from torch import Tensor
 from torch.nn.modules import Module
-from optuna.trial import Trial
+import optuna
 
-from pnpxai.core._types import ExplanationType
-from pnpxai.explainers.utils.baselines import BaselineFunction
-from pnpxai.explainers.utils.feature_masks import FeatureMaskFunction
-from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
+from pnpxai.core.utils import ModelWrapper
+from pnpxai.explainers.types import TunableParameter
+from pnpxai.utils import generate_param_key
+
 
 # Ensure compatibility with Python 2/3
-ABC = abc.ABC if sys.version_info >= (3, 4) else abc.ABCMeta(str('ABC'), (), {})
+ABC = abc.ABC if sys.version_info >= (3, 4) else abc.ABCMeta(str("ABC"), (), {})
 
 
 NON_DISPLAYED_ATTRS = [
-    'model',
-    'forward_arg_extractor',
-    'additional_forward_args',
-    'device',
-    'n_classes',
-    'zennit_composite',
+    "model",
+    "forward_arg_extractor",
+    "additional_forward_arg_extractor",
+    "device",
+    "n_classes",
+    "zennit_composite",
+    "_wrapped_model",
+    "_tunable_params",
 ]
 
+
 class Explainer(ABC):
-    EXPLANATION_TYPE: ExplanationType = "attribution"
+    """
+    Abstract base class for implementing attribution explanations for machine learning models.
+
+    This class provides methods for extracting forward arguments, loading baseline and feature mask functions, and applying them during attribution.
+
+    Parameters:
+        model (Module): The PyTorch model for which attribution is to be computed.
+        forward_arg_extractor (Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]): Optional function to extract forward arguments from inputs.
+        additional_forward_arg_extractor (Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]): Optional function to extract additional forward arguments.
+        **kwargs: Additional keyword arguments to pass to the constructor.
+
+    Notes:
+        - Subclasses must implement the `attribute` method to define how attributions are computed.
+        - The `forward_arg_extractor` and `additional_forward_arg_extractor` functions allow for customization in extracting forward arguments from the inputs.
+    """
+    SUPPORTED_MODULES: List[Type[Module]] = []
+    SUPPORTED_DTYPES: List[Type] = []
+    SUPPORTED_NDIMS: List[int] = []
 
     def __init__(
-            self,
-            model: Module,
-            forward_arg_extractor: Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]=None,
-            additional_forward_arg_extractor: Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]]=None,
-            **kwargs
+        self,
+        model: Module,
+        target_input_keys: Optional[List[Union[str, int]]] = None,
+        additional_input_keys: Optional[List[Union[str, int]]] = None,
+        output_modifier: Optional[Callable[[Any], Tensor]] = None,
+        **kwargs,
     ) -> None:
         self.model = model.eval()
-        self.forward_arg_extractor = forward_arg_extractor
-        self.additional_forward_arg_extractor = additional_forward_arg_extractor
-        self.device = next(model.parameters()).device
+        self.target_input_keys = target_input_keys
+        self.additional_input_keys = additional_input_keys
+        self.output_modifier = output_modifier
+
+    @property
+    def _wrapped_model(self):
+        return ModelWrapper(
+            model=self.model,
+            target_input_keys=self.target_input_keys,
+            additional_input_keys=self.additional_input_keys,
+            output_modifier=self.output_modifier,
+        )
+
+    @property
+    def wrapped_model(self):
+        return self._wrapped_model
+
+    @property
+    def device(self):
+        return next(self.model.parameters()).device
 
     def __repr__(self):
-        displayed_attrs = ', '.join([
-            f'{k}={v}' for k, v in self.__dict__.items()
-            if k not in NON_DISPLAYED_ATTRS and v is not None]
+        kwargs_repr = ', '.join(
+            '{}={}'.format(key, value)
+            for key, value in self.__dict__.items()
+            if key not in NON_DISPLAYED_ATTRS and value is not None
         )
-        return f"{self.__class__.__name__}({displayed_attrs})"
+        return "{}({})".format(self.__class__.__name__, kwargs_repr)
 
-    def _extract_forward_args(
-            self,
-            inputs: Union[Tensor, Tuple[Tensor]]
-    ) -> Tuple[Union[Tensor, Tuple[Tensor], Type[None]]]:
-        forward_args = self.forward_arg_extractor(inputs) \
-            if self.forward_arg_extractor else inputs
-        additional_forward_args = self.additional_forward_arg_extractor(inputs) \
-            if self.additional_forward_arg_extractor else None
+    def format_inputs(self, inputs: Union[Tuple, Dict]):
+        forward_args = self._wrapped_model.format_target_inputs(inputs)
+        additional_forward_args = self._wrapped_model.format_additional_inputs(inputs)
         return forward_args, additional_forward_args
-
-    def copy(self):
-        return copy.copy(self)
-
-    def set_kwargs(self, **kwargs):
-        clone = self.copy()
-        for k, v in kwargs.items():
-            setattr(clone, k, v)
-        return clone
-
-    def _load_baseline_fn(self):
-        baseline_fns = tuple(
-            BaselineFunction(method=baseline_fn)
-            if isinstance(baseline_fn, str) else baseline_fn
-            for baseline_fn in format_into_tuple(self.baseline_fn)
-        )
-        return format_out_tuple_if_single(baseline_fns)
-
-    def _get_baselines(self, forward_args):
-        forward_args = format_into_tuple(forward_args)
-        baseline_fns = format_into_tuple(self._load_baseline_fn())
-        assert len(forward_args) == len(baseline_fns)
-        baselines = tuple(
-            baseline_fn(forward_arg)
-            for baseline_fn, forward_arg in zip(baseline_fns, forward_args)
-        )
-        return format_out_tuple_if_single(baselines)
-
-    def _load_feature_mask_fn(self):
-        feature_mask_fns = tuple(
-            FeatureMaskFunction(method=feature_mask_fn)
-            if isinstance(feature_mask_fn, str) else feature_mask_fn
-            for feature_mask_fn in format_into_tuple(self.feature_mask_fn)
-        )
-        return format_out_tuple_if_single(feature_mask_fns)
-
-    def _get_feature_masks(self, forward_args):
-        forward_args = format_into_tuple(forward_args)
-        feature_mask_fns = format_into_tuple(self._load_feature_mask_fn())
-        assert len(forward_args) == len(feature_mask_fns)
-        feature_masks = []
-        max_vals = None
-        for feature_mask_fn, forward_arg in zip(feature_mask_fns, forward_args):
-            feature_mask = feature_mask_fn(forward_arg)
-            if max_vals is not None:
-                feature_mask += max_vals[(...,)+(None,)*(feature_mask.dim()-1)] + 1
-            feature_masks.append(feature_mask)
-
-            # update max_vals
-            bsz, *size = feature_mask.size()
-            max_vals = feature_mask.view(-1, math.prod(size)).max(axis=1).values
-        feature_masks = tuple(feature_masks)
-        return format_out_tuple_if_single(feature_masks)
 
     @abstractmethod
     def attribute(
-            self,
-            inputs: Union[Tensor, Tuple[Tensor]],
-            targets: Tensor,
+        self,
+        inputs: Union[Tensor, Tuple[Tensor]],
+        targets: Tensor,
     ) -> Union[Tensor, Tuple[Tensor]]:
+        """
+        Computes attributions for the given inputs and targets.
+
+        Args:
+            inputs (Union[Tensor, Tuple[Tensor]]): The inputs for the model.
+            targets (Tensor): The target labels.
+
+        Returns:
+            Union[Tensor, Tuple[Tensor]]: The computed attributions.
+        """
         raise NotImplementedError
 
-    def suggest_tunables(
+    def is_tunable(self):
+        return isinstance(self, Tunable)
+
+
+class Tunable:
+    def __init__(self, params: Optional[List[TunableParameter]] = None):
+        self._tunable_params = params or []
+
+    @property
+    def tunable_params(self):
+        return [tp for tp in self._tunable_params if not tp.disabled]
+
+    @property
+    def non_tunable_params(self):
+        tunable_params = [tp.name.split('.')[0] for tp in self.tunable_params]
+        required_params = [
+            param for param in inspect.signature(self.__class__).parameters]
+        return [param for param in required_params if param not in tunable_params]
+
+    def get_current_tunable_param_values(self):
+        tps = {}
+        for tp in self._tunable_params:
+            if tp.is_leaf:
+                tps[tp.name] = tp.current_value
+                continue
+            if not hasattr(tp, 'selector'):
+                tps[tp.name] = tp.current_value
+                continue
+            tps[tp.name] = tp.selector.get_key(tp.current_value.__class__)
+            if isinstance(tp.current_value, Tunable):
+                leaf_values = tp.current_value.get_current_tunable_param_values()
+                for k, v in leaf_values.items():
+                    tps[f'{tp.name}.{k}'] = v
+        return tps
+
+    def register_tunable_params(
         self,
-        trial: Trial,
-        key: Optional[str]=None,
+        params: List[Union[TunableParameter, Tuple[TunableParameter]]],
     ):
-        return {}
+        for param in params:
+            self._register_tunable_param(param)
+
+    def _register_tunable_param(
+        self,
+        param: Union[TunableParameter, Tuple[TunableParameter]],
+        key=None,
+    ):
+        if isinstance(param, tuple):
+            for i, _param in enumerate(param):
+                self._register_tunable_param(_param, i)
+        else:
+            if key is not None:
+                param.rename(f'{param.name}.{key}')
+            self._tunable_params.append(param)
+
+    def disable_tunable_param(self, param_name):
+        for tp in self._tunable_params:
+            if tp.name.startswith(param_name):
+                tp.disable()
+
+    def enable_tunable_param(self, param_name):
+        for tp in self._tunable_params:
+            if tp.name.startswith(param_name):
+                tp.enable()
+
+    def suggest(self, trial: optuna.Trial, key=None):
+        suggested = defaultdict(tuple)
+        for tp in self.tunable_params:
+            suggest = {
+                str: trial.suggest_categorical,
+                int: trial.suggest_int,
+                float: trial.suggest_float
+            }.get(tp.dtype)
+            suggested_value = suggest(
+                name=generate_param_key(key, tp.name),
+                **tp.space
+            )
+            if not tp.is_leaf:  # maybe util functions
+                # init default util function
+                suggested_value = tp.selector.select(suggested_value)
+                # recursively suggest
+                if isinstance(suggested_value, Tunable):
+                    suggested_value = suggested_value.suggest(trial, key=tp.name)
+            nm, *keys = tp.name.split('.')
+            if keys:
+                suggested[nm] += (suggested_value,)
+            else:
+                suggested[nm] = suggested_value
+
+        non_tunable_params = {k: getattr(self, k) for k in self.non_tunable_params}
+        return self.__class__(
+            **non_tunable_params,
+            **suggested,
+        )

@@ -1,7 +1,8 @@
 import random
+import re
 from io import TextIOWrapper
 from contextlib import contextmanager
-from typing import Sequence, Callable, Any, Union, Optional, Tuple
+from typing import Sequence, Callable, Any, Union, Optional, Tuple, TypeVar
 
 import numpy as np
 import torch
@@ -101,7 +102,10 @@ def linear_from_params(weight: Tensor, bias: Optional[Tensor] = None) -> nn.Line
     return layer
 
 
-def format_into_tuple(obj: Any):
+T = TypeVar('T')
+
+
+def format_into_tuple(obj: T) -> Tuple[T]:
     if isinstance(obj, Sequence) and not isinstance(obj, str):
         return tuple(obj)
     elif isinstance(obj, type(None)):
@@ -109,7 +113,7 @@ def format_into_tuple(obj: Any):
     return (obj,)
 
 
-def format_out_tuple_if_single(obj: Tuple[Any]):
+def format_out_tuple_if_single(obj: Tuple[T]) -> Union[T, Tuple[T]]:
     if len(obj) == 1:
         return obj[0]
     return obj
@@ -119,9 +123,32 @@ def format_into_tuple_all(**kwargs):
     return {k: format_into_tuple(v) for k, v in kwargs.items()}
 
 
-def ignore_warnings():
-    import warnings
-    warnings.filterwarnings("ignore", category=UserWarning, message="'has_cuda' is deprecated")
-    warnings.filterwarnings("ignore", category=UserWarning, message="'has_cudnn' is deprecated")
-    warnings.filterwarnings("ignore", category=UserWarning, message="'has_mps' is deprecated")
-    warnings.filterwarnings("ignore", category=UserWarning, message="'has_mkldnn' is deprecated")
+def generate_param_key(*args):
+    # ensure the uniqueness of param name of optuna
+    return '.'.join([str(arg) for arg in args if arg is not None])
+
+
+def _camel_to_snake(name):
+    return re.sub(r'(?<!^)(?=[A-Z])', '_', name).lower()
+
+
+def format_multimodal_supporting_input(input, format, input_key=None, **kwargs):
+    inputs = format_into_tuple(input)
+    formatted = []
+    for inp in inputs:
+        args = ()
+        if input_key is None:
+            args += (inp,)
+        else:
+            kwargs[input_key] = inp
+        formatted.append(format(*args, **kwargs))
+    formatted = format_out_tuple_if_single(tuple(formatted))
+    return formatted
+
+
+def run_multimodal_supporting_util_fn(input, fn):
+    inputs = format_into_tuple(input)
+    fns = format_into_tuple(fn)
+    assert len(inputs) == len(fns)
+    outputs = tuple(f(inp) for f, inp in zip(fns, inputs))
+    return format_out_tuple_if_single(outputs)

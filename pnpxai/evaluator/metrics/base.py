@@ -1,68 +1,152 @@
 import abc
 import sys
-import warnings
-from typing import Optional, Union, Callable, Tuple
+from typing import Optional, Union, Callable, Tuple, List, Any, Dict
 
 import copy
 import torch
 from torch import nn
 
+from pnpxai.core.utils import ModelWrapper
 from pnpxai.core._types import ExplanationType
-from pnpxai.explainers import GradCam
 from pnpxai.explainers.base import Explainer
-from pnpxai.explainers.utils.postprocess import PostProcessor
 
 # Ensure compatibility with Python 2/3
-ABC = abc.ABC if sys.version_info >= (3, 4) else abc.ABCMeta(str('ABC'), (), {})
+ABC = abc.ABC if sys.version_info >= (3, 4) else abc.ABCMeta(str("ABC"), (), {})
 
 NON_DISPLAYED_ATTRS = [
-    'model',
-    'explainer',
-    'device',
-    'prob_fn',
-    'pred_fn',
+    "model",
+    "explainer",
+    "device",
+    "prob_fn",
+    "pred_fn",
 ]
 
+
 class Metric(ABC):
+    """
+    An abstract base class representing a metric used to evaluate explanations generated
+    by an explainer for a given model. The metric is typically used to assess the quality or
+    effectiveness of attribution-based explanations.
+
+    Parameters:
+        model (nn.Module): The model to be explained.
+        explainer (Optional[Explainer], optional):
+            The explainer used to generate explanations for the model. Defaults to None.
+        **kwargs:
+            Additional keyword arguments.
+    """
+
     SUPPORTED_EXPLANATION_TYPE: ExplanationType = "attribution"
 
     def __init__(
         self,
         model: nn.Module,
-        explainer: Optional[Explainer]=None,
-        **kwargs
+        explainer: Optional[Explainer] = None,
+        target_input_keys: Optional[List[Union[str, int]]] = None,
+        additional_input_keys: Optional[List[Union[str, int]]] = None,
+        output_modifier: Optional[Callable[[Any], torch.Tensor]] = None,
+        **kwargs,
     ):
-        self.model = model.eval()
+        self.model = model.eval()  # Set the model to evaluation mode
         self.explainer = explainer
-        self.device = next(model.parameters()).device
+        self._wrapped_model = ModelWrapper(
+            model=model,
+            target_input_keys=target_input_keys,
+            additional_input_keys=additional_input_keys,
+            output_modifier=output_modifier,
+        )
+
+    @property
+    def wrapped_model(self):
+        return self._wrapped_model
+
+    @property
+    def device(self):
+        return next(self.model.parameters()).device
 
     def __repr__(self):
-        displayed_attrs = ', '.join([
-            f'{k}={v}' for k, v in self.__dict__.items()
-            if k not in NON_DISPLAYED_ATTRS and v is not None]
+        """
+        Provides a string representation of the Metric object, displaying its attributes.
+
+        Returns:
+            str: A string representation of the Metric object.
+        """
+        displayed_attrs = ", ".join(
+            [
+                f"{k}={v}"
+                for k, v in self.__dict__.items()
+                if k not in NON_DISPLAYED_ATTRS and v is not None
+            ]
         )
         return f"{self.__class__.__name__}({displayed_attrs})"
 
+    def format_inputs(self, inputs: Union[Tuple, Dict]):
+        forward_args = self._wrapped_model.format_target_inputs(inputs)
+        additional_forward_args = self._wrapped_model.format_additional_inputs(inputs)
+        return forward_args, additional_forward_args
+
     def copy(self):
+        """
+        Creates a shallow copy of the Metric object.
+
+        Returns:
+            Metric: A copy of the Metric object.
+        """
         return copy.copy(self)
 
     def set_explainer(self, explainer: Explainer):
-        assert self.model is explainer.model, 'Must have same model of metric.'
+        """
+        Sets the explainer for the metric, ensuring it is associated with the same model.
+        """
+        assert self.model is explainer.model, "Must have same model of metric."
         clone = self.copy()
         clone.explainer = explainer
         return clone
 
     def set_kwargs(self, **kwargs):
+        """
+        Sets additional attributes for the Metric object using keyword arguments.
+        """
         for k, v in kwargs.items():
             setattr(self, k, v)
         return self
 
     def evaluate(
-            self,
-            inputs: Union[torch.Tensor, None],
-            targets: Union[torch.Tensor, None],
-            attributions: Union[torch.Tensor, None],
-            **kwargs
-        ) -> torch.Tensor:
-        """Main function of the interpreter."""
+        self,
+        inputs: torch.Tensor,
+        targets: torch.Tensor,
+        attributions: Optional[torch.Tensor] = None,
+        **kwargs,
+    ) -> torch.Tensor:
+        """
+        Abstract method to evaluate the metric based on inputs, targets, and attributions.
+
+        Parameters:
+            inputs (Union[torch.Tensor, None]):
+                The input data for the model.
+            targets (Union[torch.Tensor, None]):
+                The target labels for the input data.
+            attributions (Union[torch.Tensor, None]):
+                The attributions generated by the explainer.
+            **kwargs:
+                Additional keyword arguments.
+
+        Returns:
+            torch.Tensor: The result of the metric evaluation.
+        """
         raise NotImplementedError
+
+    def _get_attributions(
+        self,
+        inputs: torch.Tensor,
+        targets: torch.Tensor,
+        attributions: Optional[torch.Tensor] = None,
+    ):
+        if attributions is None:
+            if self.explainer is None:
+                raise Exception(
+                    "[Sensitivity] Explainer must be set, if the attributions are not provided"
+                )
+            attributions = self.explainer.attribute(inputs, targets)
+
+        return attributions

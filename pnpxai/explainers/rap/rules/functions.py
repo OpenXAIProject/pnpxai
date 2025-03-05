@@ -1,4 +1,9 @@
-from pnpxai.explainers.rap.rules.base import RelProp, RelPropSimple, _TensorOrTensors, safe_divide
+from pnpxai.explainers.rap.rules.base import (
+    RelProp,
+    RelPropSimple,
+    _TensorOrTensors,
+    safe_divide,
+)
 from torch import Tensor
 import torch
 
@@ -11,9 +16,20 @@ class GeLU(RelProp):
     pass
 
 
+class LeakyReLU(RelProp):
+    pass
+
+
 class SoftMax(RelProp):
-    def relprop(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None):
-        dim = kwargs.get('dim', None)
+    def relprop(
+        self,
+        rel: _TensorOrTensors,
+        inputs: _TensorOrTensors,
+        outputs: _TensorOrTensors,
+        args=None,
+        kwargs=None,
+    ):
+        dim = kwargs.get("dim", None)
         if dim is None:
             # if args[0] is tensor, then dim = args[1]
             dim = args[int(torch.is_tensor(args[0]))]
@@ -23,13 +39,27 @@ class SoftMax(RelProp):
 
 
 class Add(RelPropSimple):
-    def _partial_relprop(self, rel: Tensor, inputs: _TensorOrTensors, is_pos: bool, args=None, kwargs=None):
-        clamp_kwargs = {'min': 0} if is_pos else {'max': 0}
+    def _partial_relprop(
+        self,
+        rel: Tensor,
+        inputs: _TensorOrTensors,
+        is_pos: bool,
+        args=None,
+        kwargs=None,
+    ):
+        clamp_kwargs = {"min": 0} if is_pos else {"max": 0}
         inputs = [torch.clamp(x, **clamp_kwargs) for x in inputs]
         pos_outputs = torch.add(*inputs)
         return super().relprop(rel, inputs, pos_outputs, args, kwargs)
 
-    def relprop(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None):
+    def relprop(
+        self,
+        rel: _TensorOrTensors,
+        inputs: _TensorOrTensors,
+        outputs: _TensorOrTensors,
+        args=None,
+        kwargs=None,
+    ):
         if torch.is_tensor(inputs):
             return rel
 
@@ -46,7 +76,14 @@ class Sub(Add):
 
 
 class Mul(RelPropSimple):
-    def relprop(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None):
+    def relprop(
+        self,
+        rel: _TensorOrTensors,
+        inputs: _TensorOrTensors,
+        outputs: _TensorOrTensors,
+        args=None,
+        kwargs=None,
+    ):
         if torch.is_tensor(inputs):
             inputs = [inputs]
 
@@ -61,8 +98,19 @@ class FloorDiv(Mul):
     pass
 
 
+class Div(Mul):
+    pass
+
+
 class MatMul(RelProp):
-    def relprop(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None) -> _TensorOrTensors:
+    def relprop(
+        self,
+        rel: _TensorOrTensors,
+        inputs: _TensorOrTensors,
+        outputs: _TensorOrTensors,
+        args=None,
+        kwargs=None,
+    ) -> _TensorOrTensors:
         in_a, in_b = inputs
         rel_norm = safe_divide(rel, outputs)
 
@@ -73,12 +121,26 @@ class MatMul(RelProp):
 
 
 class Flatten(RelProp):
-    def relprop(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None):
+    def relprop(
+        self,
+        rel: _TensorOrTensors,
+        inputs: _TensorOrTensors,
+        outputs: _TensorOrTensors,
+        args=None,
+        kwargs=None,
+    ):
         return rel.reshape(inputs.shape)
 
 
 class Cat(RelPropSimple):
-    def backward(self, rel: _TensorOrTensors, inputs: _TensorOrTensors, outputs: _TensorOrTensors, args=None, kwargs=None):
+    def backward(
+        self,
+        rel: _TensorOrTensors,
+        inputs: _TensorOrTensors,
+        outputs: _TensorOrTensors,
+        args=None,
+        kwargs=None,
+    ):
         Sp = safe_divide(rel, outputs)
         Cp = self.gradprop(outputs, inputs, Sp)
         rel = [x * cp for x, cp in zip(inputs, Cp)]
@@ -91,7 +153,9 @@ class Repeat(RelPropSimple):
 
 
 class GetItem(RelPropSimple):
-    def relprop(self, rel: Tensor, inputs: Tensor, outputs: Tensor, args=None, kwargs=None):
+    def relprop(
+        self, rel: Tensor, inputs: Tensor, outputs: Tensor, args=None, kwargs=None
+    ):
         # If module's output is a tuple, propagate rel as is
         inputs = args[0]
         if not torch.is_tensor(inputs):
@@ -104,9 +168,11 @@ class GetItem(RelPropSimple):
 
 
 class Unsqueeze(RelProp):
-    def relprop(self, rel: Tensor, inputs: Tensor, outputs: Tensor, args=None, kwargs=None) -> _TensorOrTensors:
-        if 'input' in kwargs:
-            del kwargs['input']
+    def relprop(
+        self, rel: Tensor, inputs: Tensor, outputs: Tensor, args=None, kwargs=None
+    ) -> _TensorOrTensors:
+        if "input" in kwargs:
+            del kwargs["input"]
         else:
             args = args[1:]
 
@@ -114,13 +180,19 @@ class Unsqueeze(RelProp):
         return rel
 
 
+class Squeeze(RelPropSimple):
+    pass
+
+
 class Expand(RelPropSimple):
     pass
 
 
 class Permute(RelPropSimple):
-    def relprop(self, rel: Tensor, inputs: Tensor, outputs: Tensor, args=None, kwargs=None) -> _TensorOrTensors:
-        dims = kwargs.get('dims', None)
+    def relprop(
+        self, rel: Tensor, inputs: Tensor, outputs: Tensor, args=None, kwargs=None
+    ) -> _TensorOrTensors:
+        dims = kwargs.get("dims", None)
         if dims is None:
             dims = args[1] if isinstance(args[1], (tuple, list)) else args[1:]
 
@@ -132,22 +204,40 @@ class Permute(RelPropSimple):
 
 
 class Reshape(RelProp):
-    def relprop(self, rel: Tensor, inputs: Tensor, outputs: Tensor, args=None, kwargs=None) -> _TensorOrTensors:
+    def relprop(
+        self, rel: Tensor, inputs: Tensor, outputs: Tensor, args=None, kwargs=None
+    ) -> _TensorOrTensors:
         return rel.reshape(inputs.shape)
 
 
 class Transpose(RelProp):
-    def relprop(self, rel: Tensor, inputs: Tensor, outputs: Tensor, args=None, kwargs=None) -> Tensor:
-        dim1 = kwargs.get('dim1', args[1] if len(args) > 1 else None)
-        dim2 = kwargs.get('dim2', args[2] if len(args) > 2 else None)
+    def relprop(
+        self, rel: Tensor, inputs: Tensor, outputs: Tensor, args=None, kwargs=None
+    ) -> Tensor:
+        dim1 = kwargs.get("dim1", args[1] if len(args) > 1 else None)
+        dim2 = kwargs.get("dim2", args[2] if len(args) > 2 else None)
 
         return rel.transpose(dim1, dim2)
 
 
 class View(RelProp):
-    def relprop(self, rel: Tensor, inputs: Tensor, outputs: Tensor, args=None, kwargs=None) -> Tensor:
+    def relprop(
+        self, rel: Tensor, inputs: Tensor, outputs: Tensor, args=None, kwargs=None
+    ) -> Tensor:
         return rel.contiguous().view_as(inputs)
 
 
 class GetAttr(RelProp):
+    pass
+
+
+class Contiguous(RelProp):
+    pass
+
+
+class Unfold(RelPropSimple):
+    pass
+
+
+class ReplicationPad1d(RelPropSimple):
     pass

@@ -1,8 +1,8 @@
-from typing import Set, Tuple, Optional
+from typing import Set, Tuple, Optional, Union, Sequence
 from torch import fx, nn
+from pnpxai.utils import format_into_tuple
 from pnpxai.core._types import Model
-from .utils import get_target_module_of
-from .types import (
+from pnpxai.core.detector.types import (
     ModuleType,
     Linear,
     Convolution,
@@ -11,6 +11,7 @@ from .types import (
     Attention,
     Embedding,
 )
+# from pnpxai.core.modality.modality import _Modality
 
 DEFAULT_MODULE_TYPES_TO_DETECT = (
     Linear,
@@ -41,7 +42,8 @@ def symbolic_trace(model: nn.Module) -> fx.GraphModule:
     tracer = Tracer()
     graph = tracer.trace(model)
     name = (
-        model.__class__.__name__ if isinstance(model, nn.Module) else model.__name__
+        model.__class__.__name__ if isinstance(
+            model, nn.Module) else model.__name__
     )
     return fx.GraphModule(tracer.root, graph, name)
 
@@ -79,40 +81,13 @@ def extract_graph_data(graph_module: fx.GraphModule):
             'source': node.name,
             'target': user.name,
         } for user in node.users]
-    return data    
+    return data
 
 
 def detect_model_architecture(
-        model: Model,
-        targets: Optional[Tuple[ModuleType]]=None,
-    ) -> Set[ModuleType]:
-    """
-    A function detecting architecture for a given model.
-
-    Args:
-        model (Model): The machine learning model to be detected
-
-    Returns:
-        ModelArchitectureSummary: A summary of model architecture
-    """
-    targets = targets or DEFAULT_MODULE_TYPES_TO_DETECT
-    detected = set()
-    traced_model = symbolic_trace(model)
-    for node in traced_model.graph.nodes:
-        m = get_target_module_of(node)
-        if m is None:
-            continue
-        tp = next((target for target in targets if isinstance(m, target)), None)
-        if tp is None:
-            continue
-        detected.add(tp)
-    return detected
-
-
-def detect_model_architecture(
-        model: Model,
-        targets: Optional[Tuple[ModuleType]]=None,
-    ) -> Set[ModuleType]:
+    model: Model,
+    targets: Optional[Tuple[ModuleType]] = None,
+) -> Set[ModuleType]:
     """
     A function detecting architecture for a given model.
 
@@ -125,8 +100,30 @@ def detect_model_architecture(
     targets = targets or DEFAULT_MODULE_TYPES_TO_DETECT
     detected = set()
     for nm, module in model.named_modules():
-        module_type = next((target for target in targets if isinstance(module, target)), None)
+        module_type = next(
+            (target for target in targets if isinstance(module, target)), None)
         if module_type is None:
             continue
         detected.add(module_type)
     return detected
+
+
+DATA_MODALITY_MAYBE = {
+    (float, 2): 'tabular or time-series',
+    (float, 4): 'image',
+    (int, 2): 'text',    
+}
+
+
+def _data_modality_maybe(dtype, ndims):
+    return DATA_MODALITY_MAYBE.get((dtype, ndims))
+
+
+def detect_data_modality(modality: Union["Modality", Sequence["Modality"]]):
+    nms = []
+    for mod in format_into_tuple(modality):
+        mod_nm = _data_modality_maybe(mod.dtype_key, mod.ndims)
+        if mod_nm is None:
+            raise ValueError('Cannot match data modality')
+        nms.append(mod_nm)
+    return nms
