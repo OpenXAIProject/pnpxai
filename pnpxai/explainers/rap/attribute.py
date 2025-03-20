@@ -78,7 +78,6 @@ class RAP(Explainer):
             len(target_inputs) == 1
         ), "RAP for multiple target inputs is not supported."
         outputs = self.method.run(*target_inputs)
-        import pdb; pdb.set_trace()
         preds = self.compute_pred(outputs)
         relprop = self.method.relprop(preds)
         return relprop
