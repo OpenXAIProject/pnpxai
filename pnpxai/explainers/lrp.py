@@ -18,6 +18,7 @@ from zennit.rules import Epsilon
 from zennit.canonizers import SequentialMergeBatchNorm, Canonizer
 
 from pnpxai.core.detector.types import Linear, Convolution, LSTM, RNN, Attention
+from pnpxai.core.utils import ModelWrapper
 from pnpxai.explainers.attentions.module_converters import default_attention_converters
 from pnpxai.explainers.attentions.rules import ConservativeAttentionPropagation
 from pnpxai.explainers.base import Tunable
@@ -69,11 +70,10 @@ class LRPBase(ZennitExplainer):
         self.zennit_composite = zennit_composite
         self.target_layer = target_layer
 
-    def _layer_explainer(
-        self,
-        model: Union[Module, fx.GraphModule],
-    ) -> LayerGradient:
-        wrapped_model = ModelWrapperForLayerAttribution(self._wrapped_model)
+    @property
+    def _layer_attributor(self) -> LayerGradient:
+        preprocessed_model = self._preprocess_model()
+        wrapped_model = ModelWrapperForLayerAttribution(preprocessed_model)
         stack = list(format_into_tuple(self.target_layer))
         # stack = self.target_layer.copy() if isinstance(
         #     self.target_layer, Sequence) else [self.target_layer]
@@ -83,10 +83,10 @@ class LRPBase(ZennitExplainer):
             if isinstance(target_layer, str):
                 layers += (wrapped_model.input_maps[target_layer],)
                 continue
-            if isinstance(model, fx.GraphModule):
+            if isinstance(preprocessed_model, fx.GraphModule):
                 child_nodes = []
                 found = False
-                for node in model.graph.nodes:
+                for node in preprocessed_model.graph.nodes:
                     if node.op == "call_module":
                         try:
                             module = self.model.get_submodule(node.target)
@@ -110,7 +110,7 @@ class LRPBase(ZennitExplainer):
                     last_child = self.model.get_submodule(
                         child_nodes[-1].target)
                     layers += (last_child,)
-            elif isinstance(model, Module):
+            elif isinstance(preprocessed_model, Module):
                 layers += (target_layer,)
         layers = format_out_tuple_if_single(layers)
         return LayerGradient(
@@ -119,16 +119,31 @@ class LRPBase(ZennitExplainer):
             composite=self.zennit_composite,
         )
 
-    def _explainer(self, model) -> Gradient:
+    @property
+    def _attributor(self) -> Gradient:
         return Gradient(
-            model=model,
+            model=self._preprocess_model(),
             composite=self.zennit_composite
         )
 
-    def explainer(self, model) -> Union[Gradient, LayerGradient]:
+    @property
+    def attributor(self) -> Union[Gradient, LayerGradient]:
         if self.target_layer is None:
-            return self._explainer(model)
-        return self._layer_explainer(model)
+            return self._attributor
+        return self._layer_attributor
+
+    def _preprocess_model(self):
+        model, treated = _replace_add_function_with_sum_module(self.model)
+        if treated:
+            # rewrap treated model
+            return ModelWrapper(
+                model=model,
+                target_input_keys=self.target_input_keys,
+                additional_input_keys=self.additional_input_keys,
+                output_modifier=self.output_modifier,
+            )
+        return self._wrapped_model
+
 
     def attribute(
         self,
@@ -145,10 +160,10 @@ class LRPBase(ZennitExplainer):
         Returns:
             torch.Tensor: The result of the explanation.
         """
-        model = _replace_add_function_with_sum_module(self.model)
-        forward_args, additional_forward_args = self.format_inputs(
-            inputs)
-        with self.explainer(model=model) as attributor:
+        forward_args, additional_forward_args = self.format_inputs(inputs)
+        
+        # the composite is registered by __enter__ method
+        with self.attributor as attributor:
             attrs = attributor.forward(
                 forward_args,
                 targets,
@@ -176,6 +191,7 @@ class LRPUniformEpsilon(LRPBase, Tunable):
     SUPPORTED_MODULES = [Linear, Convolution, LSTM, RNN, Attention]
     SUPPORTED_DTYPES = [float, int]
     SUPPORTED_NDIMS = [2, 4]
+    alias = ['lrp_uniform_epsilon', 'lrp_e']
 
     def __init__(
         self,
@@ -237,6 +253,8 @@ class LRPEpsilonGammaBox(LRPBase, Tunable):
     SUPPORTED_MODULES = [Convolution]
     SUPPORTED_DTYPES = [float]
     SUPPORTED_NDIMS = [4]
+    alias = ['lrp_epsilon_gamma_box', 'lrp_egb']
+
 
     def __init__(
         self,
@@ -309,6 +327,7 @@ class LRPEpsilonPlus(LRPBase, Tunable):
     SUPPORTED_MODULES = [Convolution]
     SUPPORTED_DTYPES = [float]
     SUPPORTED_NDIMS = [4]
+    alias = ['lrp_epsilon_plus', 'lrp_ep']
 
     def __init__(
         self,
@@ -367,9 +386,7 @@ class LRPEpsilonAlpha2Beta1(LRPBase, Tunable):
     SUPPORTED_MODULES = [Convolution]
     SUPPORTED_DTYPES = [float]
     SUPPORTED_NDIMS = [4]
-    TUNABLES = {
-        'epsilon': (float, {"low": 1e-6, "high": 1, "log": True}),
-    }
+    alias = ['lrp_epsilon_alpha2_beta1', 'lrp_ea2b1']
 
     def __init__(
         self,
@@ -413,7 +430,7 @@ def _get_uniform_epsilon_composite(epsilon, stabilizer, zennit_canonizers):
     zennit_canonizers = zennit_canonizers or []
     canonizers = canonizers_base() + default_attention_converters + zennit_canonizers
     layer_map = (
-        [(Linear, Epsilon(epsilon=epsilon))]
+        [(Linear, Epsilon(epsilon=epsilon)), (Convolution, Epsilon(epsilon=epsilon))]
         + transformer_layer_map(stabilizer=stabilizer)
         + layer_map_base(stabilizer=stabilizer)
     )
@@ -480,13 +497,13 @@ def canonizers_base():
 
 
 def _replace_add_function_with_sum_module(model: Module) -> fx.GraphModule:
+    treated = False
     try:
         traced_model = fx.symbolic_trace(model)
     except Exception:
         warnings.warn(
             "Your model may not be traced by torch.fx.symbolic_trace.")
-        return model
-    treated = False
+        return model, treated
     for node in traced_model.graph.nodes:
         if node.target is _operator.add:
             treated = True
@@ -498,8 +515,8 @@ def _replace_add_function_with_sum_module(model: Module) -> fx.GraphModule:
                 node.replace_all_uses_with(replacement)
                 traced_model.graph.erase_node(node)
     if not treated:
-        return model
+        return model, treated
     # ensure changes
     traced_model.graph.lint()
     traced_model.recompile()
-    return traced_model
+    return traced_model, treated

@@ -49,6 +49,7 @@ class FullGrad(ZennitExplainer, Tunable):
     SUPPORTED_MODULES = [Convolution]
     SUPPORTED_DTYPES = [float]
     SUPPORTED_NDIMS = [4]
+    alias = ['full_grad', 'fg']
 
     def __init__(
         self,

@@ -45,6 +45,7 @@ class IntegratedGradients(Explainer, Tunable):
     SUPPORTED_MODULES = [Linear, Convolution, Attention]
     SUPPORTED_DTYPES = [float, int]
     SUPPORTED_NDIMS = [2, 4]
+    alias = ['integrated_gradients', 'ig']
 
     def __init__(
         self,
@@ -98,7 +99,7 @@ class IntegratedGradients(Explainer, Tunable):
 
     @property
     def _explainer(self) -> CaptumIntegratedGradients:
-        return CaptumIntegratedGradients(forward_func=self.model)
+        return CaptumIntegratedGradients(forward_func=self._wrapped_model)
 
     @property
     def explainer(self) -> Union[CaptumIntegratedGradients, CaptumLayerIntegratedGradients]:

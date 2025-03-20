@@ -30,6 +30,7 @@ class VarGrad(SmoothGrad):
     SUPPORTED_MODULES = [Linear, Convolution, LSTM, RNN, Attention]
     SUPPORTED_DTYPES = [float, int]
     SUPPORTED_NDIMS = [2, 4]
+    alias = ['var_grad', 'vg']
     
     def __init__(
         self,

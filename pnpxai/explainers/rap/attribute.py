@@ -25,6 +25,7 @@ class RAP(Explainer):
     SUPPORTED_MODULES = [Linear, Convolution]
     SUPPORTED_DTYPES = [float]
     SUPPORTED_NDIMS = [4]
+    alias = 'rap'
 
     def __init__(
         self,
@@ -72,11 +73,12 @@ class RAP(Explainer):
         Returns:
             DataSource: RAP attributions.
         """
-        inputs, _ = self.format_inputs(inputs)
+        target_inputs, _ = self.format_inputs(inputs)
         assert (
-            len(inputs) == 1
-        ), "RAP for multiple inputs is not supported."
-        outputs = self.method.run(*inputs)
+            len(target_inputs) == 1
+        ), "RAP for multiple target inputs is not supported."
+        outputs = self.method.run(*target_inputs)
+        import pdb; pdb.set_trace()
         preds = self.compute_pred(outputs)
         relprop = self.method.relprop(preds)
         return relprop

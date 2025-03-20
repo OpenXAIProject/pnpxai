@@ -214,6 +214,7 @@ class MoRF(PixelFlipping):
         evaluate(inputs, targets, attributions, attention_mask=None):
             Evaluate the explainer's correctness using the MoRF technique by observing changes in model predictions.
     """
+    alias = ['morf']
 
     def __init__(
         self,
@@ -288,6 +289,7 @@ class LeRF(PixelFlipping):
         evaluate(inputs, targets, attributions, attention_mask=None):
             Evaluate the explainer's correctness using the LeRF technique by observing changes in model predictions.
     """
+    alias = ['lerf']
 
     def __init__(
         self,
@@ -365,6 +367,7 @@ class AbPC(PixelFlipping):
         evaluate(inputs, targets, attributions, attention_mask=None):
             Evaluate the explainer's correctness using the AbPC technique by observing changes in model predictions.
     """
+    alias = ['abpc']
 
     def __init__(
         self,

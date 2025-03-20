@@ -205,6 +205,8 @@ class AttentionRollout(AttentionRolloutBase):
     Reference:
         Samira Abnar, Willem Zuidema. Quantifying Attention Flow in Transformers.
     """
+    alias = ['attention_rollout', 'ar']
+
     def __init__(
         self,
         model: Module,
@@ -230,7 +232,8 @@ class AttentionRollout(AttentionRolloutBase):
     def collect_attention_map(self, inputs, targets):
         forward_args, additional_forward_args = self.format_inputs(inputs)
         # get all attn maps
-        with SavingAttentionAttributor(model=self.model) as attributor:
+        with SavingAttentionAttributor(model=self._wrapped_model) as attributor:
+            forward_args += additional_forward_args
             weights_all = attributor(forward_args, None)
         return (weights_all,)
     
@@ -273,6 +276,7 @@ class TransformerAttribution(AttentionRolloutBase):
     """
 
     SUPPORTED_MODULES = [Attention]
+    alias = ['transformer_attribution', 'ta']
     
     def __init__(
         self,
@@ -346,7 +350,7 @@ class TransformerAttribution(AttentionRolloutBase):
     @property
     def _gradient(self) -> Gradient:
         return Gradient(
-            model=self.model,
+            model=self._wrapped_model,
             composite=self.zennit_composite,
         )
 

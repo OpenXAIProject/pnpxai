@@ -32,6 +32,7 @@ class GradientXInput(Explainer):
     SUPPORTED_MODULES = [Linear, Convolution, LSTM, RNN, Attention]
     SUPPORTED_DTYPES = [float, int]
     SUPPORTED_NDIMS = [2, 4]
+    alias = ['grad_x_input', 'gi']
 
     def __init__(
         self,
@@ -64,7 +65,7 @@ class GradientXInput(Explainer):
 
     @property
     def _explainer(self) -> CaptumGradientXInput:
-        return CaptumGradientXInput(forward_func=self.model)
+        return CaptumGradientXInput(forward_func=self._wrapped_model)
     
     @property
     def explainer(self) -> Union[CaptumGradientXInput, CaptumLayerGradientXInput]:

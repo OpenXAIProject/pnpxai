@@ -98,10 +98,19 @@ class Metric(ABC):
         """
         Sets the explainer for the metric, ensuring it is associated with the same model.
         """
-        assert self.model is explainer.model, "Must have same model of metric."
-        clone = self.copy()
-        clone.explainer = explainer
-        return clone
+        for alias in ['model', '_model', 'forward_func']:
+            if hasattr(explainer, alias):
+                explainer_model = getattr(explainer, alias)
+                break
+        if isinstance(explainer_model, ModelWrapper):
+            explainer_model = explainer_model.model
+        # explainer_model = explainer._model if hasattr(explainer, '_model') else explainer.model
+        assert self.model is explainer_model or self._wrapped_model is explainer_model, "Must have same model of metric."
+        self.explainer = explainer
+        return self
+        # clone = self.copy()
+        # clone.explainer = explainer
+        # return clone
 
     def set_kwargs(self, **kwargs):
         """

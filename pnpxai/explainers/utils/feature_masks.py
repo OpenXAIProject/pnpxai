@@ -1,6 +1,7 @@
-from typing import Literal, Union
+from typing import Literal, Union, Sequence
 
 import torch
+import numpy as np
 from skimage.segmentation import (
     felzenszwalb,
     quickshift,
@@ -11,6 +12,8 @@ from skimage.segmentation import (
 from pnpxai.explainers.base import Tunable
 from pnpxai.explainers.types import TunableParameter
 from pnpxai.explainers.utils.base import UtilFunction
+from torchvision.transforms import InterpolationMode, Resize
+import torchvision.transforms.functional as TF
 
 
 class FeatureMaskFunction(UtilFunction):
@@ -66,6 +69,32 @@ class FeatureMaskFunction(UtilFunction):
             )) for inp in inputs
         ]
         return torch.stack(feature_mask).long().to(inputs.device)
+
+
+class Checkerboard(FeatureMaskFunction):
+    def __init__(
+        self,
+        size: Sequence[int] = [20, 20],
+    ):
+        assert len(size) == 2
+        self.size = size
+        self._n_checkers = size[0] * size[1]
+
+    def __call__(self, inputs: torch.Tensor):
+        assert inputs.dim() == 4
+
+        bsz, c, h, w = inputs.size()
+        # print(input_size)
+
+        resize = Resize([h, w], interpolation=InterpolationMode.NEAREST)
+
+        patch_masks = []
+        for i in range(self._n_checkers):
+            mask = np.zeros(self._n_checkers)
+            mask[i] = i
+            mask = resize(torch.Tensor(mask).reshape(-1,self.size[0], self.size[1])).unsqueeze(1)
+            patch_masks.append(mask.numpy())
+        return torch.from_numpy(sum(patch_masks)).squeeze(1).repeat(bsz, 1, 1).long().to(inputs.device)
 
 
 class Felzenszwalb(FeatureMaskFunction, Tunable):
@@ -260,6 +289,7 @@ FEATURE_MASK_FUNCTIONS = {
         'no_mask_2d': NoMask2d,
     },
     (float, 4): {
+        'checkerboard': Checkerboard,
         'felzenszwalb': Felzenszwalb,
         'quickshift': Quickshift,
         'slic': Slic,

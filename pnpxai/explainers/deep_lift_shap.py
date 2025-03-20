@@ -24,6 +24,7 @@ class DeepLiftShap(Explainer):
     SUPPORTED_MODULES = [Convolution]
     SUPPORTED_DTYPES = [float]
     SUPPORTED_NDIMS = [2]
+    alias = ['deep_lift_shap', 'dls']
 
     def __init__(
         self,

@@ -112,8 +112,9 @@ class Explainer(ABC):
         """
         raise NotImplementedError
 
-    def is_tunable(self):
-        return isinstance(self, Tunable)
+    @classmethod
+    def is_tunable(cls):
+        return issubclass(cls, Tunable)
 
 
 class Tunable:
@@ -122,7 +123,7 @@ class Tunable:
 
     @property
     def tunable_params(self):
-        return [tp for tp in self._tunable_params if not tp.disabled]
+        return [tp for tp in self._tunable_params]
 
     @property
     def non_tunable_params(self):
@@ -179,30 +180,64 @@ class Tunable:
 
     def suggest(self, trial: optuna.Trial, key=None):
         suggested = defaultdict(tuple)
+        disabled_nms = []
         for tp in self.tunable_params:
-            suggest = {
-                str: trial.suggest_categorical,
-                int: trial.suggest_int,
-                float: trial.suggest_float
-            }.get(tp.dtype)
-            suggested_value = suggest(
-                name=generate_param_key(key, tp.name),
-                **tp.space
-            )
-            if not tp.is_leaf:  # maybe util functions
-                # init default util function
-                suggested_value = tp.selector.select(suggested_value)
-                # recursively suggest
-                if isinstance(suggested_value, Tunable):
-                    suggested_value = suggested_value.suggest(trial, key=tp.name)
-            nm, *keys = tp.name.split('.')
-            if keys:
-                suggested[nm] += (suggested_value,)
+            if not tp.disabled:
+                suggest = {
+                    str: trial.suggest_categorical,
+                    int: trial.suggest_int,
+                    float: trial.suggest_float
+                }.get(tp.dtype)
+                suggested_value = suggest(
+                    name=generate_param_key(key, tp.name),
+                    **tp.space
+                )
+                if not tp.is_leaf:  # maybe util functions
+                    # init default util function
+                    suggested_value = tp.selector.select(suggested_value)
+                    # recursively suggest
+                    if isinstance(suggested_value, Tunable):
+                        suggested_value = suggested_value.suggest(
+                            trial, key=generate_param_key(key, tp.name),
+                        )
+                nm, *keys = tp.name.split('.')
+                if keys:
+                    suggested[nm] += (suggested_value,)
+                else:
+                    suggested[nm] = suggested_value
             else:
-                suggested[nm] = suggested_value
+                suggested[tp.name] = tp.current_value
+                disabled_nms.append(tp.name)
 
         non_tunable_params = {k: getattr(self, k) for k in self.non_tunable_params}
-        return self.__class__(
+        suggested_obj = self.__class__(
             **non_tunable_params,
             **suggested,
         )
+        for nm in disabled_nms:
+            suggested_obj.disable_tunable_param(nm)
+        return suggested_obj
+
+
+    # def get_tunable_param(self, key, is_leaf=True):
+    #     for tp in self.tunable_params:
+    #         if tp.name == key:
+    #             return tp, is_leaf
+    #     return self.get_tunable_param('.'.join(key.split('.')[:-1]), False)
+
+    def get_tunable_param(self, key, parent=False):
+        for tp in self.tunable_params:
+            if tp.name == key:
+                return tp
+        if not parent:
+            return None
+        return self.get_tunable_param('.'.join(key.split('.')[:-1]))
+
+    def update_current_value(self, key, value):
+        tp = self.get_tunable_param(key)
+        if tp is None:
+            parent_tp = self.get_tunable_param(key, parent=True)
+            parent_tp.current_value.update_current_value(key.split('.')[-1], value)
+        else:
+            value = value if tp.is_leaf else tp.selector.select(value)
+            tp.update_value(value)

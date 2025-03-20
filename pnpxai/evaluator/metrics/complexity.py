@@ -29,6 +29,8 @@ class Complexity(Metric):
     Reference:
         U. Bhatt, A. Weller, and J. M. F. Moura. Evaluating and aggregating feature-based model attributions. In Proceedings of the IJCAI (2020).
     """
+    alias = ['complexity']
+
 
     def __init__(
         self, model: Model, explainer: Optional[Explainer] = None, n_bins: int = 10
@@ -63,4 +65,4 @@ class Complexity(Metric):
             hist, _ = np.histogram(attr.detach().cpu(), bins=self.n_bins)
             prob_mass = hist / hist.sum()
             evaluations.append(entropy(prob_mass))
-        return torch.tensor(evaluations)
+        return torch.tensor(evaluations).to(attributions.dtype).to(self.device)

@@ -28,6 +28,7 @@ class GuidedGradCam(Explainer, Tunable):
     SUPPORTED_MODULES = [Convolution]
     SUPPORTED_DTYPES = [float]
     SUPPORTED_NDIMS = [4]
+    alias = ['guided_grad_cam', 'ggcam']
 
     def __init__(
         self,

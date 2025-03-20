@@ -38,6 +38,7 @@ class SmoothGrad(ZennitExplainer, Tunable):
     SUPPORTED_MODULES = [Linear, Convolution, LSTM, RNN, Attention]
     SUPPORTED_DTYPES = [float, int]
     SUPPORTED_NDIMS = [2, 4]
+    alias = ['smooth_grad', 'sg']
 
     def __init__(
         self,
@@ -94,7 +95,7 @@ class SmoothGrad(ZennitExplainer, Tunable):
     @property
     def _attributor(self) -> SmoothGradAttributor:
         return SmoothGradAttributor(
-            model=self.model,
+            model=self._wrapped_model,
             noise_level=self.noise_level.current_value,
             n_iter=self.n_iter.current_value,
         )

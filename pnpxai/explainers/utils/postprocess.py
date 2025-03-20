@@ -227,11 +227,9 @@ NORMALIZATION_FUNCTIONS = {
         'identity': Identity,
     },
     (float, 4): {
-        'identity': Identity,
         'minmax': MinMax,
     },
     (int, 2): {
-        'identity': Identity,
         'minmax': MinMax,
     },
 }

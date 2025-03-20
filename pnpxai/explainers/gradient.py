@@ -32,6 +32,7 @@ class Gradient(ZennitExplainer):
     SUPPORTED_MODULES = [Linear, Convolution, LSTM, RNN, Attention]
     SUPPORTED_DTYPES = [float, int]
     SUPPORTED_NDIMS = [2, 4]
+    alias = ['gradient', 'vanilla_gradient']
 
     def __init__(
         self,
@@ -66,7 +67,7 @@ class Gradient(ZennitExplainer):
 
     @property
     def _attributor(self) -> GradientAttributor:
-        return GradientAttributor(self.model)
+        return GradientAttributor(self._wrapped_model)
     
     @property
     def attributor(self) -> Union[GradientAttributor, LayerGradientAttributor]:

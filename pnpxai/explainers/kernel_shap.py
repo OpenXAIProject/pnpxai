@@ -41,6 +41,7 @@ class KernelShap(Explainer, Tunable):
     SUPPORTED_MODULES = [Linear, Convolution, LSTM, RNN, Attention]
     SUPPORTED_DTYPES = [float, int]
     SUPPORTED_NDIMS = [2, 4]
+    alias = ['kernel_shap', 'ks']
 
     def __init__(
         self,
