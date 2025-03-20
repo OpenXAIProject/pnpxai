@@ -2,6 +2,8 @@ from typing import Sequence, Optional, Callable, Any, List, Dict, Union
 import torch
 import inspect
 
+from pnpxai.utils import format_into_tuple
+
 
 def default_output_modifier(outputs):
     return outputs
@@ -75,17 +77,25 @@ class ModelWrapper(torch.nn.Module):
         else:
             return {key: batch[key].to(self.device) for key in self.additional_input_keys}
 
-    def format_inputs(self, inputs: Union[Sequence, Dict]):
+    def format_inputs(self, inputs: Union[torch.Tensor, Sequence, Dict]):
+        if isinstance(inputs, torch.Tensor):
+            inputs = format_into_tuple(inputs)
         if isinstance(inputs, Sequence):
             inputs = list(inputs)
+            return tuple(dict(zip(self._required_order, inputs)).values())
         return tuple(inputs[key].to(self.device) for key in self._required_order)
 
-    def format_target_inputs(self, inputs: Union[Sequence, Dict]):
+    def format_target_inputs(self, inputs: Union[torch.Tensor, Sequence, Dict]):
+        if isinstance(inputs, torch.Tensor):
+            inputs = format_into_tuple(inputs)
         if isinstance(inputs, Sequence):
             inputs = list(inputs)
+            return tuple(dict(zip(self.target_input_keys, inputs)).values())
         return tuple(inputs[key].to(self.device) for key in self.target_input_keys)
 
     def format_additional_inputs(self, inputs: Union[Sequence, Dict]):
+        if isinstance(inputs, torch.Tensor):
+            inputs = format_into_tuple(inputs)
         if isinstance(inputs, Sequence):
             inputs = list(inputs)
         return tuple(

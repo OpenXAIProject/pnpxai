@@ -76,10 +76,8 @@ class AutoExplanation(Experiment):
 
     def _load_default_explainers(self):
         for explainer_type in self.recommended.explainers:
-            default_nm = _camel_to_snake(explainer_type.__name__)
-            self.explainers.add(key=default_nm, value=explainer_type)
+            self.explainers.add(key=explainer_type.alias[0], value=explainer_type)
 
     def _load_default_metrics(self):
         for tp in DEFAULT_METRICS:
-            default_nm = _camel_to_snake(tp.__name__)
-            self.metrics.add(key=default_nm, value=tp)
+            self.metrics.add(key=tp.alias[0], value=tp)

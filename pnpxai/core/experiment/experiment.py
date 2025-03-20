@@ -530,6 +530,8 @@ class Experiment(Observable):
         self,
         explainer_key: str,
         metric_key: str,
+        metric_options: Optional[Dict[str, Any]] = None,
+        disable_tunable_params: Optional[Dict[str, Any]] = None,
         direction: Literal['minimize', 'maximize'] = 'maximize',
         sampler: Literal['grid', 'random', 'tpe'] = 'tpe',
         data_ids: Optional[Union[int, Sequence[int]]] = None,
@@ -537,6 +539,8 @@ class Experiment(Observable):
         timeout: Optional[float] = None,
         num_threads: Optional[int] = None,
         show_progress: bool = False,
+        n_jobs: int = 1,
+        errors: Literal['raise', 'ignore'] = 'raise',
         **kwargs,  # sampler kwargs
     ) -> OptimizationOutput:
         """
@@ -563,15 +567,18 @@ class Experiment(Observable):
         org_num_threads = torch.get_num_threads()
         if num_threads is not None:
             torch.set_num_threads(num_threads)
-        objective = Objective(
+        metric_options = metric_options or {}
+        obj = Objective(
             modality=self.modality,
             explainer=self.create_explainer(explainer_key),
-            metric=self.create_metric(metric_key),
+            metric=self.create_metric(metric_key, **metric_options),
             data=self.manager.get_data(data_ids)[0],
+            disable_tunable_params=disable_tunable_params,
             target_class_extractor=self.target_class_extractor,
             label_key=self.label_key,
             target_labels=self.target_labels,
             show_progress=show_progress,
+            errors=errors,
         )
 
         # TODO: grid search
@@ -584,30 +591,33 @@ class Experiment(Observable):
             direction=direction,
         )
         study.optimize(
-            objective,
+            obj,
             n_trials=n_trials,
             timeout=timeout,
-            n_jobs=1,
+            n_jobs=n_jobs,
         )
-        try:
-            opt_explainer = study.best_trial.user_attrs['explainer']
-            opt_postprocessor = study.best_trial.user_attrs['postprocessor']
-            opt_params = study.best_params
-            opt_value = study.best_trial.value
-        except ValueError:
-            # all trials fail
-            opt_explainer = None
-            opt_postprocessor = None
-            opt_params = None
-            opt_value = None
-        torch.set_num_threads(org_num_threads)
+
+        opt_explainer = self.create_explainer(explainer_key)
+        opt_pps = tuple(
+            PostProcessor(modality=mod) for mod in format_into_tuple(self.modality))
+        for key in study.best_params:
+            div, *additional_keys = key.split('.')
+            if div == Objective.EXPLAINER_KEY:
+                opt_explainer.update_current_value(
+                    '.'.join(additional_keys), study.best_params[key])
+            elif div == Objective.POSTPROCESSOR_KEY:
+                mod_loc, _key = additional_keys
+                opt_pps[int(mod_loc)].update_current_value(
+                    _key, study.best_params[key])
+        opt_pps = format_out_tuple_if_single(opt_pps)
         return OptimizationOutput(
             explainer=opt_explainer,
-            postprocessor=opt_postprocessor,
+            postprocessor=opt_pps,
             study=study,
-            value=opt_value,
-            params=opt_params,
+            value=study.best_trial.value,
+            params=study.best_params,
         )
+
 
     def get_inputs_flattened(
         self,
@@ -807,3 +817,5 @@ class Experiment(Observable):
     @property
     def has_explanations(self):
         return self.manager.has_explanations
+
+

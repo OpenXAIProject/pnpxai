@@ -1,4 +1,5 @@
-from typing import Optional, Any, Callable, Union
+
+from typing import Optional, Any, Callable, Union, Dict, Literal
 
 from tqdm import tqdm
 from optuna.trial import Trial, TrialState
@@ -42,10 +43,12 @@ class Objective:
         explainer: Explainer,
         metric: Metric,
         data: DataSource,
+        disable_tunable_params: Optional[Dict[str, Any]] = None,
         target_class_extractor: Optional[Callable[[Any], Any]] = None,
         label_key: Optional[Union[str, int]] = -1,
         target_labels: bool = False,
         show_progress: bool = False,
+        errors: Literal['raise', 'ignore'] = 'raise',
     ):
         self.modality = modality
         self.explainer = explainer
@@ -55,6 +58,17 @@ class Objective:
         self.label_key = label_key
         self.target_labels = target_labels
         self.show_progress = show_progress
+        self.disable_tunable_params = disable_tunable_params or {}
+        self.disable_tunable_params_()
+        self.errors = errors
+
+    def disable_tunable_params_(self):
+        if self.explainer.is_tunable():
+            for key, value in self.disable_tunable_params.items():
+                param = getattr(self.explainer, key)
+                param.update_value(value) # fix value
+                param.disable() # disable tuning
+
 
     def __call__(self, trial: Trial) -> float:
         """
@@ -73,16 +87,15 @@ class Objective:
             results contain non-countable values like `nan` or `inf`.
         """
         # suggest explainer
-        if self.explainer.is_tunable():
-            suggested_explainer = self.explainer.suggest(trial)
+        if self.explainer.__class__.is_tunable():
+            suggested_explainer = self.explainer.suggest(trial, key=self.EXPLAINER_KEY)
         else:
             suggested_explainer = self.explainer
-            # explainer = suggest(trial, self.explainer, self.modality, key=self.EXPLAINER_KEY)
 
         # suggest postprocessor
         modalities = format_into_tuple(self.modality)
         suggested_pps = tuple()
-        for modality in modalities:
+        for pp_loc, modality in enumerate(modalities):
             if (
                 isinstance(suggested_explainer, (Lime, KernelShap))
                 and modality.dtype_key == int
@@ -93,7 +106,10 @@ class Objective:
                 pp_base.disable_tunable_param('pooling_method')
             else:
                 pp_base = PostProcessor(modality)
-            suggested_pp = pp_base.suggest(trial)
+            suggested_pp = pp_base.suggest(
+                trial,
+                key=f'{self.POSTPROCESSOR_KEY}.{pp_loc}',
+            )
             suggested_pps += (suggested_pp,)
 
         '''
@@ -109,9 +125,6 @@ class Objective:
         )
         for t in reversed(trials_to_consider):
             if trial.params == t.params:
-                trial.set_user_attr('explainer', suggested_explainer)
-                trial.set_user_attr('postprocessor', format_out_tuple_if_single(
-                    suggested_pps))
                 return t.value
 
         # actual trial
@@ -127,7 +140,12 @@ class Objective:
                 formatted = suggested_explainer._wrapped_model.format_inputs(inputs)
                 outputs = suggested_explainer._wrapped_model(*formatted)
                 targets = self.target_class_extractor(outputs)
-            attrs = format_into_tuple(suggested_explainer.attribute(inputs, targets))
+            try:
+                attrs = format_into_tuple(suggested_explainer.attribute(inputs, targets))
+            except Exception as e:
+                if self.errors == 'raise':
+                    raise e
+                return float('nan')
             attrs_pp = tuple()
             for pp, attr in zip(suggested_pps, attrs):
                 attr_pp = pp(attr)
@@ -140,9 +158,4 @@ class Objective:
             )
             for ev in format_into_tuple(evals):
                 evals_sum += ev.sum().item()
-
-        # log suggested explainer and postprocessor to `trial.user_attrs`
-        trial.set_user_attr('explainer', suggested_explainer)
-        trial.set_user_attr('postprocessor', format_out_tuple_if_single(
-            suggested_pps))
         return evals_sum / len(self.data.dataset)

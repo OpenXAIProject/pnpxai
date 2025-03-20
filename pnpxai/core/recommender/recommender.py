@@ -16,12 +16,13 @@ from pnpxai.explainers.base import Explainer
 from pnpxai.explainers import (
     GradCam,
     GuidedGradCam,
+    RAP,
     AVAILABLE_EXPLAINERS
 )
 from pnpxai.utils import format_into_tuple
 
 
-CAM_BASED_EXPLAINERS = {GradCam, GuidedGradCam}
+ATTENTION_NOT_SUPPORTED_EXPLAINERS = {GradCam, GuidedGradCam, RAP}
 
 
 @dataclass
@@ -129,7 +130,7 @@ class XaiRecommender:
                     self._map_by_architecture.data[arch]
                 )
         if Attention in architecture:
-            explainers['architecture'].difference_update(CAM_BASED_EXPLAINERS)
+            explainers['architecture'].difference_update(ATTENTION_NOT_SUPPORTED_EXPLAINERS)
         explainers = set.intersection(*explainers.values())
         return list(explainers)
 

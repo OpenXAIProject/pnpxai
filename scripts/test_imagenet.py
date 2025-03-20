@@ -23,7 +23,8 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader
 
 from pnpxai import XaiRecommender, Experiment, AutoExplanation
-from pnpxai.evaluator.metrics import AbPC
+from pnpxai.evaluator.metrics.base import Metric
+from pnpxai.evaluator.metrics import AbPC, Complexity
 from pnpxai.core.modality.modality import Modality
 
 from tutorials.helpers import get_torchvision_model, get_imagenet_dataset
@@ -32,7 +33,6 @@ from tutorials.helpers import get_torchvision_model, get_imagenet_dataset
 TORCHVISION_MODEL_CHOICES = [
     'resnet18',
     'vit_b_16',
-    # ...
 ]
 
 
@@ -44,6 +44,34 @@ parser.add_argument('--batch_size', type=int, default=1) # vit_b_16 x ig often r
 parser.add_argument('--disable_gpu', action='store_true')
 parser.add_argument('--fast_dev_run', action='store_true')
 
+#------------------------------------------------------------------------------#
+#---------------------------------- metrics -----------------------------------#
+#------------------------------------------------------------------------------#
+
+class CompoundMetric(Metric):
+    def __init__(
+        self,
+        model,
+        metrics,
+        weights, 
+        explainer=None,
+        target_input_keys=None,
+        additional_input_keys=None,
+        output_modifier=None,
+    ):
+        super().__init__(
+            model, explainer, target_input_keys,
+            additional_input_keys, output_modifier,
+        )
+        assert len(metrics) == len(weights)
+        self.metrics = metrics
+        self.weights = weights
+
+    def evaluate(self, inputs, targets, attrs):
+        values = torch.zeros(attrs.size(0)).to(attrs.device)
+        for weight, metric in zip(self.weights, self.metrics):
+            values += weight * metric.set_explainer(self.explainer).evaluate(inputs, targets, attrs)
+        return values
 
 def main(args):
     # setup
@@ -76,47 +104,6 @@ def main(args):
         pooling_dim=1,
     )
 
-    '''
-    #--------------------------------------------------------------------------#
-    #------------------------------- recommend --------------------------------#
-    #--------------------------------------------------------------------------#
-
-    # You can get pnpxai recommendation results without AutoExplanation as followings:
-
-    recommended = XaiRecommender().recommend(
-        modality=modality,
-        model=model,
-    )
-    
-    recommended.print_tabular()
-    '''
-
-
-    '''
-    #--------------------------------------------------------------------------#
-    #------------------------------ experiment --------------------------------#
-    #--------------------------------------------------------------------------#
-
-    # You can manually create experiment as followings:
-    expr = Experiment(
-        model=model,
-        data=dataloader,
-        modality=modality,
-        target_input_keys=[0],  # feature location in batch from dataloader
-        target_class_extractor=lambda outputs: outputs.argmax(-1),  # extract target classes from output batch
-        label_key=-1,  # label location in batch from dataloader
-    )
-
-    # add recommended explainers recommended
-    camel_to_snake = lambda name: re.sub(r'(?<!^)(?=[A-Z])', '_', name).lower()
-    for explainer_type in recommended.explainers:
-        name = camel_to_snake(explainer_type.__name__)
-        expr.explainers.add(key=name, value=explainer_type)
-
-    # add a metric
-    expr.metrics.add(key='abpc', value=AbPC)
-    '''
-
 
     #--------------------------------------------------------------------------#
     #--------------------------- auto explanation -----------------------------#
@@ -132,11 +119,14 @@ def main(args):
         label_key='labels',
         target_labels=False, # Gets attributions on the prediction for all explainer if False.
     )
-    
-    # You can browse available explainer_keys and metric_keys as followings:
-    print(expr.explainers.choices)
-    print(expr.metrics.choices)
 
+    # update metrics
+    expr.metrics.delete('morf')
+    expr.metrics.delete('lerf')
+
+    expr.metrics.add('cmpx', Complexity)
+    expr.metrics.add('cmpd', CompoundMetric)
+    
     # optimize all
     records = []
     best_params = defaultdict(dict)
@@ -148,15 +138,35 @@ def main(args):
     for explainer_key, metric_key in pbar:
         if expr.is_tunable(explainer_key):  # skip if there's no tunable for an explainer
             pbar.set_description(f'Optimizing {explainer_key} on {metric_key}')
+
+            # setup for compound metrics
+            metric_options = {}
+            if metric_key == 'cmpd':
+                metric_options['metrics'] = [
+                    expr.create_metric('abpc'),
+                    expr.create_metric('cmpx'),
+                ]
+                metric_options['weights'] = [.8, -.2]
+
+            # fix n_samples for lime and kernel shap
+            disable_tunable_params = {}
+            if explainer_key in ['lime', 'kernel_shap']:
+                disable_tunable_params['n_samples'] = 30
+
+            # set direction
             direction = {
-                'mo_r_f': 'minimize',
-                'le_r_f': 'maximize',
-                'ab_p_c': 'maximize',
+                'abpc': 'maximize',
+                'cmpx': 'minimize',
+                'cmpd': 'maximize',
             }.get(metric_key)
+
+            # optimize
             opt_results = expr.optimize(
                 explainer_key=explainer_key,
                 metric_key=metric_key,
+                metric_options=metric_options,
                 direction=direction,
+                disable_tunable_params=disable_tunable_params,
                 sampler='random',
                 num_threads=16,
                 seed=42,

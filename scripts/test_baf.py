@@ -31,7 +31,6 @@ from pprint import pprint
 import numpy as np
 import pandas as pd
 import torch
-
 from torch import nn
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader, Subset
@@ -39,13 +38,15 @@ from PIL import Image
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, roc_auc_score
+import xgboost
 
 from pnpxai import XaiRecommender, Experiment, AutoExplanation
-from pnpxai.evaluator.metrics import AbPC
 from pnpxai.core.modality.modality import Modality
+from pnpxai.explainers import Lime, KernelShap
+from pnpxai.evaluator.metrics import AbPC, MoRF, LeRF
 
 
-BAF_MODEL_CHOICES = ['tab_resnet']
+BAF_MODEL_CHOICES = ['tab_resnet', 'xgb']
 
 
 parser = argparse.ArgumentParser()
@@ -142,6 +143,7 @@ def preprocess_data(file_path, mul=2, random_state=42):
 #----------------------------------- model ------------------------------------#
 #------------------------------------------------------------------------------#
 
+# tab resnet
 class ResNetBlock(nn.Module):
     def __init__(self, in_features, out_features):
         super(ResNetBlock, self).__init__()
@@ -224,11 +226,54 @@ def train(
     return model_path
 
 
+class TorchModelForXGBoost(nn.Module):
+    def __init__(self, xgb_model):
+        super().__init__()
+        self.xgb_model = xgb_model
+        self._dummy_layer = nn.Linear(1, 1)
+
+    def forward(self, x: torch.Tensor):
+        out = self.xgb_model.predict_proba(x.cpu().numpy())
+        return torch.from_numpy(out)
+
+
+
+#------------------------------------------------------------------------------#
+#----------------------------------- kmeans -----------------------------------#
+#------------------------------------------------------------------------------#
+
+from sklearn.cluster import KMeans as SklearnKMeans
+from pnpxai.explainers.utils.baselines import BaselineFunction
+from pnpxai.explainers.base import Tunable
+from pnpxai.explainers.types import TunableParameter
+
+
+class KMeans(BaselineFunction, Tunable):
+    def __init__(self, background_data, n_clusters=8):
+        self.background_data = background_data
+        self.n_clusters = TunableParameter(
+            name='n_clusters',
+            current_value=n_clusters,
+            dtype=int,
+            is_leaf=True,
+            space={'low': 8, 'high': len(background_data)//10, 'step': 10},
+        )
+        self.kmeans_ = SklearnKMeans(n_clusters).fit(background_data)
+        BaselineFunction.__init__(self)
+        Tunable.__init__(self)
+        self.register_tunable_params([self.n_clusters])
+
+    def __call__(self, inputs):
+        cluster_ids = self.kmeans_.predict(inputs.numpy())
+        cluster_centers = self.kmeans_.cluster_centers_[cluster_ids]
+        return torch.from_numpy(cluster_centers).to(inputs.device)
+
+
 #------------------------------------------------------------------------------#
 #----------------------------------- main -------------------------------------#
 #------------------------------------------------------------------------------#
 
-def main(args):
+def main_resnet(args):
     # setup
     use_gpu = torch.cuda.is_available() and not args.disable_gpu
     device = torch.device('cuda' if use_gpu else 'cpu')
@@ -369,14 +414,18 @@ def main(args):
         if expr.is_tunable(explainer_key): # skip if there's no tunable for an explainer
             pbar.set_description(f'Optimizing {explainer_key} on {metric_key}')
             direction = {
-                'mo_r_f': 'minimize',
-                'le_r_f': 'maximize',
-                'ab_p_c': 'maximize',
+                'morf': 'minimize',
+                'lerf': 'maximize',
+                'abpc': 'maximize',
             }.get(metric_key)
+            disable_tunable_params = {}
+            if explainer_key in ['lime', 'kernel_shap']:
+                disable_tunable_params['n_samples'] = 100
             opt_results = expr.optimize(
                 explainer_key=explainer_key,
                 metric_key=metric_key,
                 direction=direction,
+                disable_tunable_params=disable_tunable_params,
                 sampler='random',
                 seed=42,
                 num_threads=16,
@@ -398,7 +447,116 @@ def main(args):
     pprint(best_params)
 
 
+def main_xgb(args):
+    # data
+    data_fpth = download_data(args.data_dir) # download data and get the filepath
+    data = preprocess_data(data_fpth) # load and preprocess data
+
+    test_set = PandasDataset(data['x_test'], data['y_test'])
+    if args.fast_dev_run:
+        indices = list(range(args.batch_size*2))
+        test_set = Subset(test_set, indices=indices)
+    test_loader = DataLoader(
+        test_set,
+        batch_size=len(test_set),
+        collate_fn=collate_fn,
+        num_workers=0,
+        shuffle=False,
+        pin_memory=False,
+    )
+
+    # model
+    xgb_model = xgboost.XGBClassifier()
+    xgb_model.fit(data['x_train'], data['y_train'])
+    torch_model = TorchModelForXGBoost(xgb_model=xgb_model)
+
+    # modality
+    sample_batch = next(iter(test_loader))
+    modality = Modality(
+        dtype=sample_batch[0].dtype,
+        ndims=sample_batch[0].dim(),
+    )
+
+    #--------------------------------------------------------------------------#
+    #------------------------------ experiment --------------------------------#
+    #--------------------------------------------------------------------------#
+
+    # You can manually create experiment as followings:
+    expr = Experiment(
+        model=torch_model,
+        data=test_loader,
+        modality=modality,
+        target_input_keys=[0],  # feature location in batch from dataloader
+        target_class_extractor=lambda outputs: outputs.argmax(-1),  # extract target class from output batch
+        label_key=-1,  # label location in input batch from dataloader
+    )
+
+    # add explainers
+    expr.explainers.add('kernel_shap', KernelShap)
+    expr.explainers.add('lime', Lime)
+
+    # add metrics
+    expr.metrics.add('abpc', AbPC)
+    expr.metrics.add('morf', MoRF)
+    expr.metrics.add('lerf', LeRF)
+
+    # remove unused baseline functions
+    expr.modality.util_functions['baseline_fn'].delete('zeros')
+    expr.modality.util_functions['baseline_fn'].delete('mean')
+
+    # add new baseline functions
+    expr.modality.util_functions['baseline_fn'].add('kmeans', KMeans)
+    expr.modality.util_functions['baseline_fn'].add_default_kwargs(
+        'background_data', test_set.inputs.astype('float32').to_numpy())
+
+    records = []
+    best_params = defaultdict(dict)
+    combs = list(itertools.product(
+        expr.explainers.choices,
+        expr.metrics.choices,
+    ))
+    pbar = tqdm(combs, total=len(combs))
+    for explainer_key, metric_key in pbar:
+        if expr.is_tunable(explainer_key): # skip if there's no tunable for an explainer
+            pbar.set_description(f'Optimizing {explainer_key} on {metric_key}')
+            direction = {
+                'morf': 'minimize',
+                'lerf': 'maximize',
+                'abpc': 'maximize',
+            }.get(metric_key)
+
+            opt_results = expr.optimize(
+                explainer_key=explainer_key,
+                metric_key=metric_key,
+                metric_options={'n_steps': sample_batch[0].size(1)}, # pixel flip feature by feature
+                direction=direction,
+                disable_tunable_params={'n_samples': 30}, # fix n_samples
+                sampler='random',
+                seed=42,
+                num_threads=16,
+                show_progress=not args.fast_dev_run,
+                n_trials=2 if args.fast_dev_run else 100,
+            )
+            records.append({
+                'explainer': explainer_key,
+                'metric': f'Best {metric_key}',
+                'value': opt_results.study.best_trial.value,
+            })
+            best_params[explainer_key][metric_key] = opt_results.study.best_params
+    df = pd.DataFrame.from_records(records)
+    summary_table = df.set_index(
+        ['explainer', 'metric'])['value'].unstack('metric')
+    print('-------- Summary --------')
+    print(summary_table)
+    print('------ Best Params ------')
+    pprint(best_params)
+
+
+
 if __name__ == '__main__':
     args = parser.parse_args()
-    main(args)
+    if args.model == 'tab_resnet':
+        main_resnet(args)
+    elif args.model == 'xgb':
+        main_xgb(args)
 
