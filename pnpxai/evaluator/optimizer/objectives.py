@@ -1,14 +1,15 @@
-from typing import Optional, Any
-from torch import Tensor
+
+from typing import Optional, Any, Callable, Union, Dict, Literal
+
+from tqdm import tqdm
 from optuna.trial import Trial, TrialState
 
-from pnpxai.core._types import TensorOrTupleOfTensors
-from pnpxai.core.modality.modality import Modality, TextModality
+from pnpxai.core._types import DataSource
+from pnpxai.core.modality.modality import Modality
 from pnpxai.explainers import Explainer, KernelShap, Lime
 from pnpxai.explainers.utils.postprocess import PostProcessor, Identity
 from pnpxai.evaluator.metrics.base import Metric
-from pnpxai.evaluator.optimizer.suggestor import suggest
-from pnpxai.utils import format_into_tuple, format_out_tuple_if_single, generate_param_key
+from pnpxai.utils import format_into_tuple, format_out_tuple_if_single
 
 
 class Objective:
@@ -38,64 +39,36 @@ class Objective:
 
     def __init__(
         self,
-        explainer: Explainer,
-        postprocessor: PostProcessor,
-        metric: Metric,
         modality: Modality,
-        inputs: Optional[TensorOrTupleOfTensors] = None,
-        targets: Optional[Tensor] = None,
+        explainer: Explainer,
+        metric: Metric,
+        data: DataSource,
+        disable_tunable_params: Optional[Dict[str, Any]] = None,
+        target_class_extractor: Optional[Callable[[Any], Any]] = None,
+        label_key: Optional[Union[str, int]] = -1,
+        target_labels: bool = False,
+        show_progress: bool = False,
+        errors: Literal['raise', 'ignore'] = 'raise',
     ):
-        self.explainer = explainer
-        self.postprocessor = postprocessor
-        self.metric = metric
         self.modality = modality
-        self.inputs = inputs
-        self.targets = targets
+        self.explainer = explainer
+        self.metric = metric
+        self.data = data
+        self.target_class_extractor = target_class_extractor
+        self.label_key = label_key
+        self.target_labels = target_labels
+        self.show_progress = show_progress
+        self.disable_tunable_params = disable_tunable_params or {}
+        self.disable_tunable_params_()
+        self.errors = errors
 
-    def set_inputs(self, inputs):
-        """
-        Sets the input data for the objective.
+    def disable_tunable_params_(self):
+        if self.explainer.is_tunable():
+            for key, value in self.disable_tunable_params.items():
+                param = getattr(self.explainer, key)
+                param.update_value(value) # fix value
+                param.disable() # disable tuning
 
-        Parameters:
-            inputs (TensorOrTupleOfTensors): 
-                The input data to be used by the explainer.
-
-        Returns:
-            Objective: The updated Objective instance.
-        """
-        self.inputs = inputs
-        return self
-
-    def set_targets(self, targets):
-        """
-        Sets the target labels for the objective.
-
-        Parameters:
-            targets (Tensor): 
-                The target labels corresponding to the input data.
-
-        Returns:
-            Objective: The updated Objective instance.
-        """
-        self.targets = targets
-        return self
-
-    def set_data(self, inputs, targets):
-        """
-        Sets both the input data and target labels for the objective.
-
-        Parameters:
-            inputs (TensorOrTupleOfTensors): 
-                The input data to be used by the explainer.
-            targets (Tensor): 
-                The target labels corresponding to the input data.
-
-        Returns:
-            Objective: The updated Objective instance.
-        """
-        self.set_inputs(inputs)
-        self.set_targets(targets)
-        return self
 
     def __call__(self, trial: Trial) -> float:
         """
@@ -114,61 +87,75 @@ class Objective:
             results contain non-countable values like `nan` or `inf`.
         """
         # suggest explainer
-        explainer = suggest(trial, self.explainer, self.modality, key=self.EXPLAINER_KEY)
+        if self.explainer.__class__.is_tunable():
+            suggested_explainer = self.explainer.suggest(trial, key=self.EXPLAINER_KEY)
+        else:
+            suggested_explainer = self.explainer
 
         # suggest postprocessor
         modalities = format_into_tuple(self.modality)
-        is_multi_modal = len(modalities) > 1
-        postprocessor = []
-        for pp, modality in zip(
-            format_into_tuple(self.postprocessor),
-            modalities,
-        ):
-            force_params = {}
+        suggested_pps = tuple()
+        for pp_loc, modality in enumerate(modalities):
             if (
-                isinstance(explainer, (Lime, KernelShap))
-                and isinstance(modality, TextModality)
+                isinstance(suggested_explainer, (Lime, KernelShap))
+                and modality.dtype_key == int
             ):
-                force_params['pooling_fn'] = Identity()
-            postprocessor.append(suggest(
-                trial, pp, modality,
-                key=generate_param_key(
-                    self.POSTPROCESSOR_KEY,
-                    modality.__class__.__name__ if is_multi_modal else None
-                ),
-                force_params=force_params,
-            ))
-        postprocessor = format_out_tuple_if_single(tuple(postprocessor))
+                modality.util_functions['pooling_fn'].add_fallback_option(
+                    key='identity', value=Identity)
+                pp_base = PostProcessor(modality, 'identity')
+                pp_base.disable_tunable_param('pooling_method')
+            else:
+                pp_base = PostProcessor(modality)
+            suggested_pp = pp_base.suggest(
+                trial,
+                key=f'{self.POSTPROCESSOR_KEY}.{pp_loc}',
+            )
+            suggested_pps += (suggested_pp,)
 
-        # Ignore duplicated samples
+        '''
+        Although the number of trials is larger than the number of search grids,
+        the number of actual trials will be limited to the number of search grids
+        by the following exception.
+        '''
+        # ignore duplicated samples
         states_to_consider = (TrialState.COMPLETE,)
-        trials_to_consider = trial.study.get_trials(deepcopy=False, states=states_to_consider)
+        trials_to_consider = trial.study.get_trials(
+            deepcopy=False,
+            states=states_to_consider,
+        )
         for t in reversed(trials_to_consider):
             if trial.params == t.params:
-                trial.set_user_attr('explainer', explainer)
-                trial.set_user_attr('postprocessor', postprocessor)
                 return t.value
 
-        # Explain and postprocess
-        attrs = explainer.attribute(self.inputs, self.targets)
-        postprocessed = tuple(
-            pp(attr) for pp, attr in zip(
-                format_into_tuple(postprocessor),
-                format_into_tuple(attrs),
+        # actual trial
+        evals_sum = 0.
+        pbar = self.data
+        if self.show_progress:
+            pbar = tqdm(pbar, total=len(pbar))
+        for batch in pbar:
+            inputs = suggested_explainer._wrapped_model.extract_inputs(batch)
+            if self.target_labels:
+                targets = batch[self.label_key]
+            else:
+                formatted = suggested_explainer._wrapped_model.format_inputs(inputs)
+                outputs = suggested_explainer._wrapped_model(*formatted)
+                targets = self.target_class_extractor(outputs)
+            try:
+                attrs = format_into_tuple(suggested_explainer.attribute(inputs, targets))
+            except Exception as e:
+                if self.errors == 'raise':
+                    raise e
+                return float('nan')
+            attrs_pp = tuple()
+            for pp, attr in zip(suggested_pps, attrs):
+                attr_pp = pp(attr)
+                if any(a.isnan().sum() > 0 or a.isinf().sum() > 0 for a in attr_pp):
+                    return float('nan')
+                attrs_pp += (attr_pp,)
+            attrs_pp = format_out_tuple_if_single(attrs_pp)
+            evals = self.metric.set_explainer(suggested_explainer).evaluate(
+                inputs, targets, attrs_pp,
             )
-        )
-
-        if any(pp.isnan().sum() > 0 or pp.isinf().sum() > 0 for pp in postprocessed):
-            # Treat a failure as nan
-            return float('nan')
-
-        postprocessed = format_out_tuple_if_single(postprocessed)
-        metric = self.metric.set_explainer(explainer)
-        evals = format_into_tuple(
-            metric.evaluate(self.inputs, self.targets, postprocessed)
-        )
-
-        # Keep current explainer and postprocessor on trial
-        trial.set_user_attr('explainer', explainer)
-        trial.set_user_attr('postprocessor', postprocessor)
-        return (sum(*evals) / len(evals)).item()
+            for ev in format_into_tuple(evals):
+                evals_sum += ev.sum().item()
+        return evals_sum / len(self.data.dataset)

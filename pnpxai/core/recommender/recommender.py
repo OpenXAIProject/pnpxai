@@ -1,35 +1,39 @@
 from typing import List, Type, Dict, Set, Any, Sequence, Tuple, Union
+from collections import defaultdict
 from dataclasses import dataclass, asdict
 from tabulate import tabulate
+import itertools
 
 from pnpxai.core._types import Model
 from pnpxai.core.modality.modality import Modality
-from pnpxai.core.detector import detect_model_architecture
-from pnpxai.core.detector.types import (
-    ModuleType,
-    Linear,
-    Convolution
+from pnpxai.core.detector import (
+    detect_model_architecture,
+    detect_data_modality,
 )
+from pnpxai.core.detector.detector import _data_modality_maybe
+from pnpxai.core.detector.types import ModuleType, Attention
 from pnpxai.explainers.base import Explainer
 from pnpxai.explainers import (
     GradCam,
     GuidedGradCam,
+    RAP,
     AVAILABLE_EXPLAINERS
 )
 from pnpxai.utils import format_into_tuple
 
 
-CAM_BASED_EXPLAINERS = {GradCam, GuidedGradCam}
+ATTENTION_NOT_SUPPORTED_EXPLAINERS = {GradCam, GuidedGradCam, RAP}
 
 
 @dataclass
 class RecommenderOutput:
+    detected_modality: str
     detected_architectures: Set[ModuleType]
-    explainers: list
+    explainers: List[Explainer]
 
     def print_tabular(self):
         print(tabulate([
-            [k, [v.__name__ for v in vs]]
+            [k, [v.__name__ if not isinstance(v, str) else v for v in vs]]
             for k, vs in asdict(self).items()
         ]))
 
@@ -59,51 +63,82 @@ class XaiRecommender:
     """
 
     def __init__(self):
-        self.architecture_to_explainers_map = self._build_architecture_to_explainers_map()
+        self._map_by_architecture = self._build_map_by_architecture()
+        self._map_by_modality = self._build_map_by_modality()
 
-    def _build_architecture_to_explainers_map(self):
-        map_data = {}
+    @property
+    def map_by_architecture(self):
+        return self._map_by_architecture
+    
+    @property
+    def map_by_modality(self):
+        return self._map_by_modality
+
+    def _build_map_by_architecture(self):
+        map_data = defaultdict(set)
         for explainer_type in AVAILABLE_EXPLAINERS:
             for arch in explainer_type.SUPPORTED_MODULES:
-                if arch not in map_data:
-                    map_data[arch] = set()
                 map_data[arch].add(explainer_type)
         return RecommendationMap(map_data, ["architecture", "explainers"])
+
+    def _build_map_by_modality(self):
+        map_data = defaultdict(set)
+        for explainer_type in AVAILABLE_EXPLAINERS:
+            if not hasattr(explainer_type, 'SUPPORTED_DTYPES'):
+                continue
+            combs = itertools.product(
+                explainer_type.SUPPORTED_DTYPES,
+                explainer_type.SUPPORTED_NDIMS,
+            )
+            for comb in combs:
+                mod_nm = _data_modality_maybe(*comb)
+                if not mod_nm:
+                    continue
+                map_data[mod_nm].add(explainer_type)
+        return RecommendationMap(map_data, ["modality", "explainers"])
 
     def _filter_explainers(
         self,
         modality: Union[Modality, Tuple[Modality]],
-        arch: Set[ModuleType],
+        architecture: Set[ModuleType],
     ) -> List[Type[Explainer]]:
         """
         Filters explainers based on the user's question, task, and model architecture.
 
         Args:
         - modaltiy (Union[Modality, Tuple[Modality]]): Modality of the input data (e.g., ImageModality, TextModality, TabularModality).
-        - arch (Set[ModuleType]): Set of neural network module types (e.g., nn.Linear, nn.Conv2d).
+        - architecture (Set[ModuleType]): Set of neural network module types (e.g., nn.Linear, nn.Conv2d).
 
         Returns:
         - List[Set[Type[Explainer]]]: List of compatible explainers based on the given inputs.
         """
         # question_to_method = QUESTION_TO_EXPLAINERS.get(question, set())
-        explainers = []
+        explainers = defaultdict(set)
+        explainers['modality'].update(AVAILABLE_EXPLAINERS)
         for mod in format_into_tuple(modality):
-            modality_to_explainers = set(mod.EXPLAINERS)
-            arch_to_explainers = set.union(*(
-                self.architecture_to_explainers_map.data.get(
-                    module_type, set())
-                for module_type in arch
-            ))
-            explainers_mod = set.intersection(
-                modality_to_explainers, arch_to_explainers)
-            if arch.difference({Convolution, Linear}):
-                explainers_mod = explainers_mod.difference(
-                    CAM_BASED_EXPLAINERS)
-            explainers.append(explainers_mod)
-        explainers = set.intersection(*explainers)
+            mod_nm = _data_modality_maybe(mod.dtype_key, mod.ndims)
+            if mod_nm is None:
+                raise ValueError('Cannot match data modality')
+            explainers['modality'].difference_update(
+                explainers['modality'].difference(
+                    self._map_by_modality.data[mod_nm]
+                )
+            )
+        for arch in architecture:
+            if arch in self._map_by_architecture.data:
+                explainers['architecture'].update(
+                    self._map_by_architecture.data[arch]
+                )
+        if Attention in architecture:
+            explainers['architecture'].difference_update(ATTENTION_NOT_SUPPORTED_EXPLAINERS)
+        explainers = set.intersection(*explainers.values())
         return list(explainers)
 
-    def recommend(self, modality: Union[Modality, Tuple[Modality]], model: Model) -> RecommenderOutput:
+    def recommend(
+        self,
+        modality: Union[Modality, Tuple[Modality]],
+        model: Model,
+    ) -> RecommenderOutput:
         """
         Recommends explainers and evaluation metrics based on the user's input.
 
@@ -114,11 +149,11 @@ class XaiRecommender:
         Returns:
         - RecommenderOutput: An object containing recommended explainers.
         """
-        arch = detect_model_architecture(model)
-        explainers = self._filter_explainers(modality, arch)
-        # metrics = self._suggest_metrics(explainers)
+        mod_nms = detect_data_modality(modality)
+        architecture = detect_model_architecture(model)
+        explainers = self._filter_explainers(modality, architecture)
         return RecommenderOutput(
-            detected_architectures=arch,
+            detected_modality=mod_nms,
+            detected_architectures=architecture,
             explainers=_sort_by_name(explainers),
-            # metrics=_sort_by_name(metrics),
         )

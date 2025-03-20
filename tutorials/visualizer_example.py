@@ -1,5 +1,5 @@
 from pnpxai.visualizer.visualizer import Visualizer
-from pnpxai import AutoExplanationForImageClassification
+from pnpxai import AutoExplanation, Modality
 import torch
 import numpy as np
 import os
@@ -12,6 +12,12 @@ from helpers import load_model_and_dataloader_for_tutorial, denormalize_image
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model, loader, transform = load_model_and_dataloader_for_tutorial("image", device)
+sample_batch = next(iter(loader))
+modality = Modality(
+    dtype=sample_batch[0].dtype,
+    ndims=sample_batch[0].dim(),
+    pooling_dim=1,
+)
 
 
 # ------------------------------------------------------------------------------#
@@ -19,13 +25,14 @@ model, loader, transform = load_model_and_dataloader_for_tutorial("image", devic
 # ------------------------------------------------------------------------------#
 
 
-expr = AutoExplanationForImageClassification(
+expr = AutoExplanation(
     model=model,
     data=loader,
-    input_extractor=lambda batch: batch[0].to(device),
-    label_extractor=lambda batch: batch[1].to(device),
-    target_extractor=lambda outputs: outputs.argmax(-1).to(device),
-    channel_dim=1,
+    modality=modality,
+    target_input_keys=[0],
+    target_class_extractor=lambda outputs: outputs.argmax(-1),
+    label_key=-1,
+    target_labels=True,
 )
 
 
@@ -42,4 +49,4 @@ visualizer = Visualizer(
     experiment=expr,
     input_visualizer=input_visualizer,
 )
-visualizer.launch()
+visualizer.launch(share=True)

@@ -1,25 +1,29 @@
-from typing import Callable, Optional, Tuple, Union
+from typing import Callable, Optional, Union, List, Any
 
 from torch import Tensor
 from torch.nn import Module
 
 from pnpxai.explainers.base import Explainer
 from pnpxai.utils import format_into_tuple
-from pnpxai.explainers.base import Explainer
 
 
 class ZennitExplainer(Explainer):
     def __init__(
         self,
         model: Module,
-        forward_arg_extractor: Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
-        additional_forward_arg_extractor: Optional[Callable[[Tuple[Tensor]], Union[Tensor, Tuple[Tensor]]]] = None,
-        n_classes: Optional[int]=None,
+        target_input_keys: Optional[List[Union[str, int]]] = None,
+        additional_input_keys: Optional[List[Union[str, int]]] = None,
+        output_modifier: Optional[Callable[[Any], Tensor]] = None,
+        n_classes: Optional[int] = None,
         **kwargs
     ) -> None:
-        super().__init__(model, forward_arg_extractor, additional_forward_arg_extractor)
+        super().__init__(
+            model,
+            target_input_keys,
+            additional_input_keys,
+            output_modifier,
+        )
         self.n_classes = n_classes
-
 
     def __init_subclass__(cls) -> None:
         cls.attribute = set_n_classes_before(cls.attribute)
@@ -35,7 +39,8 @@ def set_n_classes_before(func):
         if isinstance(inputs, Tensor):
             inputs = format_into_tuple(inputs)
         if self.n_classes is None:
-            outputs = self.model(*inputs)
+            formatted = self._wrapped_model.format_inputs(inputs)
+            outputs = self._wrapped_model(*formatted)
             self.n_classes = outputs.shape[-1]
         return func(*args, **kwargs)
     return wrapper

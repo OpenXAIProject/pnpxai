@@ -15,7 +15,7 @@ class FactScore:
         atomic_fact_generator: Callable[[str], List[str]],
         knowledge_source: Callable[[str, str], List[Dict[str, str]]],
         scorer: Callable[[str, str, List[Dict[str, str]]], Any],
-        aggregate_fn: Optional[Callable[[List[Any]], Any]]=None,
+        aggregate_fn: Optional[Callable[[List[Any]], Any]] = None,
     ) -> None:
         self.atomic_fact_generator = atomic_fact_generator
         self.knowledge_source = knowledge_source
