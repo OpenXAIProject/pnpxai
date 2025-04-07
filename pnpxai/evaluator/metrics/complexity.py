@@ -56,6 +56,8 @@ class Complexity(Metric):
             Tensor: A tensor of the complexity evaluations.
         """
         attributions = self._get_attributions(inputs, targets, attributions)
+        if attributions.ndim == 2: # FIXED
+            attributions = attributions.unsqueeze(1) # FIXED
 
         assert attributions.ndim in [3, 4], "Must have 2D or 3D attributions"
         if attributions.ndim == 4:

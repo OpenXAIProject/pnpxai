@@ -1,0 +1,5 @@
+sampler: random
+seed: 42
+num_threads: 16
+show_progress: false
+n_trials: 100
