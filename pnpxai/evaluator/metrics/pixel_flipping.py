@@ -145,6 +145,8 @@ class PixelFlipping(Metric):
                 )
 
                 baseline = baseline_fn(forward_arg)
+                is_flipped = is_flipped.to(baseline.device)
+                
                 flipped_forward_arg = baseline * is_flipped + forward_arg * (1 - is_flipped)
 
                 flipped_forward_args = tuple(

@@ -41,10 +41,15 @@ class Metric(ABC):
     SUPPORTED_EXPLANATION_TYPE: ExplanationType = "attribution"
 
     def __init__(
-        self, model: nn.Module, explainer: Optional[Explainer] = None, **kwargs
+        self,
+        model: nn.Module,
+        explainer: Optional[Explainer] = None,
+        postprocessor: Optional[PostProcessor] = None,
+        **kwargs,
     ):
         self.model = model.eval()  # Set the model to evaluation mode
         self.explainer = explainer
+        self.postprocessor = postprocessor
         self.device = next(
             model.parameters()
         ).device  # Determine the device used by the model
@@ -81,6 +86,11 @@ class Metric(ABC):
         assert self.model is explainer.model, "Must have same model of metric."
         clone = self.copy()
         clone.explainer = explainer
+        return clone
+
+    def set_postprocessor(self, postprocessor: PostProcessor):
+        clone = self.copy()
+        clone.postprocessor = postprocessor
         return clone
 
     def set_kwargs(self, **kwargs):

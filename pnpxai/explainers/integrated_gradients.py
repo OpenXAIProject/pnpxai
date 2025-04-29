@@ -93,6 +93,7 @@ class IntegratedGradients(Explainer):
             inputs)
         forward_args = format_into_tuple(forward_args)
         baselines = format_into_tuple(self._get_baselines(forward_args))
+        
         attrs = self.explainer.attribute(
             inputs=forward_args,
             baselines=baselines,

@@ -8,6 +8,7 @@ from pnpxai.evaluator.metrics.pixel_flipping import (
     LeRF,
     AbPC,
 )
+from pnpxai.evaluator.metrics.composite import Composite
 
 
 PIXEL_FLIPPING_METRICS = [

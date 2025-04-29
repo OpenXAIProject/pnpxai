@@ -45,25 +45,28 @@ def posl2normsq(attrs: Tensor, channel_dim: int) -> Tensor:
 def identity(attrs: Tensor, *args, **kwargs) -> Tensor:
     return attrs
 
+def sqrt(attrs: Tensor, *args, **kwargs) -> Tensor:
+    return attrs.clamp(min=0).sqrt()
+
 
 class PoolingFunction(UtilFunction):
     """
-    A base class for pooling functions that aggregate or summarize attribution data across 
-    certain dimensions. Pooling functions are often used to reduce the dimensionality of 
+    A base class for pooling functions that aggregate or summarize attribution data across
+    certain dimensions. Pooling functions are often used to reduce the dimensionality of
     attributions and highlight important features.
 
     Parameters:
         channel_dim (int):
-            The dimension of the input channels. This dimension is used by the pooling function 
+            The dimension of the input channels. This dimension is used by the pooling function
             to perform aggregation operations correctly.
 
     Notes:
-        - `PoolingFunction` is intended to be subclassed. Concrete pooling methods should 
+        - `PoolingFunction` is intended to be subclassed. Concrete pooling methods should
           inherit from this class and implement the actual pooling logic.
-        - The pooling operation should be compatible with the `channel_dim` provided during 
+        - The pooling operation should be compatible with the `channel_dim` provided during
           initialization.
     """
-    
+
     def __init__(self, channel_dim: int):
         super().__init__()
         self.channel_dim = channel_dim
@@ -157,22 +160,38 @@ class Identity(UtilFunction):
         return identity(inputs)
 
 
+class Square(UtilFunction):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def __call__(self, inputs: Tensor):
+        return sqrt(inputs)
+
+
+class Abs(UtilFunction):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def __call__(self, inputs: Tensor):
+        return abs(inputs)
+
+
 POOLING_FUNCTIONS_FOR_IMAGE = {
-    'sumpos': SumPos,
-    'sumabs': SumAbs,
-    'l1norm': L1Norm,
-    'maxnorm': MaxNorm,
-    'l2norm': L2Norm,
-    'l2normsq': L2NormSquare,
-    'possum': PosSum,
-    'posmaxnorm': PosMaxNorm,
-    'posl2norm': PosL2Norm,
-    'posl2normsq': PosL2NormSquare,
+    "sumpos": SumPos,
+    "sumabs": SumAbs,
+    "l1norm": L1Norm,
+    "maxnorm": MaxNorm,
+    "l2norm": L2Norm,
+    "l2normsq": L2NormSquare,
+    "possum": PosSum,
+    "posmaxnorm": PosMaxNorm,
+    "posl2norm": PosL2Norm,
+    "posl2normsq": PosL2NormSquare,
 }
 
 POOLING_FUNCTIONS_FOR_TEXT = POOLING_FUNCTIONS_FOR_IMAGE
 
-POOLING_FUNCTIONS_FOR_TIME_SERIES = {'identity': Identity}
+POOLING_FUNCTIONS_FOR_TIME_SERIES = {"identity": Identity, "sqrt": Square, "abs": Abs}
 
 POOLING_FUNCTIONS = {
     **POOLING_FUNCTIONS_FOR_IMAGE,
@@ -190,17 +209,17 @@ def minmax(attrs: Tensor):
 
 class NormalizationFunction(UtilFunction):
     """
-    A base class for normalization functions that adjust or scale attribution data. Normalization 
-    functions are typically used to bring the data into a specific range or format for better 
+    A base class for normalization functions that adjust or scale attribution data. Normalization
+    functions are typically used to bring the data into a specific range or format for better
     interpretation or visualization.
 
     Notes:
-        - `NormalizationFunction` is designed to be subclassed. Concrete normalization methods 
+        - `NormalizationFunction` is designed to be subclassed. Concrete normalization methods
           should inherit from this class and implement the actual normalization logic.
-        - Subclasses can override the `__init__` method to accept additional parameters required 
+        - Subclasses can override the `__init__` method to accept additional parameters required
           for their specific normalization operations.
     """
-    
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -214,14 +233,15 @@ class MinMax(NormalizationFunction):
 
 
 NORMALIZATION_FUNCTIONS_FOR_IMAGE = {
-    'minmax': MinMax,
-    'identity': Identity,
+    "minmax": MinMax,
+    "identity": Identity,
 }
 
 NORMALIZATION_FUNCTIONS_FOR_TEXT = NORMALIZATION_FUNCTIONS_FOR_IMAGE
 
 NORMALIZATION_FUNCTIONS_FOR_TIME_SERIES = {
-    'identity': Identity,
+    "identity": Identity,
+    "minmax": MinMax,
 }
 
 NORMALIZATION_FUNCTIONS = {
@@ -238,27 +258,27 @@ class PostProcessor(UtilFunction):
 
     Parameters:
         pooling_fn (PoolingFunction):
-            A function used to perform pooling on the attributions. Pooling typically involves 
+            A function used to perform pooling on the attributions. Pooling typically involves
             aggregating or summarizing the attributions over certain dimensions.
         normalization_fn (NormalizationFunction):
-            A function used to normalize the pooled attributions. Normalization typically involves 
+            A function used to normalize the pooled attributions. Normalization typically involves
             scaling or adjusting the attributions to a certain range or format.
 
     Methods:
         from_name(pooling_method: str, normalization_method: str, channel_dim: int) -> PostProcessor:
-            Creates a `PostProcessor` instance using the specified method names for pooling and 
-            normalization, and the channel dimension. This is a convenience method for instantiating 
+            Creates a `PostProcessor` instance using the specified method names for pooling and
+            normalization, and the channel dimension. This is a convenience method for instantiating
             `PostProcessor` with predefined methods.
 
         __call__(attrs):
-            Applies the pooling and normalization functions to the given attributions. The input 
+            Applies the pooling and normalization functions to the given attributions. The input
             attributions are first pooled and then normalized.
 
         get_tunables() -> Dict[str, Tuple[Type, Dict[str, Any]]]:
-            Returns a dictionary of tunable parameters for the `PostProcessor`. The dictionary 
+            Returns a dictionary of tunable parameters for the `PostProcessor`. The dictionary
             includes the functions for pooling and normalization along with their default parameters.
     """
-    
+
     def __init__(
         self,
         pooling_fn: PoolingFunction,
@@ -286,6 +306,6 @@ class PostProcessor(UtilFunction):
 
     def get_tunables(self):
         return {
-            'pooling_fn': (PoolingFunction, {}),
-            'normalization_fn': (NormalizationFunction, {}),
+            "pooling_fn": (PoolingFunction, {}),
+            "normalization_fn": (NormalizationFunction, {}),
         }

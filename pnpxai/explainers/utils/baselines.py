@@ -54,8 +54,11 @@ class MeanBaselineFunction(BaselineFunction):
 
     def __call__(self, inputs: torch.Tensor):
         size = inputs.size(self.dim)
-        repeat = tuple(size if d == self.dim else 1 for d in range(inputs.dim()))
-        return torch.mean(inputs, dim=self.dim, keepdim=True).repeat(*repeat)
+        target_dim = self.dim % inputs.ndim
+        # print(self.dim, inputs.ndim, target_dim)
+        repeat = tuple(size if d == target_dim else 1 for d in range(inputs.dim()))
+        outputs = torch.mean(inputs, dim=self.dim, keepdim=True).repeat(*repeat)
+        return outputs
 
 
 class InvertBaselineFunction(BaselineFunction):
