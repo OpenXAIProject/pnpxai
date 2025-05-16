@@ -18,7 +18,7 @@
       
       
       <link rel="icon" href="../../../assets/favicon.ico">
-      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.33">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
     
     
       
@@ -26,7 +26,7 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.3cba04c6.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.342714a4.min.css">
       
       
 
@@ -47,7 +47,7 @@
     
       <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -89,7 +89,7 @@
     </a>
     <label class="md-header__button md-icon" for="__drawer">
       
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -109,7 +109,7 @@
     </div>
     
     
-      <script>var media,input,key,value,palette=__md_get("__palette");if(palette&&palette.color){"(prefers-color-scheme)"===palette.color.media&&(media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']"),palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent"));for([key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
     
     
     
@@ -159,8 +159,10 @@
       <a href="../../.." class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Home
+    
   </span>
   
 
@@ -181,6 +183,7 @@
     
     
     
+    
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
@@ -191,8 +194,10 @@
           <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
             
   
+  
   <span class="md-ellipsis">
     API
+    
   </span>
   
 
@@ -218,6 +223,7 @@
     
     
     
+    
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
@@ -228,8 +234,10 @@
           <label class="md-nav__link" for="__nav_2_1" id="__nav_2_1_label" tabindex="0">
             
   
+  
   <span class="md-ellipsis">
     Core
+    
   </span>
   
 
@@ -253,8 +261,10 @@
       <a href="../experiment/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Experiment
+    
   </span>
   
 
@@ -274,8 +284,10 @@
       <a href="../auto_explanation/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Auto Explanation
+    
   </span>
   
 
@@ -295,8 +307,10 @@
       <a href="../modality/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Modality
+    
   </span>
   
 
@@ -323,8 +337,10 @@
         <label class="md-nav__link md-nav__link--active" for="__toc">
           
   
+  
   <span class="md-ellipsis">
     Recommender
+    
   </span>
   
 
@@ -334,8 +350,10 @@
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
+  
   <span class="md-ellipsis">
     Recommender
+    
   </span>
   
 
@@ -361,9 +379,121 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="recommender">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.core.recommender.recommender.CAM_BASED_EXPLAINERS" class="md-nav__link">
+    <span class="md-ellipsis">
+      CAM_BASED_EXPLAINERS
+    </span>
+  </a>
+  
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.core.recommender.recommender.RecommenderOutput" class="md-nav__link">
+    <span class="md-ellipsis">
+      RecommenderOutput
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RecommenderOutput">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.core.recommender.recommender.RecommenderOutput.detected_architectures" class="md-nav__link">
+    <span class="md-ellipsis">
+      detected_architectures
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.core.recommender.recommender.RecommenderOutput.explainers" class="md-nav__link">
+    <span class="md-ellipsis">
+      explainers
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.core.recommender.recommender.RecommenderOutput.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      __init__
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.core.recommender.recommender.RecommenderOutput.print_tabular" class="md-nav__link">
+    <span class="md-ellipsis">
+      print_tabular
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.core.recommender.recommender.RecommendationMap" class="md-nav__link">
+    <span class="md-ellipsis">
+      RecommendationMap
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RecommendationMap">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.core.recommender.recommender.RecommendationMap.data" class="md-nav__link">
+    <span class="md-ellipsis">
+      data
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.core.recommender.recommender.RecommendationMap.headers" class="md-nav__link">
+    <span class="md-ellipsis">
+      headers
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.core.recommender.recommender.RecommendationMap.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      __init__
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.core.recommender.recommender.RecommendationMap.print_tabular" class="md-nav__link">
+    <span class="md-ellipsis">
+      print_tabular
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pnpxai.core.recommender.recommender.XaiRecommender" class="md-nav__link">
     <span class="md-ellipsis">
       XaiRecommender
@@ -374,11 +504,34 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#pnpxai.core.recommender.recommender.XaiRecommender.architecture_to_explainers_map" class="md-nav__link">
+    <span class="md-ellipsis">
+      architecture_to_explainers_map
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.core.recommender.recommender.XaiRecommender.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      __init__
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pnpxai.core.recommender.recommender.XaiRecommender.recommend" class="md-nav__link">
     <span class="md-ellipsis">
       recommend
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -406,8 +559,10 @@
       <a href="../detector/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Detector
+    
   </span>
   
 
@@ -435,6 +590,7 @@
     
     
     
+    
     <li class="md-nav__item md-nav__item--nested">
       
         
@@ -445,8 +601,10 @@
           <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
             
   
+  
   <span class="md-ellipsis">
     Evaluator
+    
   </span>
   
 
@@ -470,8 +628,10 @@
       <a href="../../evaluator/metrics/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Metrics
+    
   </span>
   
 
@@ -491,8 +651,10 @@
       <a href="../../evaluator/optimizer/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Optimizer
+    
   </span>
   
 
@@ -520,6 +682,7 @@
     
     
     
+    
     <li class="md-nav__item md-nav__item--nested">
       
         
@@ -530,8 +693,10 @@
           <label class="md-nav__link" for="__nav_2_3" id="__nav_2_3_label" tabindex="0">
             
   
+  
   <span class="md-ellipsis">
     Explainer
+    
   </span>
   
 
@@ -555,8 +720,10 @@
       <a href="../../explainer/base/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Base
+    
   </span>
   
 
@@ -576,8 +743,10 @@
       <a href="../../explainer/grad_cam/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     GradCam
+    
   </span>
   
 
@@ -597,8 +766,10 @@
       <a href="../../explainer/guided_grad_cam/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     GuidedGradCam
+    
   </span>
   
 
@@ -618,8 +789,10 @@
       <a href="../../explainer/gradient/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Gradient
+    
   </span>
   
 
@@ -639,8 +812,10 @@
       <a href="../../explainer/grad_x_input/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     GradientXInput
+    
   </span>
   
 
@@ -660,8 +835,10 @@
       <a href="../../explainer/smooth_grad/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     SmoothGrad
+    
   </span>
   
 
@@ -681,8 +858,10 @@
       <a href="../../explainer/var_grad/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     VarGrad
+    
   </span>
   
 
@@ -702,8 +881,10 @@
       <a href="../../explainer/ig/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     IntegratedGradients
+    
   </span>
   
 
@@ -723,8 +904,10 @@
       <a href="../../explainer/lrp/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     LRP
+    
   </span>
   
 
@@ -744,8 +927,10 @@
       <a href="../../explainer/rap/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     RAP
+    
   </span>
   
 
@@ -765,8 +950,10 @@
       <a href="../../explainer/kernel_shap/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     KernelShap
+    
   </span>
   
 
@@ -786,8 +973,10 @@
       <a href="../../explainer/lime/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Lime
+    
   </span>
   
 
@@ -807,8 +996,10 @@
       <a href="../../explainer/attn_rollout/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     AttentionRollout
+    
   </span>
   
 
@@ -843,8 +1034,10 @@
       <a href="../../../detector/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Detector
+    
   </span>
   
 
@@ -863,8 +1056,10 @@
       <a href="../../../explainer/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Explainer
+    
   </span>
   
 
@@ -883,8 +1078,10 @@
       <a href="../../../recommender/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Recommender
+    
   </span>
   
 
@@ -903,8 +1100,10 @@
       <a href="../../../evaluator/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Evaluator
+    
   </span>
   
 
@@ -923,8 +1122,10 @@
       <a href="../../../optimizer/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
     Optimizer
+    
   </span>
   
 
@@ -964,9 +1165,121 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="recommender">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.core.recommender.recommender.CAM_BASED_EXPLAINERS" class="md-nav__link">
+    <span class="md-ellipsis">
+      CAM_BASED_EXPLAINERS
+    </span>
+  </a>
+  
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.core.recommender.recommender.RecommenderOutput" class="md-nav__link">
+    <span class="md-ellipsis">
+      RecommenderOutput
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RecommenderOutput">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.core.recommender.recommender.RecommenderOutput.detected_architectures" class="md-nav__link">
+    <span class="md-ellipsis">
+      detected_architectures
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.core.recommender.recommender.RecommenderOutput.explainers" class="md-nav__link">
+    <span class="md-ellipsis">
+      explainers
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.core.recommender.recommender.RecommenderOutput.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      __init__
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.core.recommender.recommender.RecommenderOutput.print_tabular" class="md-nav__link">
+    <span class="md-ellipsis">
+      print_tabular
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.core.recommender.recommender.RecommendationMap" class="md-nav__link">
+    <span class="md-ellipsis">
+      RecommendationMap
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RecommendationMap">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.core.recommender.recommender.RecommendationMap.data" class="md-nav__link">
+    <span class="md-ellipsis">
+      data
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.core.recommender.recommender.RecommendationMap.headers" class="md-nav__link">
+    <span class="md-ellipsis">
+      headers
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.core.recommender.recommender.RecommendationMap.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      __init__
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.core.recommender.recommender.RecommendationMap.print_tabular" class="md-nav__link">
+    <span class="md-ellipsis">
+      print_tabular
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pnpxai.core.recommender.recommender.XaiRecommender" class="md-nav__link">
     <span class="md-ellipsis">
       XaiRecommender
@@ -977,11 +1290,34 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#pnpxai.core.recommender.recommender.XaiRecommender.architecture_to_explainers_map" class="md-nav__link">
+    <span class="md-ellipsis">
+      architecture_to_explainers_map
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pnpxai.core.recommender.recommender.XaiRecommender.__init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      __init__
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#pnpxai.core.recommender.recommender.XaiRecommender.recommend" class="md-nav__link">
     <span class="md-ellipsis">
       recommend
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -1005,14 +1341,26 @@
                   
 
 
+
   <h1>Recommender</h1>
 
 <div class="doc doc-object doc-module">
 
 
 
-<a id="pnpxai.core.recommender.recommender"></a>
+<h4 id="pnpxai.core.recommender.recommender" class="doc doc-heading">
+            <code>pnpxai.core.recommender.recommender</code>
+
+
+</h4>
+
     <div class="doc doc-contents first">
+
+
+
+
+
+
 
 
 
@@ -1023,168 +1371,52 @@
 
 
 
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="pnpxai.core.recommender.recommender.CAM_BASED_EXPLAINERS" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">CAM_BASED_EXPLAINERS</span> <span class="o">=</span> <span class="p">{</span><span class="n">GradCam</span><span class="p">,</span> <span class="n">GuidedGradCam</span><span class="p">}</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+</h5>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
 
 
 <div class="doc doc-object doc-class">
 
 
 
-<h2 id="pnpxai.core.recommender.recommender.XaiRecommender" class="doc doc-heading">
-            <code>XaiRecommender</code>
+<h5 id="pnpxai.core.recommender.recommender.RecommenderOutput" class="doc doc-heading">
+            <code>RecommenderOutput</code>
 
 
-</h2>
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-dataclass"><code>dataclass</code></small>
+  </span>
+
+</h5>
 
 
     <div class="doc doc-contents ">
 
 
-      <p>Recommender class that suggests explainers and evaluation metrics based on the user's input. The recommender
-analyzes the model architecture and the selected modality to provide the most suitable explainers and detected architecture.</p>
 
-              <details class="quote">
-                <summary>Source code in <code>pnpxai/core/recommender/recommender.py</code></summary>
-                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 55</span>
-<span class="normal"> 56</span>
-<span class="normal"> 57</span>
-<span class="normal"> 58</span>
-<span class="normal"> 59</span>
-<span class="normal"> 60</span>
-<span class="normal"> 61</span>
-<span class="normal"> 62</span>
-<span class="normal"> 63</span>
-<span class="normal"> 64</span>
-<span class="normal"> 65</span>
-<span class="normal"> 66</span>
-<span class="normal"> 67</span>
-<span class="normal"> 68</span>
-<span class="normal"> 69</span>
-<span class="normal"> 70</span>
-<span class="normal"> 71</span>
-<span class="normal"> 72</span>
-<span class="normal"> 73</span>
-<span class="normal"> 74</span>
-<span class="normal"> 75</span>
-<span class="normal"> 76</span>
-<span class="normal"> 77</span>
-<span class="normal"> 78</span>
-<span class="normal"> 79</span>
-<span class="normal"> 80</span>
-<span class="normal"> 81</span>
-<span class="normal"> 82</span>
-<span class="normal"> 83</span>
-<span class="normal"> 84</span>
-<span class="normal"> 85</span>
-<span class="normal"> 86</span>
-<span class="normal"> 87</span>
-<span class="normal"> 88</span>
-<span class="normal"> 89</span>
-<span class="normal"> 90</span>
-<span class="normal"> 91</span>
-<span class="normal"> 92</span>
-<span class="normal"> 93</span>
-<span class="normal"> 94</span>
-<span class="normal"> 95</span>
-<span class="normal"> 96</span>
-<span class="normal"> 97</span>
-<span class="normal"> 98</span>
-<span class="normal"> 99</span>
-<span class="normal">100</span>
-<span class="normal">101</span>
-<span class="normal">102</span>
-<span class="normal">103</span>
-<span class="normal">104</span>
-<span class="normal">105</span>
-<span class="normal">106</span>
-<span class="normal">107</span>
-<span class="normal">108</span>
-<span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span>
-<span class="normal">114</span>
-<span class="normal">115</span>
-<span class="normal">116</span>
-<span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span>
-<span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">XaiRecommender</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Recommender class that suggests explainers and evaluation metrics based on the user&#39;s input. The recommender</span>
-<span class="sd">    analyzes the model architecture and the selected modality to provide the most suitable explainers and detected architecture.        </span>
-<span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">architecture_to_explainers_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_architecture_to_explainers_map</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">_build_architecture_to_explainers_map</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">map_data</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">explainer_type</span> <span class="ow">in</span> <span class="n">AVAILABLE_EXPLAINERS</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">arch</span> <span class="ow">in</span> <span class="n">explainer_type</span><span class="o">.</span><span class="n">SUPPORTED_MODULES</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">arch</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">map_data</span><span class="p">:</span>
-                    <span class="n">map_data</span><span class="p">[</span><span class="n">arch</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
-                <span class="n">map_data</span><span class="p">[</span><span class="n">arch</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">explainer_type</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">RecommendationMap</span><span class="p">(</span><span class="n">map_data</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;architecture&quot;</span><span class="p">,</span> <span class="s2">&quot;explainers&quot;</span><span class="p">])</span>
 
-    <span class="k">def</span> <span class="nf">_filter_explainers</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">modality</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Modality</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Modality</span><span class="p">]],</span>
-        <span class="n">arch</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">ModuleType</span><span class="p">],</span>
-    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Type</span><span class="p">[</span><span class="n">Explainer</span><span class="p">]]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Filters explainers based on the user&#39;s question, task, and model architecture.</span>
 
-<span class="sd">        Args:</span>
-<span class="sd">        - modaltiy (Union[Modality, Tuple[Modality]]): Modality of the input data (e.g., ImageModality, TextModality, TabularModality).</span>
-<span class="sd">        - arch (Set[ModuleType]): Set of neural network module types (e.g., nn.Linear, nn.Conv2d).</span>
 
-<span class="sd">        Returns:</span>
-<span class="sd">        - List[Set[Type[Explainer]]]: List of compatible explainers based on the given inputs.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># question_to_method = QUESTION_TO_EXPLAINERS.get(question, set())</span>
-        <span class="n">explainers</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">mod</span> <span class="ow">in</span> <span class="n">format_into_tuple</span><span class="p">(</span><span class="n">modality</span><span class="p">):</span>
-            <span class="n">modality_to_explainers</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">mod</span><span class="o">.</span><span class="n">EXPLAINERS</span><span class="p">)</span>
-            <span class="n">arch_to_explainers</span> <span class="o">=</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">architecture_to_explainers_map</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-                    <span class="n">module_type</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span>
-                <span class="k">for</span> <span class="n">module_type</span> <span class="ow">in</span> <span class="n">arch</span>
-            <span class="p">))</span>
-            <span class="n">explainers_mod</span> <span class="o">=</span> <span class="nb">set</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span>
-                <span class="n">modality_to_explainers</span><span class="p">,</span> <span class="n">arch_to_explainers</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">arch</span><span class="o">.</span><span class="n">difference</span><span class="p">({</span><span class="n">Convolution</span><span class="p">,</span> <span class="n">Linear</span><span class="p">}):</span>
-                <span class="n">explainers_mod</span> <span class="o">=</span> <span class="n">explainers_mod</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span>
-                    <span class="n">CAM_BASED_EXPLAINERS</span><span class="p">)</span>
-            <span class="n">explainers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">explainers_mod</span><span class="p">)</span>
-        <span class="n">explainers</span> <span class="o">=</span> <span class="nb">set</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="o">*</span><span class="n">explainers</span><span class="p">)</span>
-        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">explainers</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">recommend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modality</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Modality</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Modality</span><span class="p">]],</span> <span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RecommenderOutput</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Recommends explainers and evaluation metrics based on the user&#39;s input.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">        - modality (Union[Modality], Tuple[Modality]): Modality of the input data (e.g., ImageModality, TextModality, TabularModality).</span>
-<span class="sd">        - model (Model): Neural network module, used for the architecture-based filtering.</span>
-
-<span class="sd">        Returns:</span>
-<span class="sd">        - RecommenderOutput: An object containing recommended explainers.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">arch</span> <span class="o">=</span> <span class="n">detect_model_architecture</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-        <span class="n">explainers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter_explainers</span><span class="p">(</span><span class="n">modality</span><span class="p">,</span> <span class="n">arch</span><span class="p">)</span>
-        <span class="c1"># metrics = self._suggest_metrics(explainers)</span>
-        <span class="k">return</span> <span class="n">RecommenderOutput</span><span class="p">(</span>
-            <span class="n">detected_architectures</span><span class="o">=</span><span class="n">arch</span><span class="p">,</span>
-            <span class="n">explainers</span><span class="o">=</span><span class="n">_sort_by_name</span><span class="p">(</span><span class="n">explainers</span><span class="p">),</span>
-            <span class="c1"># metrics=_sort_by_name(metrics),</span>
-        <span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-              </details>
 
 
 
@@ -1196,67 +1428,292 @@ analyzes the model architecture and the selected modality to provide the most su
 
 
 
+<div class="doc doc-object doc-attribute">
+
+
+
+<h6 id="pnpxai.core.recommender.recommender.RecommenderOutput.detected_architectures" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">detected_architectures</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">ModuleType</span><span class="p">]</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+</h6>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h6 id="pnpxai.core.recommender.recommender.RecommenderOutput.explainers" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">explainers</span><span class="p">:</span> <span class="nb">list</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+</h6>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
 
 
 <div class="doc doc-object doc-function">
 
 
-<h3 id="pnpxai.core.recommender.recommender.XaiRecommender.recommend" class="doc doc-heading">
-            <code class="highlight language-python"><span class="n">recommend</span><span class="p">(</span><span class="n">modality</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span></code>
+<h6 id="pnpxai.core.recommender.recommender.RecommenderOutput.__init__" class="doc doc-heading">
+            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">detected_architectures</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="n">ModuleType</span><span class="p">],</span> <span class="n">explainers</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span></code>
 
-</h3>
+</h6>
 
 
     <div class="doc doc-contents ">
 
-      <p>Recommends explainers and evaluation metrics based on the user's input.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="pnpxai.core.recommender.recommender.RecommenderOutput.print_tabular" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">print_tabular</span><span class="p">()</span></code>
+
+</h6>
+
+
+    <div class="doc doc-contents ">
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h5 id="pnpxai.core.recommender.recommender.RecommendationMap" class="doc doc-heading">
+            <code>RecommendationMap</code>
+
+
+</h5>
+
+
+    <div class="doc doc-contents ">
+
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h6 id="pnpxai.core.recommender.recommender.RecommendationMap.data" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">data</span> <span class="o">=</span> <span class="n">data</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+</h6>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h6 id="pnpxai.core.recommender.recommender.RecommendationMap.headers" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">headers</span> <span class="o">=</span> <span class="n">headers</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+</h6>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="pnpxai.core.recommender.recommender.RecommendationMap.__init__" class="doc doc-heading">
+            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Set</span><span class="p">[</span><span class="n">Any</span><span class="p">]],</span> <span class="n">headers</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span></code>
+
+</h6>
+
+
+    <div class="doc doc-contents ">
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="pnpxai.core.recommender.recommender.RecommendationMap.print_tabular" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">print_tabular</span><span class="p">()</span></code>
+
+</h6>
+
+
+    <div class="doc doc-contents ">
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h5 id="pnpxai.core.recommender.recommender.XaiRecommender" class="doc doc-heading">
+            <code>XaiRecommender</code>
+
+
+</h5>
+
+
+    <div class="doc doc-contents ">
+
+
+        <p>Recommender class that suggests explainers and evaluation metrics based on the user's input. The recommender
+analyzes the model architecture and the selected modality to provide the most suitable explainers and detected architecture.</p>
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h6 id="pnpxai.core.recommender.recommender.XaiRecommender.architecture_to_explainers_map" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">architecture_to_explainers_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_architecture_to_explainers_map</span><span class="p">()</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+</h6>
+
+
+    <div class="doc doc-contents ">
+
+    </div>
+
+</div>
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="pnpxai.core.recommender.recommender.XaiRecommender.__init__" class="doc doc-heading">
+            <code class="highlight language-python"><span class="fm">__init__</span><span class="p">()</span></code>
+
+</h6>
+
+
+    <div class="doc doc-contents ">
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h6 id="pnpxai.core.recommender.recommender.XaiRecommender.recommend" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">recommend</span><span class="p">(</span><span class="n">modality</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Modality</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Modality</span><span class="p">]],</span> <span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RecommenderOutput</span></code>
+
+</h6>
+
+
+    <div class="doc doc-contents ">
+
+        <p>Recommends explainers and evaluation metrics based on the user's input.</p>
 <p>Args:
 - modality (Union[Modality], Tuple[Modality]): Modality of the input data (e.g., ImageModality, TextModality, TabularModality).
 - model (Model): Neural network module, used for the architecture-based filtering.</p>
 <p>Returns:
 - RecommenderOutput: An object containing recommended explainers.</p>
 
-            <details class="quote">
-              <summary>Source code in <code>pnpxai/core/recommender/recommender.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">106</span>
-<span class="normal">107</span>
-<span class="normal">108</span>
-<span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span>
-<span class="normal">114</span>
-<span class="normal">115</span>
-<span class="normal">116</span>
-<span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span>
-<span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">recommend</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">modality</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Modality</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Modality</span><span class="p">]],</span> <span class="n">model</span><span class="p">:</span> <span class="n">Model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RecommenderOutput</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Recommends explainers and evaluation metrics based on the user&#39;s input.</span>
 
-<span class="sd">    Args:</span>
-<span class="sd">    - modality (Union[Modality], Tuple[Modality]): Modality of the input data (e.g., ImageModality, TextModality, TabularModality).</span>
-<span class="sd">    - model (Model): Neural network module, used for the architecture-based filtering.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">    - RecommenderOutput: An object containing recommended explainers.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">arch</span> <span class="o">=</span> <span class="n">detect_model_architecture</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-    <span class="n">explainers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter_explainers</span><span class="p">(</span><span class="n">modality</span><span class="p">,</span> <span class="n">arch</span><span class="p">)</span>
-    <span class="c1"># metrics = self._suggest_metrics(explainers)</span>
-    <span class="k">return</span> <span class="n">RecommenderOutput</span><span class="p">(</span>
-        <span class="n">detected_architectures</span><span class="o">=</span><span class="n">arch</span><span class="p">,</span>
-        <span class="n">explainers</span><span class="o">=</span><span class="n">_sort_by_name</span><span class="p">(</span><span class="n">explainers</span><span class="p">),</span>
-        <span class="c1"># metrics=_sort_by_name(metrics),</span>
-    <span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-            </details>
     </div>
 
 </div>
@@ -1323,10 +1780,12 @@ analyzes the model architecture and the selected modality to provide the most su
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../../..", "features": [], "search": "../../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+      
+      <script id="__config" type="application/json">{"base": "../../..", "features": ["content.code.copy"], "search": "../../../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../../assets/javascripts/bundle.af256bd8.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.13a4f30d.min.js"></script>
       
     
   </body>

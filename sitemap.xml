@@ -2,132 +2,106 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/</loc>
-         <lastmod>2024-12-27</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-05-16</lastmod>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/detector/</loc>
-         <lastmod>2024-12-27</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-05-16</lastmod>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/evaluator/</loc>
-         <lastmod>2024-12-27</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-05-16</lastmod>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/explainer/</loc>
-         <lastmod>2024-12-27</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-05-16</lastmod>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/optimizer/</loc>
-         <lastmod>2024-12-27</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-05-16</lastmod>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/recommender/</loc>
-         <lastmod>2024-12-27</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-05-16</lastmod>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/core/auto_explanation/</loc>
-         <lastmod>2024-12-27</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-05-16</lastmod>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/core/detector/</loc>
-         <lastmod>2024-12-27</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-05-16</lastmod>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/core/experiment/</loc>
-         <lastmod>2024-12-27</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-05-16</lastmod>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/core/modality/</loc>
-         <lastmod>2024-12-27</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-05-16</lastmod>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/core/recommender/</loc>
-         <lastmod>2024-12-27</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-05-16</lastmod>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/evaluator/metrics/</loc>
-         <lastmod>2024-12-27</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-05-16</lastmod>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/evaluator/optimizer/</loc>
-         <lastmod>2024-12-27</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-05-16</lastmod>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/explainer/attn_rollout/</loc>
-         <lastmod>2024-12-27</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-05-16</lastmod>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/explainer/base/</loc>
-         <lastmod>2024-12-27</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-05-16</lastmod>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/explainer/grad_cam/</loc>
-         <lastmod>2024-12-27</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-05-16</lastmod>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/explainer/grad_x_input/</loc>
-         <lastmod>2024-12-27</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-05-16</lastmod>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/explainer/gradient/</loc>
-         <lastmod>2024-12-27</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-05-16</lastmod>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/explainer/guided_grad_cam/</loc>
-         <lastmod>2024-12-27</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-05-16</lastmod>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/explainer/ig/</loc>
-         <lastmod>2024-12-27</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-05-16</lastmod>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/explainer/kernel_shap/</loc>
-         <lastmod>2024-12-27</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-05-16</lastmod>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/explainer/lime/</loc>
-         <lastmod>2024-12-27</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-05-16</lastmod>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/explainer/lrp/</loc>
-         <lastmod>2024-12-27</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-05-16</lastmod>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/explainer/rap/</loc>
-         <lastmod>2024-12-27</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-05-16</lastmod>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/explainer/smooth_grad/</loc>
-         <lastmod>2024-12-27</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-05-16</lastmod>
     </url>
     <url>
          <loc>https://openxaiproject.github.io/pnpxai/api/explainer/var_grad/</loc>
-         <lastmod>2024-12-27</lastmod>
-         <changefreq>daily</changefreq>
+         <lastmod>2025-05-16</lastmod>
     </url>
 </urlset>
