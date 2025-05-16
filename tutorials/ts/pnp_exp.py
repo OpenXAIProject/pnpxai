@@ -42,6 +42,7 @@ from tutorials.ts.utils import (
     DEVICE,
     tensor_mapper,
     composite_agg_func,
+    plot_inputs_and_attributions,
 )
 
 
@@ -114,23 +115,23 @@ def app():
     modality = TimeSeriesModality(seq_dim)
 
     explainer_types = [
-        # Gradient,
-        # GradientXInput,
-        IntegratedGradients,
-        # KernelShap,
-        # Lime,
-        # LRPEpsilonAlpha2Beta1,
-        # LRPEpsilonGammaBox,
-        # LRPEpsilonPlus,
-        # LRPUniformEpsilon,
-        # SmoothGrad,
-        # VarGrad,
+        Gradient,
+        GradientXInput,
+        # IntegratedGradients,
+        KernelShap,
+        Lime,
+        LRPEpsilonAlpha2Beta1,
+        LRPEpsilonGammaBox,
+        LRPEpsilonPlus,
+        LRPUniformEpsilon,
+        SmoothGrad,
+        VarGrad,
     ]
     explainers = get_explainers(explainer_types, model, modality)
 
     metrics = []
-    # metrics = get_metrics([AbPC, Complexity], model, modality, agg_dim)
-    # metrics = [*metrics, Composite(metrics, composite_agg_func)]
+    metrics = get_metrics([AbPC, Complexity], model, modality, agg_dim)
+    metrics = [*metrics, Composite(metrics, composite_agg_func)]
     metrics.extend(get_metrics([Sensitivity], model, modality, agg_dim))
     # metrics = metrics[:2]
 
@@ -159,35 +160,68 @@ def app():
     log_file = open(
         os.path.join(CURRENT_PATH, f"out/pnp_{model.__class__.__name__}.csv"), "a+"
     )
+    plot_path = os.path.join(CURRENT_PATH, "plots", model.__class__.__name__, 'pnp')
+
+    plot_data_step = 100
+    plot_data, _ = expr.manager.get_data(data_ids)
+
+    plot_inputs = torch.concat([datum for datum, _ in plot_data], dim=0)
+    plot_inputs = tensor_mapper(plot_inputs[::plot_data_step]).to(DEVICE)
+
+    plot_targets = torch.concat([target for _, target in plot_data], dim=0)
+    plot_targets = tensor_mapper(plot_targets[::plot_data_step]).to(DEVICE)
 
     for metric, metric_id in zip(*expr.manager.get_metrics()):
         for explainer, explainer_id in zip(*expr.manager.get_explainers()):
-            try:
-                optimized = expr.optimize(
-                    data_ids=data_ids,
-                    explainer_id=explainer_id,
-                    metric_id=metric_id,
-                    direction=optimization_directions[metric.__class__],
-                    sampler="tpe",  # Literal['tpe','random']
-                    n_trials=20,
-                    seed=42,  # seed for sampler: by default, None
-                )
-                best_value = optimized.study.best_trial.value / len(data_ids)
-                print(
-                    f"Metric: {metric.__class__.__name__}; Explainer: {explainer.__class__.__name__};"
-                )
-                print("Best/value:", best_value)  # get the optimized value
+            # try:
+            optimized = expr.optimize(
+                data_ids=data_ids,
+                explainer_id=explainer_id,
+                metric_id=metric_id,
+                direction=optimization_directions[metric.__class__],
+                sampler="tpe",  # Literal['tpe','random']
+                n_trials=20,
+                seed=42,  # seed for sampler: by default, None
+            )
 
-                torch.cuda.empty_cache()
-                log = f"{metric.__class__.__name__},{explainer.__class__.__name__},{best_value}\n"
-                print(log)
-                log_file.write(log)
-                log_file.flush()
-                del optimized
-            except:
-                print(
-                    f"[FAILED!!!] Metric: {metric.__class__.__name__}; Explainer: {explainer.__class__.__name__}"
-                )
+            best_value = optimized.study.best_trial.value / len(data_ids)
+            print(
+                f"Metric: {metric.__class__.__name__}; Explainer: {explainer.__class__.__name__};"
+            )
+            print("Best/value:", best_value)  # get the optimized value
+
+            torch.cuda.empty_cache()
+            log_data = [
+                str(metric.__class__.__name__),
+                str(explainer.__class__.__name__),
+                str(best_value),
+            ]
+            log = ",".join(log_data) + "\n"
+            print(log)
+            log_file.write(log)
+            log_file.flush()
+
+            attributions = optimized.explainer.attribute(inputs=plot_inputs, targets=plot_targets)
+            attributions = optimized.postprocessor(attributions)
+            attributions = attributions.clamp(min=-1 + 1e-9, max=1 - 1e-9).cpu().detach()
+
+            plot_inputs_and_attributions(
+                plot_inputs[..., 0, :].tolist(),
+                attributions[..., 0, :].tolist(),
+                " ".join(log_data),
+                os.path.join(
+                    plot_path,
+                    str(metric.__class__.__name__),
+                    str(explainer.__class__.__name__),
+                    f"{'_'.join(log_data[:2])}.png",
+                ),
+            )
+
+            del optimized
+            # except:
+            #     print(
+            #         f"[FAILED!!!] Metric: {metric.__class__.__name__}; Explainer: {explainer.__class__.__name__}"
+            #     )
             gc.collect()
             torch.cuda.empty_cache()
 

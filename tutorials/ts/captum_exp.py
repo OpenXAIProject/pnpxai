@@ -31,7 +31,8 @@ from tutorials.ts.utils import (
     BATCH_SIZE,
     DEVICE,
     tensor_mapper,
-    composite_agg_func
+    composite_agg_func,
+    plot_inputs_and_attributions,
 )
 
 
@@ -66,8 +67,8 @@ def get_metrics(
 def app():
     dsid = "TwoLeadECG"
     loader = get_ts_dataset_loader(dsid, ROOT_PATH, BATCH_SIZE)
-    # model = ResNetPlus(loader.vars, loader.c)
-    model = PatchTST(loader.vars, None, loader.len, loader.c, classification=True)
+    model = ResNetPlus(loader.vars, loader.c)
+    # model = PatchTST(loader.vars, None, loader.len, loader.c, classification=True)
     model = train_model(
         loader,
         model,
@@ -86,19 +87,23 @@ def app():
     explainer_types = [
         InputXGradient,
         # IntegratedGradients,
-        # KernelShap,
-        # Lime,
+        KernelShap,
+        Lime,
     ]
     explainers = get_explainers(explainer_types, model)
 
+    metrics = []
     metrics = get_metrics([AbPC, Complexity], model, modality, agg_dim)
     metrics: Sequence[Metric] = [*metrics, Composite(metrics, composite_agg_func)]
     # metrics = metrics[2:]
-    # metrics = get_metrics([Sensitivity], model, modality, agg_dim)
+    metrics.extend(get_metrics([Sensitivity], model, modality, agg_dim))
 
     log_file = open(
         os.path.join(CURRENT_PATH, f"out/captum_{model.__class__.__name__}.csv"), "a+"
     )
+    plot_path = os.path.join(CURRENT_PATH, "plots", model.__class__.__name__, "captum")
+
+    plot_data_step = 100
 
     for metric in metrics:
         for explainer in explainers:
@@ -115,10 +120,30 @@ def app():
             print("Best/value:", evals)
 
             torch.cuda.empty_cache()
-            log_file.write(
-                f"{metric.__class__.__name__},{explainer.__class__.__name__},{evals}\n"
-            )
+            log_data = [
+                str(metric.__class__.__name__),
+                str(explainer.__class__.__name__),
+                str(evals),
+            ]
+            log = ",".join(log_data) + "\n"
+            print(log)
+            log_file.write(log)
             log_file.flush()
+
+            attributions = attributions.clamp(min=-1 + 1e-9, max=1 - 1e-9)
+
+            plot_inputs_and_attributions(
+                inputs[::plot_data_step, 0, :].tolist(),
+                attributions[::plot_data_step, 0, :].tolist(),
+                " ".join(log_data),
+                os.path.join(
+                    plot_path,
+                    str(metric.__class__.__name__),
+                    str(explainer.__class__.__name__),
+                    f"{'_'.join(log_data[:2])}.png",
+                ),
+            )
+
             # except Exception as e:
             #     print(
             #         f"[FAILED!!!] Metric: {metric.__class__.__name__}; Explainer: {explainer.__class__.__name__}. {e}"

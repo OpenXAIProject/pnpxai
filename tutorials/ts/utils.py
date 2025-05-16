@@ -3,6 +3,7 @@ import os
 import torch
 
 from matplotlib import pyplot as plt
+from matplotlib.axes import Axes
 
 from tsai.all import (
     get_UCR_data,
@@ -21,8 +22,8 @@ from tsai.all import (
 # ------------------------------------------------------------------------------#
 
 # setup
-# DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-DEVICE = torch.device('cpu')
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# DEVICE = torch.device("cpu")
 torch.set_num_threads(1)
 CURRENT_PATH = os.path.dirname(os.path.realpath(__file__))
 ROOT_PATH = os.path.join(CURRENT_PATH, "../")
@@ -67,3 +68,35 @@ def train_model(
 
 def tensor_mapper(x: TSTensor):
     return torch.from_numpy(x.cpu().numpy())
+
+
+def threshold_plot(ax: Axes, predictions, confidences, color_mapper=None):
+    # Define colors based on confidence RGB
+    if color_mapper is None:
+        def color_mapper(c):
+            return (1, 1 - c, 1 - c) if c > 0 else (1 + c, 1 + c, 1)
+
+    colors = [color_mapper(c) for c in confidences]
+
+    # Plotting
+    ax.plot(predictions, color="black", label="Lookback")
+    min_pred = min(predictions)
+    max_pred = max(predictions)
+    for i in range(len(predictions) - 1):
+        ax.fill_betweenx([min_pred, max_pred], i, i + 1, color=colors[i])
+
+
+def plot_inputs_and_attributions(inputs, attributions, title, filename: str):
+    assert len(inputs) == len(attributions)
+
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+
+    *filename, ext = filename.split('.')
+    filename = '.'.join(filename)
+
+    for idx, (datum, attr) in enumerate(zip(inputs, attributions)):
+        fig, axes = plt.subplots(2, figsize=(4, 4))
+        axes[0].plot(datum)
+        threshold_plot(axes[1], datum, attr)
+        fig.suptitle(f"#{idx} - {title}")
+        fig.savefig(f"{filename}[{idx}].{ext}")

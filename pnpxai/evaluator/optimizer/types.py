@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 import optuna
+from pnpxai.core._types import TensorOrTupleOfTensors
 from pnpxai.explainers.base import Explainer
 from pnpxai.explainers.utils.postprocess import PostProcessor
 
