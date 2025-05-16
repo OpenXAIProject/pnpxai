@@ -223,6 +223,21 @@ We are grateful for the grant from the Institute of Information & communications
 
 <hr>
 
+## Citation
+
+If you find this repository useful in your research, please consider citing our paper:
+
+```
+@article{kim2025pnpxai,
+  title={PnPXAI: A Universal XAI Framework Providing Automatic Explanations Across Diverse Modalities and Models},
+  author=author={Kim, Seongun and Kim, Sol A and Kim, Geonhyeong and Menadjiev, Enver and Lee, Chanwoo and Chung, Seongwook and Kim, Nari and Choi, Jaesik},
+  journal={arXiv preprint arXiv:2505.10515},
+  year={2025}
+}
+```
+
+<hr>
+
 ## License
 
 PnP XAI is released under Apache license 2.0. See [LICENSE](https://github.com/OpenXAIProject/pnpxai/tree/main/LICENSE) for additional details.
