@@ -157,7 +157,7 @@ We are grateful for the grant from the Institute of Information & communications
 
 ## Citation
 
-If you find this repository useful in your research, please consider citing our [paper](https://arxiv.org/abs/2505.10515)::
+If you find this repository useful in your research, please consider citing our [paper](https://arxiv.org/abs/2505.10515):
 
 ```
 @article{kim2025pnpxai,
