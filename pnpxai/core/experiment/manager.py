@@ -22,7 +22,7 @@ class ExperimentManager:
         self.set_data_ids()
         self._explainers: List[Explainer] = []
         self._explainer_ids: List[int] = []
-        self._postprocessors: List[PostProcessor] =[]
+        self._postprocessors: List[PostProcessor] = []
         self._postprocessor_ids: List[int] = []
         self._metrics: List[Metric] = []
         self._metric_ids: List[int] = []
@@ -357,7 +357,6 @@ class ExperimentManager:
 
         for idx, output in zip(data_ids, outputs):
             self._cache.set_output(idx, output)
-
 
     def _get_batch_size(self, data: DataSource) -> Optional[int]:
         if torch.is_tensor(data):

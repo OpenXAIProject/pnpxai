@@ -7,10 +7,7 @@ from zennit.rules import NoMod
 from zennit.types import Linear
 
 from pnpxai.explainers.lrp import LRPBase, canonizers_base
-from pnpxai.explainers.types import (
-    ForwardArgumentExtractor,
-    TargetLayer,
-)
+from pnpxai.explainers.types import TargetLayer
 
 
 class GuidedBackpropRule(BasicHook):
@@ -30,18 +27,20 @@ class GuidedBackprop(LRPBase):
         self,
         model: Module,
         stabilizer: float=1e-6,
-        forward_arg_extractor: Optional[ForwardArgumentExtractor]=None,
-        additional_forward_arg_extractor: Optional[ForwardArgumentExtractor]=None,
-        layer: Optional[TargetLayer]=None,
+        target_input_keys: Optional[List[Union[str, int]]]=None,
+        additional_input_keys: Optional[List[Union[str, int]]]=None,
+        output_modifier: Optional[Callable[[Any], torch.Tensor]]=None,
+        target_layer: Optional[TargetLayer]=None,
         n_classes: Optional[int]=None,
     ) -> None:
         self.stabilizer = stabilizer
         super().__init__(
             model,
             self._composite,
-            forward_arg_extractor,
-            additional_forward_arg_extractor,
-            layer,
+            target_input_keys,
+            additional_input_keys,
+            output_modifier,
+            target_layer,
             n_classes
         )
 

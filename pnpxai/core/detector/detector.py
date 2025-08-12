@@ -1,7 +1,7 @@
-from typing import Set, Tuple, Optional
+from typing import Set, Tuple, Optional, Union, Sequence
 from torch import fx, nn
+from pnpxai.utils import format_into_tuple
 from pnpxai.core._types import Model
-from pnpxai.core.detector.utils import get_target_module_of
 from pnpxai.core.detector.types import (
     ModuleType,
     Linear,
@@ -11,6 +11,7 @@ from pnpxai.core.detector.types import (
     Attention,
     Embedding,
 )
+# from pnpxai.core.modality.modality import _Modality
 
 DEFAULT_MODULE_TYPES_TO_DETECT = (
     Linear,
@@ -105,3 +106,24 @@ def detect_model_architecture(
             continue
         detected.add(module_type)
     return detected
+
+
+DATA_MODALITY_MAYBE = {
+    (float, 2): 'tabular or time-series',
+    (float, 4): 'image',
+    (int, 2): 'text',    
+}
+
+
+def _data_modality_maybe(dtype, ndims):
+    return DATA_MODALITY_MAYBE.get((dtype, ndims))
+
+
+def detect_data_modality(modality: Union["Modality", Sequence["Modality"]]):
+    nms = []
+    for mod in format_into_tuple(modality):
+        mod_nm = _data_modality_maybe(mod.dtype_key, mod.ndims)
+        if mod_nm is None:
+            raise ValueError('Cannot match data modality')
+        nms.append(mod_nm)
+    return nms

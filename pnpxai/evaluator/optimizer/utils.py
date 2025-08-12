@@ -15,21 +15,10 @@ DEFAULT_N_TRIALS = {
     'tpe': 50,
 }
 
+
 def load_sampler(sampler: Literal['grid', 'random', 'tpe']='tpe', **kwargs):
     return AVAILABLE_SAMPLERS[sampler](**kwargs)
 
+
 def get_default_n_trials(sampler):
     return DEFAULT_N_TRIALS[sampler]
-
-def nest_params(flattened_params):
-    nested = {}
-    for k, v in flattened_params.items():
-        ref = nested
-        splits = k.split('.')
-        while splits:
-            s = splits.pop(0)
-            if s not in ref:
-                _v = {} if len(splits) > 0 else v
-                ref[s] = _v
-            ref = ref[s]
-    return nested

@@ -62,8 +62,8 @@ AVAILABLE_EXPLAINERS: Tuple[Explainer] = (
     KernelShap,
     Lime,
     Gfgp,
-    AttentionRollout,
-    TransformerAttribution,
+    # AttentionRollout,
+    # TransformerAttribution,
 )
 
 EXPLAINERS_FOR_TABULAR = []

@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Callable, Tuple, List, Sequence, Optional, Union, Literal
+from typing import Callable, Tuple, List, Sequence, Optional, Union, Literal, Any
 
 import torch
 from torch import Tensor
@@ -15,19 +15,24 @@ from pnpxai.core.detector.types import Attention
 from pnpxai.explainers.attentions.attributions import SavingAttentionAttributor
 from pnpxai.explainers.attentions.rules import CGWAttentionPropagation
 from pnpxai.explainers.attentions.module_converters import default_attention_converters
+from pnpxai.explainers.base import Tunable
+from pnpxai.explainers.types import TunableParameter
 from pnpxai.explainers.zennit.attribution import Gradient, LayerGradient
 from pnpxai.explainers.zennit.base import ZennitExplainer
-from pnpxai.explainers.utils import captum_wrap_model_input
-from pnpxai.explainers.types import ForwardArgumentExtractor
+from pnpxai.explainers.utils import ModelWrapperForLayerAttribution
+
 
 def rollout_min_head_fusion_function(attn_weights):
     return attn_weights.min(axis=1).values
 
+
 def rollout_max_head_fusion_function(attn_weights):
     return attn_weights.max(axis=1).values
 
+
 def rollout_mean_head_fusion_function(attn_weights):
     return attn_weights.mean(axis=1)
+
 
 def _get_rollout_head_fusion_function(method: Literal['min', 'max', 'mean']):
     if method == 'min':
@@ -38,7 +43,7 @@ def _get_rollout_head_fusion_function(method: Literal['min', 'max', 'mean']):
         return rollout_mean_head_fusion_function
 
 
-class AttentionRolloutBase(ZennitExplainer):
+class AttentionRolloutBase(ZennitExplainer, Tunable):
     """
     Base class for `AttentionRollout` and `TransformerAttribution` explainers.
 
@@ -61,30 +66,56 @@ class AttentionRolloutBase(ZennitExplainer):
     """
 
     SUPPORTED_MODULES = [Attention]
+    SUPPORTED_DTYPES = [float]
+    SUPPORTED_NDIMS = [4]
 
     def __init__(
         self,
         model: Module,
-        interpolate_mode: Literal['bilinear']='bilinear',
-        head_fusion_method: Literal['min', 'max', 'mean']='min',
-        discard_ratio: float=0.9,
-        forward_arg_extractor: Optional[ForwardArgumentExtractor]=None,
-        additional_forward_arg_extractor: Optional[ForwardArgumentExtractor]=None,
-        n_classes: Optional[int]=None,
+        interpolate_mode: Literal['bilinear', 'bicubic'] = 'bilinear',
+        head_fusion_method: Literal['min', 'max', 'mean'] = 'min',
+        discard_ratio: float = 0.9,
+        target_input_keys: Optional[List[Union[str, int]]] = None,
+        additional_input_keys: Optional[List[Union[str, int]]] = None,
+        output_modifier: Optional[Callable[[Any], Tensor]] = None,
+        n_classes: Optional[int] = None,
     ) -> None:
-        super().__init__(
+        self.interpolate_mode = TunableParameter(
+            name='interpolate_mode',
+            current_value=interpolate_mode,
+            dtype=str,
+            is_leaf=True,
+            space={'choices': ['bilinear', 'bicubic']},
+        )
+        self.head_fusion_method = TunableParameter(
+            name='head_fusion_method',
+            current_value=head_fusion_method,
+            dtype=str,
+            is_leaf=True,
+            space={'choices': ['min', 'max', 'mean']},
+        )
+        self.discard_ratio = TunableParameter(
+            name='discard_ratio',
+            current_value=discard_ratio,
+            dtype=float,
+            is_leaf=True,
+            space={'low': 0., 'high': .95, 'step': .05},
+        )
+        ZennitExplainer.__init__(
+            self,
             model,
-            forward_arg_extractor,
-            additional_forward_arg_extractor,
+            target_input_keys,
+            additional_input_keys,
+            output_modifier,
             n_classes,
         )
-        self.interpolate_mode = interpolate_mode
-        self.head_fusion_method = head_fusion_method
-        self.discard_ratio = discard_ratio
+        Tunable.__init__(self)
+        self.register_tunable_params([
+            self.interpolate_mode, self.head_fusion_method, self.discard_ratio])
 
     @property
     def head_fusion_function(self):
-        return _get_rollout_head_fusion_function(self.head_fusion_method)
+        return _get_rollout_head_fusion_function(self.head_fusion_method.current_value)
 
     @abstractmethod
     def collect_attention_map(self, inputs, targets):
@@ -95,17 +126,20 @@ class AttentionRolloutBase(ZennitExplainer):
         raise NotImplementedError
 
     def _discard(self, fused_attn_map):
-        org_size = fused_attn_map.size() # keep size to recover it after discard
+        org_size = fused_attn_map.size()  # keep size to recover it after discard
+
         flattened = fused_attn_map.flatten(1)
         bsz, n_tokens = flattened.size()
-        attn_cls = flattened[:, 0] # keep attn scores of cls token to recover them after discard
+        
+        # keep attn scores of cls token to recover them after discard
+        attn_cls = flattened[:, 0]
         _, indices = flattened.topk(
-            k=int(n_tokens*self.discard_ratio),
+            k=int(n_tokens*self.discard_ratio.current_value),
             dim=-1,
             largest=False,
         )
-        flattened[torch.arange(bsz)[:, None], indices] = 0. # discard
-        flattened[:, 0] = attn_cls # recover attn scores of cls token
+        flattened[torch.arange(bsz)[:, None], indices] = 0.  # discard
+        flattened[:, 0] = attn_cls  # recover attn scores of cls token
         discarded = flattened.view(*org_size)
         return discarded
     
@@ -124,6 +158,12 @@ class AttentionRolloutBase(ZennitExplainer):
         Returns:
             torch.Tensor: The result of the explanation.
         """
+        forward_args, _ = self.format_inputs(inputs)
+        assert (
+            len(forward_args) == 1
+        ), "AttentionRollout for multiple inputs is not supported."
+
+        # inputs = inputs[0]
 
         attn_maps = self.collect_attention_map(inputs, targets)
         with torch.no_grad():
@@ -131,8 +171,8 @@ class AttentionRolloutBase(ZennitExplainer):
 
         # attn btw cls and patches
         attrs = rollout[:, 0, 1:]
-        n_patches = attrs.size(-1)        
-        bsz, _, h, w = inputs.size()
+        n_patches = attrs.size(-1)
+        bsz, _, h, w = forward_args[0].size()
         p_h = int(h / w * n_patches ** .5)
         p_w = n_patches // p_h
         attrs = attrs.view(bsz, 1, p_h, p_w)
@@ -141,26 +181,9 @@ class AttentionRolloutBase(ZennitExplainer):
         attrs = LayerAttribution.interpolate(
             layer_attribution=attrs,
             interpolate_dims=(h, w),
-            interpolate_mode=self.interpolate_mode,
+            interpolate_mode=self.interpolate_mode.current_value,
         )
         return attrs
-
-    def get_tunables(self):
-        """
-        Provides Tunable parameters for the optimizer
-
-        Tunable parameters:
-            `interpolate_mode` (str): Value can be selected of `"bilinear"` and `"bicubic"`
-
-            `head_fusion_method` (str): Value can be selected of `"min"`, `"max"`, and `"mean"`
-
-            `discard_ratio` (float): Value can be selected in the range of `range(0, 0.95, 0.05)`
-        """
-        return {
-            'interpolate_mode': (list, {'choices': ['bilinear', 'bicubic']}),
-            'head_fusion_method': (list, {'choices': ['min', 'max', 'mean']}),
-            'discard_ratio': (float, {'low': 0., 'high': .95, 'step': .05}),
-        }
 
 
 class AttentionRollout(AttentionRolloutBase):
@@ -182,30 +205,36 @@ class AttentionRollout(AttentionRolloutBase):
     Reference:
         Samira Abnar, Willem Zuidema. Quantifying Attention Flow in Transformers.
     """
+    alias = ['attention_rollout', 'ar']
+
     def __init__(
         self,
         model: Module,
-        interpolate_mode: Literal['bilinear']='bilinear',
-        head_fusion_method: Literal['min', 'max', 'mean']='min',
-        discard_ratio: float=0.9,
-        forward_arg_extractor: Optional[ForwardArgumentExtractor]=None,
-        additional_forward_arg_extractor: Optional[ForwardArgumentExtractor]=None,
-        n_classes: Optional[int]=None,
+        interpolate_mode: Literal['bilinear'] = 'bilinear',
+        head_fusion_method: Literal['min', 'max', 'mean'] = 'min',
+        discard_ratio: float = 0.9,
+        target_input_keys: Optional[List[Union[str, int]]] = None,
+        additional_input_keys: Optional[List[Union[str, int]]] = None,
+        output_modifier: Optional[Callable[[Any], torch.Tensor]] = None,
+        n_classes: Optional[int] = None,
     ) -> None:
         super().__init__(
             model,
             interpolate_mode,
             head_fusion_method,
             discard_ratio,
-            forward_arg_extractor,
-            additional_forward_arg_extractor,
+            target_input_keys,
+            additional_input_keys,
+            output_modifier,
             n_classes
         )
 
     def collect_attention_map(self, inputs, targets):
+        forward_args, additional_forward_args = self.format_inputs(inputs)
         # get all attn maps
-        with SavingAttentionAttributor(model=self.model) as attributor:
-            weights_all = attributor(inputs, None)
+        with SavingAttentionAttributor(model=self._wrapped_model) as attributor:
+            forward_args += additional_forward_args
+            weights_all = attributor(forward_args, None)
         return (weights_all,)
     
     def rollout(self, weights_all):
@@ -247,36 +276,39 @@ class TransformerAttribution(AttentionRolloutBase):
     """
 
     SUPPORTED_MODULES = [Attention]
+    alias = ['transformer_attribution', 'ta']
     
     def __init__(
         self,
         model: Module,
-        interpolate_mode: Literal['bilinear']='bilinear',
-        head_fusion_method: Literal['min', 'max', 'mean']='mean',
-        discard_ratio: float=0.9,
-        alpha: float=2.,
-        beta: float=1.,
-        stabilizer: float=1e-6,
-        zennit_canonizers: Optional[List[Canonizer]]=None,
-        layer: Optional[Union[Module, Sequence[Module]]]=None,
-        forward_arg_extractor: Optional[ForwardArgumentExtractor]=None,
-        additional_forward_arg_extractor: Optional[ForwardArgumentExtractor]=None,
-        n_classes: Optional[int]=None
+        interpolate_mode: Literal['bilinear'] = 'bilinear',
+        head_fusion_method: Literal['min', 'max', 'mean'] = 'mean',
+        discard_ratio: float = 0.9,
+        alpha: float = 2.,
+        beta: float = 1.,
+        stabilizer: float = 1e-6,
+        zennit_canonizers: Optional[List[Canonizer]] = None,
+        target_layer: Optional[Union[Module, Sequence[Module]]] = None,
+        target_input_keys: Optional[List[Union[str, int]]] = None,
+        additional_input_keys: Optional[List[Union[str, int]]] = None,
+        output_modifier: Optional[Callable[[Any], torch.Tensor]] = None,
+        n_classes: Optional[int] = None
     ) -> None:
         super().__init__(
             model,
             interpolate_mode,
             head_fusion_method,
             discard_ratio,
-            forward_arg_extractor,
-            additional_forward_arg_extractor,
+            target_input_keys,
+            additional_input_keys,
+            output_modifier,
             n_classes
         )
         self.alpha = alpha
         self.beta = beta
         self.stabilizer = stabilizer
         self.zennit_canonizers = zennit_canonizers or []
-        self.layer = layer
+        self.target_layer = target_layer
 
     @staticmethod
     def default_head_fusion_fn(attns):
@@ -302,32 +334,34 @@ class TransformerAttribution(AttentionRolloutBase):
     
     @property
     def _layer_gradient(self) -> LayerGradient:
-        wrapped_model = captum_wrap_model_input(self.model)
+        wrapped_model = ModelWrapperForLayerAttribution(self._wrapped_model)
+        format_into_tuple
         layers = [
-            wrapped_model.input_maps[layer] if isinstance(layer, str)
-            else layer for layer in self.layer
-        ] if isinstance(self.layer, Sequence) else self.layer
+            wrapped_model.input_maps[target_layer] if isinstance(target_layer, str)
+            else target_layer for target_layer in format_into_tuple(self.target_layer)
+        ]
+        layers = format_out_tuple_if_single(layers)
         return LayerGradient(
             model=wrapped_model,
-            layer=layers,
+            target_layer=layers,
             composite=self.zennit_composite,
         )
     
     @property
     def _gradient(self) -> Gradient:
         return Gradient(
-            model=self.model,
+            model=self._wrapped_model,
             composite=self.zennit_composite,
         )
 
     @property
     def attributor(self):
-        if self.layer is None:
+        if self.target_layer is None:
             return self._gradient
         return self._layer_gradient
     
     def collect_attention_map(self, inputs, targets):
-        forward_args, additional_forward_args = self._extract_forward_args(inputs)
+        forward_args, additional_forward_args = self.format_inputs(inputs)
         with self.attributor as attributor:
             attributor.forward(
                 forward_args=forward_args,
@@ -360,10 +394,10 @@ class GenericAttention(AttentionRolloutBase):
     def __init__(
             self,
             model: Module,
-            alpha: float=2.,
-            beta: float=1.,
-            stabilizer: float=1e-6,
-            head_fusion_function: Optional[Callable[[Tensor], Tensor]]=None,
-            n_classes: Optional[int]=None
-        ) -> None:
+            alpha: float = 2.,
+            beta: float = 1.,
+            stabilizer: float = 1e-6,
+            head_fusion_function: Optional[Callable[[Tensor], Tensor]] = None,
+            n_classes: Optional[int] = None
+    ) -> None:
         raise NotImplementedError

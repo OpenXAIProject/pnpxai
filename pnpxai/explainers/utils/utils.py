@@ -1,14 +1,10 @@
-from typing import Sequence, Any, Union
-import functools
-
-import torch
 from torch import nn
-from captum.attr._utils.input_layer_wrapper import ModelInputWrapper
-from skimage.segmentation import felzenszwalb
+from captum.attr._utils.input_layer_wrapper import ModelInputWrapper, InputIdentity
 
 from pnpxai.core.detector import symbolic_trace
 from pnpxai.core.detector.utils import get_target_module_of, find_nearest_user_of
 from pnpxai.core.detector.types import Convolution, Pool
+from pnpxai.core.utils import ModelWrapper
 
 
 def find_cam_target_layer(model: nn.Module) -> nn.Module:
@@ -29,63 +25,15 @@ def find_cam_target_layer(model: nn.Module) -> nn.Module:
     return target_module
 
 
-def default_feature_mask_fn_image(inputs: torch.Tensor, scale=250):
-    feature_mask = [
-        torch.tensor(felzenszwalb(input.permute(1,2,0).detach().cpu().numpy(), scale=scale))
-        for input in inputs
-    ]
-    return torch.LongTensor(torch.stack(feature_mask)).to(inputs.device)
+class ModelWrapperForLayerAttribution(ModelInputWrapper):
+    def __init__(
+        self,
+        wrapped_model: ModelWrapper,
+    ):
+        super().__init__(wrapped_model)
 
-
-def default_feature_mask_fn_text(inputs): return None
-
-
-def default_feature_mask_fn_image_text(images, text):
-    fm_img = default_feature_mask_fn_image(images)
-    bsz, text_len = text.size()
-    fm_text = torch.arange(text_len).repeat(bsz).view(bsz, text_len)
-    fm_text += fm_img.max().item() + 1
-    return fm_img, fm_text
-
-
-def get_default_feature_mask_fn(modality):
-    if modality == 'image':
-        return default_feature_mask_fn_image
-    elif modality == 'text':
-        return default_feature_mask_fn_text
-    elif modality == ('image', 'text'):
-        return default_feature_mask_fn_image_text
-    else:
-        raise NotImplementedError(f"default_feature_mask_fn for '{modality}' not supported.")
-
-
-def default_baseline_fn_image(inputs: torch.Tensor):
-    return torch.zeros_like(inputs)
-
-def default_baseline_fn_text(inputs: torch.Tensor, mask_token_id: int=0):
-    return torch.ones_like(inputs, dtype=torch.long) * mask_token_id
-
-def default_baseline_fn_image_text(images: torch.Tensor, text: torch.Tensor, mask_token_id: int=0):
-    return default_baseline_fn_image(images), default_baseline_fn_text(text, mask_token_id)
-
-def get_default_baseline_fn(modality, mask_token_id=0):
-    if modality == 'image':
-        return default_baseline_fn_image
-    elif modality == 'text':
-        return default_baseline_fn_text
-    elif modality == ('image', 'text'):
-        return functools.partial(default_baseline_fn_image_text, mask_token_id=mask_token_id)
-    else:
-        raise NotImplementedError(f"default_baseline_fn for '{modality}' not supported.")
-
-def captum_wrap_model_input(model):
-    if isinstance(model, nn.DataParallel):
-        return ModelInputWrapper(model.module)
-    return ModelInputWrapper(model)
-
-
-
-def _format_to_tuple(obj: Union[Any, Sequence[Any]]):
-    if isinstance(obj, Sequence):
-        return tuple(obj)
-    return (obj,)
+        # override
+        self.arg_name_list = wrapped_model.required_order
+        self.input_maps = nn.ModuleDict({
+            arg_name: InputIdentity(arg_name) for arg_name in self.arg_name_list
+        })

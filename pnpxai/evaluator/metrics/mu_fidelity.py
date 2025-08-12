@@ -34,6 +34,7 @@ class MuFidelity(Metric):
     Reference:
         U. Bhatt, A. Weller, and J. M. F. Moura. Evaluating and aggregating feature-based model attributions. In Proceedings of the IJCAI (2020).
     """
+    alias = ['mu_fidelity', 'mufid']
 
     def __init__(
         self,
