@@ -389,7 +389,7 @@ def _get_uniform_epsilon_composite(epsilon, stabilizer, zennit_canonizers):
     zennit_canonizers = zennit_canonizers or []
     canonizers = canonizers_base() + default_attention_converters + zennit_canonizers
     layer_map = (
-        [(Linear, Epsilon(epsilon=epsilon))]
+        [(Linear, Epsilon(epsilon=epsilon)), (Convolution, Epsilon(epsilon=epsilon))]
         + transformer_layer_map(stabilizer=stabilizer)
         + layer_map_base(stabilizer=stabilizer)
     )
