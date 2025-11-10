@@ -1,4 +1,5 @@
 from typing import Callable, Optional, Dict, Any
+from collections import defaultdict
 
 
 class FunctionSelector:
@@ -50,20 +51,42 @@ class FunctionSelector:
         self,
         data: Optional[Dict[str, Callable]] = None,
         default_kwargs: Optional[Dict[str, Any]] = None,
+        choicewise_default_kwargs: Optional[Dict[str, Any]] = None,
+        fallback_options: Optional[Dict[str, Callable]] = None,
     ):
         self._data = data or {}
         self._default_kwargs = default_kwargs or {}
+        self._choicewise_default_kwargs = choicewise_default_kwargs or defaultdict(dict)
+        self._fallback_options = fallback_options or {}
 
     @property
     def choices(self):
         return list(self._data.keys())
 
+    @property
+    def default_kwargs(self):
+        return self._default_kwargs
+
+    @property
+    def data(self):
+        return self._data
+
     def add(self, key: str, value: Callable):
         self._data[key] = value
         return value
 
+    def add_default_kwargs(self, key, value, choice=None):
+        if choice is None:
+            self._default_kwargs[key] = value
+        else:
+            self._choicewise_default_kwargs[choice][key] = value
+
+    def add_fallback_option(self, key, value):
+        self._fallback_options[key] = value
+
     def get(self, key: str):
-        return self._data[key]
+        data = {**self._data, **self._fallback_options}
+        return data[key]
 
     def delete(self, key: str):
         return self._data.pop(key, None)
@@ -73,8 +96,12 @@ class FunctionSelector:
 
     def select(self, key: str, **kwargs):
         fn_type = self.get(key)
-        kwargs = {**self._default_kwargs, **kwargs}
+        kwargs = {
+            **self._default_kwargs,
+            **self._choicewise_default_kwargs[key],
+            **kwargs,
+        }
         return fn_type(**kwargs)
 
-    def get_tunables(self):
-        return {'method': (list, {'choices': self.choices})}
+    def get_key(self, value):
+        return {v: k for k, v in self._data.items()}.get(value)

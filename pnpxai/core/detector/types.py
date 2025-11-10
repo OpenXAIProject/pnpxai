@@ -86,5 +86,4 @@ class Embedding(metaclass=SubclassMeta):
     )
 
 
-
 ModuleType = Union[Linear, Convolution, RNN, LSTM, Attention, Pool, Embedding]

@@ -6,6 +6,7 @@ from pnpxai.evaluator.optimizer.utils import (
     get_default_n_trials,
 )
 
+
 def optimize(
     objective: Objective,
     direction: Literal['maximize', 'minimize'] = 'maximize',

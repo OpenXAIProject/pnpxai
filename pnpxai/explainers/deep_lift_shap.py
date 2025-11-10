@@ -6,7 +6,6 @@ from torch import Tensor
 from pnpxai.core.detector.types import Convolution
 from pnpxai.explainers.base import Explainer
 from torch.nn.modules import Module
-from pnpxai.explainers.base import Explainer
 
 
 class DeepLiftShap(Explainer):
@@ -23,6 +22,9 @@ class DeepLiftShap(Explainer):
         Scott M. Lundberg, Su-In Lee, A Unified Approach to Interpreting Model Predictions
     """
     SUPPORTED_MODULES = [Convolution]
+    SUPPORTED_DTYPES = [float]
+    SUPPORTED_NDIMS = [2]
+    alias = ['deep_lift_shap', 'dls']
 
     def __init__(
         self,
