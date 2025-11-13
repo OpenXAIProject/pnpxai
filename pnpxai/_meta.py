@@ -3,8 +3,8 @@
 # Copyright 2023-2026, Open XAI PnP
 author = "Team SAIL"
 author_email = "open.xai@gmail.com"
-version = "0.1.1"
-full_version = "0.1.1"
-git_version = '80f0228e8971a8bfe5b3c022430a7bf06177f74e'
+version = "0.1.3"
+full_version = "0.1.3"
+git_version = '78e93c7eecf360e21ffaf95a930d8790633be820'
 release = True
 homepage = "https://github.com/OpenXAIProject/pnpxai"
