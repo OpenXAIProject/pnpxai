@@ -1,10 +1,10 @@
-from typing import Literal, Union, Literal
+from typing import Literal, Union
 
 import torch
 import torchvision.transforms.functional as TF
+from pnpxai.explainers.base import Tunable
+from pnpxai.explainers.types import TunableParameter
 from pnpxai.explainers.utils.base import UtilFunction
-
-BaselineMethod = Literal['zeros', 'invert', 'gaussian_blur', 'token']
 
 
 class BaselineFunction(UtilFunction):
@@ -22,16 +22,9 @@ class BaselineFunction(UtilFunction):
     def __init__(self, *args, **kwargs):
         pass
 
-    @classmethod
-    def from_method(cls, method, **kwargs):
-        baseline_fn = BASELINE_FUNCTIONS.get(method, None)
-        if baseline_fn is None:
-            raise ValueError
-        return baseline_fn(**kwargs)
-
 
 class TokenBaselineFunction(BaselineFunction):
-    def __init__(self, token_id, **kwargs):
+    def __init__(self, token_id):
         super().__init__()
         self.token_id = token_id
 
@@ -40,7 +33,7 @@ class TokenBaselineFunction(BaselineFunction):
 
 
 class ZeroBaselineFunction(BaselineFunction):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__()
 
     def __call__(self, inputs: torch.Tensor):
@@ -59,64 +52,79 @@ class MeanBaselineFunction(BaselineFunction):
 
 
 class InvertBaselineFunction(BaselineFunction):
-    def __init__(self, *args, **kwargs):
+    def __init__(self):
         super().__init__()
 
     def __call__(self, inputs: torch.Tensor):
         return TF.invert(inputs)
 
 
-class GaussianBlurBaselineFunction(BaselineFunction):
+class GaussianBlurBaselineFunction(BaselineFunction, Tunable):
     def __init__(
         self,
         kernel_size_x: int = 3,
         kernel_size_y: int = 3,
         sigma_x: float = .5,
         sigma_y: float = .5,
-        **kwargs
     ):
-        super().__init__()
-        self.kernel_size_x = kernel_size_x
-        self.kernel_size_y = kernel_size_y
-        self.sigma_x = sigma_x
-        self.sigma_y = sigma_y
+        BaselineFunction.__init__(self)
+        self.kernel_size_x = TunableParameter(
+            name='kernel_size_x',
+            current_value=kernel_size_x,
+            dtype=int,
+            is_leaf=True,
+            space={'low': 1, 'high': 11, 'step': 2},
+        )
+        self.kernel_size_y = TunableParameter(
+            name='kernel_size_y',
+            current_value=kernel_size_y,
+            dtype=int,
+            is_leaf=True,
+            space={'low': 1, 'high': 11, 'step': 2},
+        )
+        self.sigma_x = TunableParameter(
+            name='sigma_x',
+            current_value=sigma_x,
+            dtype=float,
+            is_leaf=True,
+            space={'low': .05, 'high': 2., 'step': .05},
+        )
+        self.sigma_y = TunableParameter(
+            name='sigma_y',
+            current_value=sigma_y,
+            dtype=float,
+            is_leaf=True,
+            space={'low': .05, 'high': 2., 'step': .05},
+        )
+        Tunable.__init__(self)
+        self.register_tunable_params([
+            self.kernel_size_x, self.kernel_size_y,
+            self.sigma_x, self.sigma_y,
+        ])
 
     def __call__(self, inputs: torch.Tensor):
         return TF.gaussian_blur(
             inputs,
-            kernel_size=[self.kernel_size_x, self.kernel_size_y],
-            sigma=[self.sigma_x, self.sigma_y],
+            kernel_size=[
+                self.kernel_size_x.current_value,
+                self.kernel_size_y.current_value,
+            ],
+            sigma=[self.sigma_x.current_value, self.sigma_y.current_value],
         )
 
-    def get_tunables(self):
-        return {
-            'kernel_size_x': (int, {'low': 1, 'high': 11, 'step': 2}),
-            'kernel_size_y': (int, {'low': 1, 'high': 11, 'step': 2}),
-            'sigma_x': (float, {'low': .05, 'high': 2., 'step': .05}),
-            'sigma_y': (float, {'low': .05, 'high': 2., 'step': .05}),
-        }
 
-
-BaselineMethodOrFunction = Union[BaselineMethod, BaselineFunction]
-
-BASELINE_FUNCTIONS_FOR_IMAGE = {
-    'zeros': ZeroBaselineFunction,
-    'mean': MeanBaselineFunction,
-    'invert': InvertBaselineFunction,
-    'gaussian_blur': GaussianBlurBaselineFunction,
-}
-
-BASELINE_FUNCTIONS_FOR_TEXT = {
-    'token': TokenBaselineFunction,
-}
-
-BASELINE_FUNCTIONS_FOR_TIME_SERIES = {
-    'zeros': ZeroBaselineFunction,
-    'mean': MeanBaselineFunction,
-}
-
-BASELINE_FUNCTIONS = {
-    **BASELINE_FUNCTIONS_FOR_IMAGE,
-    **BASELINE_FUNCTIONS_FOR_TEXT,
-    **BASELINE_FUNCTIONS_FOR_TIME_SERIES,
+BASELINE_FUNCTIONS = {  # (dtype, ndims): {available util functions}
+    (float, 2): {
+        'zeros': ZeroBaselineFunction,
+        'mean': MeanBaselineFunction,
+    },
+    (float, 4): {
+        'zeros': ZeroBaselineFunction,
+        'mean': MeanBaselineFunction,
+        'invert': InvertBaselineFunction,
+        'gaussian_blur': GaussianBlurBaselineFunction,
+    },
+    (int, 2): {
+        'token': TokenBaselineFunction,
+    },
 }

@@ -59,8 +59,9 @@ class Sensitivity(Metric):
             # attributions = self.explainer.attribute(inputs, targets)
         attributions = attributions.to(self.device)
         evaluations = []
-        for inp, target, attr in zip(inputs, targets, attributions):
+        for inp_idx, target, attr in zip(inputs, targets, attributions):
             # Add random uniform noise which ranges [-epsilon, epsilon]
+            inp = inputs[inp_idx][0][0]
             perturbed = torch.stack([inp]*self.n_iter)
             noise = (
                 torch.rand_like(perturbed).to(self.device) * self.epsilon * 2 \
@@ -74,6 +75,8 @@ class Sensitivity(Metric):
             )
             # Get maximum of the difference between the perturbed attribution and the original attribution
             attr_norm = torch.linalg.norm(attr).to(self.device)
+            if isinstance(perturbed_attr, tuple):
+                perturbed_attr = perturbed_attr[0]
             attr_diff = attr.to(self.device) - perturbed_attr.to(self.device)
             sens = max([torch.linalg.norm(diff)/attr_norm for diff in attr_diff])
             evaluations.append(sens)

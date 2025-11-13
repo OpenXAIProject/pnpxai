@@ -13,6 +13,7 @@ Model = nn.Module  # TODO: List other model types in Union[Type1, Type2, ...]
 Task = Literal["classification"]
 ExplanationType = Literal["attribution"]
 
+
 class ConfigKeys(Enum):
     EXPLAINERS = 'explainers'
     METRICS = 'metrics'

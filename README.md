@@ -155,19 +155,6 @@ The [Documentation](https://openxaiproject.github.io/pnpxai/) contains the API r
 > This research was initiated by KAIST XAI Center and conducted in collaboration with multiple institutions, including Seoul National University, Korea University, Sogang University, and ETRI.
 We are grateful for the grant from the Institute of Information & communications Technology Planning & Evaluation (IITP) (No.RS-2022-II220984).
 
-## Citation
-
-If you find this repository useful in your research, please consider citing our [paper](https://arxiv.org/abs/2505.10515):
-
-```
-@article{kim2025pnpxai,
-  title={PnPXAI: A Universal XAI Framework Providing Automatic Explanations Across Diverse Modalities and Models},
-  author=author={Kim, Seongun and Kim, Sol A and Kim, Geonhyeong and Menadjiev, Enver and Lee, Chanwoo and Chung, Seongwook and Kim, Nari and Choi, Jaesik},
-  journal={arXiv preprint arXiv:2505.10515},
-  year={2025}
-}
-```
-
 ## License
 
 PnP XAI is released under Apache license 2.0. See [LICENSE](https://github.com/OpenXAIProject/pnpxai/tree/main/LICENSE) for additional details.

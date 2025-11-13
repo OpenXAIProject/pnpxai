@@ -1,6 +1,7 @@
-from typing import Literal, Union
+from typing import Literal, Union, Sequence
 
 import torch
+import numpy as np
 from skimage.segmentation import (
     felzenszwalb,
     quickshift,
@@ -8,7 +9,11 @@ from skimage.segmentation import (
     watershed,
 )
 
+from pnpxai.explainers.base import Tunable
+from pnpxai.explainers.types import TunableParameter
 from pnpxai.explainers.utils.base import UtilFunction
+from torchvision.transforms import InterpolationMode, Resize
+import torchvision.transforms.functional as TF
 
 
 class FeatureMaskFunction(UtilFunction):
@@ -41,13 +46,6 @@ class FeatureMaskFunction(UtilFunction):
     def __init__(self):
         pass
 
-    @classmethod
-    def from_method(cls, method, **kwargs):
-        feature_mask_fn = FEATURE_MASK_FUNCTIONS.get(method, None)
-        if feature_mask_fn is None:
-            raise ValueError
-        return feature_mask_fn(**kwargs)
-
     @staticmethod
     def _skseg_for_tensor(fn, inputs: torch.Tensor, **kwargs) -> torch.Tensor:
         """
@@ -73,46 +71,106 @@ class FeatureMaskFunction(UtilFunction):
         return torch.stack(feature_mask).long().to(inputs.device)
 
 
-class Felzenszwalb(FeatureMaskFunction):
+class Checkerboard(FeatureMaskFunction):
+    def __init__(
+        self,
+        size: Sequence[int] = [20, 20],
+    ):
+        assert len(size) == 2
+        self.size = size
+        self._n_checkers = size[0] * size[1]
+
+    def __call__(self, inputs: torch.Tensor):
+        assert inputs.dim() == 4
+
+        bsz, c, h, w = inputs.size()
+        # print(input_size)
+
+        resize = Resize([h, w], interpolation=InterpolationMode.NEAREST)
+
+        patch_masks = []
+        for i in range(self._n_checkers):
+            mask = np.zeros(self._n_checkers)
+            mask[i] = i
+            mask = resize(torch.Tensor(mask).reshape(-1,self.size[0], self.size[1])).unsqueeze(1)
+            patch_masks.append(mask.numpy())
+        return torch.from_numpy(sum(patch_masks)).squeeze(1).repeat(bsz, 1, 1).long().to(inputs.device)
+
+
+class Felzenszwalb(FeatureMaskFunction, Tunable):
     def __init__(
         self,
         scale: float = 250.,
         sigma: float = 1.,
-        min_size: int = 50,
     ):
-        super().__init__()
-        self.scale = scale
-        self.sigma = sigma
+        FeatureMaskFunction.__init__(self)
+        self.scale = TunableParameter(
+            name='scale',
+            current_value=scale,
+            dtype=float,
+            is_leaf=True,
+            space={'low': 1e0, 'high': 1e3, 'log': True},
+        )
+        self.sigma = TunableParameter(
+            name='sigma',
+            current_value=sigma,
+            dtype=float,
+            is_leaf=True,
+            space={'low': 0., 'high': 2., 'step': .05},
+        )
+        Tunable.__init__(self)
+        self.register_tunable_params([self.scale, self.sigma])
 
     def __call__(self, inputs: torch.Tensor):
         return self._skseg_for_tensor(
             felzenszwalb,
             inputs,
-            scale=self.scale,
-            sigma=self.sigma,
+            scale=self.scale.current_value,
+            sigma=self.sigma.current_value,
             min_size=50,
         )
 
-    def get_tunables(self):
-        return {
-            'scale': (float, {'low': 1e0, 'high': 1e3, 'log': True}),
-            'sigma': (float, {'low': 0., 'high': 2., 'step': .05}),
-        }
 
-
-class Quickshift(FeatureMaskFunction):
+class Quickshift(FeatureMaskFunction, Tunable):
     def __init__(
         self,
         ratio: float = 1.,
         kernel_size: float = 5,
-        max_dist: float = 10.,
+        max_dist: int = 10.,
         sigma: float = 0.,
     ):
-        super().__init__()
-        self.ratio = ratio
-        self.kernel_size = kernel_size
-        self.max_dist = max_dist
-        self.sigma = sigma
+        FeatureMaskFunction.__init__(self)
+        self.ratio = TunableParameter(
+            name='ratio',
+            current_value=ratio,
+            dtype=float,
+            is_leaf=True,
+            space={'low': 0., 'high': 1., 'step': .1},
+        )
+        self.kernel_size = TunableParameter(
+            name='kernel_size',
+            current_value=kernel_size,
+            dtype=float,
+            is_leaf=True,
+            space={'low': 1., 'high': 10., 'step': 1.},
+        )
+        self.max_dist = TunableParameter(
+            name='max_dist',
+            current_value=max_dist,
+            dtype=int,
+            is_leaf=True,
+            space={'low': 1, 'high': 20, 'step': 1},
+        )
+        self.sigma = TunableParameter(
+            name='sigma',
+            current_value=sigma,
+            dtype=float,
+            is_leaf=True,
+            space={'low': 0., 'high': 2., 'step': .1},
+        )
+        Tunable.__init__(self)
+        self.register_tunable_params([
+            self.ratio, self.kernel_size, self.max_dist, self.sigma])
 
     def __call__(self, inputs: torch.Tensor):
         if inputs.size(1) == 1:
@@ -120,48 +178,54 @@ class Quickshift(FeatureMaskFunction):
         return self._skseg_for_tensor(
             quickshift,
             inputs,
-            ratio=self.ratio,
-            kernel_size=self.kernel_size,
-            max_dist=self.max_dist,
-            sigma=self.sigma,
+            ratio=self.ratio.current_value,
+            kernel_size=self.kernel_size.current_value,
+            max_dist=self.max_dist.current_value,
+            sigma=self.sigma.current_value,
         )
 
-    def get_tunables(self):
-        return {
-            'ratio': (float, {'low': 0., 'high': 1., 'step': .1}),
-            'kernel_size': (float, {'low': 1., 'high': 10., 'step': 1.}),
-            'max_dist': (int, {'low': 1, 'high': 20, 'step': 1}),
-            'sigma': (float, {'low': 0., 'high': 2., 'step': .1,})
-        }
 
-
-class Slic(FeatureMaskFunction):
+class Slic(FeatureMaskFunction, Tunable):
     def __init__(
         self,
         n_segments: int = 150,
         compactness: float = 1.,
         sigma: float = 0.
     ):
-        super().__init__()
-        self.n_segments = n_segments
-        self.compactness = compactness
-        self.sigma = sigma
+        FeatureMaskFunction.__init__(self)
+        self.n_segments = TunableParameter(
+            name='n_segments',
+            current_value=n_segments,
+            dtype=int,
+            is_leaf=True,
+            space={'low': 100, 'high': 500, 'step': 10},
+        )
+        self.compactness = TunableParameter(
+            name='compactness',
+            current_value=compactness,
+            dtype=float,
+            is_leaf=True,
+            space={'low': 1e-2, 'high': 1e2, 'log': True},
+        )
+        self.sigma = TunableParameter(
+            name='sigma',
+            current_value=sigma,
+            dtype=float,
+            is_leaf=True,
+            space={'low': 0., 'high': 2., 'step': .1},
+        )
+        Tunable.__init__(self)
+        self.register_tunable_params([
+            self.n_segments, self.compactness, self.sigma])
 
     def __call__(self, inputs: torch.Tensor):
         return self._skseg_for_tensor(
             slic,
             inputs,
-            n_segments=self.n_segments,
-            compactness=self.compactness,
-            sigma=self.sigma,
+            n_segments=self.n_segments.current_value,
+            compactness=self.compactness.current_value,
+            sigma=self.sigma.current_value,
         )
-
-    def get_tunables(self):
-        return {
-            'n_segments': (float, {'low': 100, 'high': 500, 'step': 10}),
-            'compactness': (float, {'low': 1e-2, 'high': 1e2, 'log': True}),
-            'sigma': (float, {'low': 0., 'high': 2., 'step': .1}),
-        }
 
 
 class Watershed(FeatureMaskFunction):
@@ -170,23 +234,31 @@ class Watershed(FeatureMaskFunction):
         markers: int,
         compactness: float,
     ):
-        super().__init__()
-        self.markers = markers
-        self.compactness = compactness
+        FeatureMaskFunction.__init__(self)
+        self.markers = TunableParameter(
+            name='markers',
+            current_value=markers,
+            dtype=int,
+            is_leaf=True,
+            space={'low': 10, 'high': 200, 'step': 10},
+        )
+        self.compactness = TunableParameter(
+            name='compactness',
+            current_value=compactness,
+            dtype=float,
+            is_leaf=True,
+            space={'low': 1e-6, 'high': 1., 'log': True},
+        )
+        Tunable.__init__(self)
+        self.register_tunable_params([self.markers, self.compactness])
 
     def __call__(self, inputs: torch.Tensor):
         return self._skseg_for_tensor(
             watershed,
             inputs,
-            markers=self.markers,
-            compactness=self.compactness,
+            markers=self.markers.current_value,
+            compactness=self.compactness.current_value,
         )
-
-    def get_tunables(self):
-        return {
-            'markers': (int, {'low': 10, 'high': 200, 'step': 10}),
-            'compactness': (float, {'low': 1e-6, 'high': 1., 'log': True}),
-        }
 
 
 class NoMask1d(FeatureMaskFunction):
@@ -209,30 +281,20 @@ class NoMask2d(FeatureMaskFunction):
         return seq_masks.to(inputs.device)
 
 
-
-FEATURE_MASK_FUNCTIONS_FOR_IMAGE = {
-    'felzenszwalb': Felzenszwalb,
-    'quickshift': Quickshift,
-    'slic': Slic,
-    # 'watershed': watershed_for_tensor, TODO: watershed
-}
-
-FEATURE_MASK_FUNCTIONS_FOR_TEXT = {
-    'no_mask_1d': NoMask1d,
-}
-
-FEATURE_MASK_FUNCTIONS_FOR_TIME_SERIES = {
-    'no_mask_2d': NoMask2d,
-}
-
 FEATURE_MASK_FUNCTIONS = {
-    **FEATURE_MASK_FUNCTIONS_FOR_IMAGE,
-    **FEATURE_MASK_FUNCTIONS_FOR_TEXT,
-    **FEATURE_MASK_FUNCTIONS_FOR_TIME_SERIES,
+    (float, 2): {
+        'no_mask_1d': NoMask1d,
+    },
+    (float, 3): {
+        'no_mask_2d': NoMask2d,
+    },
+    (float, 4): {
+        'checkerboard': Checkerboard,
+        'felzenszwalb': Felzenszwalb,
+        'quickshift': Quickshift,
+        'slic': Slic,
+    },
+    (int, 2): {
+        'no_mask_1d': NoMask1d,
+    }
 }
-
-
-FeatureMaskMethod = Literal[
-    'felzenszwalb', 'quickshift', 'slic', 'watershed', 'no_mask_1d'
-]
-FeatureMaskMethodOrFunction = Union[FeatureMaskMethod, FeatureMaskFunction]

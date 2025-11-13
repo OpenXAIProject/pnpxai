@@ -1,0 +1,19 @@
+sampler: grid
+seed: 42
+num_threads: 1
+show_progress: false
+n_trials: 25 # If search space is large, total iteration goes to n_trials
+search_space:
+  explainer.baseline_fn:
+    ["mean", "zeros", "kmeans"]
+  explainer.baseline_fn.n_clusters:
+    [1, 10, 20, 30, 40, 50]
+  explainer.epsilon:
+    [0.000001, 0.0001, 0.001, 0.01, 0.1, 1.0]
+  explainer.noise_level:
+    [0.1, 0.2, 0.3, 0.4, 0.5]
+  explainer.n_iter:
+    [10, 20, 30]
+  postprocessor.0.normalization_method:
+    ["identity", "pos", "minmax"]
+  
