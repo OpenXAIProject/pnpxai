@@ -30,9 +30,13 @@ class SoftMax(RelProp):
         kwargs=None,
     ):
         dim = kwargs.get("dim", None)
+
         if dim is None:
             # if args[0] is tensor, then dim = args[1]
-            dim = args[int(torch.is_tensor(args[0]))]
+            if torch.is_tensor(args[0]) and len(args) > 1:
+                dim = args[1]
+            elif isinstance(args[0], int):
+                dim = args[0]
 
         rel = (rel - (outputs * rel.sum(dim, keepdim=True))) * inputs
         return rel

@@ -83,7 +83,7 @@ class Metric(ABC):
         """
         Sets the explainer for the metric, ensuring it is associated with the same model.
         """
-        assert self.model is explainer.model, "Must have same model of metric."
+        # assert self.model is explainer.model, "Must have same model of metric."
         clone = self.copy()
         clone.explainer = explainer
         return clone

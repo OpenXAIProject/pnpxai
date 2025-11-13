@@ -222,7 +222,7 @@ FEATURE_MASK_FUNCTIONS_FOR_TEXT = {
 }
 
 FEATURE_MASK_FUNCTIONS_FOR_TIME_SERIES = {
-    'no_mask_2d': NoMask2d,
+    'no_mask_2d': NoMask1d,
 }
 
 FEATURE_MASK_FUNCTIONS = {

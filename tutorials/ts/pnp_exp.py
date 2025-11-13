@@ -6,6 +6,8 @@ from typing import Sequence, Type
 import matplotlib.pyplot as plt
 from matplotlib.axes import Axes
 
+import numpy as np
+
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
@@ -28,6 +30,8 @@ from pnpxai.explainers import (
 from pnpxai.evaluator.metrics import AbPC, Complexity, Composite, Metric, Sensitivity
 from pnpxai.core.modality.modality import TimeSeriesModality
 
+import optuna
+
 from tsai.all import (
     PatchTST,
     ResNetPlus,
@@ -41,7 +45,7 @@ from tutorials.ts.utils import (
     BATCH_SIZE,
     DEVICE,
     tensor_mapper,
-    composite_agg_func,
+    get_composite_agg_func,
     plot_inputs_and_attributions,
 )
 
@@ -91,6 +95,8 @@ def get_metrics(
 
 
 def app():
+    optuna.logging.set_verbosity(optuna.logging.ERROR)
+
     dsid = "TwoLeadECG"
     loader = get_ts_dataset_loader(dsid, ROOT_PATH, BATCH_SIZE)
     # model = ResNetPlus(loader.vars, loader.c)
@@ -117,7 +123,7 @@ def app():
     explainer_types = [
         Gradient,
         GradientXInput,
-        # IntegratedGradients,
+        IntegratedGradients,
         KernelShap,
         Lime,
         LRPEpsilonAlpha2Beta1,
@@ -130,10 +136,15 @@ def app():
     explainers = get_explainers(explainer_types, model, modality)
 
     metrics = []
-    metrics = get_metrics([AbPC, Complexity], model, modality, agg_dim)
-    metrics = [*metrics, Composite(metrics, composite_agg_func)]
-    metrics.extend(get_metrics([Sensitivity], model, modality, agg_dim))
-    # metrics = metrics[:2]
+    metrics = get_metrics([AbPC, Complexity, Sensitivity], model, modality, agg_dim)
+    metrics = [
+        Composite(
+            [metrics[0], metrics[2]], get_composite_agg_func([0.8, -0.2])
+        ),  # AbPC, Sensitivity
+        Composite(
+            metrics, get_composite_agg_func([0.6, -0.2, -0.2])
+        ),  # AbPC, Complexity, Sensitivity
+    ]
 
     expr = Experiment(
         model=model.to(DEVICE),
@@ -157,42 +168,77 @@ def app():
         Sensitivity: "minimize",
     }
 
-    log_file = open(
-        os.path.join(CURRENT_PATH, f"out/pnp_{model.__class__.__name__}.csv"), "a+"
+    plot_path = os.path.join(
+        CURRENT_PATH, "plots/composite/", model.__class__.__name__, "pnp"
     )
-    plot_path = os.path.join(CURRENT_PATH, "plots", model.__class__.__name__, 'pnp')
+    os.makedirs(plot_path, exist_ok=True)
+    log_path = os.path.join(
+        CURRENT_PATH, f"out/composite/pnp_{model.__class__.__name__}.csv"
+    )
+    os.makedirs(os.path.dirname(log_path), exist_ok=True)
+
+    log_file = open(log_path, "a+")
 
     plot_data_step = 100
-    plot_data, _ = expr.manager.get_data(data_ids)
-
-    plot_inputs = torch.concat([datum for datum, _ in plot_data], dim=0)
-    plot_inputs = tensor_mapper(plot_inputs[::plot_data_step]).to(DEVICE)
-
-    plot_targets = torch.concat([target for _, target in plot_data], dim=0)
-    plot_targets = tensor_mapper(plot_targets[::plot_data_step]).to(DEVICE)
 
     for metric, metric_id in zip(*expr.manager.get_metrics()):
         for explainer, explainer_id in zip(*expr.manager.get_explainers()):
-            # try:
-            optimized = expr.optimize(
-                data_ids=data_ids,
-                explainer_id=explainer_id,
-                metric_id=metric_id,
-                direction=optimization_directions[metric.__class__],
-                sampler="tpe",  # Literal['tpe','random']
-                n_trials=20,
-                seed=42,  # seed for sampler: by default, None
-            )
+            best_value = 0
 
-            best_value = optimized.study.best_trial.value / len(data_ids)
-            print(
-                f"Metric: {metric.__class__.__name__}; Explainer: {explainer.__class__.__name__};"
-            )
+            plot_inputs = []
+            plot_attrs = []
+
+            for idx, data_id in enumerate(data_ids):
+                try:
+                    optimized = expr.optimize(
+                        data_ids=[data_id],
+                        explainer_id=explainer_id,
+                        metric_id=metric_id,
+                        direction=optimization_directions[metric.__class__],
+                        sampler="tpe",  # Literal['tpe','random']
+                        n_trials=20,
+                        seed=42,  # seed for sampler: by default, None
+                    )
+                    cur_best_value = optimized.study.best_trial.value
+                    best_value += cur_best_value
+                    print(
+                        f"[{idx + 1}] {str(metric)} | {explainer.__class__.__name__} = {cur_best_value}"
+                    )  # get the optimized value
+
+                    if idx % plot_data_step != 0:
+                        continue
+
+                    plot_datum, _ = expr.manager.get_data([data_id])
+                    plot_datum = next(iter(plot_datum))
+                    plot_in, plot_tgt = [
+                        tensor_mapper(plot_tensor).to(DEVICE)
+                        for plot_tensor in plot_datum
+                    ]
+
+                    plot_attr = optimized.explainer.attribute(
+                        inputs=plot_in, targets=plot_tgt
+                    )
+                    plot_attr = optimized.postprocessor(plot_attr)
+                    plot_attr = plot_attr.clamp(min=-1 + 1e-9, max=1 - 1e-9)
+
+                    plot_inputs.append(plot_in.cpu().detach().numpy())
+                    plot_attrs.append(plot_attr.cpu().detach().numpy())
+
+                    del optimized
+                except Exception as e:
+                    print(
+                        f"[FAILED!!!] Metric: {metric.__class__.__name__}; Explainer: {explainer.__class__.__name__} with error:\n{e}"
+                    )
+                gc.collect()
+                torch.cuda.empty_cache()
+
+            best_value /= len(data_ids)
+            print(f"Metric: {str(metric)}; Explainer: {explainer.__class__.__name__};")
             print("Best/value:", best_value)  # get the optimized value
 
             torch.cuda.empty_cache()
             log_data = [
-                str(metric.__class__.__name__),
+                str(metric),
                 str(explainer.__class__.__name__),
                 str(best_value),
             ]
@@ -201,27 +247,21 @@ def app():
             log_file.write(log)
             log_file.flush()
 
-            attributions = optimized.explainer.attribute(inputs=plot_inputs, targets=plot_targets)
-            attributions = optimized.postprocessor(attributions)
-            attributions = attributions.clamp(min=-1 + 1e-9, max=1 - 1e-9).cpu().detach()
+            plot_inputs = np.concatenate(plot_inputs)
+            plot_attrs = np.concatenate(plot_attrs)
 
             plot_inputs_and_attributions(
                 plot_inputs[..., 0, :].tolist(),
-                attributions[..., 0, :].tolist(),
+                plot_attrs[..., 0, :].tolist(),
                 " ".join(log_data),
                 os.path.join(
                     plot_path,
-                    str(metric.__class__.__name__),
+                    str(metric),
                     str(explainer.__class__.__name__),
                     f"{'_'.join(log_data[:2])}.png",
                 ),
             )
 
-            del optimized
-            # except:
-            #     print(
-            #         f"[FAILED!!!] Metric: {metric.__class__.__name__}; Explainer: {explainer.__class__.__name__}"
-            #     )
             gc.collect()
             torch.cuda.empty_cache()
 

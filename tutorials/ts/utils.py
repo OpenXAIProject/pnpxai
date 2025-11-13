@@ -30,9 +30,16 @@ ROOT_PATH = os.path.join(CURRENT_PATH, "../")
 BATCH_SIZE = 64
 
 
-def composite_agg_func(metric1, metric2):
-    device = metric1.device
-    return metric1 * 0.8 - 0.2 * metric2.to(device)
+def get_composite_agg_func(params):
+    def func(*args):
+        device = args[0].device
+        total_val = 0
+        for arg, param in zip(args, params):
+            total_val = total_val + arg.to(device) * param
+
+        return total_val
+
+    return func
 
 
 def get_ts_dataset_loader(dataset: str, path: str, batch_size: int = 64):
@@ -73,6 +80,7 @@ def tensor_mapper(x: TSTensor):
 def threshold_plot(ax: Axes, predictions, confidences, color_mapper=None):
     # Define colors based on confidence RGB
     if color_mapper is None:
+
         def color_mapper(c):
             return (1, 1 - c, 1 - c) if c > 0 else (1 + c, 1 + c, 1)
 
@@ -91,8 +99,8 @@ def plot_inputs_and_attributions(inputs, attributions, title, filename: str):
 
     os.makedirs(os.path.dirname(filename), exist_ok=True)
 
-    *filename, ext = filename.split('.')
-    filename = '.'.join(filename)
+    *filename, ext = filename.split(".")
+    filename = ".".join(filename)
 
     for idx, (datum, attr) in enumerate(zip(inputs, attributions)):
         fig, axes = plt.subplots(2, figsize=(4, 4))

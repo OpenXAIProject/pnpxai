@@ -31,3 +31,7 @@ class Composite(Metric):
                 for metric in self.metrics
             ]
         )
+
+    def __str__(self) -> str:
+        metrics = [str(metric.__class__.__name__) for metric in self.metrics]
+        return f"Composite({','.join(metrics)})"

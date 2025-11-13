@@ -1,0 +1,23 @@
+nohup: ignoring input
+Traceback (most recent call last):
+  File "/data5/users/enver/projects/pnp/pnpxai/tutorials/img/eval_openxai_imagenet.py", line 380, in <module>
+    visualize(args)
+  File "/data5/users/enver/projects/pnp/pnpxai/tutorials/img/eval_openxai_imagenet.py", line 332, in visualize
+    plt.savefig(savedir_quant)
+  File "/data5/users/enver/miniconda3/envs/pnpxai_env/lib/python3.9/site-packages/matplotlib/pyplot.py", line 1228, in savefig
+    res = fig.savefig(*args, **kwargs)  # type: ignore[func-returns-value]
+  File "/data5/users/enver/miniconda3/envs/pnpxai_env/lib/python3.9/site-packages/matplotlib/figure.py", line 3395, in savefig
+    self.canvas.print_figure(fname, **kwargs)
+  File "/data5/users/enver/miniconda3/envs/pnpxai_env/lib/python3.9/site-packages/matplotlib/backend_bases.py", line 2204, in print_figure
+    result = print_method(
+  File "/data5/users/enver/miniconda3/envs/pnpxai_env/lib/python3.9/site-packages/matplotlib/backend_bases.py", line 2054, in <lambda>
+    print_method = functools.wraps(meth)(lambda *args, **kwargs: meth(
+  File "/data5/users/enver/miniconda3/envs/pnpxai_env/lib/python3.9/site-packages/matplotlib/backends/backend_agg.py", line 513, in print_jpg
+    self._print_pil(filename_or_obj, "jpeg", pil_kwargs, metadata)
+  File "/data5/users/enver/miniconda3/envs/pnpxai_env/lib/python3.9/site-packages/matplotlib/backends/backend_agg.py", line 445, in _print_pil
+    mpl.image.imsave(
+  File "/data5/users/enver/miniconda3/envs/pnpxai_env/lib/python3.9/site-packages/matplotlib/image.py", line 1676, in imsave
+    image.save(fname, **pil_kwargs)
+  File "/data5/users/enver/miniconda3/envs/pnpxai_env/lib/python3.9/site-packages/PIL/Image.py", line 2591, in save
+    fp = builtins.open(filename, "w+b")
+FileNotFoundError: [Errno 2] No such file or directory: '/data5/users/enver/projects/pnp/pnpxai/tutorials/img/results/openxai/vit_b_16/evals/figures/opt_evals_ab_pc.jpg'

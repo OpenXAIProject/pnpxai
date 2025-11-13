@@ -25,7 +25,7 @@ from tutorials.ts.utils import (
     BATCH_SIZE,
     DEVICE,
     tensor_mapper,
-    composite_agg_func,
+    get_composite_agg_func,
 )
 
 
@@ -118,15 +118,16 @@ def app():
     )
     explainer.attribute = build_shap_attribute(explainer)
 
-    metrics = []
-    metrics = get_metrics([AbPC, Complexity], model, modality, agg_dim)
-    metrics: Sequence[Metric] = [*metrics, Composite(metrics, composite_agg_func)]
-    # metrics.extend(get_metrics([Sensitivity], model, modality, agg_dim))
-    metrics = metrics[2:]
+    metrics = get_metrics([AbPC, Complexity, Sensitivity], model, modality, agg_dim)
+    metrics = [
+        Composite([metrics[0], metrics[2]], get_composite_agg_func([0.8, -0.2])), # AbPC, Sensitivity
+        Composite(metrics, get_composite_agg_func([0.6, -0.2, -0.2])), # AbPC, Complexity, Sensitivity
+    ]
 
-    log_file = open(
-        os.path.join(CURRENT_PATH, f"out/omni_{model.__class__.__name__}.csv"), "a+"
-    )
+    log_path = os.path.join(CURRENT_PATH, f"out/composite/omni_{model.__class__.__name__}.csv")
+    os.makedirs(os.path.dirname(log_path), exist_ok=True)
+
+    log_file = open(log_path, "a+")
 
     for metric in metrics:
         attributions = explainer.attribute(inputs, target)
@@ -135,7 +136,7 @@ def app():
         #     inputs.to(DEVICE), target.to(DEVICE), attributions.to(DEVICE)
         # )
 
-        metric.explainer = explainer.attribute
+        metric = metric.set_explainer(explainer)
         evals = metric.evaluate(inputs.to(DEVICE), target.to(DEVICE), attributions)
 
         evals = (sum(evals) / len(evals)).item()

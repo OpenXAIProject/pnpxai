@@ -63,4 +63,36 @@ class Complexity(Metric):
             hist, _ = np.histogram(attr.detach().cpu(), bins=self.n_bins)
             prob_mass = hist / hist.sum()
             evaluations.append(entropy(prob_mass))
-        return torch.tensor(evaluations)
+        return torch.tensor(evaluations, dtype=torch.float32).to(self.device)
+
+
+class Simplicity(Complexity):
+    """
+    Computes the simplicity of attributions, which is defined as the negative of the complexity.
+
+    This metric is the inverse of the Complexity metric.
+    """
+
+    def __init__(
+        self, model: Model, explainer: Optional[Explainer] = None, n_bins: int = 10
+    ):
+        super().__init__(model, explainer)
+
+    def evaluate(
+        self,
+        inputs: torch.Tensor,
+        targets: torch.Tensor,
+        attributions: Optional[torch.Tensor] = None,
+    ) -> torch.Tensor:
+        """
+        Evaluate the explainer's simplicity based on the negative of their complexity.
+
+        Args:
+            inputs (Optional[Tensor]): The input tensors to the model.
+            targets (Optional[Tensor]): The target labels for the inputs.
+            attributions (Optional[Tensor]): The attributions for the inputs.
+
+        Returns:
+            Tensor: A tensor of the simplicity evaluations.
+        """
+        return -1.0 * super().evaluate(inputs, targets, attributions)

@@ -1,7 +1,7 @@
 from pnpxai.evaluator.metrics.base import Metric
 from pnpxai.evaluator.metrics.mu_fidelity import MuFidelity
 from pnpxai.evaluator.metrics.sensitivity import Sensitivity
-from pnpxai.evaluator.metrics.complexity import Complexity
+from pnpxai.evaluator.metrics.complexity import Complexity, Simplicity
 from pnpxai.evaluator.metrics.pixel_flipping import (
     PixelFlipping,
     MoRF,
@@ -9,6 +9,7 @@ from pnpxai.evaluator.metrics.pixel_flipping import (
     AbPC,
 )
 from pnpxai.evaluator.metrics.composite import Composite
+from pnpxai.evaluator.metrics.composite_metrics import CompositeMetrics
 
 
 PIXEL_FLIPPING_METRICS = [

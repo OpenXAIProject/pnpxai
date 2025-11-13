@@ -1,0 +1,160 @@
+from typing import Optional, Union, Callable, Tuple, List, Any, Dict, get_type_hints
+
+import copy
+import torch
+from torch import nn
+
+from pnpxai.explainers.base import Explainer
+from pnpxai.explainers.types import Tensor, TensorOrTupleOfTensors
+from pnpxai.evaluator.metrics.base import Metric
+
+import pdb
+
+
+class CompositeMetrics(Metric):
+    """
+    A composite metric class that aggregates multiple evaluation metrics for input attribution methods.
+
+    This class inherits from the Metric base class and allows you to combine multiple Metric instances
+    to comprehensively evaluate the quality of input attribution methods. It can be used for hyperparameter
+    optimization by considering multiple evaluation metrics simultaneously.
+
+    Parameters:
+        model (nn.Module): The model to be explained.
+        metrics (List[Metric]): A list of Metric instances to be composited.
+        explainer (Optional[Explainer], optional): The explainer used to generate explanations for the model. Defaults to None.
+        weights (Optional[List[float]], optional): Weights for each metric to aggregate the results.
+            If None, metrics are averaged. Defaults to None.
+        **kwargs: Additional keyword arguments to be passed to the Metric base class.
+
+    Raises:
+        ValueError: If the provided metrics are not compatible for composition.
+                      Currently, only metrics that output Tensor or TensorOrTupleOfTensors are supported.
+                      Metrics outputting dictionaries (e.g., PixelFlipping) are not directly composable.
+    """
+
+    def __init__(
+        self,
+        model: nn.Module,
+        # composite_metrics: List[Metric],
+        explainer: Optional[Explainer] = None,
+        # composite_weights: Optional[List[float]] = None,
+    ):
+        super().__init__(model, explainer)
+        # self.composite_metrics = nn.ModuleList(composite_metrics) # Use ModuleList to properly register metrics as modules if they contain parameters
+        # self.composite_metrics = composite_metrics # Use ModuleList to properly register metrics as modules if they contain parameters
+        self.composite_metrics = []
+        self.composite_weights = None
+
+        # Check for metric compatibility
+        # TODO: Call this code snippet outside of init method
+        """
+        for metric in composite_metrics:
+            if not self._is_compatible_metric(metric):
+                raise ValueError(
+                    f"Metric {metric.__class__.__name__} is not compatible with CompositeMetrics. "
+                    "Only metrics that output Tensor or TensorOrTupleOfTensors are supported "
+                    "for direct composition. Metrics outputting dictionaries or other complex types are not compatible."
+                )
+        """
+
+        # if composite_weights is not None:
+        #     if len(composite_weights) != len(composite_metrics):
+        #         raise ValueError("The number of weights must match the number of metrics.")
+        #     self.composite_weights = torch.tensor(composite_weights) / sum(composite_weights)  # Normalize weights to sum to 1
+        # else:
+        #     self.composite_weights = torch.ones(len(composite_metrics)) / len(composite_metrics) # Default to equal weights
+
+    def __repr__(self):
+        """
+        Provides a string representation of the CompositeMetrics object, including its composed metrics.
+
+        Returns:
+            str: A string representation of the CompositeMetrics object.
+        """
+        metric_reprs = ", ".join([repr(metric) for metric in self.composite_metrics])
+        weights_repr = (
+            f", weights={self.composite_weights.tolist()}"
+            if hasattr(self, "weights")
+            else ""
+        )
+        return f"{self.__class__.__name__}(metrics=[{metric_reprs}]{weights_repr})"
+
+    def set_explainer(self, explainer: Explainer):
+        """
+        Sets the explainer for the composite metric and all its composed metrics.
+        """
+        assert (
+            self.model is explainer.model
+        ), "Explainer must be associated with the same model as the metric."
+        clone = self.copy()
+        clone.explainer = explainer
+        clone.composite_metrics = [
+            metric.set_explainer(explainer) for metric in self.composite_metrics
+        ]  # Update explainer for each metric
+        return clone
+
+    def evaluate(
+        self,
+        inputs: Tensor,
+        targets: Tensor,
+        attributions: Optional[Tensor] = None,
+        **kwargs,
+    ) -> Tensor:
+        """
+        Evaluate the composite metric by evaluating each composed metric and aggregating the results.
+
+        Args:
+            inputs (Tensor): The input data for the model.
+            targets (Tensor): The target labels for the input data.
+            attributions (Optional[Tensor], optional): The attributions generated by the explainer. Defaults to None.
+            **kwargs: Additional keyword arguments to be passed to individual metric's evaluate method.
+
+        Returns:
+            Tensor: A tensor representing the aggregated evaluation result.
+        """
+        aggregated_results = []
+        # TODO: Need to verify the range of each metric result
+        for metric in self.composite_metrics:
+            metric_result = metric.evaluate(inputs, targets, attributions, **kwargs)
+            aggregated_results.append(metric_result)
+
+        # Ensure all results are tensors and then stack them
+        aggregated_results = torch.stack(
+            [torch.as_tensor(res) for res in aggregated_results]
+        )
+
+        # Match the shape of composite_weights to aggregated_results
+        weights = self.composite_weights.to(aggregated_results.device)
+        if aggregated_results.ndim > 1:
+            weights = weights.view(
+                weights.shape[0], *([1] * (aggregated_results.ndim - 1))
+            )
+
+        # Apply weights to aggregate the results
+        composite_result = torch.sum(weights * aggregated_results, dim=0)
+        # if composite_result.numel() == 1:
+        #     composite_result = composite_result.squeeze()
+
+        return composite_result
+
+    # def _is_compatible_metric(self, metric: Metric) -> bool:
+    def is_compatible_metric(self, metric: Metric) -> bool:
+        """
+        Checks if a given metric is compatible with CompositeMetrics based on its output type by inspecting the return type annotation of the evaluate method.
+        Currently, only metrics that output Tensor or TensorOrTupleOfTensors are considered compatible.
+
+        Args:
+            metric (Metric): The metric instance to check.
+
+        Returns:
+            bool: True if the metric is compatible, False otherwise.
+        """
+        # TODO: Fix this part. Currently, checking compatibility not working.
+        return_type_hints = get_type_hints(metric.evaluate)
+        expected_return_types = (Tensor, TensorOrTupleOfTensors)
+        if "return" in return_type_hints:
+            return_annotation = return_type_hints["return"]
+            if return_annotation in expected_return_types:
+                return True
+        return False

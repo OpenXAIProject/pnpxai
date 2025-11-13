@@ -115,6 +115,6 @@ class IntegratedGradients(Explainer):
             `baseline_fn` (callable): BaselineFunction selects suitable values in accordance with the modality
         """
         return {
-            'n_steps': (int, {'low': 10, 'high': 100, 'step': 10}),
+            'n_steps': (int, {'low': 10, 'high': 50, 'step': 10}),
             'baseline_fn': (BaselineFunction, {}),
         }
