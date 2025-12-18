@@ -24,6 +24,7 @@ from pnpxai.explainers.attention_rollout import (
 )
 from pnpxai.explainers.lear import LEAR
 from pnpxai.explainers.gfgp import Gfgp
+from pnpxai.explainers.mad_xai import MadXai
 
 CAM_BASED_EXPLAINERS = [GradCam, GuidedGradCam]
 GRADIENT_BASED_EXPLAINERS = [
@@ -40,7 +41,8 @@ GRADIENT_BASED_EXPLAINERS = [
 PERTURBATION_BASED_EXPLAINERS = [
     KernelShap,
     Lime,
-    Gfgp
+    Gfgp,
+    MadXai
 ]
 ATTENTION_SPECIFIC_EXPLAINERS = [
     AttentionRollout,
@@ -62,9 +64,10 @@ AVAILABLE_EXPLAINERS: Tuple[Explainer] = (
     KernelShap,
     Lime,
     Gfgp,
+    MadXai,
     AttentionRollout,
     TransformerAttribution,
 )
 
 EXPLAINERS_FOR_TABULAR = []
-EXPLAINERS_FOR_MEDICAL_IMAGE: Tuple[Explainer] = (LEAR,)
+EXPLAINERS_FOR_MEDICAL_IMAGE: Tuple[Explainer] = (LEAR, MadXai)
