@@ -42,6 +42,7 @@ nav:
       - SmoothGrad: api/explainer/smooth_grad.md
       - VarGrad: api/explainer/var_grad.md
       - IntegratedGradients: api/explainer/ig.md
+      - MAGIG: api/explainer/magig.md
       - LRP: api/explainer/lrp.md
       - RAP: api/explainer/rap.md
       - KernelShap: api/explainer/kernel_shap.md

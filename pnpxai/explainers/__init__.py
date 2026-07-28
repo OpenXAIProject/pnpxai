@@ -25,6 +25,7 @@ from pnpxai.explainers.attention_rollout import (
 from pnpxai.explainers.lear import LEAR
 from pnpxai.explainers.gfgp import Gfgp
 from pnpxai.explainers.mad_xai import MadXai
+from pnpxai.explainers.magig import MAGIG
 
 CAM_BASED_EXPLAINERS = [GradCam, GuidedGradCam]
 GRADIENT_BASED_EXPLAINERS = [
@@ -33,6 +34,7 @@ GRADIENT_BASED_EXPLAINERS = [
     SmoothGrad,
     VarGrad,
     IntegratedGradients,
+    MAGIG,
     LRPUniformEpsilon,
     LRPEpsilonPlus,
     LRPEpsilonGammaBox,
