@@ -21,6 +21,10 @@ plugins:
             members_order: source  # order methods according to their order of definition in the source code, not alphabetical order
             heading_level: 4
 
+# Explainer cards are read from their tutorials, not built as pages.
+exclude_docs: |
+  _cards/
+
 nav:
   - Home: index.md
   - API:
@@ -44,6 +48,7 @@ nav:
       - IntegratedGradients: api/explainer/ig.md
       - LRP: api/explainer/lrp.md
       - RAP: api/explainer/rap.md
+      - AE: api/explainer/ae.md
       - KernelShap: api/explainer/kernel_shap.md
       - Lime: api/explainer/lime.md
       - AttentionRollout: api/explainer/attn_rollout.md
