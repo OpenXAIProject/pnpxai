@@ -29,6 +29,13 @@ def _dense_block(module):
     return type(module).__name__ == "_DenseBlock"
 
 
+def _batch_item(arg, index, count):
+    """Select one image from a batch-first tensor forward argument."""
+    if torch.is_tensor(arg) and arg.ndim > 0 and arg.shape[0] == count:
+        return arg[index:index + 1]
+    return arg
+
+
 class _Tracer(fx.Tracer):
     def is_leaf_module(self, module, module_qualified_name):
         return (
@@ -83,6 +90,17 @@ class AttributionEquilibrium(fx.Interpreter):
         self.layer = self._resolve_layer(layer)
         self._seed_node = self._resolve_node(self.layer)
         self.reset()
+
+    def __deepcopy__(self, memo):
+        # FX nodes are cached and compared by identity, but fx.Graph's deepcopy
+        # does not record its node copies in ``memo``; trace the copied model.
+        clone = AttributionEquilibrium(
+            copy.deepcopy(self.original_model, memo),
+            layer=copy.deepcopy(self.original_layer, memo),
+        )
+        clone._drop_dense_input_skip = self._drop_dense_input_skip
+        memo[id(self)] = clone
+        return clone
 
     def _resolve_layer(self, layer):
         if isinstance(layer, nn.Module):
@@ -312,13 +330,40 @@ class AttributionEquilibrium(fx.Interpreter):
 
     @torch.enable_grad()
     def attribute(self, inputs: Tensor, targets=None, ratio: float = 2.0, additional_args=()):
-        """Build the reference gradient-weighted activation and propagate it."""
+        """Explain each image on its own and stack the input-shaped results.
+
+        The reference explains one image at a time, so the tensor totals that
+        normalize its relevance are per-image totals. Explaining a batch image
+        by image keeps each result independent of the other images in it.
+        Batch-first tensors in ``additional_args`` are split the same way.
+        """
         if not isinstance(ratio, (int, float)) or not math.isfinite(ratio) or not 1 <= ratio <= 2:
             raise ValueError("AE ratio must be a finite number between 1 and 2.")
         if not torch.is_tensor(inputs) or inputs.ndim != 4 or inputs.shape[0] == 0:
             raise ValueError("AE requires a nonempty batched NCHW image tensor.")
         if not inputs.is_floating_point():
             raise TypeError("AE image inputs must have a floating-point dtype.")
+        count = inputs.shape[0]
+        if targets is not None:
+            targets = torch.as_tensor(targets, device=inputs.device)
+            if targets.is_floating_point() or targets.is_complex() or targets.dtype == torch.bool:
+                raise TypeError("AE targets must contain integer class indices.")
+            if targets.ndim == 0:
+                targets = targets.expand(count)
+            if targets.shape != (count,):
+                raise ValueError("AE requires one target class per input image.")
+        return torch.cat([
+            self._attribute_image(
+                inputs[index:index + 1],
+                None if targets is None else targets[index:index + 1],
+                ratio,
+                tuple(_batch_item(arg, index, count) for arg in additional_args),
+            )
+            for index in range(count)
+        ])
+
+    def _attribute_image(self, inputs: Tensor, targets, ratio: float, additional_args):
+        """Build the reference gradient-weighted activation and propagate it."""
         try:
             output = self.run(inputs.detach().requires_grad_(), *additional_args)
             if not torch.is_tensor(output) or output.ndim != 2 or output.shape[0] != inputs.shape[0]:
@@ -326,13 +371,6 @@ class AttributionEquilibrium(fx.Interpreter):
             if targets is None:
                 targets = output.argmax(dim=1)
             else:
-                targets = torch.as_tensor(targets, device=output.device)
-                if targets.is_floating_point() or targets.is_complex() or targets.dtype == torch.bool:
-                    raise TypeError("AE targets must contain integer class indices.")
-                if targets.ndim == 0:
-                    targets = targets.expand(output.shape[0])
-                if targets.shape != (output.shape[0],):
-                    raise ValueError("AE requires one target class per input image.")
                 targets = targets.long()
                 if ((targets < 0) | (targets >= output.shape[1])).any():
                     raise ValueError("An AE target class is outside the model's class range.")

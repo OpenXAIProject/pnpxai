@@ -23,7 +23,8 @@ class AE(Explainer):
         additional_forward_arg_extractor: Extract extra positional model args.
 
     Returns input-shaped signed relevance before channel pooling. Like the
-    reference implementation, relevance normalization uses global tensor sums.
+    reference implementation, each image is explained on its own, so a
+    result does not depend on the other images in its batch.
 
     Reference:
         Illuminating Salient Contributions in Neuron Activation with
