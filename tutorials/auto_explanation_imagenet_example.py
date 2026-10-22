@@ -36,7 +36,7 @@ expr.manager.explainers  # -> List[Explainer]
 expr.manager.metrics  # -> List[Metric]
 
 # -> Explainer. In this case, LRPEpsilonGammaBox
-expr.manager.get_explainer_by_id(7)
+expr.manager.get_explainer_by_id(8)
 # -> PostProcessor. In this case, PostProcessor(pooling_method='sumpos', normalization_method='minmax')
 expr.manager.get_postprocessor_by_id(0)
 expr.manager.get_metric_by_id(0)  # -> Metric. In this case, AbPC
