@@ -28,6 +28,7 @@ The following table summarizes the methods and metrics currently supported by th
 |IG                     | V, L, TS | Linear, Convolution, Recurrent, Transformer|
 |LRP                    | V, L, TS | Linear, Convolution, Recurrent, Transformer|
 |RAP                    | V, L, TS | Linear, Convolution, Recurrent, Transformer|
+|AE                     | V | Convolution|
 |AttentionRollout       | V, L | Transformer|
 |TransformerAttribution | V, L | Transformer|
 

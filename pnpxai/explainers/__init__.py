@@ -15,6 +15,7 @@ from pnpxai.explainers.lrp import (
     LRPEpsilonAlpha2Beta1,
 )
 from pnpxai.explainers.rap import RAP
+from pnpxai.explainers.ae import AE
 from pnpxai.explainers.kernel_shap import KernelShap
 from pnpxai.explainers.deep_lift_shap import DeepLiftShap
 from pnpxai.explainers.lime import Lime
@@ -37,6 +38,9 @@ GRADIENT_BASED_EXPLAINERS = [
     LRPEpsilonPlus,
     LRPEpsilonGammaBox,
     LRPEpsilonAlpha2Beta1
+]
+RELEVANCE_BASED_EXPLAINERS = [
+    AE,
 ]
 PERTURBATION_BASED_EXPLAINERS = [
     KernelShap,
@@ -61,6 +65,7 @@ AVAILABLE_EXPLAINERS: Tuple[Explainer] = (
     LRPEpsilonGammaBox,
     LRPEpsilonAlpha2Beta1,
     RAP,
+    AE,
     KernelShap,
     Lime,
     Gfgp,
