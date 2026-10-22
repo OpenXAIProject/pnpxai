@@ -9,6 +9,7 @@ from pnpxai.explainers import (
     RAP,
     ATTENTION_SPECIFIC_EXPLAINERS,
     Gfgp,
+    MadXai,
 )
 from tests.helpers import get_dummy_imagenet_dataset
 
@@ -29,6 +30,9 @@ class TestRobustness:
                 is_gpu_available
                 and issubclass(explainer_type, (RAP, *ATTENTION_SPECIFIC_EXPLAINERS))
                 or issubclass(explainer_type, Gfgp)
+                # MadXai explains 1-channel brain MRI with its own diffusion model,
+                # not an ImageNet classifier; see docs/_cards/mad_xai.md
+                or issubclass(explainer_type, MadXai)
             ):
                 continue
             explainer = explainer_type(model)

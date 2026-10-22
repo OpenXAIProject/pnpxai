@@ -8,6 +8,7 @@ from pathlib import Path
 from urllib3 import disable_warnings
 from urllib3.exceptions import InsecureRequestWarning
 
+import numpy as np
 import torch
 import torchvision
 from torch import Tensor
@@ -52,6 +53,38 @@ class ImageNetDataset(Dataset):
         return self.idx_to_labels[str(idx)][1]
 
 
+class BraTSSliceDataset(Dataset):
+    """Axial brain MRI slices with brain mask and lesion segmentation, as shipped in
+    the HF dataset ``kaistpnp/madical_pnpxai_brats`` (files ``<id>-slice_<k>-<modality>.png``).
+    Returns (image in [-1, 1] of shape [1, H, W], brain_mask [H, W], segmentation [H, W])."""
+
+    def __init__(self, root_dir, modality='t2', image_size=256):
+        self.image_paths = sorted(Path(root_dir).glob(f'*-{modality}.png'))
+        if len(self.image_paths) == 0:
+            raise FileNotFoundError(f'No *-{modality}.png files in {root_dir}')
+        self.modality = modality
+        self.image_size = image_size
+
+    def __len__(self):
+        return len(self.image_paths)
+
+    def _load(self, path):
+        img = Image.open(path).convert('L').resize((self.image_size, self.image_size))
+        return torch.from_numpy(np.array(img).astype(np.uint8))
+
+    def subject_id(self, idx):
+        return self.image_paths[idx].name.split('-')[0]
+
+    def __getitem__(self, idx):
+        path = self.image_paths[idx]
+        img = self._load(path)
+        brain_mask = self._load(str(path).replace(f'-{self.modality}.png', '-brainmask.png')) > 0
+        segmentation = self._load(str(path).replace(f'-{self.modality}.png', '-segmentation.png')) > 0
+        img[~brain_mask] = 0
+        img = (img.float() / 255.0 - 0.5) / 0.5
+        return img[None], brain_mask.float(), segmentation.long()
+
+
 def get_imagenet_dataset(
     transform,
     subset_size: int = 100,  # ignored if indices is not None
@@ -78,6 +111,18 @@ class IMDBDataset(Dataset):
 
     def __getitem__(self, idx):
         return self.annotations[idx]
+
+
+def get_brats_dataset(modality='t2', image_size=256, root_dir='./data/BraTS'):
+    """Download (once) and load the 126-slice BraTS test split used by the MadXai tutorial."""
+    import zipfile
+    from huggingface_hub import hf_hub_download
+    test_dir = os.path.join(root_dir, 'test')
+    if not os.path.isdir(test_dir):
+        zip_path = hf_hub_download('kaistpnp/madical_pnpxai_brats', 'test.zip', repo_type='dataset')
+        with zipfile.ZipFile(zip_path) as z:
+            z.extractall(root_dir)
+    return BraTSSliceDataset(test_dir, modality=modality, image_size=image_size)
 
 
 def get_imdb_dataset(split='test'):
