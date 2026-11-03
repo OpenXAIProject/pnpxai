@@ -25,8 +25,9 @@ from pnpxai.explainers.attention_rollout import (
 from pnpxai.explainers.lear import LEAR
 from pnpxai.explainers.gfgp import Gfgp
 from pnpxai.explainers.mad_xai import MadXai
+from pnpxai.explainers.ucag import UCAG
 
-CAM_BASED_EXPLAINERS = [GradCam, GuidedGradCam]
+CAM_BASED_EXPLAINERS = [GradCam, GuidedGradCam, UCAG]
 GRADIENT_BASED_EXPLAINERS = [
     Gradient,
     GradientXInput,
@@ -51,6 +52,7 @@ ATTENTION_SPECIFIC_EXPLAINERS = [
 AVAILABLE_EXPLAINERS: Tuple[Explainer] = (
     GradCam,
     GuidedGradCam,
+    UCAG,
     Gradient,
     GradientXInput,
     SmoothGrad,

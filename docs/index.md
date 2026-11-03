@@ -15,7 +15,7 @@
 - [**Explainers**](explainer.md): The explainers module contains a collection of state-of-the-art XAI methods that can generate global or local explanations for any AI model, such as:
 	- Perturbation-based ([SHAP](api/explainer/kernel_shap), [LIME](api/explainer/lime))
 	- Relevance-based ([IG](api/explainer/ig), [LRP](api/pnpxai/explainer/lrp), and [RAP](api/explainer/rap))
-	- CAM-based ([GradCAM](api/explainer/grad_cam), [Guided GradCAM](api/explainer/guided_grad_cam))
+	- CAM-based ([GradCAM](api/explainer/grad_cam), [Guided GradCAM](api/explainer/guided_grad_cam), [UCAG](api/explainer/ucag))
 	- Gradient-based ([SmoothGrad](api/explainer/smooth_grad), [VarGrad](api/explainer/var_grad), [Gradient &times; Input](api/explainer/grad_x_input))
 - [**Recommender**](recommender.md): The recommender module offers a recommender system that can suggest the most suitable XAI methods for a given model and dataset, based on the user’s preferences and goals.
 - [**Optimizer**](optimizer.md): The optimizer module is finds the best hyperparameter options, given a user-specified metric.
@@ -197,6 +197,7 @@ experiment = Experiment(
 - [ImageNet Example All Explainers](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/imagenet_example_all_explainers.md)
 - [ImageNet Example All Metrics](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/imagenet_example_all_metrics.md)
 - [Free MCG](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/gfgp_tutorial.py) [[Reference](https://arxiv.org/abs/2411.15265)] 
+- [UCAG](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/UCAG_example.md) [[Reference](https://doi.org/10.1609/aaai.v37i7.25954)]
 
 <hr>
 

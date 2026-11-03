@@ -14,12 +14,13 @@ from pnpxai.explainers.base import Explainer
 from pnpxai.explainers import (
     GradCam,
     GuidedGradCam,
+    UCAG,
     AVAILABLE_EXPLAINERS
 )
 from pnpxai.utils import format_into_tuple
 
 
-CAM_BASED_EXPLAINERS = {GradCam, GuidedGradCam}
+CAM_BASED_EXPLAINERS = {GradCam, GuidedGradCam, UCAG}
 
 
 @dataclass
