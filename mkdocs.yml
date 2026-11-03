@@ -46,6 +46,7 @@ nav:
       - RAP: api/explainer/rap.md
       - KernelShap: api/explainer/kernel_shap.md
       - Lime: api/explainer/lime.md
+      - CoIBA: api/explainer/coiba.md
       - AttentionRollout: api/explainer/attn_rollout.md
   - Detector: detector.md
   - Explainer: explainer.md

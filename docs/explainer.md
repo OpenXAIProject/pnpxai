@@ -19,6 +19,7 @@ The Explainer module serves as a basis for all explainers implemented within the
 | [RAP](api/explainer/rap.md)                                                                                        | Linear, Convolution, Recurrent, Transformer                 | Vision, Language, Time Series                  |
 | [KernelShap](api/explainer/kernel_shap.md)                                                                         | Linear, Convolution, Recurrent, Transformer, Decision Trees | Vision, Language, Structured Data, Time Series |
 | [Lime](api/explainer/lime.md)                                                                                      | Linear, Convolution, Recurrent, Transformer, Decision Trees | Vision, Language, Structured Data, Time Series |
+| [CoIBA](api/explainer/coiba.md)                                                                                    | Linear, Convolution, Attention                              | Vision                                         |
 | [AttentionRollout](api/explainer/attn_rollout.md#pnpxai.explainers.attention_rollout.AttentionRollout)             | Transformer                                                 | Vision, Language                               |
 | [TransformerAttribution](api/explainer/attn_rollout.md#pnpxai.explainers.attention_rollout.TransformerAttribution) | Transformer                                                 | Vision, Language                               |
 

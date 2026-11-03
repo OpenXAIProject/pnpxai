@@ -25,6 +25,7 @@ from pnpxai.explainers.attention_rollout import (
 from pnpxai.explainers.lear import LEAR
 from pnpxai.explainers.gfgp import Gfgp
 from pnpxai.explainers.mad_xai import MadXai
+from pnpxai.explainers.coiba import CoIBA
 
 CAM_BASED_EXPLAINERS = [GradCam, GuidedGradCam]
 GRADIENT_BASED_EXPLAINERS = [
@@ -42,12 +43,15 @@ PERTURBATION_BASED_EXPLAINERS = [
     KernelShap,
     Lime,
     Gfgp,
-    MadXai
+    MadXai,
+    CoIBA,
 ]
 ATTENTION_SPECIFIC_EXPLAINERS = [
     AttentionRollout,
     TransformerAttribution,
 ]
+# CoIBA is not listed: it needs selected layers and estimated feature
+# statistics before attribute(), so experiments add it explicitly.
 AVAILABLE_EXPLAINERS: Tuple[Explainer] = (
     GradCam,
     GuidedGradCam,

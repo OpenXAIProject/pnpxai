@@ -13,7 +13,7 @@
 - [**Detector**](detector.md): The detector module provides automatic detection of AI models implemented in PyTorch.
 - [**Evaluator**](evaluator.md): The evaluator module provides various ways to evaluate and compare the performance and explainability of AI models with the categorized evaluation properties of correctness ([fidelity](api/evaluator/metrics.md/#pnpxai.evaluator.metrics.mu_fidelity.MuFidelity), [area between perturbation curves](api/evaluator/metrics/#pnpxai.evaluator.metrics.pixel_flipping.AbPC)), continuity ([sensitivity](api/evaluator/metrics.md#pnpxai.evaluator.metrics.sensitivity.Sensitivity)), and compactness ([complexity](api/evaluator/metrics.md#pnpxai.evaluator.metrics.complexity.Complexity)).
 - [**Explainers**](explainer.md): The explainers module contains a collection of state-of-the-art XAI methods that can generate global or local explanations for any AI model, such as:
-	- Perturbation-based ([SHAP](api/explainer/kernel_shap), [LIME](api/explainer/lime))
+	- Perturbation-based ([SHAP](api/explainer/kernel_shap), [LIME](api/explainer/lime), [CoIBA](api/explainer/coiba))
 	- Relevance-based ([IG](api/explainer/ig), [LRP](api/pnpxai/explainer/lrp), and [RAP](api/explainer/rap))
 	- CAM-based ([GradCAM](api/explainer/grad_cam), [Guided GradCAM](api/explainer/guided_grad_cam))
 	- Gradient-based ([SmoothGrad](api/explainer/smooth_grad), [VarGrad](api/explainer/var_grad), [Gradient &times; Input](api/explainer/grad_x_input))
@@ -197,6 +197,7 @@ experiment = Experiment(
 - [ImageNet Example All Explainers](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/imagenet_example_all_explainers.md)
 - [ImageNet Example All Metrics](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/imagenet_example_all_metrics.md)
 - [Free MCG](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/gfgp_tutorial.py) [[Reference](https://arxiv.org/abs/2411.15265)] 
+- [CoIBA](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/CoIBA_example.md) [[Reference](https://arxiv.org/abs/2507.04388)]
 
 <hr>
 

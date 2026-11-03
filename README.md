@@ -11,7 +11,7 @@
 - [**Detector**](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/core/detector): The detector module provides automatic detection of AI models implemented in PyTorch.
 - [**Evaluator**](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/evaluator/metrics/): The evaluator module provides various ways to evaluate and compare the performance and explainability of AI models with the categorized evaluation properties of correctness ([fidelity](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/evaluator/metrics/mu_fidelity.py), [area between perturbation curves](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/evaluator/metrics/pixel_flipping.py)), continuity ([sensitivity](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/evaluator/metrics/sensitivity.py)), and compactness ([complexity](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/evaluator/metrics/complexity.py)).
 - **Explainers**: The explainers module contains a collection of state-of-the-art XAI methods that can generate global or local explanations for any AI model, such as:
-	- Perturbation-based ([SHAP](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/kernel_shap.py), [LIME](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/lime.py))
+	- Perturbation-based ([SHAP](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/kernel_shap.py), [LIME](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/lime.py), [CoIBA](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/coiba.py))
 	- Relevance-based ([IG](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/integrated_gradients.py), [LRP](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/lrp.py), [RAP](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/rap), [GuidedBackprop](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/guided_backprop.py))
 	- CAM-based ([GradCAM](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/grad_cam.py), [Guided GradCAM](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/guided_grad_cam.py))
 	- Gradient-based ([SmoothGrad](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/smooth_grad.py), [VarGrad](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/var_grad.py), [FullGrad](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/full_grad.py), [Gradient &times; Input](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/grad_x_input.py))
@@ -125,6 +125,7 @@ This guide explains how to automatically explain your own models and datasets us
 - [ImageNet Example All Explainers](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/imagenet_example_all_explainers.md)
 - [ImageNet Example All Metrics](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/imagenet_example_all_metrics.md)
 - [Free MCG](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/gfgp_tutorial.py) [[Reference](https://arxiv.org/abs/2411.15265)] 
+- [CoIBA](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/CoIBA_example.md) [[Reference](https://arxiv.org/abs/2507.04388)]
 
 ## Use Cases
 
