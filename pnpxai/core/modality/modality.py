@@ -41,6 +41,7 @@ from pnpxai.explainers import (
     LRPEpsilonAlpha2Beta1,
     KernelShap,
     Lime,
+    UCAG,
     AVAILABLE_EXPLAINERS
 )
 
@@ -293,6 +294,12 @@ class TimeSeriesModality(Modality):
         pooling_fn_selector (Optional[FunctionSelector]): Selector of pooling methods for the modality's explainers. If None selected, POOLING_FUNCTIONS_FOR_TIME_SERIES will be used.
         normalization_fn_selector (Optional[FunctionSelector]): Selector of normalization methods for the modality's explainers. If None selected, NORMALIZATION_FUNCTIONS_FOR_TIME_SERIES will be used.
     """
+    # UCAG crops and enlarges 2D images
+    EXPLAINERS = tuple(
+        explainer for explainer in AVAILABLE_EXPLAINERS
+        if explainer is not UCAG
+    )
+
     def __init__(
         self,
         channel_dim: int = -1,
