@@ -1,0 +1,150 @@
+{
+  "model": "vit_b_16",
+  "weights": "IMAGENET1K_V1",
+  "layers": [
+    "encoder.layers.encoder_layer_4",
+    "encoder.layers.encoder_layer_5"
+  ],
+  "feature_layout": "NTC",
+  "skip_prefix_tokens": 1,
+  "seed": 31,
+  "preprocessing_id": "vit_b_16-IMAGENET1K_V1-default-transforms",
+  "calibration": {
+    "ids": "all dataset ids except final_ids and tuning_ids",
+    "n_samples": 992
+  },
+  "final_ids": [
+    0,
+    7,
+    14,
+    403
+  ],
+  "tuning_ids": [
+    100,
+    300,
+    500,
+    700
+  ],
+  "final_files": [
+    "n01440764_tench.JPEG",
+    "n01514668_cock.JPEG",
+    "n01537544_indigo_bunting.JPEG",
+    "n02687172_aircraft_carrier.JPEG"
+  ],
+  "tuning_files": [
+    "n01860187_black_swan.JPEG",
+    "n02165105_tiger_beetle.JPEG",
+    "n03042490_cliff_dwelling.JPEG",
+    "n03887697_paper_towel.JPEG"
+  ],
+  "final_targets": [
+    0,
+    7,
+    14,
+    403
+  ],
+  "final_target_names": [
+    "tench",
+    "cock",
+    "indigo_bunting",
+    "aircraft_carrier"
+  ],
+  "maps": {
+    "shape": [
+      4,
+      1,
+      224,
+      224
+    ],
+    "dtype": "torch.float32",
+    "min": 0.0,
+    "max": 1.0
+  },
+  "baseline": {
+    "beta": 10,
+    "postprocessor": "sumpos/identity",
+    "scores": {
+      "MuFidelity": [
+        0.21654135338345865,
+        0.5037593984962406,
+        0.09774436090225563,
+        -0.08270676691729321
+      ],
+      "Complexity": [
+        1.266808339496831,
+        0.8893139686424311,
+        0.7570701707941903,
+        0.7487130239867668
+      ]
+    },
+    "means": {
+      "MuFidelity": 0.18383458646616546,
+      "Complexity": 0.9154763757300548
+    }
+  },
+  "selected": {
+    "beta": 0.1393847584003543,
+    "postprocessor": "PostProcessor(pooling_fn=L1Norm(channel_dim=1), normalization_fn=Identity())",
+    "scores": {
+      "MuFidelity": [
+        -0.11879699248120301,
+        0.37744360902255636,
+        0.25112781954887214,
+        0.004511278195488721
+      ],
+      "Complexity": [
+        1.5480734143726866,
+        1.145737856170143,
+        0.8856635420923523,
+        1.7025029241530216
+      ]
+    },
+    "means": {
+      "MuFidelity": 0.12857142857142853,
+      "Complexity": 1.3204944341970508
+    }
+  },
+  "trials": [
+    {
+      "number": 0,
+      "beta": 0.1393847584003543,
+      "pooling": "l1norm",
+      "normalization": "identity",
+      "objective_sum": 1.4977443609022554,
+      "state": "COMPLETE"
+    },
+    {
+      "number": 1,
+      "beta": 0.5208061334990657,
+      "pooling": "l2normsq",
+      "normalization": "minmax",
+      "objective_sum": 0.5278195488721804,
+      "state": "COMPLETE"
+    },
+    {
+      "number": 2,
+      "beta": 0.2294843902125865,
+      "pooling": "sumpos",
+      "normalization": "identity",
+      "objective_sum": 1.0556390977443608,
+      "state": "COMPLETE"
+    }
+  ],
+  "metric_perturbations": 20,
+  "recommended_by_autoexplanation": false,
+  "timing": {
+    "preparation_s": 11.312643887999002,
+    "explanation_s_per_image": 2.0909660369895087,
+    "explanation_peak_cuda_gib": 2.89400053024292,
+    "process_peak_rss_gib": 1.5265846252441406
+  },
+  "environment": {
+    "python": "3.9.18",
+    "torch": "2.6.0+cu124",
+    "torchvision": "0.21.0+cu124",
+    "captum": "0.7.0",
+    "optuna": "5.0.0",
+    "device": "Quadro RTX 6000",
+    "threads": 24
+  }
+}
