@@ -37,6 +37,7 @@ nav:
       - Base: api/explainer/base.md
       - GradCam: api/explainer/grad_cam.md
       - GuidedGradCam: api/explainer/guided_grad_cam.md
+      - UCAG: api/explainer/ucag.md
       - Gradient: api/explainer/gradient.md
       - GradientXInput: api/explainer/grad_x_input.md
       - SmoothGrad: api/explainer/smooth_grad.md

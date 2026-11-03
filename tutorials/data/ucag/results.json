@@ -1,0 +1,167 @@
+{
+  "model": "resnet50",
+  "weights": "IMAGENET1K_V1",
+  "preprocessing": "Resize((224, 224)), ToTensor, ImageNet Normalize",
+  "seed": 31,
+  "final_ids": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "tuning_ids": [
+    100,
+    300,
+    500,
+    700
+  ],
+  "final_files": [
+    "n01440764_tench.JPEG",
+    "n01443537_goldfish.JPEG",
+    "n01484850_great_white_shark.JPEG",
+    "n01491361_tiger_shark.JPEG"
+  ],
+  "tuning_files": [
+    "n01860187_black_swan.JPEG",
+    "n02165105_tiger_beetle.JPEG",
+    "n03042490_cliff_dwelling.JPEG",
+    "n03887697_paper_towel.JPEG"
+  ],
+  "targets": "ground-truth labels",
+  "final_targets": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "final_target_names": [
+    "tench",
+    "goldfish",
+    "great_white_shark",
+    "tiger_shark"
+  ],
+  "final_predictions": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "final_prediction_names": [
+    "tench",
+    "goldfish",
+    "great_white_shark",
+    "tiger_shark"
+  ],
+  "explainer": {
+    "layer": "layer4",
+    "crop_size": 124,
+    "num_units": 6,
+    "alpha": 2.6,
+    "limit_batch_size": 36,
+    "score": true
+  },
+  "maps": {
+    "shape": [
+      4,
+      1,
+      224,
+      224
+    ],
+    "dtype": "torch.float32",
+    "min": 0.0,
+    "max": 0.9951705932617188
+  },
+  "recommended_by_autoexplanation": true,
+  "recommended_instance": {
+    "discovered_layer": "layer4",
+    "max_abs_diff_to_configured": 2.384185791015625e-07
+  },
+  "baseline": {
+    "postprocessor": "sumpos/identity",
+    "scores": {
+      "MuFidelity": [
+        0.7368421052631579,
+        0.5849624060150376,
+        0.4812030075187969,
+        0.7263157894736841
+      ],
+      "Complexity": [
+        1.3255418798347254,
+        1.4763524843070062,
+        1.6988397168405556,
+        1.5150882366773757
+      ]
+    },
+    "means": {
+      "MuFidelity": 0.6323308270676692,
+      "Complexity": 1.5039555794149158
+    }
+  },
+  "trials": [
+    {
+      "number": 0,
+      "alpha": 1.5721076433210313,
+      "num_units": 8,
+      "pooling": "sumabs",
+      "normalization": "minmax",
+      "objective_sum": 2.321804511278195,
+      "state": "COMPLETE"
+    },
+    {
+      "number": 1,
+      "alpha": 1.0879126149728067,
+      "num_units": 3,
+      "pooling": "maxnorm",
+      "normalization": "identity",
+      "objective_sum": 1.9082706766917295,
+      "state": "COMPLETE"
+    },
+    {
+      "number": 2,
+      "alpha": 1.3686091582407232,
+      "num_units": 3,
+      "pooling": "sumpos",
+      "normalization": "identity",
+      "objective_sum": 2.1112781954887216,
+      "state": "COMPLETE"
+    }
+  ],
+  "metric_perturbations": 20,
+  "selected": {
+    "alpha": 1.5721076433210313,
+    "num_units": 8,
+    "postprocessor": "PostProcessor(pooling_fn=SumAbs(channel_dim=1), normalization_fn=MinMax())",
+    "scores": {
+      "MuFidelity": [
+        0.7022556390977444,
+        0.5609022556390978,
+        0.4842105263157894,
+        0.6180451127819548
+      ],
+      "Complexity": [
+        1.761305440477863,
+        1.8112597800582635,
+        1.8326553952047484,
+        1.7231263444574
+      ]
+    },
+    "means": {
+      "MuFidelity": 0.5913533834586466,
+      "Complexity": 1.7820867400495688
+    }
+  },
+  "timing": {
+    "explanation_s_per_image": 2.259916427661665,
+    "explanation_peak_cuda_gib": null,
+    "process_peak_rss_gib": 8.440177917480469
+  },
+  "environment": {
+    "python": "3.9.18",
+    "torch": "2.6.0+cu124",
+    "torchvision": "0.21.0+cu124",
+    "captum": "0.7.0",
+    "optuna": "5.0.0",
+    "device": "Intel(R) Xeon(R) Gold 6226 CPU @ 2.70GHz",
+    "threads": 8
+  }
+}

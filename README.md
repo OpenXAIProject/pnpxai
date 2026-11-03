@@ -13,7 +13,7 @@
 - **Explainers**: The explainers module contains a collection of state-of-the-art XAI methods that can generate global or local explanations for any AI model, such as:
 	- Perturbation-based ([SHAP](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/kernel_shap.py), [LIME](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/lime.py))
 	- Relevance-based ([IG](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/integrated_gradients.py), [LRP](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/lrp.py), [RAP](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/rap), [GuidedBackprop](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/guided_backprop.py))
-	- CAM-based ([GradCAM](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/grad_cam.py), [Guided GradCAM](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/guided_grad_cam.py))
+	- CAM-based ([GradCAM](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/grad_cam.py), [Guided GradCAM](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/guided_grad_cam.py), [UCAG](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/ucag.py))
 	- Gradient-based ([SmoothGrad](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/smooth_grad.py), [VarGrad](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/var_grad.py), [FullGrad](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/full_grad.py), [Gradient &times; Input](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/explainers/grad_x_input.py))
 - [**Recommender**](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/core/recommender): The recommender module offers a recommender system that can suggest the most suitable XAI methods for a given model and dataset, based on the user’s preferences and goals.
 - [**Optimizer**](https://github.com/OpenXAIProject/pnpxai/tree/main/pnpxai/evaluator/optimizer): The optimizer module is finds the best hyperparameter options, given a user-specified metric.
@@ -125,6 +125,7 @@ This guide explains how to automatically explain your own models and datasets us
 - [ImageNet Example All Explainers](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/imagenet_example_all_explainers.md)
 - [ImageNet Example All Metrics](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/imagenet_example_all_metrics.md)
 - [Free MCG](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/gfgp_tutorial.py) [[Reference](https://arxiv.org/abs/2411.15265)] 
+- [UCAG](https://github.com/OpenXAIProject/pnpxai/tree/main/tutorials/UCAG_example.md) [[Reference](https://doi.org/10.1609/aaai.v37i7.25954)]
 
 ## Use Cases
 

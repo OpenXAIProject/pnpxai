@@ -22,6 +22,7 @@ The following table summarizes the methods and metrics currently supported by th
 |Gradient &times; Input | V, L, TS | Linear, Convolution, Recurrent, Transformer|
 |Grad-CAM               | V, TS | Convolution|
 |Guided Grad-CAM        | V, TS | Convolution|
+|UCAG                   | V | Convolution|
 |FullGrad               | V | Linear, Convolution, Recurrent, Transformer|
 |SmoothGrad             | V, L, TS | Linear, Convolution, Recurrent, Transformer|
 |VarGrad                | V, L, TS | Linear, Convolution, Recurrent, Transformer|
